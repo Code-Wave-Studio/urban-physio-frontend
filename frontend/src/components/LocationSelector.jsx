@@ -21,13 +21,18 @@ export default function LocationSelector() {
   const [stateId, setStateId] = useState('');
   const [statesLoading, setStatesLoading] = useState(false);
   const [citiesLoading, setCitiesLoading] = useState(false);
+  const [loadError, setLoadError] = useState('');
   useEffect(() => {
     if (!showSelector) return;
+    setLoadError('');
     setStatesLoading(true);
     location
       .servedStates()
       .then((res) => setStates(res.data || []))
-      .catch(() => setStates([]))
+      .catch((err) => {
+        setStates([]);
+        setLoadError(err?.message || 'Could not reach the server. Check backend URL and CORS.');
+      })
       .finally(() => setStatesLoading(false));
 
     if (city?.state_id) {
@@ -161,6 +166,12 @@ export default function LocationSelector() {
 
             {statesLoading ? (
               <div className="h-11 rounded-xl bg-slate-100 animate-pulse" />
+            ) : loadError ? (
+              <p className="text-sm text-red-800 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+                API error: {loadError}. Confirm{' '}
+                <code className="text-xs">https://urban.codewavestudio.space/backend/api/health</code> works and
+                database seed is imported.
+              </p>
             ) : states.length === 0 ? (
               <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
                 No service areas loaded. Import clinic & doctor seed data, then refresh.
