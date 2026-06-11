@@ -169,7 +169,7 @@ export default function LocationSelector() {
             ) : loadError ? (
               <p className="text-sm text-red-800 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
                 API error: {loadError}. Confirm{' '}
-                <code className="text-xs">https://urban.codewavestudio.space/backend/api/health</code> works and
+                <code className="text-xs">https://mediumorchid-monkey-387815.hostingersite.com/backend/api/health</code> works and
                 database seed is imported.
               </p>
             ) : states.length === 0 ? (
