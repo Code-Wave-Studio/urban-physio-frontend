@@ -1,5 +1,7 @@
 import FaIcon from './FaIcon';
 import { API_BASE } from '../services/api';
+import AppointmentProgressPanel from './AppointmentProgressPanel';
+import AppointmentRequestForm from './AppointmentRequestForm';
 import { hasOfflinePaymentPending, isAwaitingOnlinePayment } from '../utils/razorpayCheckout';
 import { clinicLocationText, googleMapsUrl } from '../utils/locationHelpers';
 import { STATUS_STYLES, formatTime, formatType } from '../utils/appointmentListUtils';
@@ -348,6 +350,17 @@ export default function AppointmentDetailCard({
         {appt.created_at && <span>Booked: {appt.created_at}</span>}
         {appt.updated_at && <span>Updated: {appt.updated_at}</span>}
       </div>
+
+      {(appt.number_of_sessions >= 1) && (
+        <AppointmentProgressPanel
+          appointmentId={appt.id}
+          canEdit={isDoctor || view === 'admin'}
+        />
+      )}
+
+      {view === 'patient' && (
+        <AppointmentRequestForm appointment={appt} />
+      )}
     </article>
   );
 }

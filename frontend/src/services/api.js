@@ -56,6 +56,9 @@ export const auth = {
   updateProfile: (data) => api.put('/auth/profile', data),
   setPassword: (data) => api.post('/auth/set-password', data),
   changePassword: (data) => api.post('/auth/change-password', data),
+  phoneSendOtp: (data) => api.post('/auth/phone/send-otp', data),
+  phoneVerifyOtp: (data) => api.post('/auth/phone/verify-otp', data),
+  phoneResendOtp: (data) => api.post('/auth/phone/resend-otp', data),
 };
 
 export const location = {
@@ -294,3 +297,28 @@ export const reviews = {
 };
 
 export const sessionTypes = () => api.get('/session-types');
+
+export const search = {
+  universal: (params) => api.get('/search', { params }),
+};
+
+export const customSlots = {
+  list: (params) => api.get('/doctors/custom-slots', { params }),
+  create: (data) => api.post('/doctors/custom-slots', data),
+  update: (id, data) => api.put(`/doctors/custom-slots/${id}`, data),
+  remove: (id) => api.delete(`/doctors/custom-slots/${id}`),
+};
+
+export const appointmentProgress = {
+  get: (appointmentId) => api.get(`/appointments/${appointmentId}/progress`),
+  updateSession: (appointmentId, sessionNumber, data) =>
+    api.put(`/appointments/${appointmentId}/progress/${sessionNumber}`, data),
+  completeSession: (appointmentId, sessionNumber, data) =>
+    api.post(`/appointments/${appointmentId}/progress/${sessionNumber}/complete`, data),
+};
+
+export const appointmentRequests = {
+  list: (params) => api.get('/appointment-requests', { params }),
+  create: (data) => api.post('/appointment-requests', data),
+  review: (id, data) => api.put(`/appointment-requests/${id}/review`, data),
+};

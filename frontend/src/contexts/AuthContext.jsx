@@ -127,6 +127,11 @@ export function AuthProvider({ children }) {
     return applyAuthResponse(res);
   };
 
+  const phoneVerifyOtp = async (phone, otp, role = 'patient') => {
+    const res = await auth.phoneVerifyOtp({ phone, otp, role });
+    return applyAuthResponse(res);
+  };
+
   const resendOtp = async (email) => auth.resendOtp({ email });
 
   const googleLogin = async (idToken, role) => {
@@ -153,6 +158,7 @@ export function AuthProvider({ children }) {
         login,
         register,
         verifyOtp,
+        phoneVerifyOtp,
         resendOtp,
         googleLogin,
         forgotPassword,

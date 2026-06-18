@@ -2,16 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import FaIcon from './FaIcon';
-import { doctors, treatments, conditions } from '../services/api';
+import { search } from '../services/api';
 import { useLocation } from '../contexts/LocationContext';
 
 const QUICK_TAGS = ['Back pain', 'Knee pain', 'Neck pain', 'Sports injury'];
 
 const MENU_Z = 10060;
-
-function unwrapList(res) {
-  return res?.data ?? res ?? [];
-}
 
 export default function GlobalSearch({ variant = 'hero', className = '', onNavigate }) {
   const navigate = useNavigate();
@@ -19,7 +15,7 @@ export default function GlobalSearch({ variant = 'hero', className = '', onNavig
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState({ doctors: [], treatments: [], conditions: [] });
+  const [results, setResults] = useState({ doctors: [], clinics: [], conditions: [], symptoms: [] });
   const [activeIndex, setActiveIndex] = useState(-1);
 
   const wrapRef = useRef(null);
@@ -44,14 +40,14 @@ export default function GlobalSearch({ variant = 'hero', className = '', onNavig
         iconColor: 'text-orange-600 bg-orange-50',
       });
     });
-    results.treatments.slice(0, 3).forEach((t) => {
+    results.clinics.slice(0, 3).forEach((c) => {
       items.push({
-        type: 'treatment',
-        key: `t-${t.id}`,
-        label: t.title,
-        sub: t.short_description || 'Treatment',
-        to: `/treatments/${t.slug}`,
-        icon: 'fa-hand-holding-medical',
+        type: 'clinic',
+        key: `cl-${c.id}`,
+        label: c.name,
+        sub: c.city_name || c.address || 'Clinic',
+        to: `/book?clinic_id=${c.id}`,
+        icon: 'fa-hospital',
         iconColor: 'text-emerald-600 bg-emerald-50',
       });
     });
@@ -66,10 +62,25 @@ export default function GlobalSearch({ variant = 'hero', className = '', onNavig
         iconColor: 'text-blue-600 bg-blue-50',
       });
     });
+    results.symptoms.slice(0, 3).forEach((s, i) => {
+      items.push({
+        type: 'symptom',
+        key: `s-${s.id}-${i}`,
+        label: s.title || s.chip_label || s.label,
+        sub: s.subtitle || s.source === 'pain_type' ? 'Symptom / pain type' : 'Symptom',
+        to: `/conditions?search=${encodeURIComponent(s.title || s.chip_label || '')}`,
+        icon: 'fa-heart-pulse',
+        iconColor: 'text-rose-600 bg-rose-50',
+      });
+    });
     return items;
   }, [results]);
 
-  const totalCount = results.doctors.length + results.treatments.length + results.conditions.length;
+  const totalCount =
+    results.doctors.length +
+    results.clinics.length +
+    results.conditions.length +
+    results.symptoms.length;
 
   const updateMenuPosition = useCallback(() => {
     const el = wrapRef.current;
@@ -91,26 +102,24 @@ export default function GlobalSearch({ variant = 'hero', className = '', onNavig
     async (q) => {
       const term = q.trim();
       if (term.length < 2) {
-        setResults({ doctors: [], treatments: [], conditions: [] });
+        setResults({ doctors: [], clinics: [], conditions: [], symptoms: [] });
         setLoading(false);
         return;
       }
       setLoading(true);
       try {
-        const params = { search: term };
-        const docParams = city?.id ? { search: term, city_id: city.id } : params;
-        const [docRes, treatRes, condRes] = await Promise.all([
-          doctors.list(docParams),
-          treatments.list(params),
-          conditions.list(params),
-        ]);
+        const params = { q: term, search: term };
+        if (city?.id) params.city_id = city.id;
+        const res = await search.universal(params);
+        const data = res?.data ?? res ?? {};
         setResults({
-          doctors: unwrapList(docRes),
-          treatments: unwrapList(treatRes),
-          conditions: unwrapList(condRes),
+          doctors: data.doctors ?? [],
+          clinics: data.clinics ?? [],
+          conditions: data.conditions ?? [],
+          symptoms: data.symptoms ?? [],
         });
       } catch {
-        setResults({ doctors: [], treatments: [], conditions: [] });
+        setResults({ doctors: [], clinics: [], conditions: [], symptoms: [] });
       } finally {
         setLoading(false);
       }
@@ -121,7 +130,7 @@ export default function GlobalSearch({ variant = 'hero', className = '', onNavig
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (!query.trim()) {
-      setResults({ doctors: [], treatments: [], conditions: [] });
+      setResults({ doctors: [], clinics: [], conditions: [], symptoms: [] });
       setLoading(false);
       return undefined;
     }
@@ -167,7 +176,7 @@ export default function GlobalSearch({ variant = 'hero', className = '', onNavig
       goTo(flatItems[activeIndex].to);
       return;
     }
-    goTo(`/doctors?search=${encodeURIComponent(term)}`);
+    goTo(`/search?q=${encodeURIComponent(term)}`);
   };
 
   const onKeyDown = (e) => {
@@ -226,20 +235,21 @@ export default function GlobalSearch({ variant = 'hero', className = '', onNavig
             className="mt-3 text-sm font-semibold text-orange-600 hover:text-orange-700"
             onClick={submitSearch}
           >
-            Search all doctors
+            View all results
           </button>
         </div>
       ) : (
         <>
-          <div className="max-h-[min(60vh,320px)] overflow-y-auto py-1">
+          <div className="max-h-[min(60vh,360px)] overflow-y-auto py-1">
             {flatItems.map((item, i) => (
               <button
                 key={item.key}
                 type="button"
                 role="option"
                 aria-selected={activeIndex === i}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition ${activeIndex === i ? 'bg-orange-50' : 'hover:bg-slate-50'
-                  }`}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition ${
+                  activeIndex === i ? 'bg-orange-50' : 'hover:bg-slate-50'
+                }`}
                 onMouseEnter={() => setActiveIndex(i)}
                 onClick={() => goTo(item.to)}
               >
@@ -248,7 +258,7 @@ export default function GlobalSearch({ variant = 'hero', className = '', onNavig
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-semibold text-slate-900 truncate">{item.label}</span>
-                  <span className="block text-xs text-slate-500 truncate">{item.sub}</span>
+                  <span className="block text-xs text-slate-500 truncate capitalize">{item.type} · {item.sub}</span>
                 </span>
                 <FaIcon icon="fa-arrow-right" className="text-xs text-slate-300 shrink-0" />
               </button>
@@ -260,7 +270,7 @@ export default function GlobalSearch({ variant = 'hero', className = '', onNavig
               onClick={submitSearch}
               className="w-full text-center text-xs font-semibold text-orange-600 hover:text-orange-700 py-1.5"
             >
-              View all doctor results for &ldquo;{query.trim()}&rdquo;
+              View all results for &ldquo;{query.trim()}&rdquo;
             </button>
           </div>
         </>
@@ -274,10 +284,11 @@ export default function GlobalSearch({ variant = 'hero', className = '', onNavig
       <div className="relative">
         <FaIcon
           icon="fa-magnifying-glass"
-          className={`absolute top-1/2 -translate-y-1/2 pointer-events-none ${isHero
+          className={`absolute top-1/2 -translate-y-1/2 pointer-events-none ${
+            isHero
               ? 'left-4 text-base text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]'
               : 'left-3 text-sm text-orange-400'
-            }`}
+          }`}
         />
         <input
           ref={inputRef}
@@ -292,10 +303,10 @@ export default function GlobalSearch({ variant = 'hero', className = '', onNavig
           onKeyDown={onKeyDown}
           placeholder={
             isHero
-              ? 'Search doctors, treatments, conditions…'
+              ? 'Search doctors, clinics, conditions, symptoms…'
               : 'Search…'
           }
-          aria-label="Search doctors, treatments and conditions"
+          aria-label="Universal search"
           aria-expanded={showDropdown}
           aria-autocomplete="list"
           className={inputClass}

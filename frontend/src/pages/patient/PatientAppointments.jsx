@@ -20,6 +20,8 @@ import {
 } from '../../utils/appointmentListUtils';
 import toast from 'react-hot-toast';
 import { PATIENT_NAV } from '../../constants/patientNav';
+import AppointmentProgressPanel from '../../components/AppointmentProgressPanel';
+import AppointmentRequestForm from '../../components/AppointmentRequestForm';
 
 const FILTERS = [
   { id: 'all', label: 'All' },
@@ -284,6 +286,10 @@ export default function PatientAppointments() {
                       </Link>
                     )}
                   </div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-slate-100 space-y-4">
+                  <AppointmentProgressPanel appointmentId={a.id} />
+                  <AppointmentRequestForm appointment={a} onSubmitted={load} />
                 </div>
               </article>
             );

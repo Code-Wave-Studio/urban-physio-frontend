@@ -46,6 +46,12 @@ import CancellationHelpPage from './pages/CancellationHelpPage';
 import EmergencyBookingWizard from './pages/EmergencyBookingWizard';
 import DoctorEmergency from './pages/doctor/DoctorEmergency';
 import AdminEmergency from './pages/admin/AdminEmergency';
+import SearchResultsPage from './pages/SearchResultsPage';
+import DoctorCustomSlots from './pages/doctor/DoctorCustomSlots';
+import AppointmentRequestsPage from './pages/AppointmentRequestsPage';
+import { ADMIN_NAV } from './constants/adminNav';
+import { DOCTOR_NAV } from './constants/doctorNav';
+import { PATIENT_NAV } from './constants/patientNav';
 
 export default function App() {
   return (
@@ -86,6 +92,7 @@ export default function App() {
       <Route path="/treatments/:slug" element={<TreatmentDetail />} />
       <Route path="/conditions" element={<Conditions />} />
       <Route path="/conditions/:slug" element={<ConditionDetail />} />
+      <Route path="/search" element={<SearchResultsPage />} />
 
       <Route path="/privacy-policy" element={<PolicyPage />} />
       <Route path="/terms-and-conditions" element={<PolicyPage />} />
@@ -114,6 +121,8 @@ export default function App() {
       <Route path="/doctor/clinics" element={<ProtectedRoute roles={['doctor']}><DoctorClinics /></ProtectedRoute>} />
       <Route path="/doctor/clinics/new" element={<ProtectedRoute roles={['doctor']}><DoctorAddClinic /></ProtectedRoute>} />
       <Route path="/doctor/clinic-availability" element={<ProtectedRoute roles={['doctor']}><DoctorClinicAvailability /></ProtectedRoute>} />
+      <Route path="/doctor/custom-slots" element={<ProtectedRoute roles={['doctor']}><DoctorCustomSlots /></ProtectedRoute>} />
+      <Route path="/doctor/requests" element={<ProtectedRoute roles={['doctor']}><AppointmentRequestsPage navItems={DOCTOR_NAV} title="Appointment Requests" /></ProtectedRoute>} />
       <Route path="/doctor/emergency" element={<ProtectedRoute roles={['doctor']}><DoctorEmergency /></ProtectedRoute>} />
       <Route path="/doctor/notifications" element={<ProtectedRoute roles={['doctor']}><NotificationsPage /></ProtectedRoute>} />
 
@@ -126,6 +135,7 @@ export default function App() {
       <Route path="/admin/pain-selection" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminPainSelection /></ProtectedRoute>} />
       <Route path="/admin/emergency" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminEmergency /></ProtectedRoute>} />
       <Route path="/admin/appointments" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminAppointments /></ProtectedRoute>} />
+      <Route path="/admin/appointment-requests" element={<ProtectedRoute roles={['admin', 'super_admin']}><AppointmentRequestsPage navItems={ADMIN_NAV} title="Appointment Requests" /></ProtectedRoute>} />
       <Route path="/admin/contact" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminContact /></ProtectedRoute>} />
       <Route path="/admin/invoice-settings" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminInvoiceSettings /></ProtectedRoute>} />
       <Route path="/admin/booking-settings" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminBookingSettings /></ProtectedRoute>} />
