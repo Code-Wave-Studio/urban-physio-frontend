@@ -10,6 +10,8 @@ const NAV_LINKS = [
   { to: '/', label: 'Home' },
   { to: '/doctors', label: 'Find Doctors' },
   { to: '/treatments', label: 'Treatments' },
+  { to: '/packages', label: 'Packages' },
+  { to: '/exercises', label: 'Exercises' },
   { to: '/conditions', label: 'Conditions' },
 ];
 

@@ -285,6 +285,16 @@ export const admin = {
   emergencyAssign: (id, doctor_id) => api.post(`/admin/emergency/${id}/assign`, { doctor_id }),
   emergencyCancel: (id) => api.post(`/admin/emergency/${id}/cancel`),
   updateEmergencySettings: (data) => api.put('/admin/emergency/settings', data),
+  treatmentPackagesList: (params) => api.get('/admin/treatment-packages', { params }),
+  treatmentPackageGet: (id) => api.get(`/admin/treatment-packages/${id}`),
+  treatmentPackageCreate: (data) => api.post('/admin/treatment-packages', data),
+  treatmentPackageUpdate: (id, data) => api.put(`/admin/treatment-packages/${id}`, data),
+  treatmentPackageDelete: (id) => api.delete(`/admin/treatment-packages/${id}`),
+  exercisesList: (params) => api.get('/admin/exercises', { params }),
+  exerciseGet: (id) => api.get(`/admin/exercises/${id}`),
+  exerciseCreate: (data) => api.post('/admin/exercises', data),
+  exerciseUpdate: (id, data) => api.put(`/admin/exercises/${id}`, data),
+  exerciseDelete: (id) => api.delete(`/admin/exercises/${id}`),
 };
 
 export const contact = {
@@ -321,4 +331,32 @@ export const appointmentRequests = {
   list: (params) => api.get('/appointment-requests', { params }),
   create: (data) => api.post('/appointment-requests', data),
   review: (id, data) => api.put(`/appointment-requests/${id}/review`, data),
+};
+
+export const treatmentPackages = {
+  list: () => api.get('/treatment-packages'),
+  get: (slug) => api.get(`/treatment-packages/${slug}`),
+};
+
+export const patientPackages = {
+  list: (params) => api.get('/patient-packages', { params }),
+  get: (id) => api.get(`/patient-packages/${id}`),
+  enroll: (data) => api.post('/patient-packages', data),
+  completeSession: (packageId, sessionNumber, data) =>
+    api.post(`/patient-packages/${packageId}/sessions/${sessionNumber}/complete`, data),
+  updateSession: (packageId, sessionNumber, data) =>
+    api.put(`/patient-packages/${packageId}/sessions/${sessionNumber}`, data),
+};
+
+export const exercises = {
+  list: (params) => api.get('/exercises', { params }),
+  get: (slug) => api.get(`/exercises/${slug}`),
+};
+
+export const exercisePrescriptions = {
+  list: (params) => api.get('/exercise-prescriptions', { params }),
+  get: (id) => api.get(`/exercise-prescriptions/${id}`),
+  create: (data) => api.post('/exercise-prescriptions', data),
+  update: (id, data) => api.put(`/exercise-prescriptions/${id}`, data),
+  cancel: (id) => api.delete(`/exercise-prescriptions/${id}`),
 };

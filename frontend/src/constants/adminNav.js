@@ -5,6 +5,8 @@ export const ADMIN_NAV = [
   { to: '/admin/clinics', label: 'Clinics', icon: 'fa-hospital' },
   { to: '/admin/conditions', label: 'Conditions', icon: 'fa-notes-medical' },
   { to: '/admin/treatments', label: 'Treatments', icon: 'fa-hand-holding-medical' },
+  { to: '/admin/treatment-packages', label: 'Packages', icon: 'fa-box-open' },
+  { to: '/admin/exercises', label: 'Exercises', icon: 'fa-dumbbell' },
   { to: '/admin/pain-selection', label: 'Pain map', icon: 'fa-bullseye' },
   { to: '/admin/appointments', label: 'Appointments', icon: 'fa-calendar-check' },
   { to: '/admin/appointment-requests', label: 'Appt. Requests', icon: 'fa-inbox' },
