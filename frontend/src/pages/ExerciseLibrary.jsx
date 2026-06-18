@@ -29,6 +29,14 @@ const AREA_GRADIENT = {
   general: 'from-teal-500/20 to-emerald-500/10',
 };
 
+const BAR_GRADIENT = {
+  back: 'from-violet-500 to-purple-500',
+  neck: 'from-sky-500 to-blue-500',
+  knee: 'from-orange-500 to-amber-500',
+  shoulder: 'from-rose-500 to-pink-500',
+  general: 'from-teal-500 to-emerald-500',
+};
+
 const FALLBACK = [
   { id: 1, name: 'Cat-Cow Stretch', slug: 'cat-cow-stretch', body_area: 'back', difficulty: 'beginner', instructions: 'Start on hands and knees. Arch your back up (cat), then drop belly down (cow). Move slowly with your breath.', default_sets: 2, default_reps: '10', equipment: 'Mat' },
   { id: 2, name: 'Knee Extension', slug: 'knee-extension', body_area: 'knee', difficulty: 'beginner', instructions: 'Sit on a chair. Straighten one knee fully, hold briefly, lower slowly.', default_sets: 3, default_reps: '12', default_hold_seconds: 3, equipment: 'Chair' },
@@ -233,7 +241,7 @@ export default function ExerciseLibrary() {
                 className="group glass-card overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-white/70"
                 onClick={() => setSelected(ex)}
               >
-                <div className={`h-2 bg-gradient-to-r ${AREA_GRADIENT[ex.body_area]?.replace('/20', '/60').replace('/10', '/40') || 'from-teal-500 to-emerald-500'}`} />
+                <div className={`h-2 bg-gradient-to-r ${BAR_GRADIENT[ex.body_area] || BAR_GRADIENT.general}`} />
                 <div className="p-5">
                   <div className="flex justify-between items-start gap-2">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 capitalize">{ex.body_area}</span>
