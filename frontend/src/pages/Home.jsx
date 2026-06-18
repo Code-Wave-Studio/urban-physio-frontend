@@ -10,6 +10,7 @@ import StatsCounter from '../components/StatsCounter';
 import PainSelectionSection from '../components/home/PainSelectionSection';
 import EmergencyCareSection from '../components/home/EmergencyCareSection';
 import FaqSection from '../components/FaqSection';
+import ExercisesSection from '../components/home/ExercisesSection';
 import GlobalSearch from '../components/GlobalSearch';
 import { useLocation } from '../contexts/LocationContext';
 import { treatments, conditions } from '../services/api';
@@ -483,6 +484,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <ExercisesSection />
 
       {/* WHY US */}
       <section className="max-w-7xl mx-auto px-4 section-pad">
