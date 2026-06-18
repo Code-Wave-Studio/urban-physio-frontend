@@ -52,9 +52,14 @@ export function bookExerciseUrl(exercise) {
   return `/book?${params.toString()}`;
 }
 
-export function bookPackageUrl(slug) {
+export function bookPackageUrl(slug, extra = {}) {
   if (!slug) return '/packages';
-  return `/packages/book/${encodeURIComponent(slug)}`;
+  const params = new URLSearchParams();
+  if (extra.doctor_id) params.set('doctor_id', String(extra.doctor_id));
+  if (extra.pain_type) params.set('pain_type', extra.pain_type);
+  const q = params.toString();
+  const base = `/packages/book/${encodeURIComponent(slug)}`;
+  return q ? `${base}?${q}` : base;
 }
 
 /** Match treatment/condition title to admin pain-type labels */

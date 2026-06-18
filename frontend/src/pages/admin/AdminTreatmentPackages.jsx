@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
+import GlassModal, { GlassModalBody, GlassModalFooter, GlassModalHeader } from '../../components/GlassModal';
 import FaIcon from '../../components/FaIcon';
 import { admin } from '../../services/api';
 import toast from 'react-hot-toast';
+
+const DAY_PRESETS = [7, 10, 15, 20, 30];
 
 const EMPTY = {
   name: '',
@@ -121,7 +124,7 @@ export default function AdminTreatmentPackages() {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-slate-800">Treatment Packages</h1>
-          <p className="text-slate-600 text-sm mt-1">Manage 10 / 15 / 30 day programs</p>
+          <p className="text-slate-600 text-sm mt-1">Create custom-day rehab programs (7, 10, 15, 20 days or any duration)</p>
         </div>
         <button type="button" onClick={openCreate} className="btn-primary inline-flex items-center gap-2">
           <FaIcon icon="fa-plus" /> Add package
@@ -182,20 +185,50 @@ export default function AdminTreatmentPackages() {
       )}
 
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/40">
-          <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
-            <h2 className="text-lg font-bold mb-4">{editingId ? 'Edit package' : 'New package'}</h2>
-            <div className="space-y-3">
-              <input className="input-field" placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+        <GlassModal open={modalOpen} onClose={() => !saving && setModalOpen(false)} size="lg" titleId="pkg-form" preventClose={saving}>
+          <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1">
+            <GlassModalHeader
+              titleId="pkg-form"
+              title={editingId ? 'Edit package' : 'New treatment package'}
+              subtitle="Set any duration from 1–365 days and matching session count"
+              icon="fa-box-open"
+              accent="primary"
+              onClose={() => !saving && setModalOpen(false)}
+              disabledClose={saving}
+            />
+            <GlassModalBody className="space-y-4">
+              <input className="input-field" placeholder="Package name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
               <input className="input-field" placeholder="Slug (optional)" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
-              <div className="grid grid-cols-2 gap-3">
-                <select className="input-field" value={form.duration_days} onChange={(e) => setForm({ ...form, duration_days: e.target.value })}>
-                  <option value={10}>10 days</option>
-                  <option value={15}>15 days</option>
-                  <option value={30}>30 days</option>
-                </select>
-                <input className="input-field" type="number" placeholder="Sessions" value={form.total_sessions} onChange={(e) => setForm({ ...form, total_sessions: e.target.value })} />
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Duration (days)</label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {DAY_PRESETS.map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setForm((f) => ({ ...f, duration_days: d, total_sessions: d }))}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition ${
+                        Number(form.duration_days) === d
+                          ? 'border-primary-500 bg-primary-50 text-primary-800'
+                          : 'border-slate-200 bg-white text-slate-600 hover:border-primary-200'
+                      }`}
+                    >
+                      {d} days
+                    </button>
+                  ))}
+                </div>
+                <input
+                  className="input-field"
+                  type="number"
+                  min={1}
+                  max={365}
+                  placeholder="Custom days e.g. 7"
+                  value={form.duration_days}
+                  onChange={(e) => setForm({ ...form, duration_days: e.target.value })}
+                  required
+                />
               </div>
+              <input className="input-field" type="number" min={1} placeholder="Total sessions" value={form.total_sessions} onChange={(e) => setForm({ ...form, total_sessions: e.target.value })} />
               <input className="input-field" type="number" step="0.01" placeholder="Price (INR)" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
               <input className="input-field" placeholder="Short description" value={form.short_description} onChange={(e) => setForm({ ...form, short_description: e.target.value })} />
               <textarea className="input-field min-h-[80px]" placeholder="Full description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
@@ -207,19 +240,15 @@ export default function AdminTreatmentPackages() {
               </select>
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" checked={!!form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked ? 1 : 0 })} />
-                Active
+                Active on website
               </label>
-            </div>
-            <div className="flex gap-3 mt-6">
-              <button type="submit" disabled={saving} className="btn-primary flex-1">
-                {saving ? 'Saving…' : 'Save'}
-              </button>
-              <button type="button" onClick={() => setModalOpen(false)} className="btn-outline flex-1">
-                Cancel
-              </button>
-            </div>
+            </GlassModalBody>
+            <GlassModalFooter>
+              <button type="button" onClick={() => setModalOpen(false)} className="btn-outline" disabled={saving}>Cancel</button>
+              <button type="submit" disabled={saving} className="btn-primary ml-auto">{saving ? 'Saving…' : 'Save package'}</button>
+            </GlassModalFooter>
           </form>
-        </div>
+        </GlassModal>
       )}
     </AdminDashboardLayout>
   );

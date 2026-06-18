@@ -54,10 +54,10 @@ export default function GlassModal({
         onClick={() => closeOnBackdrop && !preventClose && onClose()}
       />
 
-      <div className="fixed inset-0 overflow-y-auto overscroll-contain pointer-events-none">
-        <div className={`flex min-h-full items-center justify-center p-4 sm:p-6 md:p-8 ${className}`}>
+      <div className="fixed inset-0 overflow-y-auto overscroll-contain pointer-events-none py-4 sm:py-6 md:py-8">
+        <div className={`flex min-h-full items-start sm:items-center justify-center px-4 sm:px-6 md:px-8 ${className}`}>
           <div
-            className={`glass-modal-panel relative w-full ${SIZES[size] || SIZES.md} pointer-events-auto ${panelClassName}`}
+            className={`glass-modal-panel relative w-full max-h-[min(calc(100dvh-2rem),920px)] ${SIZES[size] || SIZES.md} pointer-events-auto flex flex-col ${panelClassName}`}
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
           >
@@ -151,4 +151,13 @@ export function GlassModalProgress({ step, total, accent = 'primary' }) {
 
 export function GlassModalFooter({ children }) {
   return <div className="glass-modal-footer shrink-0">{children}</div>;
+}
+
+/** Scrollable modal body — use between header and footer for long forms */
+export function GlassModalBody({ children, className = '' }) {
+  return (
+    <div className={`flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-4 md:px-6 md:py-5 ${className}`}>
+      {children}
+    </div>
+  );
 }

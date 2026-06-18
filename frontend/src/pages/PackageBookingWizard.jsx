@@ -6,6 +6,7 @@ import FaIcon from '../components/FaIcon';
 import BookingStepProgress from '../components/booking/BookingStepProgress';
 import LocationDoctorsBanner from '../components/booking/LocationDoctorsBanner';
 import DoctorSelectCards from '../components/booking/DoctorSelectCards';
+import CouponInput from '../components/platform/CouponInput';
 import { packageBookings, treatmentPackages } from '../services/api';
 import { useLocationDoctors } from '../hooks/useLocationDoctors';
 import { useAuth } from '../contexts/AuthContext';
@@ -33,6 +34,7 @@ export default function PackageBookingWizard() {
   const [pkg, setPkg] = useState(null);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
   const { doctorList, loading: doctorsLoading, city, hasLocation, setShowSelector } = useLocationDoctors();
   const [form, setForm] = useState({
     doctor_id: '',
@@ -107,6 +109,7 @@ export default function PackageBookingWizard() {
         consultation_type: form.consultation_type,
         pain_type: form.pain_type,
         notes: form.notes,
+        ...(appliedCoupon?.code ? { coupon_code: appliedCoupon.code } : {}),
       });
       await openPackageRazorpayCheckout(orderRes);
       toast.success('Package booked! Track progress in My Packages.');
@@ -132,6 +135,7 @@ export default function PackageBookingWizard() {
   if (!pkg) return null;
 
   const perSession = perSessionPrice(pkg.price, pkg.total_sessions);
+  const packagePayTotal = appliedCoupon?.final_amount != null ? Number(appliedCoupon.final_amount) : Number(pkg.price);
 
   return (
     <div className="page-enter min-h-screen bg-gradient-to-b from-orange-50/40 via-white to-slate-50">
@@ -306,9 +310,21 @@ export default function PackageBookingWizard() {
                 )}
                 <div className="p-4 flex justify-between gap-3 bg-orange-50/80">
                   <span className="text-sm font-semibold text-slate-700">Total</span>
-                  <span className="text-lg font-bold text-orange-700">{formatPackagePrice(pkg.price)}</span>
+                  <span className="text-lg font-bold text-orange-700">
+                    {formatPackagePrice(appliedCoupon ? packagePayTotal : pkg.price)}
+                    {appliedCoupon && (
+                      <span className="block text-xs font-normal text-slate-500 line-through">{formatPackagePrice(pkg.price)}</span>
+                    )}
+                  </span>
                 </div>
               </div>
+
+              <CouponInput
+                amount={Number(pkg.price)}
+                orderType="package"
+                onApplied={setAppliedCoupon}
+                onClear={() => setAppliedCoupon(null)}
+              />
 
               <p className="text-xs text-slate-500 flex items-start gap-2">
                 <FaIcon icon="fa-lock" className="text-emerald-600 mt-0.5 shrink-0" />
@@ -340,7 +356,7 @@ export default function PackageBookingWizard() {
               <button type="button" onClick={pay} disabled={paying} className="btn-primary w-full sm:w-auto sm:min-w-[180px] sm:ml-auto inline-flex items-center justify-center gap-2">
                 {paying ? 'Processing…' : (
                   <>
-                    Pay {formatPackagePrice(pkg.price)}
+                    Pay {formatPackagePrice(packagePayTotal)}
                     <FaIcon icon="fa-credit-card" />
                   </>
                 )}

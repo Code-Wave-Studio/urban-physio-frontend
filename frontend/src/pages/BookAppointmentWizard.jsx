@@ -16,7 +16,10 @@ import {
   uploadReport,
   treatments,
   conditions,
+  treatmentPackages,
 } from '../services/api';
+import CouponInput from '../components/platform/CouponInput';
+import { bookPackageUrl } from '../utils/bookUrl';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocation } from '../contexts/LocationContext';
 import toast from 'react-hot-toast';
@@ -37,8 +40,11 @@ const STEPS = [
   'Doctor & Clinic',
   'Your Details',
   'Date & Time',
+  'Rehab Packages',
   'Payment',
 ];
+
+const POPULAR_PACKAGE_DAYS = [10, 15, 20];
 
 const SERVICE_TYPES = [
   { id: 'online', label: 'Online Consultation', icon: 'fa-video', desc: 'Video call via Jitsi Meet' },
@@ -115,6 +121,9 @@ export default function BookAppointmentWizard() {
   const [mapOpen, setMapOpen] = useState(false);
   const [policyAcceptance, setPolicyAcceptance] = useState(emptyPolicyAcceptance);
   const [prefillLabel, setPrefillLabel] = useState('');
+  const [packageList, setPackageList] = useState([]);
+  const [packagesLoading, setPackagesLoading] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
 
   const preselectedClinicId = searchParams.get('clinic_id');
   const preselectedDoctorFromQuery = searchParams.get('doctor_id');
@@ -162,9 +171,14 @@ export default function BookAppointmentWizard() {
   const payNowAmount = () => {
     const total = totalFee();
     const opt = resolvedPaymentOption();
-    if (opt === 'pay_at_clinic') return 0;
-    if (opt === 'partial_50') return round2(total * 0.5);
-    return round2(total);
+    let base = total;
+    if (opt === 'pay_at_clinic') base = 0;
+    else if (opt === 'partial_50') base = round2(total * 0.5);
+    else base = round2(total);
+    if (appliedCoupon?.final_amount != null && base > 0) {
+      return round2(appliedCoupon.final_amount);
+    }
+    return base;
   };
 
   const payLaterAmount = () => {
@@ -490,6 +504,22 @@ export default function BookAppointmentWizard() {
 
   const fee = totalFee;
 
+  const popularPackages = useMemo(() => {
+    const fromPreferred = POPULAR_PACKAGE_DAYS.map((d) => packageList.find((p) => Number(p.duration_days) === d)).filter(Boolean);
+    if (fromPreferred.length) return fromPreferred;
+    return packageList.slice(0, 3);
+  }, [packageList]);
+
+  useEffect(() => {
+    if (step !== 5) return;
+    setPackagesLoading(true);
+    treatmentPackages
+      .list()
+      .then((res) => setPackageList(res.data || []))
+      .catch(() => setPackageList([]))
+      .finally(() => setPackagesLoading(false));
+  }, [step]);
+
   const validateStep = (s) => {
     if (s === 0 && !form.consultation_type) {
       toast.error('Select a service type');
@@ -645,6 +675,7 @@ export default function BookAppointmentWizard() {
         accepted_policies: Object.keys(policyAcceptance).filter((k) => policyAcceptance[k]),
         policies_version: POLICY_LAST_UPDATED,
       };
+      if (appliedCoupon?.code) payload.coupon_code = appliedCoupon.code;
       const res = await appointments.book(payload);
       const appt = res.data;
       setCreatedAppt(appt);
@@ -1268,6 +1299,60 @@ export default function BookAppointmentWizard() {
           )}
 
           {step === 5 && (
+            <div className="space-y-5">
+              <div className="text-center sm:text-left">
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-primary-600 bg-primary-50 px-2.5 py-1 rounded-full">
+                  <FaIcon icon="fa-gift" /> Optional upgrade
+                </span>
+                <h2 className="text-xl font-bold text-slate-800 mt-3">Popular rehab packages</h2>
+                <p className="text-sm text-slate-600 mt-1">
+                  Multi-day programs can save you money vs. booking single sessions. You can skip and pay for this appointment only.
+                </p>
+              </div>
+
+              {packagesLoading ? (
+                <div className="grid gap-3 sm:grid-cols-3 animate-pulse">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-36 rounded-2xl bg-slate-200" />
+                  ))}
+                </div>
+              ) : popularPackages.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
+                  No featured packages right now — continue to payment for this appointment.
+                </div>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {popularPackages.map((p) => (
+                    <Link
+                      key={p.id}
+                      to={bookPackageUrl(p.slug, {
+                        doctor_id: form.doctor_id || undefined,
+                        pain_type: form.pain_type || undefined,
+                      })}
+                      className="group rounded-2xl border-2 border-slate-200 bg-white/90 p-4 hover:border-primary-400 hover:shadow-md transition text-left"
+                    >
+                      <p className="text-xs font-bold text-primary-600">{p.duration_days}-day program</p>
+                      <p className="font-bold text-slate-900 mt-1 group-hover:text-primary-800">{p.name}</p>
+                      <p className="text-xs text-slate-500 mt-1 line-clamp-2">{p.short_description}</p>
+                      <p className="text-lg font-bold text-primary-700 mt-3">₹{Number(p.price).toLocaleString('en-IN')}</p>
+                      <p className="text-xs text-primary-600 font-semibold mt-2 inline-flex items-center gap-1">
+                        Book package <FaIcon icon="fa-arrow-right" className="text-[10px]" />
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+                <Link to="/packages" className="text-sm font-semibold text-primary-600 hover:underline">
+                  View all treatment packages
+                </Link>
+                <p className="text-xs text-slate-500">Tap Continue below to skip and pay for this appointment only</p>
+              </div>
+            </div>
+          )}
+
+          {step === 6 && (
             <div className="space-y-4">
               <h2 className="text-lg font-semibold">Review & Pay</h2>
               {createdAppt?.booking_id && (
@@ -1300,7 +1385,29 @@ export default function BookAppointmentWizard() {
                 <p>
                   <span className="text-slate-500">Sessions:</span> {form.number_of_sessions}
                 </p>
-                <p className="text-lg font-bold text-primary-700 pt-2">Total: ₹{fee()}</p>
+                <p className="text-lg font-bold text-primary-700 pt-2">
+                  Total: ₹{fee().toLocaleString('en-IN')}
+                  {appliedCoupon && payNowAmount() > 0 && (
+                    <span className="block text-sm font-normal text-emerald-700 mt-1">
+                      After promo: pay ₹{payNowAmount().toLocaleString('en-IN')}
+                    </span>
+                  )}
+                </p>
+
+                {payNowAmount() > 0 && (
+                  <CouponInput
+                    amount={(() => {
+                      const total = totalFee();
+                      const opt = resolvedPaymentOption();
+                      if (opt === 'partial_50') return round2(total * 0.5);
+                      return round2(total);
+                    })()}
+                    consultationType={form.consultation_type || 'all'}
+                    onApplied={setAppliedCoupon}
+                    onClear={() => setAppliedCoupon(null)}
+                    className="mt-4"
+                  />
+                )}
 
                 {(form.consultation_type === 'clinic' || form.consultation_type === 'home_visit') && (
                   <div className="pt-3 mt-3 border-t border-white/60">
