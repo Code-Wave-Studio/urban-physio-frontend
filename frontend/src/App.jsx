@@ -57,6 +57,13 @@ import PatientPackages from './pages/patient/PatientPackages';
 import PatientRehab from './pages/patient/PatientRehab';
 import DoctorPackages from './pages/doctor/DoctorPackages';
 import DoctorPrescriptions from './pages/doctor/DoctorPrescriptions';
+import PhysioFeed from './pages/PhysioFeed';
+import PhysioFeedDetail from './pages/PhysioFeedDetail';
+import AdminPhysioFeed from './pages/admin/AdminPhysioFeed';
+import AdminBadges from './pages/admin/AdminBadges';
+import AdminCoupons from './pages/admin/AdminCoupons';
+import AdminReviews from './pages/admin/AdminReviews';
+import AdminAnalytics from './pages/admin/AdminAnalytics';
 import { ADMIN_NAV } from './constants/adminNav';
 import { DOCTOR_NAV } from './constants/doctorNav';
 import { PATIENT_NAV } from './constants/patientNav';
@@ -103,6 +110,8 @@ export default function App() {
       <Route path="/search" element={<SearchResultsPage />} />
       <Route path="/packages" element={<TreatmentPackages />} />
       <Route path="/exercises" element={<ExerciseLibrary />} />
+      <Route path="/physiofeed" element={<PhysioFeed />} />
+      <Route path="/physiofeed/:slug" element={<PhysioFeedDetail />} />
 
       <Route path="/privacy-policy" element={<PolicyPage />} />
       <Route path="/terms-and-conditions" element={<PolicyPage />} />
@@ -148,6 +157,11 @@ export default function App() {
       <Route path="/admin/treatments" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminTreatments /></ProtectedRoute>} />
       <Route path="/admin/treatment-packages" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminTreatmentPackages /></ProtectedRoute>} />
       <Route path="/admin/exercises" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminExercises /></ProtectedRoute>} />
+      <Route path="/admin/physiofeed" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminPhysioFeed /></ProtectedRoute>} />
+      <Route path="/admin/badges" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminBadges /></ProtectedRoute>} />
+      <Route path="/admin/coupons" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminCoupons /></ProtectedRoute>} />
+      <Route path="/admin/reviews" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminReviews /></ProtectedRoute>} />
+      <Route path="/admin/analytics" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminAnalytics /></ProtectedRoute>} />
       <Route path="/admin/pain-selection" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminPainSelection /></ProtectedRoute>} />
       <Route path="/admin/emergency" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminEmergency /></ProtectedRoute>} />
       <Route path="/admin/appointments" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminAppointments /></ProtectedRoute>} />

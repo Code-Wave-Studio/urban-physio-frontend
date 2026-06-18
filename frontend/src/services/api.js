@@ -295,6 +295,33 @@ export const admin = {
   exerciseCreate: (data) => api.post('/admin/exercises', data),
   exerciseUpdate: (id, data) => api.put(`/admin/exercises/${id}`, data),
   exerciseDelete: (id) => api.delete(`/admin/exercises/${id}`),
+  physioFeedList: (params) => api.get('/admin/physiofeed', { params }),
+  physioFeedGet: (id) => api.get(`/admin/physiofeed/${id}`),
+  physioFeedCreate: (data) => api.post('/admin/physiofeed', data),
+  physioFeedUpdate: (id, data) => api.put(`/admin/physiofeed/${id}`, data),
+  physioFeedDelete: (id) => api.delete(`/admin/physiofeed/${id}`),
+  physioFeedPublishScheduled: () => api.post('/admin/physiofeed/publish-scheduled', {}),
+  badgesList: () => api.get('/admin/badges'),
+  badgeCreate: (data) => api.post('/admin/badges', data),
+  badgeUpdate: (id, data) => api.put(`/admin/badges/${id}`, data),
+  badgeDelete: (id) => api.delete(`/admin/badges/${id}`),
+  badgeAssignDoctor: (data) => api.post('/admin/badges/assign-doctor', data),
+  badgeRevokeDoctor: (data) => api.post('/admin/badges/revoke-doctor', data),
+  badgeAssignClinic: (data) => api.post('/admin/badges/assign-clinic', data),
+  badgeRevokeClinic: (data) => api.post('/admin/badges/revoke-clinic', data),
+  couponsList: (params) => api.get('/admin/coupons', { params }),
+  couponCreate: (data) => api.post('/admin/coupons', data),
+  couponUpdate: (id, data) => api.put(`/admin/coupons/${id}`, data),
+  couponDelete: (id) => api.delete(`/admin/coupons/${id}`),
+  couponRedemptions: (id) => api.get(`/admin/coupons/${id}/redemptions`),
+  analyticsOverview: () => api.get('/admin/analytics'),
+  analyticsReports: (params) => api.get('/admin/analytics/reports', { params }),
+  doctorReviewsList: (params) => api.get('/admin/reviews/doctors', { params }),
+  clinicReviewsList: (params) => api.get('/admin/reviews/clinics', { params }),
+  moderateDoctorReview: (id, data) => api.put(`/admin/reviews/doctor/${id}`, data),
+  moderateClinicReview: (id, data) => api.put(`/admin/reviews/clinic/${id}`, data),
+  deleteDoctorReview: (id) => api.delete(`/admin/reviews/doctor/${id}`),
+  deleteClinicReview: (id) => api.delete(`/admin/reviews/clinic/${id}`),
 };
 
 export const contact = {
@@ -303,7 +330,22 @@ export const contact = {
 };
 
 export const reviews = {
+  list: (params) => api.get('/reviews', { params }),
   create: (data) => api.post('/reviews', data),
+};
+
+export const clinicReviews = {
+  list: (params) => api.get('/clinic-reviews', { params }),
+  create: (data) => api.post('/clinic-reviews', data),
+};
+
+export const coupons = {
+  validate: (data) => api.post('/coupons/validate', data),
+};
+
+export const physioFeed = {
+  list: (params) => api.get('/physiofeed', { params }),
+  get: (slug) => api.get(`/physiofeed/${slug}`),
 };
 
 export const sessionTypes = () => api.get('/session-types');

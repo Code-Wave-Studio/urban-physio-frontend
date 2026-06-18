@@ -11,6 +11,8 @@ import PainSelectionSection from '../components/home/PainSelectionSection';
 import EmergencyCareSection from '../components/home/EmergencyCareSection';
 import FaqSection from '../components/FaqSection';
 import ExercisesSection from '../components/home/ExercisesSection';
+import PackagesSection from '../components/home/PackagesSection';
+import PhysioFeedSection from '../components/home/PhysioFeedSection';
 import GlobalSearch from '../components/GlobalSearch';
 import { useLocation } from '../contexts/LocationContext';
 import { treatments, conditions } from '../services/api';
@@ -485,7 +487,11 @@ export default function Home() {
         </div>
       </section>
 
+      <PackagesSection />
+
       <ExercisesSection />
+
+      <PhysioFeedSection />
 
       {/* WHY US */}
       <section className="max-w-7xl mx-auto px-4 section-pad">
