@@ -45,7 +45,7 @@ export default function Login() {
       <div className="max-w-md mx-auto px-4 py-16 relative">
         <div className="glass-strong rounded-3xl p-8 animate-scale-in shadow-xl hover-glow">
           <h1 className="text-2xl font-bold text-slate-800 mb-2">Sign In</h1>
-          <p className="text-sm text-slate-500 mb-6">Patients & doctors — email password or phone + email OTP</p>
+          <p className="text-sm text-slate-500 mb-6">Patients & doctors — email password or + email OTP</p>
 
           {loginRequiredForBooking && (
             <p className="text-sm text-primary-800 bg-primary-50 border border-primary-200 rounded-xl px-4 py-3 mb-4">
@@ -70,7 +70,7 @@ export default function Login() {
                 mode === 'phone' ? 'bg-white text-primary-700 shadow-sm' : 'text-slate-600'
               }`}
             >
-              Mobile + Email OTP
+              Email OTP
             </button>
           </div>
 
