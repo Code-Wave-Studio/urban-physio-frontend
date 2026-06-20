@@ -68,6 +68,7 @@ export default function Home() {
   } = useLocation();
   const [treatmentList, setTreatmentList] = useState([]);
   const [conditionList, setConditionList] = useState([]);
+  const [heroImgOk, setHeroImgOk] = useState(true);
   const areaName = locationLabel || city?.name;
 
   useEffect(() => {
