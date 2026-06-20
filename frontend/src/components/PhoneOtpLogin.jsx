@@ -13,6 +13,7 @@ export default function PhoneOtpLogin({ redirectTo, defaultRole = 'patient', fix
   const [phone, setPhone] = useState('');
   const [role, setRole] = useState(fixedRole || defaultRole);
   const [phoneMasked, setPhoneMasked] = useState('');
+  const [emailMasked, setEmailMasked] = useState('');
   const [deliveryChannel, setDeliveryChannel] = useState('sms');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
@@ -43,6 +44,7 @@ export default function PhoneOtpLogin({ redirectTo, defaultRole = 'patient', fix
     const data = res?.data ?? res ?? {};
     setDeliveryChannel(data.delivery_channel || 'sms');
     if (data.phone_masked) setPhoneMasked(data.phone_masked);
+    if (data.email_masked) setEmailMasked(data.email_masked);
   };
 
   const sendOtp = async (e) => {
@@ -56,7 +58,11 @@ export default function PhoneOtpLogin({ redirectTo, defaultRole = 'patient', fix
       setCooldown(RESEND_COOLDOWN);
       setTimeout(() => inputRefs.current[0]?.focus(), 100);
     } catch (err) {
-      toast.error(err.message || 'Could not send OTP');
+      if (err.status === 429) {
+        toast.error('Too many OTP requests. Wait 15 minutes or use email sign-in below.');
+      } else {
+        toast.error(err.message || 'Could not send OTP');
+      }
     } finally {
       setLoading(false);
     }
@@ -113,15 +119,22 @@ export default function PhoneOtpLogin({ redirectTo, defaultRole = 'patient', fix
     inputRefs.current[Math.min(pasted.length, 5)]?.focus();
   };
 
-  const otpDestination = phoneMasked || `+91 ${phone.replace(/\D/g, '').slice(-10)}`;
-  const channelLabel = deliveryChannel === 'whatsapp' ? 'WhatsApp' : 'SMS';
+  const otpDestination =
+    deliveryChannel === 'email'
+      ? emailMasked || 'your registered email'
+      : phoneMasked || `+91 ${phone.replace(/\D/g, '').slice(-10)}`;
+  const channelLabel =
+    deliveryChannel === 'email' ? 'Email' : deliveryChannel === 'whatsapp' ? 'WhatsApp' : 'SMS';
 
   if (step === 'otp') {
     return (
       <form onSubmit={verifyOtp} className="space-y-5">
         <div className="text-center">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-50 text-primary-600 mb-3">
-            <FaIcon icon={deliveryChannel === 'whatsapp' ? 'fa-whatsapp' : 'fa-comment-sms'} brand={deliveryChannel === 'whatsapp'} />
+            <FaIcon
+              icon={deliveryChannel === 'email' ? 'fa-envelope' : deliveryChannel === 'whatsapp' ? 'fa-whatsapp' : 'fa-comment-sms'}
+              brand={deliveryChannel === 'whatsapp'}
+            />
           </div>
           <p className="text-sm text-slate-600">
             Enter the 6-digit code sent to
