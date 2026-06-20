@@ -5,8 +5,9 @@ import toast from 'react-hot-toast';
 import FaIcon from './FaIcon';
 import { search } from '../services/api';
 import { useLocation } from '../contexts/LocationContext';
+import { localSearchMatches, mergeSearchResults, QUICK_SEARCH_TAGS } from '../utils/searchCatalog';
 
-const QUICK_TAGS = ['Back pain', 'Knee pain', 'Neck pain', 'Sports injury'];
+const QUICK_TAGS = QUICK_SEARCH_TAGS;
 
 const MENU_Z = 10060;
 const SEARCH_HINT = 'Try knee pain, Mumbai, physio near me…';
@@ -38,6 +39,7 @@ export default function GlobalSearch({
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(EMPTY_RESULTS);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [apiFailed, setApiFailed] = useState(false);
 
   const wrapRef = useRef(null);
   const inputRef = useRef(null);
@@ -154,9 +156,15 @@ export default function GlobalSearch({
       if (term.length < 2) {
         setResults(EMPTY_RESULTS);
         setLoading(false);
+        setApiFailed(false);
         return;
       }
+
+      const local = localSearchMatches(term);
+      setResults(mergeSearchResults({}, local));
       setLoading(true);
+      setApiFailed(false);
+
       try {
         const params = { q: term, search: term };
         if (city?.id) params.city_id = city.id;
@@ -166,17 +174,17 @@ export default function GlobalSearch({
         }
         const res = await search.universal(params);
         const data = res?.data ?? res ?? {};
-        setResults({
-          doctors: data.doctors ?? [],
-          clinics: data.clinics ?? [],
-          conditions: data.conditions ?? [],
-          treatments: data.treatments ?? [],
-          symptoms: data.symptoms ?? [],
-          locations: data.locations ?? [],
-        });
-      } catch {
-        setResults(EMPTY_RESULTS);
-        toast.error('Search is temporarily unavailable');
+        setResults(mergeSearchResults(data, local));
+        setApiFailed(false);
+      } catch (err) {
+        setResults(mergeSearchResults({}, local));
+        const hasLocal = local.treatments.length + local.symptoms.length > 0;
+        setApiFailed(!hasLocal);
+        if (!hasLocal && err?.status !== 429) {
+          toast.error('Search is temporarily unavailable');
+        } else if (err?.status === 429) {
+          toast.error('Too many searches — please wait a moment');
+        }
       } finally {
         setLoading(false);
       }
@@ -304,7 +312,7 @@ export default function GlobalSearch({
         : 'relative w-full';
 
   const renderDropdownBody = () => {
-    if (loading) {
+    if (loading && totalCount === 0) {
       return (
         <div className="px-4 py-6 text-center text-sm text-slate-500">
           <FaIcon icon="fa-spinner" className="fa-spin mr-2" />
@@ -312,22 +320,36 @@ export default function GlobalSearch({
         </div>
       );
     }
-    if (totalCount === 0) {
+    if (totalCount === 0 && !loading) {
       return (
         <div className="px-4 py-5 text-center">
           <p className="text-sm text-slate-600">No matches for &ldquo;{trimmedQuery}&rdquo;</p>
+          {apiFailed && (
+            <p className="text-xs text-amber-600 mt-2">Live search unavailable — showing quick links only</p>
+          )}
           <button
             type="button"
             className="mt-3 text-sm font-semibold text-orange-600 hover:text-orange-700 active:text-orange-800"
             onClick={submitSearch}
           >
-            View all results
+            Browse all results
           </button>
         </div>
       );
     }
     return (
       <>
+        {loading && (
+          <p className="px-3 py-2 text-xs text-slate-500 bg-slate-50 border-b border-slate-100 flex items-center gap-2">
+            <FaIcon icon="fa-spinner" className="fa-spin" />
+            Finding doctors, clinics &amp; more…
+          </p>
+        )}
+        {apiFailed && !loading && (
+          <p className="px-3 py-2 text-xs text-amber-700 bg-amber-50 border-b border-amber-100">
+            Showing quick matches — full search loading may be limited
+          </p>
+        )}
         <div
           className={`overflow-y-auto py-1 overscroll-contain ${
             isMobile ? 'max-h-[min(42vh,280px)]' : 'max-h-[min(60vh,360px)]'

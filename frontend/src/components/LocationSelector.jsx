@@ -14,7 +14,7 @@ export default function LocationSelector() {
     hasNearbyProviders,
     city,
     locationLabel,
-    loading,
+    detectingGps,
   } = useLocation();
 
   const [states, setStates] = useState([]);
@@ -135,18 +135,21 @@ export default function LocationSelector() {
 
         <button
           type="button"
-          onClick={() => {
-            setShowSelector(false);
-            requestGeolocation();
-          }}
-          disabled={loading}
+          onClick={requestGeolocation}
           className="location-gps-btn w-full flex items-center justify-center gap-2.5 rounded-2xl border-2 border-primary-500/40 bg-gradient-to-r from-primary-50 to-white py-3.5 text-sm font-semibold text-primary-800 shadow-sm hover:border-primary-500 hover:shadow-md transition disabled:opacity-60"
+          disabled={detectingGps}
         >
           <span className="w-9 h-9 rounded-full bg-primary-600 text-white flex items-center justify-center">
-            <FaIcon icon={loading ? 'fa-spinner' : 'fa-location-crosshairs'} className={loading ? 'fa-spin' : ''} />
+            <FaIcon
+              icon={detectingGps ? 'fa-spinner' : 'fa-location-crosshairs'}
+              className={detectingGps ? 'fa-spin' : ''}
+            />
           </span>
-          {loading ? 'Detecting your location…' : 'Use my current location'}
+          {detectingGps ? 'Detecting your location…' : 'Use my current location'}
         </button>
+        <p className="text-xs text-slate-500 text-center -mt-2">
+          Allow location access when your browser asks — needed for GPS detect.
+        </p>
 
         <div className="flex items-center gap-3">
           <div className="flex-1 h-px bg-slate-200" />

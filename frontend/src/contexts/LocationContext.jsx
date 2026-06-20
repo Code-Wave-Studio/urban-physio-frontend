@@ -31,6 +31,52 @@ function formatLocationLabel(city, detectedLabel) {
   return city.state_name ? `${city.name}, ${city.state_name}` : city.name;
 }
 
+function resolveCityFromPayload(data, cityOverride = null) {
+  return data?.city || data?.service_city || cityOverride || null;
+}
+
+function geolocationErrorMessage(err) {
+  switch (err?.code) {
+    case 1:
+      return 'Location permission denied. Allow location in browser settings, then tap "Use my current location" again.';
+    case 2:
+      return 'Location unavailable. Check GPS or Wi‑Fi and try again.';
+    case 3:
+      return 'Location timed out. Try again or pick your city manually.';
+    default:
+      return 'Could not get GPS location. Pick your city manually or try again.';
+  }
+}
+
+function readGeolocationPosition(options) {
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(resolve, reject, options);
+  });
+}
+
+/** High-accuracy first; fall back to coarse GPS if slow or timed out. */
+async function fetchDevicePosition() {
+  const accurate = {
+    enableHighAccuracy: true,
+    timeout: 15000,
+    maximumAge: 0,
+  };
+  const coarse = {
+    enableHighAccuracy: false,
+    timeout: 25000,
+    maximumAge: 120000,
+  };
+
+  try {
+    return await readGeolocationPosition(accurate);
+  } catch (err) {
+    if (err?.code === 3 || err?.code === 2) {
+      return await readGeolocationPosition(coarse);
+    }
+    throw err;
+  }
+}
+
 async function fetchProvidersForCity(cityId, coords = null) {
   try {
     const params = { city_id: cityId };
@@ -65,6 +111,7 @@ export function LocationProvider({ children }) {
   const [nearbyClinics, setNearbyClinics] = useState([]);
   const [showSelector, setShowSelector] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [detectingGps, setDetectingGps] = useState(false);
   const [locationResolved, setLocationResolved] = useState(false);
 
   const initDone = useRef(false);
@@ -88,7 +135,7 @@ export function LocationProvider({ children }) {
 
   const applyProviderPayload = useCallback(
     (data, cityOverride = null, { userInitiated = false, fromGps = false } = {}) => {
-      const resolvedCity = data?.city || cityOverride;
+      const resolvedCity = resolveCityFromPayload(data, cityOverride);
       const detectedLabel = data?.detected_label || resolvedCity?.detected_label || null;
       const docList = data?.doctors || [];
       const clinicList = data?.clinics || [];
@@ -99,6 +146,8 @@ export function LocationProvider({ children }) {
       if (resolvedCity) {
         setCity(resolvedCity);
         setLocationLabel(formatLocationLabel(resolvedCity, detectedLabel));
+      } else if (detectedLabel) {
+        setLocationLabel(detectedLabel);
       }
 
       setNearbyDoctors(docList);
@@ -113,6 +162,7 @@ export function LocationProvider({ children }) {
 
       if (fromGps) {
         setCoords(data?.coords ?? null);
+        setLocationSource('gps');
         if (!has) {
           setShowSelector(true);
           return false;
@@ -177,7 +227,7 @@ export function LocationProvider({ children }) {
   );
 
   const detectLocation = useCallback(
-    async (lat, lng, epoch) => {
+    async (lat, lng, epoch, { userInitiated = false } = {}) => {
       if (epoch !== locationEpoch.current) return;
 
       setLoading(true);
@@ -186,25 +236,31 @@ export function LocationProvider({ children }) {
         if (epoch !== locationEpoch.current) return;
 
         const data = res?.data ?? res;
+        const displayCity = resolveCityFromPayload(data);
+        const merged = {
+          ...data,
+          city: displayCity,
+          coords: data?.coords ?? { lat, lng },
+        };
+
         setCoords({ lat, lng });
         setLocationSource('gps');
 
-        const hasProviders = applyProviderPayload(
-          { ...data, coords: data.coords ?? { lat, lng } },
-          null,
-          { fromGps: true }
-        );
+        const hasProviders = applyProviderPayload(merged, null, {
+          fromGps: true,
+          userInitiated,
+        });
 
         if (epoch !== locationEpoch.current) return;
 
         const label =
           data?.detected_label ||
-          formatLocationLabel(data?.city) ||
-          data?.city?.name;
+          formatLocationLabel(displayCity) ||
+          displayCity?.name;
 
         if (hasProviders && label) {
           const serviceName = data?.service_city?.name;
-          const displayName = data?.city?.name;
+          const displayName = displayCity?.name;
           if (serviceName && displayName && serviceName !== displayName) {
             toast.success(`Showing care near ${displayName} · Providers in ${serviceName} area`);
           } else {
@@ -223,13 +279,14 @@ export function LocationProvider({ children }) {
             duration: 5000,
           });
         }
-      } catch {
+      } catch (err) {
         if (epoch !== locationEpoch.current) return;
         setShowSelector(true);
-        toast.error('Could not detect location. Please select your city manually.');
+        toast.error(err?.message || 'Could not detect location. Please select your city manually.');
       } finally {
+        setLoading(false);
+        setDetectingGps(false);
         if (epoch === locationEpoch.current) {
-          setLoading(false);
           setLocationResolved(true);
         }
       }
@@ -237,55 +294,67 @@ export function LocationProvider({ children }) {
     [applyProviderPayload]
   );
 
-  const requestGeolocation = useCallback(() => {
-    const epoch = ++locationEpoch.current;
-    setLocationSource('gps');
+  const requestGeolocation = useCallback(
+    async ({ userInitiated = false, skipSavedFallback = false } = {}) => {
+      const epoch = ++locationEpoch.current;
+      setLocationSource('gps');
+      setDetectingGps(true);
+      setLoading(true);
 
-    if (!navigator.geolocation) {
-      setShowSelector(true);
-      setLoading(false);
-      setLocationResolved(true);
-      toast.error('Geolocation not supported. Please select your city manually.');
-      return;
-    }
+      if (userInitiated) {
+        localStorage.removeItem(STORAGE_KEY);
+        setShowSelector(true);
+      }
 
-    setLoading(true);
-
-    navigator.geolocation.getCurrentPosition(
-      (pos) => detectLocation(pos.coords.latitude, pos.coords.longitude, epoch),
-      async (err) => {
-        if (epoch !== locationEpoch.current) return;
-
-        const saved = readSavedCity();
-        if (saved?.id) {
-          locationEpoch.current += 1;
-          setLocationSource(saved.source === 'manual' ? 'city' : 'gps');
-          setCoords(null);
-          await loadCityProviders(saved.id, saved, {
-            userInitiated: false,
-            fromGps: saved.source !== 'manual',
-          });
-          return;
-        }
-
+      if (!navigator.geolocation) {
+        setDetectingGps(false);
         setLoading(false);
         setShowSelector(true);
         setLocationResolved(true);
-        if (err?.code === 1) {
-          toast.error('Location permission denied. Select your city manually.');
-        } else {
-          toast.error('Could not get GPS location. Select your city manually.');
+        toast.error('Geolocation not supported. Please select your city manually.');
+        return;
+      }
+
+      try {
+        const pos = await fetchDevicePosition();
+        if (epoch !== locationEpoch.current) return;
+        await detectLocation(pos.coords.latitude, pos.coords.longitude, epoch, { userInitiated });
+      } catch (err) {
+        if (epoch !== locationEpoch.current) return;
+
+        if (!skipSavedFallback && !userInitiated) {
+          const saved = readSavedCity();
+          if (saved?.id) {
+            locationEpoch.current += 1;
+            setLocationSource(saved.source === 'manual' ? 'city' : 'gps');
+            setCoords(null);
+            setDetectingGps(false);
+            await loadCityProviders(saved.id, saved, {
+              userInitiated: false,
+              fromGps: saved.source !== 'manual',
+            });
+            return;
+          }
         }
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-    );
-  }, [detectLocation, loadCityProviders]);
+
+        setShowSelector(true);
+        toast.error(geolocationErrorMessage(err));
+      } finally {
+        setDetectingGps(false);
+        setLoading(false);
+        if (epoch === locationEpoch.current) {
+          setLocationResolved(true);
+        }
+      }
+    },
+    [detectLocation, loadCityProviders]
+  );
 
   const refreshLocation = useCallback(() => {
     if (locationSource === 'city' && city?.id) {
       return loadCityProviders(city.id, city, { userInitiated: true, coords });
     }
-    return requestGeolocation();
+    return requestGeolocation({ userInitiated: true, skipSavedFallback: true });
   }, [locationSource, city, coords, loadCityProviders, requestGeolocation]);
 
   useEffect(() => {
@@ -303,7 +372,7 @@ export function LocationProvider({ children }) {
         return;
       }
 
-      requestGeolocation();
+      await requestGeolocation({ userInitiated: false, skipSavedFallback: false });
     };
 
     bootstrap();
@@ -319,7 +388,7 @@ export function LocationProvider({ children }) {
           if (saved.source === 'manual') {
             loadCityProviders(saved.id, saved, { userInitiated: false });
           } else {
-            requestGeolocation();
+            requestGeolocation({ userInitiated: false, skipSavedFallback: false });
           }
         }
       }
@@ -339,9 +408,7 @@ export function LocationProvider({ children }) {
   };
 
   const useCurrentLocation = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
-    setShowSelector(false);
-    requestGeolocation();
+    requestGeolocation({ userInitiated: true, skipSavedFallback: true });
   }, [requestGeolocation]);
 
   return (
@@ -357,6 +424,7 @@ export function LocationProvider({ children }) {
         locationResolved,
         showSelector,
         loading,
+        detectingGps,
         requestGeolocation: useCurrentLocation,
         refreshLocation,
         selectCity,

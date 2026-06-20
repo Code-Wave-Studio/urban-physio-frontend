@@ -60,6 +60,7 @@ export default function Home() {
     nearbyDoctors,
     nearbyClinics,
     loading,
+    detectingGps,
     requestGeolocation,
     refreshLocation,
     city,
@@ -343,10 +344,11 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={requestGeolocation}
-                  className="btn-primary text-sm py-2.5 px-5 inline-flex items-center gap-2"
+                  disabled={detectingGps}
+                  className="btn-primary text-sm py-2.5 px-5 inline-flex items-center gap-2 disabled:opacity-60"
                 >
-                  <FaIcon icon="fa-crosshairs" />
-                  Detect location
+                  <FaIcon icon={detectingGps ? 'fa-spinner fa-spin' : 'fa-crosshairs'} />
+                  {detectingGps ? 'Detecting…' : 'Detect location'}
                 </button>
               )}
               <button

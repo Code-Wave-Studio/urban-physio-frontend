@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar';
 import FaIcon from '../components/FaIcon';
 import { search } from '../services/api';
 import { useLocation } from '../contexts/LocationContext';
+import { localSearchMatches, mergeSearchResults } from '../utils/searchCatalog';
 
 export default function SearchResultsPage() {
   const [params] = useSearchParams();
@@ -20,6 +21,7 @@ export default function SearchResultsPage() {
       return;
     }
     setLoading(true);
+    const local = localSearchMatches(q);
     const apiParams = { q, search: q, limit: 20 };
     if (city?.id) apiParams.city_id = city.id;
     if (coords?.lat != null && coords?.lng != null) {
@@ -27,17 +29,15 @@ export default function SearchResultsPage() {
       apiParams.lng = coords.lng;
     }
     search.universal(apiParams)
-      .then((res) => setResults(res?.data ?? res))
-      .catch(() => {
-        toast.error('Search is temporarily unavailable');
-        setResults({
-          doctors: [],
-          clinics: [],
-          conditions: [],
-          treatments: [],
-          symptoms: [],
-          locations: [],
-        });
+      .then((res) => setResults(mergeSearchResults(res?.data ?? res, local)))
+      .catch((err) => {
+        const merged = mergeSearchResults({}, local);
+        setResults(merged);
+        const hasLocal =
+          merged.treatments.length + merged.symptoms.length > 0;
+        if (!hasLocal) {
+          toast.error(err?.status === 429 ? 'Too many searches — wait a moment' : 'Search is temporarily unavailable');
+        }
       })
       .finally(() => setLoading(false));
   }, [q, city?.id, coords?.lat, coords?.lng]);
