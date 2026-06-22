@@ -5,7 +5,7 @@ import GlobalSearch from './GlobalSearch';
 const EXPLORE_LINKS = [
   { to: '/', label: 'Home', icon: 'fa-house' },
   { to: '/doctors', label: 'Find Physiotherapists', icon: 'fa-user-doctor' },
-  { to: '/clinics', label: 'Find Clinics', icon: 'fa-hospital' },
+  { to: '/clinics', label: 'Find Clinic', icon: 'fa-hospital', tone: 'emerald' },
   { to: '/book?type=home_visit', label: 'Home Physiotherapy', icon: 'fa-house-medical' },
   { to: '/treatments', label: 'Services', icon: 'fa-kit-medical' },
   { to: '/exercises', label: 'Exercise Library', icon: 'fa-dumbbell' },
@@ -48,19 +48,22 @@ function NavSection({ title, children }) {
   );
 }
 
-function NavItem({ to, label, icon, pathname, search, onNavigate }) {
+function NavItem({ to, label, icon, pathname, search, onNavigate, tone = 'primary' }) {
   const active = isLinkActive(pathname, search, to);
+  const activeBg = tone === 'emerald' ? 'bg-emerald-50 text-emerald-800' : 'bg-primary-50 text-primary-700';
+  const activeIcon = tone === 'emerald' ? 'bg-emerald-100 text-emerald-600' : 'bg-primary-100 text-primary-600';
+  const hoverBg = tone === 'emerald' ? 'hover:bg-emerald-50' : 'hover:bg-slate-50';
   return (
     <Link
       to={to}
       onClick={onNavigate}
       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-medium transition-colors ${
-        active ? 'bg-primary-50 text-primary-700' : 'text-slate-700 hover:bg-slate-50'
+        active ? activeBg : `text-slate-700 ${hoverBg}`
       }`}
     >
       <span
         className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm ${
-          active ? 'bg-primary-100 text-primary-600' : 'bg-slate-100 text-slate-500'
+          active ? activeIcon : 'bg-slate-100 text-slate-500'
         }`}
       >
         <FaIcon icon={icon} />
@@ -174,7 +177,7 @@ export default function MobileNavDrawer({
 
           <NavSection title="Explore">
             {EXPLORE_LINKS.map((link) => (
-              <NavItem key={link.to} {...link} pathname={pathname} search={search} onNavigate={onClose} />
+              <NavItem key={link.to + link.label} {...link} pathname={pathname} search={search} onNavigate={onClose} />
             ))}
           </NavSection>
 
@@ -216,8 +219,21 @@ export default function MobileNavDrawer({
         </nav>
 
         <div className="p-4 border-t border-slate-100 space-y-2 shrink-0 bg-slate-50/80">
-          <Link to="/book" className="btn-primary w-full text-center block text-sm" onClick={onClose}>
-            Book Appointment
+          <div className="grid grid-cols-2 gap-2">
+            <Link
+              to="/clinics"
+              className="btn-primary w-full text-center text-sm !py-2.5 !bg-emerald-600 hover:!bg-emerald-700 inline-flex items-center justify-center gap-1.5"
+              onClick={onClose}
+            >
+              <FaIcon icon="fa-hospital" className="text-xs" />
+              Find Clinic
+            </Link>
+            <Link to="/book" className="btn-outline w-full text-center text-sm !py-2.5 block" onClick={onClose}>
+              Book
+            </Link>
+          </div>
+          <Link to="/doctors" className="btn-outline w-full text-center block text-sm !py-2.5" onClick={onClose}>
+            Find Physiotherapists
           </Link>
           {user ? (
             <button type="button" className="btn-outline w-full text-sm text-red-700 border-red-200" onClick={onLogout}>

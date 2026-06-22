@@ -19,9 +19,9 @@ import { treatments, conditions } from '../services/api';
 import { SITE_FAQS } from '../constants/supportPages';
 
 const SERVICES = [
-  { title: 'Online Consultation', desc: 'HD video sessions via Jitsi Meet from your home', icon: 'fa-video', color: 'from-orange-400/20 to-amber-400/20', iconColor: 'text-orange-600' },
-  { title: 'Clinic Visit', desc: 'Premium partner clinics with modern equipment', icon: 'fa-hospital', color: 'from-emerald-400/20 to-teal-400/20', iconColor: 'text-emerald-600' },
-  { title: 'Home Visit', desc: 'Licensed physiotherapist at your doorstep', icon: 'fa-house-medical', color: 'from-amber-400/20 to-orange-400/20', iconColor: 'text-orange-600' },
+  { title: 'Online Consultation', desc: 'HD video sessions via Jitsi Meet from your home', icon: 'fa-video', color: 'from-orange-400/20 to-amber-400/20', iconColor: 'text-orange-600', link: '/book?type=online', linkLabel: 'Book' },
+  { title: 'Clinic Visit', desc: 'Premium partner clinics with modern equipment', icon: 'fa-hospital', color: 'from-emerald-400/20 to-teal-400/20', iconColor: 'text-emerald-600', link: '/clinics', linkLabel: 'Find Clinic' },
+  { title: 'Home Visit', desc: 'Licensed physiotherapist at your doorstep', icon: 'fa-house-medical', color: 'from-amber-400/20 to-orange-400/20', iconColor: 'text-orange-600', link: '/book?type=home_visit', linkLabel: 'Book' },
 ];
 
 const STEPS = [
@@ -174,8 +174,15 @@ export default function Home() {
                   to="/doctors"
                   className="inline-flex items-center justify-center gap-2 px-5 py-3 md:px-8 md:py-3.5 text-sm md:text-base rounded-xl font-semibold text-white bg-white/10 border border-white/25 backdrop-blur-md hover:bg-white/20 transition"
                 >
-                  Find a Doctor
-                  <FaIcon icon="fa-arrow-right" className="text-sm" />
+                  Find Physiotherapists
+                  <FaIcon icon="fa-user-doctor" className="text-sm" />
+                </Link>
+                <Link
+                  to="/clinics"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3 md:px-8 md:py-3.5 text-sm md:text-base rounded-xl font-semibold text-white bg-emerald-500/20 border border-emerald-300/35 backdrop-blur-md hover:bg-emerald-500/30 transition"
+                >
+                  Find Clinic
+                  <FaIcon icon="fa-hospital" className="text-sm" />
                 </Link>
               </div>
             </div>
@@ -253,8 +260,8 @@ export default function Home() {
               </div>
               <h3 className="font-bold text-base md:text-xl text-slate-800">{f.title}</h3>
               <p className="text-slate-600 mt-2 text-xs md:text-base line-clamp-2">{f.desc}</p>
-              <Link to="/book" className="inline-flex items-center gap-1 mt-3 text-primary-600 font-semibold text-sm">
-                Book <FaIcon icon="fa-arrow-right" className="text-xs" />
+              <Link to={f.link || '/book'} className="inline-flex items-center gap-1 mt-3 text-primary-600 font-semibold text-sm">
+                {f.linkLabel || 'Book'} <FaIcon icon="fa-arrow-right" className="text-xs" />
               </Link>
             </div>
           ))}
@@ -376,14 +383,23 @@ export default function Home() {
               {areaName ? `Partner clinics in ${areaName}` : 'Approved partner clinics near you'}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={refreshLocation}
-            className="btn-outline text-xs md:text-sm py-2 px-3 inline-flex items-center gap-1.5"
-          >
-            <FaIcon icon="fa-location-crosshairs" />
-            Refresh
-          </button>
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 shrink-0 w-full sm:w-auto">
+            <Link
+              to="/clinics"
+              className="btn-primary text-xs md:text-sm py-2.5 px-4 inline-flex items-center justify-center gap-1.5 !bg-emerald-600 hover:!bg-emerald-700 w-full sm:w-auto"
+            >
+              <FaIcon icon="fa-hospital" />
+              Find Clinic
+            </Link>
+            <button
+              type="button"
+              onClick={refreshLocation}
+              className="btn-outline text-xs md:text-sm py-2.5 px-3 inline-flex items-center justify-center gap-1.5 w-full sm:w-auto"
+            >
+              <FaIcon icon="fa-location-crosshairs" />
+              Refresh
+            </button>
+          </div>
         </div>
 
         {loading ? (
@@ -406,12 +422,19 @@ export default function Home() {
                 </div>
               ))}
             </div>
-            <div className="text-center mt-5 md:mt-10 flex flex-wrap justify-center gap-3">
-              <Link to="/clinics" className="btn-primary inline-flex items-center gap-2 text-sm py-2.5 px-5">
-                View all clinics
+            <div className="text-center mt-5 md:mt-10 flex flex-col sm:flex-row flex-wrap justify-center gap-3">
+              <Link
+                to="/clinics"
+                className="btn-primary inline-flex items-center justify-center gap-2 text-sm py-2.5 px-5 !bg-emerald-600 hover:!bg-emerald-700 w-full sm:w-auto"
+              >
+                <FaIcon icon="fa-hospital" />
+                Find Clinic
                 <FaIcon icon="fa-arrow-right" />
               </Link>
-              <Link to="/book?type=clinic" className="btn-outline inline-flex items-center gap-2 text-sm py-2.5 px-5">
+              <Link
+                to="/book?type=clinic"
+                className="btn-outline inline-flex items-center justify-center gap-2 text-sm py-2.5 px-5 w-full sm:w-auto"
+              >
                 Book clinic visit
               </Link>
             </div>
@@ -422,16 +445,26 @@ export default function Home() {
             <p className="text-slate-600 text-sm md:text-lg px-4">
               No partner clinics in your area yet. Try another city or book an online session.
             </p>
-            <div className="flex flex-wrap justify-center gap-2 mt-4">
+            <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-2 mt-4 px-2">
+              <Link
+                to="/clinics"
+                className="btn-primary text-sm py-2.5 px-5 inline-flex items-center justify-center gap-2 !bg-emerald-600 hover:!bg-emerald-700 w-full sm:w-auto"
+              >
+                <FaIcon icon="fa-hospital" />
+                Find Clinic
+              </Link>
               <button
                 type="button"
                 onClick={() => setShowSelector(true)}
-                className="btn-primary text-sm py-2.5 px-5 inline-flex items-center gap-2"
+                className="btn-outline text-sm py-2.5 px-5 inline-flex items-center justify-center gap-2 w-full sm:w-auto"
               >
                 <FaIcon icon="fa-location-dot" />
                 Select city
               </button>
-              <Link to="/book?type=online" className="btn-outline text-sm py-2.5 px-5 inline-flex items-center gap-2">
+              <Link
+                to="/book?type=online"
+                className="btn-outline text-sm py-2.5 px-5 inline-flex items-center justify-center gap-2 w-full sm:w-auto"
+              >
                 Online consultation
               </Link>
             </div>
@@ -556,6 +589,10 @@ export default function Home() {
               </Link>
               <Link to="/doctors" className="btn-glass inline-flex items-center justify-center gap-2 px-5 py-3 text-sm md:text-base">
                 Browse Doctors
+              </Link>
+              <Link to="/clinics" className="btn-glass inline-flex items-center justify-center gap-2 px-5 py-3 text-sm md:text-base !border-emerald-300/40 hover:!bg-emerald-500/20">
+                <FaIcon icon="fa-hospital" />
+                Find Clinic
               </Link>
             </div>
           </div>
