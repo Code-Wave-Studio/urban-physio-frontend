@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import FaIcon from '../components/FaIcon';
 import ClinicLogo from '../components/ClinicLogo';
+import ClinicBannerCarousel from '../components/clinic/ClinicBannerCarousel';
 import DoctorAvatar from '../components/DoctorAvatar';
 import BadgeList from '../components/platform/BadgeList';
 import ReviewStars from '../components/platform/ReviewStars';
@@ -13,7 +14,7 @@ import ReviewForm from '../components/platform/ReviewForm';
 import { clinics } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { resolveMediaUrl } from '../utils/mediaUrl';
-import { formatOpeningHoursRows, openingHoursSummary, SOCIAL_FIELDS } from '../utils/clinicProfileUtils';
+import { formatOpeningHoursRows, getBannerImages, openingHoursSummary, SOCIAL_FIELDS } from '../utils/clinicProfileUtils';
 import { googleMapsUrl } from '../utils/locationHelpers';
 import { clinicBookUrl, clinicProfileUrl, doctorProfileUrl, formatOpeningHours } from '../utils/profileUrls';
 
@@ -45,7 +46,7 @@ function StatPill({ label, value, icon, tone = 'emerald', compact = false }) {
   };
   return (
     <div
-      className={`rounded-xl sm:rounded-2xl border border-white/90 bg-white/95 backdrop-blur-md shadow-lg shadow-emerald-950/10 h-full ${
+      className={`rounded-xl sm:rounded-2xl border border-slate-200/90 bg-white shadow-md shadow-slate-200/60 h-full ${
         compact ? 'px-3 py-2.5 min-w-[8.75rem] snap-start shrink-0' : 'px-3 py-2.5 sm:px-4 sm:py-3.5'
       }`}
     >
@@ -105,7 +106,7 @@ export default function ClinicProfilePage() {
   const social = clinic?.social_links_parsed || {};
   const doctorCount = stats.doctor_count ?? clinic?.doctors?.length ?? clinic?.doctor_count ?? 0;
   const rating = Number(stats.avg_rating ?? clinic?.rating_avg) || 0;
-  const coverSrc = resolveMediaUrl(clinic?.cover_image);
+  const bannerImages = useMemo(() => getBannerImages(clinic), [clinic]);
   const websiteUrl = clinic?.website_url || clinic?.website;
   const activeSocials = SOCIAL_FIELDS.filter(({ key }) => social[key]);
 
@@ -161,54 +162,54 @@ export default function ClinicProfilePage() {
       />
       <Navbar />
 
-      {/* Hero + stats anchored to banner bottom */}
-      <div className="relative overflow-visible bg-gradient-to-br from-slate-900 via-emerald-950 to-teal-950 text-white pb-12 sm:pb-14 md:pb-16">
-        {coverSrc && (
-          <div
-            className="absolute inset-0 bg-cover bg-center opacity-35"
-            style={{ backgroundImage: `url(${coverSrc})` }}
-            aria-hidden
+      {/* Light hero + auto-scrolling banner */}
+      <div className="relative bg-slate-50">
+        <div className="relative pt-14 sm:pt-16 md:pt-[4.5rem]">
+          <ClinicBannerCarousel
+            images={bannerImages}
+            className="h-44 sm:h-52 md:h-60 w-full"
+            alt={`${clinic.name} banner`}
           />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-emerald-950/75 to-teal-900/60" aria-hidden />
-        <div className="mesh-blob w-72 h-72 -top-20 -right-16 bg-emerald-400/20 hidden md:block" aria-hidden />
-        <div className="mesh-blob w-56 h-56 bottom-0 left-0 bg-teal-400/15 hidden md:block" aria-hidden />
+          <div className="absolute top-3 left-0 right-0 z-10 max-w-6xl mx-auto px-4">
+            <Link
+              to="/clinics"
+              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-slate-800 bg-white/90 backdrop-blur-sm border border-white/80 shadow-sm px-3 py-1.5 rounded-full hover:bg-white transition"
+            >
+              <FaIcon icon="fa-arrow-left" className="text-xs" />
+              All clinics
+            </Link>
+          </div>
+        </div>
 
-        <div className="relative max-w-6xl mx-auto px-4 pt-16 sm:pt-20 pb-6 sm:pb-8 md:pt-24 md:pb-10">
-          <Link
-            to="/clinics"
-            className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-emerald-200/90 hover:text-white transition mb-4 sm:mb-6"
-          >
-            <FaIcon icon="fa-arrow-left" className="text-xs" />
-            All clinics
-          </Link>
-
-          <div className="flex flex-col md:flex-row gap-4 sm:gap-6 md:gap-8 items-center md:items-start">
+        <div className="relative max-w-6xl mx-auto px-4 pb-8 sm:pb-10 md:pb-12">
+          <div className="flex flex-col md:flex-row gap-4 sm:gap-6 md:gap-8 items-center md:items-start -mt-10 sm:-mt-12 md:-mt-14">
             <div className="shrink-0">
               <ClinicLogo
                 clinic={clinic}
                 size="xl"
-                className="!w-24 !h-24 sm:!w-32 sm:!h-32 md:!w-36 md:!h-36 !rounded-2xl sm:!rounded-3xl ring-4 ring-white/25 shadow-2xl"
+                className="!w-24 !h-24 sm:!w-32 sm:!h-32 md:!w-36 md:!h-36 !rounded-2xl sm:!rounded-3xl ring-4 ring-white shadow-xl"
               />
             </div>
-            <div className="flex-1 min-w-0 w-full text-center md:text-left">
+            <div className="flex-1 min-w-0 w-full text-center md:text-left pt-1">
               <div className="flex flex-wrap justify-center md:justify-start gap-1.5 sm:gap-2 mb-2 sm:mb-3">
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide bg-emerald-500/20 text-emerald-100 border border-emerald-400/30 px-3 py-1 rounded-full">
-                  <FaIcon icon="fa-circle-check" className="text-emerald-300" />
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full">
+                  <FaIcon icon="fa-circle-check" className="text-emerald-600" />
                   Partner clinic
                 </span>
                 {(clinic.is_featured === 1 || clinic.is_featured === '1') && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide bg-amber-400/20 text-amber-100 border border-amber-300/30 px-3 py-1 rounded-full">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1 rounded-full">
                     <FaIcon icon="fa-star" />
                     Featured
                   </span>
                 )}
               </div>
 
-              <h1 className="text-xl sm:text-3xl md:text-4xl font-bold tracking-tight leading-tight px-1">{clinic.name}</h1>
+              <h1 className="text-xl sm:text-3xl md:text-4xl font-bold tracking-tight leading-tight text-slate-900 px-1">
+                {clinic.name}
+              </h1>
 
-              <p className="text-emerald-100/90 text-xs sm:text-sm md:text-base mt-2 flex items-start justify-center md:justify-start gap-2 max-w-2xl mx-auto md:mx-0 px-1">
-                <FaIcon icon="fa-location-dot" className="text-emerald-300 mt-0.5 shrink-0" />
+              <p className="text-slate-600 text-xs sm:text-sm md:text-base mt-2 flex items-start justify-center md:justify-start gap-2 max-w-2xl mx-auto md:mx-0 px-1">
+                <FaIcon icon="fa-location-dot" className="text-emerald-600 mt-0.5 shrink-0" />
                 <span className="text-left line-clamp-3 sm:line-clamp-none">{locationLine || 'India'}</span>
               </p>
 
@@ -217,8 +218,8 @@ export default function ClinicProfilePage() {
               </div>
 
               {hoursSummary && (
-                <p className="mt-3 text-xs sm:text-sm text-emerald-100/90 inline-flex items-center gap-2 justify-center md:justify-start">
-                  <FaIcon icon="fa-clock" className="text-emerald-300 shrink-0" />
+                <p className="mt-3 text-xs sm:text-sm text-slate-600 inline-flex items-center gap-2 justify-center md:justify-start">
+                  <FaIcon icon="fa-clock" className="text-emerald-600 shrink-0" />
                   {hoursSummary}
                 </p>
               )}
@@ -230,7 +231,7 @@ export default function ClinicProfilePage() {
                       href={websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/10 border border-white/20 hover:bg-white/15"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200/80"
                     >
                       <FaIcon icon="fa-globe" />
                       Website
@@ -242,7 +243,7 @@ export default function ClinicProfilePage() {
                       href={social[key]}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/10 border border-white/20 hover:bg-white/15"
+                      className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200/80"
                       aria-label={key}
                     >
                       <FaIcon icon={icon} className="text-sm" />
@@ -255,44 +256,27 @@ export default function ClinicProfilePage() {
                 <BadgeList badges={clinic.badges} />
               </div>
 
-              {/* Desktop / tablet hero actions */}
               <div className="mt-4 sm:mt-6 hidden sm:flex flex-wrap gap-2 sm:gap-3 justify-center md:justify-start">
-                <Link
-                  to={clinicBookUrl(clinic)}
-                  className="inline-flex items-center justify-center gap-2 bg-white text-emerald-900 font-bold px-5 py-3 rounded-xl text-sm shadow-lg shadow-emerald-950/30 hover:bg-emerald-50 transition"
-                >
+                <Link to={clinicBookUrl(clinic)} className="btn-primary text-sm !px-5 !py-3">
                   <FaIcon icon="fa-calendar-check" />
                   Book clinic visit
                 </Link>
-                <ShareProfileButton
-                  title={clinic.name}
-                  className="!border-white/25 !bg-white/10 !text-white hover:!bg-white/15"
-                />
+                <ShareProfileButton title={clinic.name} />
                 {clinic.phone && (
-                  <a
-                    href={`tel:${clinic.phone}`}
-                    className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold border border-white/25 bg-white/5 hover:bg-white/10 transition"
-                  >
+                  <a href={`tel:${clinic.phone}`} className="btn-outline text-sm !px-5 !py-3">
                     <FaIcon icon="fa-phone" />
                     Call
                   </a>
                 )}
               </div>
 
-              {/* Mobile — share only (book/call in bottom bar) */}
               <div className="mt-4 flex sm:hidden justify-center">
-                <ShareProfileButton
-                  title={clinic.name}
-                  className="!border-white/25 !bg-white/10 !text-white hover:!bg-white/15 !py-2.5 !text-sm w-full max-w-xs justify-center"
-                />
+                <ShareProfileButton title={clinic.name} className="!py-2.5 !text-sm w-full max-w-xs justify-center" />
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Stats — horizontal scroll on mobile, grid on desktop */}
-        <div className="absolute left-0 right-0 bottom-0 translate-y-1/2 z-[3]">
-          <div className="max-w-6xl mx-auto px-4">
+          <div className="mt-6 sm:mt-8">
             <div className="flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory md:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <StatPill
                 label="Rating"
@@ -340,7 +324,7 @@ export default function ClinicProfilePage() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 pt-10 sm:pt-12 md:pt-14 pb-24 sm:pb-8 md:pb-10 space-y-4 sm:space-y-6">
+      <div className="max-w-6xl mx-auto px-4 pt-4 sm:pt-6 pb-24 sm:pb-8 md:pb-10 space-y-4 sm:space-y-6">
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="lg:col-span-2 space-y-4 sm:space-y-6 order-2 lg:order-1">
             {clinic.gallery?.length > 0 && (

@@ -257,6 +257,7 @@ export const admin = {
   logs: () => api.get('/admin/logs'),
   updateUserStatus: (id, isActive) => api.put(`/admin/users/${id}`, { is_active: isActive }),
   clinics: (params) => api.get('/admin/clinics', { params }),
+  clinicGet: (id) => api.get(`/admin/clinics/${id}`),
   clinicCreate: (data) => api.post('/admin/clinics', data),
   clinicUpdate: (id, data) => api.put(`/admin/clinics/${id}`, data),
   clinicDelete: (id) => api.delete(`/admin/clinics/${id}`),

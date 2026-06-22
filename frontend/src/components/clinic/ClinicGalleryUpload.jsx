@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 /**
  * @param {{ images: string[], clinicId?: string | number | null, onChange: (urls: string[]) => void, max?: number }} props
  */
-export default function ClinicGalleryUpload({ images = [], clinicId, onChange, max = 12 }) {
+export default function ClinicGalleryUpload({ images = [], clinicId, onChange, max = 10 }) {
   const [uploading, setUploading] = useState(false);
 
   const addUrl = (url) => {

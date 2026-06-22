@@ -9,6 +9,7 @@ import { CookieConsentProvider } from './contexts/CookieConsentContext';
 import { LocationProvider } from './contexts/LocationContext';
 import { ContactProvider } from './contexts/ContactContext';
 import FloatingActions from './components/FloatingActions';
+import HapticsRoot from './components/HapticsRoot';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import './index.css';
 
@@ -33,6 +34,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <ContactProvider>
           <LocationProvider>
             <App />
+            <HapticsRoot />
             <FloatingActions />
           <Toaster
             position="top-right"

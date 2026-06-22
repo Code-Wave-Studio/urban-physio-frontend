@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import FaIcon from './FaIcon';
+import { hapticClose, hapticOpen } from '../utils/haptics';
 
 const SIZES = {
   sm: 'max-w-md',
@@ -24,6 +25,14 @@ export default function GlassModal({
   className = '',
   panelClassName = '',
 }) {
+  const wasOpen = useRef(false);
+
+  useEffect(() => {
+    if (open && !wasOpen.current) hapticOpen();
+    if (!open && wasOpen.current) hapticClose();
+    wasOpen.current = open;
+  }, [open]);
+
   useEffect(() => {
     if (!open) return undefined;
     const onKey = (e) => {
@@ -49,7 +58,7 @@ export default function GlassModal({
     >
       <button
         type="button"
-        className="glass-modal-backdrop fixed inset-0 w-full h-full cursor-default"
+        className="glass-modal-backdrop fixed inset-0 w-full h-full cursor-default animate-fade-in"
         aria-label="Close dialog"
         onClick={() => closeOnBackdrop && !preventClose && onClose()}
       />

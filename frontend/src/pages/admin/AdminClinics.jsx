@@ -6,6 +6,19 @@ import LocationMapModal from '../../components/LocationMapModal';
 import SearchableLocationSelect from '../../components/SearchableLocationSelect';
 import ClinicLogo from '../../components/ClinicLogo';
 import ClinicLogoUpload from '../../components/ClinicLogoUpload';
+import ClinicGalleryUpload from '../../components/clinic/ClinicGalleryUpload';
+import {
+  ClinicOpeningHoursFields,
+  ClinicProfileDetailsFields,
+  ClinicSocialLinksFields,
+  ClinicStatisticsFields,
+  ClinicTagListFields,
+} from '../../components/clinic/ClinicProfileFormSections';
+import {
+  buildClinicPayload,
+  clinicRecordToForm,
+  emptyClinicForm,
+} from '../../utils/clinicProfileUtils';
 import { admin, doctors as doctorsApi, location } from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -96,24 +109,46 @@ function ClinicRow({ clinic, onApprove, onReject, onEdit, onDelete, onManageDoct
   );
 }
 
+function AdminFormSection({ title, icon, children, defaultOpen = true }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white/80 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left bg-slate-50/80 border-b border-slate-100"
+      >
+        <span className="font-semibold text-slate-800 text-sm inline-flex items-center gap-2">
+          <FaIcon icon={icon} className="text-primary-600" />
+          {title}
+        </span>
+        <FaIcon icon={open ? 'fa-chevron-up' : 'fa-chevron-down'} className="text-slate-400 text-xs" />
+      </button>
+      {open && <div className="p-4 space-y-4">{children}</div>}
+    </div>
+  );
+}
+
 function ClinicFormModal({ open, onClose, initial, onSave }) {
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
   const [stateId, setStateId] = useState('');
   const [mapOpen, setMapOpen] = useState(false);
-  const [form, setForm] = useState(() => ({
-    name: '',
-    address: '',
-    city_id: '',
-    phone: '',
-    email: '',
-    logo: '',
-    latitude: null,
-    longitude: null,
-    ...initial,
-  }));
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState(() => emptyClinicForm());
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const setSocial = (key, value) =>
+    setForm((f) => ({ ...f, social_links: { ...f.social_links, [key]: value } }));
+  const setHours = (key, value) => {
+    const slots = value.trim()
+      ? value.split(',').map((s) => s.trim()).filter(Boolean)
+      : [];
+    setForm((f) => ({
+      ...f,
+      opening_hours: { ...f.opening_hours, [key]: slots },
+    }));
+  };
 
   useEffect(() => {
     location.states().then((res) => setStates(res.data || []));
@@ -125,104 +160,158 @@ function ClinicFormModal({ open, onClose, initial, onSave }) {
   }, [stateId]);
 
   useEffect(() => {
-    setForm((f) => ({ ...f, ...initial }));
-    if (initial?.state_id) {
-      setStateId(String(initial.state_id));
-    } else if (initial?.city_id && states.length) {
-      location.cities().then((res) => {
-        const all = res.data || [];
-        const city = all.find((c) => String(c.id) === String(initial.city_id));
-        if (city?.state_id) setStateId(String(city.state_id));
-      });
-    } else {
+    if (!open) return;
+    if (!initial?.id) {
+      setForm(emptyClinicForm());
       setStateId('');
+      return;
     }
-  }, [initial, states.length]);
+    setLoading(true);
+    admin
+      .clinicGet(initial.id)
+      .then((res) => {
+        const c = res.data ?? res;
+        setForm(clinicRecordToForm(c));
+        if (c.state_id) setStateId(String(c.state_id));
+        else if (c.city_id && states.length) {
+          const city = cities.find((x) => String(x.id) === String(c.city_id));
+          if (city?.state_id) setStateId(String(city.state_id));
+        }
+      })
+      .catch(() => toast.error('Could not load clinic profile'))
+      .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initial?.id]);
 
   const submit = async (e) => {
     e.preventDefault();
-    await onSave({
-      ...form,
-      city_id: form.city_id ? parseInt(form.city_id, 10) : null,
-    });
+    await onSave(buildClinicPayload(form));
   };
 
   return (
-    <GlassModal open={open} onClose={onClose} size="lg" titleId="admin-clinic-form">
+    <GlassModal open={open} onClose={onClose} size="xl" titleId="admin-clinic-form">
       <form onSubmit={submit} className="flex flex-col min-h-0 flex-1">
         <GlassModalHeader
           titleId="admin-clinic-form"
-          title={initial?.id ? 'Edit clinic' : 'Create clinic'}
-          subtitle="Admin can create, edit, approve and manage doctors for any clinic."
+          title={initial?.id ? 'Edit clinic profile' : 'Create clinic'}
+          subtitle="Manage all clinic content — banner photos, hours, services, stats and more."
           icon="fa-hospital"
           accent="primary"
           onClose={onClose}
         />
         <GlassModalBody className="space-y-4">
-          <ClinicLogoUpload
-            logo={form.logo}
-            name={form.name}
-            clinicId={initial?.id || null}
-            onUploaded={(url) => set('logo', url)}
-          />
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Clinic name</label>
-              <input className="input-field" value={form.name} onChange={(e) => set('name', e.target.value)} required />
+          {loading ? (
+            <div className="py-12 flex flex-col items-center text-slate-500">
+              <div className="animate-spin w-8 h-8 border-2 border-primary-600 border-t-transparent rounded-full" />
+              <p className="text-sm mt-3">Loading clinic…</p>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
-              <input className="input-field" value={form.phone} onChange={(e) => set('phone', e.target.value)} required />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Address</label>
-            <textarea className="input-field" rows={3} value={form.address} onChange={(e) => set('address', e.target.value)} required />
-          </div>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <SearchableLocationSelect
-              label="State"
-              placeholder="Select state"
-              options={states}
-              value={stateId}
-              onChange={(id) => {
-                setStateId(id);
-                set('city_id', '');
-              }}
-            />
-            <SearchableLocationSelect
-              label="City"
-              placeholder={stateId ? 'Select city' : 'Select state first'}
-              options={cities}
-              value={form.city_id || ''}
-              onChange={(id) => set('city_id', id)}
-              disabled={!stateId}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Email (optional)</label>
-            <input type="email" className="input-field" value={form.email || ''} onChange={(e) => set('email', e.target.value)} />
-          </div>
+          ) : (
+            <>
+              <AdminFormSection title="Basic details" icon="fa-hospital">
+                <ClinicLogoUpload
+                  logo={form.logo}
+                  name={form.name}
+                  clinicId={initial?.id || null}
+                  onUploaded={(url) => set('logo', url)}
+                />
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Clinic name</label>
+                    <input className="input-field" value={form.name} onChange={(e) => set('name', e.target.value)} required />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+                    <input className="input-field" value={form.phone} onChange={(e) => set('phone', e.target.value)} required />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Address</label>
+                  <textarea className="input-field" rows={3} value={form.address} onChange={(e) => set('address', e.target.value)} required />
+                </div>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <SearchableLocationSelect
+                    label="State"
+                    placeholder="Select state"
+                    options={states}
+                    value={stateId}
+                    onChange={(id) => {
+                      setStateId(id);
+                      set('city_id', '');
+                    }}
+                  />
+                  <SearchableLocationSelect
+                    label="City"
+                    placeholder={stateId ? 'Select city' : 'Select state first'}
+                    options={cities}
+                    value={form.city_id || ''}
+                    onChange={(id) => set('city_id', id)}
+                    disabled={!stateId}
+                  />
+                </div>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Pincode</label>
+                    <input className="input-field" value={form.pincode} onChange={(e) => set('pincode', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Email (optional)</label>
+                    <input type="email" className="input-field" value={form.email || ''} onChange={(e) => set('email', e.target.value)} />
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="font-semibold text-slate-800 text-sm flex items-center gap-2">
+                    <FaIcon icon="fa-map-location-dot" className="text-primary-600" /> Map location
+                  </p>
+                  <button type="button" className="btn-outline text-sm mt-3 w-full" onClick={() => setMapOpen(true)}>
+                    Pick on map
+                  </button>
+                  {form.latitude != null && (
+                    <p className="text-xs text-slate-600 mt-2">
+                      Pin: {Number(form.latitude).toFixed(5)}, {Number(form.longitude).toFixed(5)}
+                    </p>
+                  )}
+                </div>
+              </AdminFormSection>
 
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <p className="font-semibold text-slate-800 text-sm flex items-center gap-2">
-              <FaIcon icon="fa-map-location-dot" className="text-primary-600" /> Map location
-            </p>
-            <button type="button" className="btn-outline text-sm mt-3 w-full" onClick={() => setMapOpen(true)}>
-              Pick on map
-            </button>
-            {form.latitude != null && (
-              <p className="text-xs text-slate-600 mt-2">
-                Pin: {Number(form.latitude).toFixed(5)}, {Number(form.longitude).toFixed(5)}
-              </p>
-            )}
-          </div>
+              <AdminFormSection title="About, cover & website" icon="fa-circle-info">
+                <ClinicProfileDetailsFields form={form} set={set} setHours={setHours} />
+              </AdminFormSection>
+
+              <AdminFormSection title="Opening hours" icon="fa-clock">
+                <ClinicOpeningHoursFields form={form} setHours={setHours} />
+              </AdminFormSection>
+
+              <AdminFormSection title="Social media" icon="fa-share-nodes" defaultOpen={false}>
+                <ClinicSocialLinksFields form={form} setSocial={setSocial} />
+              </AdminFormSection>
+
+              <AdminFormSection title="Services & equipment" icon="fa-hand-holding-medical" defaultOpen={false}>
+                <ClinicTagListFields form={form} set={set} />
+              </AdminFormSection>
+
+              <AdminFormSection title="Clinic statistics" icon="fa-chart-simple" defaultOpen={false}>
+                <ClinicStatisticsFields form={form} set={set} />
+              </AdminFormSection>
+
+              <AdminFormSection title="Banner photos (max 10)" icon="fa-images">
+                <p className="text-xs text-slate-500 -mt-1 mb-2">
+                  These photos auto-scroll on the clinic profile banner. Cover image shows first.
+                </p>
+                <ClinicGalleryUpload
+                  images={form.image_urls}
+                  clinicId={initial?.id || null}
+                  onChange={(urls) => set('image_urls', urls)}
+                  max={10}
+                />
+              </AdminFormSection>
+            </>
+          )}
         </GlassModalBody>
         <GlassModalFooter>
           <button type="button" className="btn-outline text-sm" onClick={onClose}>
             Cancel
           </button>
-          <button type="submit" className="btn-primary text-sm ml-auto">
+          <button type="submit" className="btn-primary text-sm ml-auto" disabled={loading}>
             Save
           </button>
         </GlassModalFooter>

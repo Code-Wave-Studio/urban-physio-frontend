@@ -1,6 +1,8 @@
+import { useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import FaIcon from './FaIcon';
 import GlobalSearch from './GlobalSearch';
+import { hapticClose, hapticOpen } from '../utils/haptics';
 
 const EXPLORE_LINKS = [
   { to: '/', label: 'Home', icon: 'fa-house' },
@@ -89,6 +91,13 @@ export default function MobileNavDrawer({
   onLogout,
 }) {
   const { pathname, search } = useLocation();
+  const wasOpen = useRef(false);
+
+  useEffect(() => {
+    if (open && !wasOpen.current) hapticOpen();
+    if (!open && wasOpen.current) hapticClose();
+    wasOpen.current = open;
+  }, [open]);
 
   const patientLinks = [
     { to: '/patient/profile', label: 'Profile', icon: 'fa-user' },

@@ -64,6 +64,107 @@ export function normalizeSocialLinks(raw) {
   return base;
 }
 
+/** Up to 10 banner images: cover first, then gallery (deduped). */
+export function getBannerImages(clinic, max = 10) {
+  if (!clinic) return [];
+  const seen = new Set();
+  const out = [];
+  const push = (url) => {
+    const u = url ? String(url).trim() : '';
+    if (!u || seen.has(u)) return;
+    seen.add(u);
+    out.push(u);
+  };
+  push(clinic.cover_image);
+  for (const g of clinic.gallery || []) {
+    push(g?.image_url || g?.url);
+    if (out.length >= max) break;
+  }
+  return out.slice(0, max);
+}
+
+export function emptyClinicForm() {
+  return {
+    name: '',
+    address: '',
+    city_id: '',
+    pincode: '',
+    phone: '',
+    email: '',
+    logo: '',
+    cover_image: '',
+    website: '',
+    description: '',
+    latitude: null,
+    longitude: null,
+    opening_hours: emptyOpeningHours(),
+    social_links: normalizeSocialLinks(),
+    services: '',
+    facilities: '',
+    equipment_modalities: '',
+    stats_patients_treated: '',
+    stats_staff_count: '',
+    stats_satisfaction_rate: '',
+    image_urls: [],
+  };
+}
+
+export function clinicRecordToForm(c) {
+  if (!c) return emptyClinicForm();
+  return {
+    name: c.name || '',
+    address: c.address || '',
+    city_id: c.city_id ? String(c.city_id) : '',
+    pincode: c.pincode || '',
+    phone: c.phone || '',
+    email: c.email || '',
+    logo: c.logo || '',
+    cover_image: c.cover_image || '',
+    website: c.website || '',
+    description: c.description || '',
+    latitude: c.latitude != null ? parseFloat(c.latitude) : null,
+    longitude: c.longitude != null ? parseFloat(c.longitude) : null,
+    opening_hours: normalizeOpeningHours(c.opening_hours_parsed || c.opening_hours),
+    social_links: normalizeSocialLinks(c.social_links_parsed || c.social_links),
+    services: tagsToInput(c.services_list || c.services),
+    facilities: tagsToInput(c.facilities_list || c.facilities),
+    equipment_modalities: tagsToInput(c.equipment_list || c.equipment_modalities),
+    stats_patients_treated: c.stats_patients_treated ?? '',
+    stats_staff_count: c.stats_staff_count ?? '',
+    stats_satisfaction_rate: c.stats_satisfaction_rate ?? '',
+    image_urls: c.image_urls?.length
+      ? c.image_urls
+      : (c.gallery || []).map((g) => g.image_url).filter(Boolean),
+  };
+}
+
+export function buildClinicPayload(form) {
+  const satisfaction = form.stats_satisfaction_rate === '' ? null : Number(form.stats_satisfaction_rate);
+  return {
+    name: form.name.trim(),
+    address: form.address.trim(),
+    city_id: parseInt(form.city_id, 10),
+    pincode: form.pincode.trim() || undefined,
+    phone: form.phone.trim(),
+    email: form.email.trim() || undefined,
+    logo: form.logo || undefined,
+    cover_image: form.cover_image.trim() || undefined,
+    website: form.website.trim() || undefined,
+    description: form.description.trim() || undefined,
+    latitude: form.latitude,
+    longitude: form.longitude,
+    opening_hours: normalizeOpeningHours(form.opening_hours),
+    social_links: form.social_links,
+    services: parseTagInput(form.services),
+    facilities: parseTagInput(form.facilities),
+    equipment_modalities: parseTagInput(form.equipment_modalities),
+    stats_patients_treated: form.stats_patients_treated === '' ? 0 : parseInt(form.stats_patients_treated, 10),
+    stats_staff_count: form.stats_staff_count === '' ? 0 : parseInt(form.stats_staff_count, 10),
+    stats_satisfaction_rate: Number.isFinite(satisfaction) ? satisfaction : null,
+    image_urls: form.image_urls,
+  };
+}
+
 export function openingHoursSummary(hours) {
   const normalized = normalizeOpeningHours(hours);
   const openDays = WEEKDAYS.filter(({ key }) => normalized[key]?.length);

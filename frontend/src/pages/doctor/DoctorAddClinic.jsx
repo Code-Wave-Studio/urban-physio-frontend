@@ -16,37 +16,17 @@ import {
 import { doctors, location } from '../../services/api';
 import { DOCTOR_NAV } from '../../constants/doctorNav';
 import {
-  emptyOpeningHours,
-  normalizeOpeningHours,
-  normalizeSocialLinks,
-  parseTagInput,
-  tagsToInput,
+  buildClinicPayload,
+  clinicRecordToForm,
+  emptyClinicForm,
 } from '../../utils/clinicProfileUtils';
 import toast from 'react-hot-toast';
 
-const empty = () => ({
-  name: '',
-  address: '',
-  city_id: '',
-  pincode: '',
-  phone: '',
-  email: '',
-  logo: '',
-  cover_image: '',
-  website: '',
-  description: '',
-  latitude: null,
-  longitude: null,
-  opening_hours: emptyOpeningHours(),
-  social_links: normalizeSocialLinks(),
-  services: '',
-  facilities: '',
-  equipment_modalities: '',
-  stats_patients_treated: '',
-  stats_staff_count: '',
-  stats_satisfaction_rate: '',
-  image_urls: [],
-});
+const empty = emptyClinicForm;
+
+function buildPayload(form) {
+  return buildClinicPayload(form);
+}
 
 function FormSection({ title, icon, children, defaultOpen = true }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -68,39 +48,12 @@ function FormSection({ title, icon, children, defaultOpen = true }) {
   );
 }
 
-function buildPayload(form) {
-  const satisfaction = form.stats_satisfaction_rate === '' ? null : Number(form.stats_satisfaction_rate);
-  return {
-    name: form.name.trim(),
-    address: form.address.trim(),
-    city_id: parseInt(form.city_id, 10),
-    pincode: form.pincode.trim() || undefined,
-    phone: form.phone.trim(),
-    email: form.email.trim() || undefined,
-    logo: form.logo || undefined,
-    cover_image: form.cover_image.trim() || undefined,
-    website: form.website.trim() || undefined,
-    description: form.description.trim() || undefined,
-    latitude: form.latitude,
-    longitude: form.longitude,
-    opening_hours: normalizeOpeningHours(form.opening_hours),
-    social_links: form.social_links,
-    services: parseTagInput(form.services),
-    facilities: parseTagInput(form.facilities),
-    equipment_modalities: parseTagInput(form.equipment_modalities),
-    stats_patients_treated: form.stats_patients_treated === '' ? 0 : parseInt(form.stats_patients_treated, 10),
-    stats_staff_count: form.stats_staff_count === '' ? 0 : parseInt(form.stats_staff_count, 10),
-    stats_satisfaction_rate: Number.isFinite(satisfaction) ? satisfaction : null,
-    image_urls: form.image_urls,
-  };
-}
-
 export default function DoctorAddClinic() {
   const [params] = useSearchParams();
   const editId = params.get('edit');
   const navigate = useNavigate();
 
-  const [form, setForm] = useState(empty);
+  const [form, setForm] = useState(() => empty());
   const [saving, setSaving] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
   const [states, setStates] = useState([]);
@@ -139,33 +92,7 @@ export default function DoctorAddClinic() {
       .then((res) => {
         const found = res.data ?? res;
         if (!found) return;
-        setForm({
-          ...empty(),
-          name: found.name || '',
-          address: found.address || '',
-          city_id: found.city_id ? String(found.city_id) : '',
-          pincode: found.pincode || '',
-          phone: found.phone || '',
-          email: found.email || '',
-          logo: found.logo || '',
-          cover_image: found.cover_image || '',
-          website: found.website || '',
-          description: found.description || '',
-          latitude: found.latitude != null ? parseFloat(found.latitude) : null,
-          longitude: found.longitude != null ? parseFloat(found.longitude) : null,
-          opening_hours: normalizeOpeningHours(found.opening_hours),
-          social_links: normalizeSocialLinks(found.social_links),
-          services: tagsToInput(found.services_list || found.services),
-          facilities: tagsToInput(found.facilities_list || found.facilities),
-          equipment_modalities: tagsToInput(found.equipment_list || found.equipment_modalities),
-          stats_patients_treated: found.stats_patients_treated != null ? String(found.stats_patients_treated) : '',
-          stats_staff_count: found.stats_staff_count != null ? String(found.stats_staff_count) : '',
-          stats_satisfaction_rate:
-            found.stats_satisfaction_rate != null && found.stats_satisfaction_rate !== ''
-              ? String(found.stats_satisfaction_rate)
-              : '',
-          image_urls: found.image_urls || (found.gallery || []).map((g) => g.image_url).filter(Boolean),
-        });
+        setForm(clinicRecordToForm(found));
       })
       .catch(() => toast.error('Could not load clinic'));
   }, [editId]);
@@ -300,10 +227,12 @@ export default function DoctorAddClinic() {
         </FormSection>
 
         <FormSection title="Clinic photos" icon="fa-images">
+          <p className="text-xs text-slate-500 -mt-1 mb-2">Up to 10 photos — auto-scroll on your public clinic banner.</p>
           <ClinicGalleryUpload
             images={form.image_urls}
             clinicId={editId}
             onChange={(urls) => set('image_urls', urls)}
+            max={10}
           />
         </FormSection>
 
