@@ -312,23 +312,16 @@ export default function Home() {
         </div>
 
         {loading ? (
-          <div className="space-y-3 md:grid md:grid-cols-3 md:gap-6 md:space-y-0">
-            {[1, 2].map((i) => (
-              <div key={i} className="glass-card h-20 md:h-48 animate-pulse bg-white/30" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="rounded-2xl border border-white/60 bg-white/40 h-64 sm:h-72 animate-pulse" />
             ))}
           </div>
         ) : nearbyDoctors.length > 0 ? (
           <>
-            <div className="space-y-3 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:space-y-0">
-              {nearbyDoctors.slice(0, 3).map((d) => (
-                <div key={d.id} className="md:hidden">
-                  <DoctorCard doctor={d} compact />
-                </div>
-              ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
               {nearbyDoctors.slice(0, 6).map((d) => (
-                <div key={`lg-${d.id}`} className="hidden md:block">
-                  <DoctorCard doctor={d} />
-                </div>
+                <DoctorCard key={d.id} doctor={d} variant="listing" />
               ))}
             </div>
             <div className="text-center mt-5 md:mt-10">
@@ -403,23 +396,16 @@ export default function Home() {
         </div>
 
         {loading ? (
-          <div className="space-y-3 md:grid md:grid-cols-3 md:gap-6 md:space-y-0">
-            {[1, 2].map((i) => (
-              <div key={i} className="glass-card h-20 md:h-48 animate-pulse bg-white/30" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="rounded-2xl border border-white/60 bg-white/40 h-64 sm:h-72 animate-pulse" />
             ))}
           </div>
         ) : nearbyClinics.length > 0 ? (
           <>
-            <div className="space-y-3 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:space-y-0">
-              {nearbyClinics.slice(0, 3).map((c) => (
-                <div key={c.id} className="md:hidden">
-                  <ClinicCard clinic={c} compact />
-                </div>
-              ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
               {nearbyClinics.slice(0, 6).map((c) => (
-                <div key={`lg-clinic-${c.id}`} className="hidden md:block">
-                  <ClinicCard clinic={c} />
-                </div>
+                <ClinicCard key={c.id} clinic={c} variant="listing" />
               ))}
             </div>
             <div className="text-center mt-5 md:mt-10 flex flex-col sm:flex-row flex-wrap justify-center gap-3">

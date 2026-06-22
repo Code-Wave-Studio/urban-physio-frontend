@@ -135,12 +135,10 @@ export default function DoctorClinics() {
                   <FaIcon icon="fa-calendar-days" />
                   Set availability
                 </Link>
-                {(c.approval_status === 'pending' || c.approval_status === 'rejected') && (
-                  <Link to={`/doctor/clinics/new?edit=${c.id}`} className="btn-outline text-sm inline-flex items-center gap-2">
-                    <FaIcon icon="fa-pen" />
-                    Edit
-                  </Link>
-                )}
+                <Link to={`/doctor/clinics/new?edit=${c.id}`} className="btn-outline text-sm inline-flex items-center gap-2">
+                  <FaIcon icon="fa-pen" />
+                  {c.approval_status === 'approved' ? 'Edit profile' : 'Edit'}
+                </Link>
               </div>
             </div>
           ))}

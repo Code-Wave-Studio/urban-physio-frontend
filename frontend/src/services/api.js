@@ -96,6 +96,7 @@ export const doctors = {
   patients: () => api.get('/doctors/patients'),
   patientDetail: (patientId) => api.get(`/doctors/patients/${patientId}`),
   clinics: () => api.get('/doctors/clinics'),
+  getClinic: (id) => api.get(`/doctors/clinics/${id}`),
   createClinic: (data) => api.post('/doctors/clinics', data),
   updateClinic: (id, data) => api.put(`/doctors/clinics/${id}`, data),
   clinicAvailability: (clinicId) => api.get(`/doctors/clinics/${clinicId}/availability`),
@@ -177,6 +178,19 @@ export const uploadClinicLogo = (file, clinicId) => {
   if (clinicId) form.append('clinic_id', String(clinicId));
   const token = localStorage.getItem('token');
   return axios.post(`${API_BASE}/upload/clinic-logo`, form, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  }).then((res) => res.data);
+};
+
+export const uploadClinicGallery = (file, clinicId) => {
+  const form = new FormData();
+  form.append('image', file);
+  form.append('clinic_id', String(clinicId));
+  const token = localStorage.getItem('token');
+  return axios.post(`${API_BASE}/upload/clinic-gallery`, form, {
     headers: {
       'Content-Type': 'multipart/form-data',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),

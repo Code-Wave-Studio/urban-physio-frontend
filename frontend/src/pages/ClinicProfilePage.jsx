@@ -9,8 +9,11 @@ import BadgeList from '../components/platform/BadgeList';
 import ReviewStars from '../components/platform/ReviewStars';
 import PageMeta, { clinicSchema } from '../components/seo/PageMeta';
 import ShareProfileButton from '../components/profile/ShareProfileButton';
+import ReviewForm from '../components/platform/ReviewForm';
 import { clinics } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import { resolveMediaUrl } from '../utils/mediaUrl';
+import { formatOpeningHoursRows, openingHoursSummary, SOCIAL_FIELDS } from '../utils/clinicProfileUtils';
 import { googleMapsUrl } from '../utils/locationHelpers';
 import { clinicBookUrl, clinicProfileUrl, doctorProfileUrl, formatOpeningHours } from '../utils/profileUrls';
 
@@ -69,11 +72,12 @@ function StatPill({ label, value, icon, tone = 'emerald', compact = false }) {
 
 export default function ClinicProfilePage() {
   const { slug } = useParams();
+  const { hasRole } = useAuth();
   const [clinic, setClinic] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  useEffect(() => {
+  const load = () => {
     setLoading(true);
     setNotFound(false);
     clinics
@@ -81,6 +85,10 @@ export default function ClinicProfilePage() {
       .then((res) => setClinic(res?.data ?? res))
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    load();
   }, [slug]);
 
   const canonical = clinic?.canonical_path || (slug ? `/clinic/${slug}` : '');
@@ -88,11 +96,18 @@ export default function ClinicProfilePage() {
   const jsonLd = useMemo(() => (clinic ? clinicSchema(clinic, canonicalUrl) : null), [clinic, canonicalUrl]);
 
   const hoursText = formatOpeningHours(clinic?.opening_hours_parsed || clinic?.opening_hours);
+  const hoursRows = formatOpeningHoursRows(clinic?.opening_hours_parsed || clinic?.opening_hours);
+  const hoursSummary = openingHoursSummary(clinic?.opening_hours_parsed || clinic?.opening_hours);
   const services = clinic?.services_list?.length ? clinic.services_list : [];
   const facilities = clinic?.facilities_list?.length ? clinic.facilities_list : [];
-  const doctorCount = clinic?.doctors?.length ?? clinic?.doctor_count ?? 0;
-  const rating = Number(clinic?.rating_avg) || 0;
+  const equipment = clinic?.equipment_list?.length ? clinic.equipment_list : [];
+  const stats = clinic?.statistics || {};
+  const social = clinic?.social_links_parsed || {};
+  const doctorCount = stats.doctor_count ?? clinic?.doctors?.length ?? clinic?.doctor_count ?? 0;
+  const rating = Number(stats.avg_rating ?? clinic?.rating_avg) || 0;
   const coverSrc = resolveMediaUrl(clinic?.cover_image);
+  const websiteUrl = clinic?.website_url || clinic?.website;
+  const activeSocials = SOCIAL_FIELDS.filter(({ key }) => social[key]);
 
   if (loading) {
     return (
@@ -200,6 +215,42 @@ export default function ClinicProfilePage() {
               <div className="mt-3 sm:mt-4 flex justify-center md:justify-start">
                 <ReviewStars rating={clinic.rating_avg} count={clinic.rating_count} size="lg" />
               </div>
+
+              {hoursSummary && (
+                <p className="mt-3 text-xs sm:text-sm text-emerald-100/90 inline-flex items-center gap-2 justify-center md:justify-start">
+                  <FaIcon icon="fa-clock" className="text-emerald-300 shrink-0" />
+                  {hoursSummary}
+                </p>
+              )}
+
+              {(websiteUrl || activeSocials.length > 0) && (
+                <div className="mt-3 flex flex-wrap justify-center md:justify-start gap-2">
+                  {websiteUrl && (
+                    <a
+                      href={websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/10 border border-white/20 hover:bg-white/15"
+                    >
+                      <FaIcon icon="fa-globe" />
+                      Website
+                    </a>
+                  )}
+                  {activeSocials.map(({ key, icon }) => (
+                    <a
+                      key={key}
+                      href={social[key]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/10 border border-white/20 hover:bg-white/15"
+                      aria-label={key}
+                    >
+                      <FaIcon icon={icon} className="text-sm" />
+                    </a>
+                  ))}
+                </div>
+              )}
+
               <div className="mt-2 sm:mt-3 flex justify-center md:justify-start">
                 <BadgeList badges={clinic.badges} />
               </div>
@@ -250,9 +301,20 @@ export default function ClinicProfilePage() {
                 tone={rating > 0 ? 'amber' : 'slate'}
                 compact
               />
-              <StatPill label="Physios" value={doctorCount || '—'} icon="fa-user-doctor" compact />
-              <StatPill label="City" value={clinic.city_name || '—'} icon="fa-location-dot" tone="slate" compact />
-              <StatPill label="Care" value="In-person" icon="fa-hospital" compact />
+              <StatPill
+                label="Patients"
+                value={stats.patients_treated > 0 ? stats.patients_treated.toLocaleString('en-IN') : '—'}
+                icon="fa-users"
+                compact
+              />
+              <StatPill label="Staff" value={stats.staff_count || doctorCount || '—'} icon="fa-user-doctor" compact />
+              <StatPill
+                label="Satisfaction"
+                value={stats.satisfaction_rate != null ? `${stats.satisfaction_rate}%` : '—'}
+                icon="fa-face-smile"
+                tone="emerald"
+                compact
+              />
             </div>
             <div className="hidden md:grid md:grid-cols-4 md:gap-3">
               <StatPill
@@ -261,9 +323,18 @@ export default function ClinicProfilePage() {
                 icon={rating > 0 ? 'fa-star' : undefined}
                 tone={rating > 0 ? 'amber' : 'slate'}
               />
-              <StatPill label="Physiotherapists" value={doctorCount || '—'} icon="fa-user-doctor" />
-              <StatPill label="City" value={clinic.city_name || '—'} icon="fa-location-dot" tone="slate" />
-              <StatPill label="Care type" value="In-person" icon="fa-hospital" />
+              <StatPill
+                label="Patients treated"
+                value={stats.patients_treated > 0 ? stats.patients_treated.toLocaleString('en-IN') : '—'}
+                icon="fa-users"
+              />
+              <StatPill label="Staff" value={stats.staff_count || doctorCount || '—'} icon="fa-user-doctor" />
+              <StatPill
+                label="Satisfaction"
+                value={stats.satisfaction_rate != null ? `${stats.satisfaction_rate}%` : '—'}
+                icon="fa-face-smile"
+                tone="emerald"
+              />
             </div>
           </div>
         </div>
@@ -272,6 +343,26 @@ export default function ClinicProfilePage() {
       <div className="max-w-6xl mx-auto px-4 pt-10 sm:pt-12 md:pt-14 pb-24 sm:pb-8 md:pb-10 space-y-4 sm:space-y-6">
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="lg:col-span-2 space-y-4 sm:space-y-6 order-2 lg:order-1">
+            {clinic.gallery?.length > 0 && (
+              <Section title="Clinic photos" icon="fa-images">
+                <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {clinic.gallery.map((img) => (
+                    <div
+                      key={img.id}
+                      className="relative shrink-0 w-[85%] sm:w-72 md:w-80 aspect-[16/10] snap-center rounded-2xl overflow-hidden border border-slate-100 shadow-sm"
+                    >
+                      <img
+                        src={resolveMediaUrl(img.image_url) || img.image_url}
+                        alt={`${clinic.name} photo`}
+                        loading="lazy"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </Section>
+            )}
+
             <Section title="About this clinic" icon="fa-circle-info">
               <p className="text-slate-600 leading-relaxed whitespace-pre-line">
                 {clinic.description ||
@@ -279,23 +370,39 @@ export default function ClinicProfilePage() {
               </p>
             </Section>
 
-            {clinic.gallery?.length > 0 && (
-              <Section title="Clinic gallery" icon="fa-images">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {clinic.gallery.map((img) => (
-                    <div key={img.id} className="group relative overflow-hidden rounded-2xl border border-slate-100 aspect-[4/3]">
-                      <img
-                        src={resolveMediaUrl(img.image_url) || img.image_url}
-                        alt={`${clinic.name} photo`}
-                        loading="lazy"
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  ))}
+            <Section title="Clinic statistics" icon="fa-chart-simple">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4 text-center">
+                  <p className="text-[10px] font-bold uppercase text-emerald-700/80">Patients treated</p>
+                  <p className="text-2xl font-bold text-emerald-900 mt-1">
+                    {stats.patients_treated > 0 ? stats.patients_treated.toLocaleString('en-IN') : '—'}
+                  </p>
                 </div>
-              </Section>
-            )}
+                <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-4 text-center">
+                  <p className="text-[10px] font-bold uppercase text-amber-800/80">Average rating</p>
+                  <p className="text-2xl font-bold text-amber-900 mt-1 inline-flex items-center justify-center gap-1">
+                    {rating > 0 ? (
+                      <>
+                        <FaIcon icon="fa-star" className="text-sm" />
+                        {rating.toFixed(1)}
+                      </>
+                    ) : (
+                      'New'
+                    )}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4 text-center">
+                  <p className="text-[10px] font-bold uppercase text-slate-500">Staff</p>
+                  <p className="text-2xl font-bold text-slate-900 mt-1">{stats.staff_count || doctorCount || '—'}</p>
+                </div>
+                <div className="rounded-xl border border-teal-100 bg-teal-50/50 p-4 text-center">
+                  <p className="text-[10px] font-bold uppercase text-teal-800/80">Satisfaction</p>
+                  <p className="text-2xl font-bold text-teal-900 mt-1">
+                    {stats.satisfaction_rate != null ? `${stats.satisfaction_rate}%` : '—'}
+                  </p>
+                </div>
+              </div>
+            </Section>
 
             {clinic.doctors?.length > 0 && (
               <Section title="Our physiotherapists" icon="fa-user-doctor">
@@ -325,7 +432,7 @@ export default function ClinicProfilePage() {
             )}
 
             {services.length > 0 && (
-              <Section title="Treatments offered" icon="fa-hand-holding-medical">
+              <Section title="Treatments & services" icon="fa-hand-holding-medical">
                 <div className="flex flex-wrap gap-2">
                   {services.map((s) => (
                     <span
@@ -333,6 +440,21 @@ export default function ClinicProfilePage() {
                       className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 text-sm font-medium border border-emerald-100"
                     >
                       {s}
+                    </span>
+                  ))}
+                </div>
+              </Section>
+            )}
+
+            {equipment.length > 0 && (
+              <Section title="Equipment & modalities" icon="fa-stethoscope">
+                <div className="flex flex-wrap gap-2">
+                  {equipment.map((item) => (
+                    <span
+                      key={item}
+                      className="px-3 py-1.5 rounded-full bg-teal-50 text-teal-800 text-sm font-medium border border-teal-100"
+                    >
+                      {item}
                     </span>
                   ))}
                 </div>
@@ -354,21 +476,29 @@ export default function ClinicProfilePage() {
               </Section>
             )}
 
-            {clinic.reviews?.length > 0 && (
-              <Section title="Patient reviews" icon="fa-star">
-                <div className="space-y-3">
+            <Section title="Patient feedback" icon="fa-star">
+              {clinic.reviews?.length > 0 ? (
+                <div className="space-y-3 mb-4">
                   {clinic.reviews.map((r) => (
                     <div key={r.id} className="p-4 md:p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-slate-100">
-                      <ReviewStars rating={r.rating} />
+                      <div className="flex items-center justify-between gap-2">
+                        <ReviewStars rating={r.rating} />
+                        {r.patient_first_name && (
+                          <span className="text-xs font-semibold text-slate-500">{r.patient_first_name}</span>
+                        )}
+                      </div>
                       <p className="text-sm text-slate-600 mt-2 leading-relaxed">{r.comment || 'No comment'}</p>
-                      {r.created_at && (
-                        <p className="text-xs text-slate-400 mt-2">{r.created_at.slice(0, 10)}</p>
-                      )}
+                      {r.created_at && <p className="text-xs text-slate-400 mt-2">{r.created_at.slice(0, 10)}</p>}
                     </div>
                   ))}
                 </div>
-              </Section>
-            )}
+              ) : (
+                <p className="text-sm text-slate-500 mb-4">No patient reviews yet. Be the first to share your experience.</p>
+              )}
+              {hasRole('patient') && (
+                <ReviewForm clinicId={+clinic.id} onSubmitted={load} />
+              )}
+            </Section>
           </div>
 
           <aside className="space-y-4 sm:space-y-6 order-1 lg:order-2">
@@ -419,7 +549,22 @@ export default function ClinicProfilePage() {
             </div>
 
             <Section title="Location & contact" icon="fa-map-location-dot">
-              {hoursText && (
+              {hoursRows?.length > 0 && (
+                <div className="mb-4 rounded-xl border border-emerald-100 overflow-hidden">
+                  <p className="text-xs font-bold uppercase text-emerald-800 bg-emerald-50 px-3 py-2 border-b border-emerald-100">
+                    Opening hours
+                  </p>
+                  <ul className="divide-y divide-slate-100">
+                    {hoursRows.map((row) => (
+                      <li key={row.key} className="flex justify-between gap-3 px-3 py-2 text-sm">
+                        <span className="font-medium text-slate-700">{row.label}</span>
+                        <span className={row.closed ? 'text-slate-400' : 'text-slate-600'}>{row.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {hoursText && !hoursRows?.length && (
                 <div className="flex gap-3 text-sm text-slate-600 mb-4 p-3 rounded-xl bg-emerald-50/50 border border-emerald-100/80">
                   <FaIcon icon="fa-clock" className="text-emerald-600 mt-0.5 shrink-0" />
                   <span>{hoursText}</span>
