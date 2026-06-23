@@ -445,6 +445,42 @@
     @apply bg-white/10 backdrop-blur-2xl border border-white/25 rounded-3xl shadow-2xl;
   }
 
+  /* Doctor public profile — color-only banner */
+  .doctor-profile-banner {
+    @apply bg-primary-800;
+  }
+
+  .doctor-profile-banner__orb {
+    @apply absolute rounded-full pointer-events-none blur-3xl;
+    animation: heroOrb 16s ease-in-out infinite;
+  }
+
+  .doctor-profile-banner__orb--warm {
+    width: min(50vw, 380px);
+    height: min(50vw, 380px);
+    top: -20%;
+    right: -8%;
+    background: rgba(251, 146, 60, 0.45);
+  }
+
+  .doctor-profile-banner__orb--amber {
+    width: min(40vw, 320px);
+    height: min(40vw, 320px);
+    bottom: -15%;
+    left: -5%;
+    background: rgba(249, 115, 22, 0.38);
+    animation-delay: -5s;
+  }
+
+  .doctor-profile-banner__orb--deep {
+    width: min(35vw, 260px);
+    height: min(35vw, 260px);
+    top: 20%;
+    left: 35%;
+    background: rgba(234, 88, 12, 0.28);
+    animation-delay: -10s;
+  }
+
   @keyframes heroOrb {
     0%,
     100% {

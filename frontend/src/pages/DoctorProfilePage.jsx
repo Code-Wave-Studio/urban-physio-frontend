@@ -5,7 +5,7 @@ import Footer from '../components/Footer';
 import FaIcon from '../components/FaIcon';
 import DoctorAvatar from '../components/DoctorAvatar';
 import ClinicLogo from '../components/ClinicLogo';
-import ClinicBannerCarousel from '../components/clinic/ClinicBannerCarousel';
+import DoctorProfileBanner from '../components/doctor/DoctorProfileBanner';
 import BadgeList from '../components/platform/BadgeList';
 import ReviewStars from '../components/platform/ReviewStars';
 import PageMeta, { doctorSchema } from '../components/seo/PageMeta';
@@ -15,11 +15,7 @@ import ProfileSlotsPreview from '../components/profile/ProfileSlotsPreview';
 import { doctors } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { googleMapsUrl } from '../utils/locationHelpers';
-import {
-  doctorMinFee,
-  formatReviewCount,
-  getDoctorBannerImages,
-} from '../utils/doctorProfileUtils';
+import { doctorMinFee, formatReviewCount } from '../utils/doctorProfileUtils';
 import {
   clinicProfileUrl,
   doctorBookUrl,
@@ -111,8 +107,6 @@ export default function DoctorProfilePage() {
   const canonicalUrl = typeof window !== 'undefined' ? `${window.location.origin}${canonical}` : canonical;
   const jsonLd = useMemo(() => (doctor ? doctorSchema(doctor, canonicalUrl) : null), [doctor, canonicalUrl]);
 
-  const bannerImages = useMemo(() => getDoctorBannerImages(doctor), [doctor]);
-
   if (!loading && doctor?.slug && profileKey !== doctor.slug) {
     return <Navigate to={doctorProfileUrl(doctor)} replace />;
   }
@@ -178,11 +172,9 @@ export default function DoctorProfilePage() {
 
       <div className="relative bg-white">
         <div className="relative pt-14 sm:pt-16 md:pt-[4.5rem]">
-          <ClinicBannerCarousel
-            images={bannerImages}
+          <DoctorProfileBanner
             className="h-52 sm:h-60 md:h-72 w-full"
-            alt={`${fullName} profile banner`}
-            showOverlay={false}
+            specialization={doctor.specialization}
           />
           <div className="absolute top-3 left-0 right-0 z-20 max-w-6xl mx-auto px-4">
             <Link
