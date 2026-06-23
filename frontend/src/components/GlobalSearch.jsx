@@ -381,7 +381,7 @@ export default function GlobalSearch({
   const heroPlaceholder = typedPlaceholder ? `Search ${typedPlaceholder}` : 'Search physiotherapy…';
 
   const inputClass = isHero
-    ? 'w-full bg-white/98 backdrop-blur-md border-0 rounded-xl sm:rounded-2xl py-3.5 sm:py-4 pl-12 pr-28 sm:pr-32 text-sm sm:text-base text-slate-900 placeholder:text-slate-400 shadow-lg shadow-blue-950/10 focus:ring-2 focus:ring-blue-400/70 outline-none'
+    ? 'w-full bg-white border border-orange-100/80 rounded-xl sm:rounded-2xl py-3.5 sm:py-4 pl-[3.75rem] sm:pl-[4.25rem] pr-28 sm:pr-32 text-sm sm:text-base text-slate-800 placeholder:text-slate-400 shadow-sm focus:ring-2 focus:ring-orange-400/60 focus:border-orange-300 outline-none'
     : isMobile
       ? 'w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-10 text-base text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-orange-400/70 focus:border-orange-300 outline-none'
       : isHeader
@@ -505,14 +505,16 @@ export default function GlobalSearch({
 
       <div className={isMobile ? 'flex items-stretch gap-2' : 'relative'}>
         <div className={`relative ${isMobile ? 'min-w-0 flex-1' : ''}`}>
-          <FaIcon
-            icon="fa-magnifying-glass"
-            className={`absolute top-1/2 -translate-y-1/2 pointer-events-none ${
-              isHero
-                ? 'left-4 text-base text-slate-700'
-                : 'left-3 text-sm text-slate-600'
-            }`}
-          />
+          {isHero ? (
+            <span className="hero-search-icon" aria-hidden="true">
+              <FaIcon icon="fa-magnifying-glass" className="text-sm sm:text-base" />
+            </span>
+          ) : (
+            <FaIcon
+              icon="fa-magnifying-glass"
+              className={`absolute top-1/2 -translate-y-1/2 pointer-events-none left-3 text-sm text-slate-600`}
+            />
+          )}
           <input
             ref={inputRef}
             type="search"
@@ -548,7 +550,7 @@ export default function GlobalSearch({
             <button
               type="button"
               onClick={submitSearch}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-gradient-to-r from-blue-600 to-orange-500 hover:from-blue-500 hover:to-orange-400 text-white font-semibold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl shadow-md transition"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-semibold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl shadow-md shadow-orange-600/25 transition"
             >
               Search
             </button>
@@ -575,7 +577,7 @@ export default function GlobalSearch({
         >
           <span
             className={`text-[11px] sm:text-xs font-medium ${
-              isHero ? 'text-blue-100/90' : 'text-slate-500'
+              isHero ? 'text-orange-900/70' : 'text-slate-500'
             }`}
           >
             Popular:
@@ -587,7 +589,7 @@ export default function GlobalSearch({
               onClick={() => applyQuickTag(tag)}
               className={`text-[11px] sm:text-xs px-2.5 py-1 rounded-full transition touch-manipulation ${
                 isHero
-                  ? 'bg-blue-500/15 border border-blue-300/25 text-blue-50 hover:bg-orange-500/20 hover:border-orange-300/35'
+                  ? 'bg-white/80 border border-orange-200/80 text-orange-800 hover:bg-orange-50 hover:border-orange-300 shadow-sm'
                   : 'bg-orange-50 border border-orange-100 text-orange-700 hover:bg-orange-100 active:bg-orange-200'
               }`}
             >

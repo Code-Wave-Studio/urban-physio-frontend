@@ -371,31 +371,31 @@
     @apply absolute rounded-full blur-3xl opacity-40 pointer-events-none;
   }
 
-  /* Home hero — modern blue + orange mesh */
+  /* Home hero — clean premium orange */
   .hero-section-bg {
     @apply absolute inset-0 overflow-hidden;
     background:
-      radial-gradient(ellipse 95% 75% at 92% 8%, rgba(249, 115, 22, 0.42) 0%, transparent 52%),
-      radial-gradient(ellipse 85% 65% at 8% 18%, rgba(59, 130, 246, 0.38) 0%, transparent 48%),
-      radial-gradient(ellipse 70% 55% at 55% 95%, rgba(251, 146, 60, 0.28) 0%, transparent 58%),
-      radial-gradient(ellipse 50% 40% at 72% 62%, rgba(37, 99, 235, 0.22) 0%, transparent 50%),
-      linear-gradient(145deg, #020617 0%, #0f172a 18%, #1e3a8a 42%, #1d4ed8 58%, #1e40af 72%, #0f172a 100%);
+      radial-gradient(ellipse 90% 70% at 100% 0%, rgba(251, 146, 60, 0.45) 0%, transparent 55%),
+      radial-gradient(ellipse 75% 60% at 0% 100%, rgba(249, 115, 22, 0.32) 0%, transparent 52%),
+      radial-gradient(ellipse 55% 45% at 50% 40%, rgba(254, 215, 170, 0.55) 0%, transparent 60%),
+      linear-gradient(165deg, #fffbf7 0%, #fff7ed 22%, #ffedd5 48%, #fdba74 72%, #fb923c 88%, #f97316 100%);
   }
 
   .hero-section-bg::before {
     content: '';
     @apply absolute inset-0 pointer-events-none;
     background-image:
-      linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-    background-size: 56px 56px;
-    mask-image: radial-gradient(ellipse 90% 80% at 48% 38%, black 15%, transparent 78%);
+      linear-gradient(rgba(255, 255, 255, 0.65) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.65) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(ellipse 95% 85% at 50% 35%, black 10%, transparent 80%);
+    opacity: 0.35;
   }
 
   .hero-section-bg::after {
     content: '';
-    @apply absolute inset-x-0 bottom-0 h-24 pointer-events-none;
-    background: linear-gradient(to top, rgba(239, 246, 255, 0.92) 0%, rgba(248, 250, 252, 0.4) 55%, transparent 100%);
+    @apply absolute inset-x-0 bottom-0 h-28 pointer-events-none;
+    background: linear-gradient(to top, rgba(255, 247, 237, 0.98) 0%, rgba(255, 255, 255, 0.35) 55%, transparent 100%);
   }
 
   .hero-orb {
@@ -403,45 +403,51 @@
     animation: heroOrb 14s ease-in-out infinite;
   }
 
-  .hero-orb--blue {
-    width: min(44vw, 440px);
-    height: min(44vw, 440px);
-    top: -14%;
-    right: -6%;
-    background: rgba(59, 130, 246, 0.38);
+  .hero-orb--warm {
+    width: min(42vw, 420px);
+    height: min(42vw, 420px);
+    top: -10%;
+    right: -5%;
+    background: rgba(251, 146, 60, 0.42);
   }
 
-  .hero-orb--orange {
-    width: min(38vw, 380px);
-    height: min(38vw, 380px);
-    bottom: 2%;
-    left: -8%;
-    background: rgba(249, 115, 22, 0.36);
+  .hero-orb--amber {
+    width: min(36vw, 360px);
+    height: min(36vw, 360px);
+    bottom: 0;
+    left: -6%;
+    background: rgba(249, 115, 22, 0.35);
     animation-delay: -4s;
   }
 
-  .hero-orb--sky {
-    width: min(30vw, 300px);
-    height: min(30vw, 300px);
-    top: 38%;
-    left: 40%;
-    background: rgba(96, 165, 250, 0.28);
+  .hero-orb--peach {
+    width: min(28vw, 280px);
+    height: min(28vw, 280px);
+    top: 42%;
+    left: 38%;
+    background: rgba(253, 186, 116, 0.4);
     animation-delay: -8s;
   }
 
   .hero-search-shell {
-    @apply relative rounded-2xl sm:rounded-3xl p-1 sm:p-1.5;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.55) 0%, rgba(249, 115, 22, 0.45) 100%);
+    @apply relative rounded-2xl sm:rounded-[1.35rem] p-1;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 237, 213, 0.9) 100%);
+    border: 1px solid rgba(251, 146, 60, 0.35);
     box-shadow:
-      0 24px 48px -12px rgba(15, 23, 42, 0.45),
-      0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+      0 20px 50px -16px rgba(234, 88, 12, 0.28),
+      0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+  }
+
+  .hero-search-icon {
+    @apply absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 z-10 flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl
+           bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-md shadow-orange-600/25 pointer-events-none;
   }
 
   .glass-hero-panel {
-    @apply bg-white/10 backdrop-blur-2xl border border-white/25 rounded-3xl shadow-2xl;
+    @apply bg-white/70 backdrop-blur-2xl border border-orange-200/60 rounded-3xl shadow-2xl;
     box-shadow:
-      0 32px 64px -16px rgba(15, 23, 42, 0.5),
-      0 0 0 1px rgba(147, 197, 253, 0.15) inset;
+      0 32px 64px -16px rgba(234, 88, 12, 0.2),
+      0 0 0 1px rgba(255, 255, 255, 0.85) inset;
   }
 
   @keyframes heroOrb {
