@@ -381,7 +381,7 @@ export default function GlobalSearch({
   const heroPlaceholder = typedPlaceholder ? `Search ${typedPlaceholder}` : 'Search physiotherapy…';
 
   const inputClass = isHero
-    ? 'w-full bg-white/95 backdrop-blur-md border-0 rounded-xl sm:rounded-2xl py-3.5 sm:py-4 pl-12 pr-28 sm:pr-32 text-sm sm:text-base text-slate-900 placeholder:text-slate-400 shadow-xl shadow-black/10 focus:ring-2 focus:ring-orange-400/80 outline-none'
+    ? 'w-full bg-white/98 backdrop-blur-md border-0 rounded-xl sm:rounded-2xl py-3.5 sm:py-4 pl-12 pr-28 sm:pr-32 text-sm sm:text-base text-slate-900 placeholder:text-slate-400 shadow-lg shadow-blue-950/10 focus:ring-2 focus:ring-blue-400/70 outline-none'
     : isMobile
       ? 'w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-10 text-base text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-orange-400/70 focus:border-orange-300 outline-none'
       : isHeader
@@ -548,7 +548,7 @@ export default function GlobalSearch({
             <button
               type="button"
               onClick={submitSearch}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-orange-600 hover:bg-orange-700 text-white font-semibold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl shadow-md transition"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-gradient-to-r from-blue-600 to-orange-500 hover:from-blue-500 hover:to-orange-400 text-white font-semibold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl shadow-md transition"
             >
               Search
             </button>
@@ -575,7 +575,7 @@ export default function GlobalSearch({
         >
           <span
             className={`text-[11px] sm:text-xs font-medium ${
-              isHero ? 'text-slate-300/90' : 'text-slate-500'
+              isHero ? 'text-blue-100/90' : 'text-slate-500'
             }`}
           >
             Popular:
@@ -587,7 +587,7 @@ export default function GlobalSearch({
               onClick={() => applyQuickTag(tag)}
               className={`text-[11px] sm:text-xs px-2.5 py-1 rounded-full transition touch-manipulation ${
                 isHero
-                  ? 'bg-white/10 border border-white/20 text-white/90 hover:bg-white/20'
+                  ? 'bg-blue-500/15 border border-blue-300/25 text-blue-50 hover:bg-orange-500/20 hover:border-orange-300/35'
                   : 'bg-orange-50 border border-orange-100 text-orange-700 hover:bg-orange-100 active:bg-orange-200'
               }`}
             >

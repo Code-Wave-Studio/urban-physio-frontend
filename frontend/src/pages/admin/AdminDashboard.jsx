@@ -143,21 +143,6 @@ const EMPTY = {
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [data, setData] = useState(null);
-  const [repairing, setRepairing] = useState(false);
-
-  const runTextRepair = async () => {
-    if (!window.confirm('Fix corrupted &amp; text in the database? Safe to run more than once.')) return;
-    setRepairing(true);
-    try {
-      const res = await admin.repairHtmlEntities();
-      const n = res?.data?.updated_rows ?? 0;
-      toast.success(res?.message || (n ? `Repaired ${n} record(s)` : 'Database text is already clean'));
-    } catch (e) {
-      toast.error(e.message || 'Repair failed');
-    } finally {
-      setRepairing(false);
-    }
-  };
 
   useEffect(() => {
     admin
@@ -320,26 +305,6 @@ export default function AdminDashboard() {
             )}
           </div>
         </div>
-      </div>
-
-      <div className="mb-6 md:mb-8 rounded-2xl border border-amber-200/80 bg-amber-50/60 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <p className="font-semibold text-slate-900 text-sm flex items-center gap-2">
-            <FaIcon icon="fa-wand-magic-sparkles" className="text-amber-600" />
-            Fix garbled text (&amp;amp;…)
-          </p>
-          <p className="text-xs text-slate-600 mt-1 max-w-xl">
-            If clinic names or descriptions show <code className="text-[11px] bg-white/80 px-1 rounded">&amp;amp;</code> in admin or DB — click once. No terminal or PHP script needed.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={runTextRepair}
-          disabled={repairing}
-          className="btn-outline text-sm shrink-0 border-amber-300 text-amber-900 hover:bg-amber-100"
-        >
-          {repairing ? 'Repairing…' : 'Repair database text'}
-        </button>
       </div>
 
       {/* Stats */}

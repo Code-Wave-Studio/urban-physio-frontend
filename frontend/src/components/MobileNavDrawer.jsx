@@ -137,14 +137,14 @@ export default function MobileNavDrawer({
       <button
         type="button"
         aria-label="Close menu"
-        className={`site-mobile-backdrop fixed inset-0 z-[105] lg:hidden bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 ${
+        className={`site-mobile-backdrop fixed inset-0 z-[105] md:hidden bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 ${
           open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
       />
 
       <div
-        className={`site-mobile-drawer fixed top-0 right-0 z-[108] h-full w-[min(22rem,92vw)] bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] lg:hidden ${
+        className={`site-mobile-drawer fixed top-0 right-0 z-[108] h-full w-[min(22rem,92vw)] bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] md:hidden ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
         aria-hidden={!open}

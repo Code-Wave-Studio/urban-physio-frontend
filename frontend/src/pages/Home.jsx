@@ -103,18 +103,18 @@ export default function Home() {
       <Navbar />
       <LocationSelector />
 
-      <div className="mesh-blob w-96 h-96 bg-orange-400 -top-48 -right-48 animate-pulse-soft hidden md:block" />
-      <div className="mesh-blob w-80 h-80 bg-orange-300 bottom-1/3 -left-40 animate-float hidden md:block" />
+      <div className="mesh-blob w-96 h-96 bg-blue-500 -top-48 -right-48 animate-pulse-soft hidden md:block" />
+      <div className="mesh-blob w-80 h-80 bg-orange-400 bottom-1/3 -left-40 animate-float hidden md:block" />
 
-      {/* HERO — content-driven height */}
-      <section className="relative flex items-center overflow-hidden py-8 pb-14 md:py-16 md:pb-20">
+      {/* HERO — modern blue + orange */}
+      <section className="relative flex items-center overflow-hidden py-10 pb-16 md:py-20 md:pb-24">
         <div className="hero-section-bg" aria-hidden>
-          <span className="hero-orb hero-orb--cyan" />
-          <span className="hero-orb hero-orb--teal" />
-          <span className="hero-orb hero-orb--violet" />
+          <span className="hero-orb hero-orb--blue" />
+          <span className="hero-orb hero-orb--orange" />
+          <span className="hero-orb hero-orb--sky" />
         </div>
         <div
-          className="absolute inset-0 opacity-[0.15] mix-blend-overlay pointer-events-none"
+          className="absolute inset-0 opacity-[0.12] mix-blend-overlay pointer-events-none"
           style={{
             backgroundImage:
               "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E\")",
@@ -122,99 +122,119 @@ export default function Home() {
         />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-[1] w-full">
-          <div className="grid lg:grid-cols-2 gap-6 lg:gap-12 items-center w-full">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-14 items-center w-full">
             <div className="animate-slide-up text-white text-center md:text-left">
-              <span className="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-md border border-white/20 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium mb-3 md:mb-6 text-orange-50 shadow-lg shadow-black/10">
-                <FaIcon icon="fa-heart-pulse" className="text-orange-300 text-sm" />
+              <span className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-blue-300/25 px-3.5 py-1.5 rounded-full text-xs md:text-sm font-semibold mb-4 md:mb-6 text-blue-50 shadow-lg shadow-blue-950/20">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-orange-500 text-white text-[10px]">
+                  <FaIcon icon="fa-heart-pulse" />
+                </span>
                 #1 Physio Platform in India
               </span>
-              <h1 className="text-2xl sm:text-4xl lg:text-6xl font-bold leading-tight tracking-tight text-white drop-shadow-sm">
+              <h1 className="text-3xl sm:text-4xl lg:text-[3.35rem] font-bold leading-[1.1] tracking-tight text-white drop-shadow-sm">
                 Heal Faster with{' '}
-                <span className="bg-gradient-to-r from-orange-200 via-amber-100 to-white bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-sky-200 via-blue-100 to-orange-300 bg-clip-text text-transparent">
                   Premium Care
                 </span>
               </h1>
-              <p className="mt-3 md:mt-6 text-sm md:text-lg text-slate-200/95 max-w-xl leading-relaxed mx-auto md:mx-0">
-                Access trusted physiotherapists nationwide — from online sessions to clinic and home treatments.
+              <p className="mt-4 md:mt-6 text-sm md:text-lg text-blue-100/90 max-w-xl leading-relaxed mx-auto md:mx-0">
+                Access trusted physiotherapists nationwide — online sessions, partner clinics, and home treatments in one place.
               </p>
 
-              <div className="mt-5 md:mt-7">
-                <GlobalSearch variant="hero" />
+              <div className="mt-6 md:mt-8 hero-search-shell">
+                <div className="rounded-xl sm:rounded-2xl bg-slate-950/20 backdrop-blur-sm p-0.5">
+                  <GlobalSearch variant="hero" />
+                </div>
               </div>
 
               {city && (
-                <p className="mt-3 md:mt-4 flex justify-center md:justify-start">
-                  <span className="bg-orange-500/20 backdrop-blur-md border border-orange-400/35 px-3 py-1.5 rounded-full inline-flex items-center gap-1.5 text-xs md:text-sm font-medium text-orange-50 shadow-lg shadow-black/10">
+                <p className="mt-4 flex justify-center md:justify-start">
+                  <span className="bg-blue-500/15 backdrop-blur-md border border-blue-400/30 px-3.5 py-1.5 rounded-full inline-flex items-center gap-1.5 text-xs md:text-sm font-medium text-sky-100 shadow-lg shadow-blue-950/15">
                     <FaIcon icon="fa-location-dot" className="text-orange-300 text-xs" />
                     Near {areaName}
                   </span>
                 </p>
               )}
 
-              {/* Mobile hero image — compact */}
+              <div className="mt-5 flex flex-wrap justify-center md:justify-start gap-2 md:gap-3">
+                {HERO_FEATURES.map((t) => (
+                  <span
+                    key={t.label}
+                    className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-blue-100/90 bg-white/10 border border-white/15 rounded-full px-3 py-1.5 backdrop-blur-sm"
+                  >
+                    <FaIcon icon={t.icon} className="text-orange-300 text-[10px]" />
+                    {t.label}
+                  </span>
+                ))}
+              </div>
+
               {heroImgOk && (
-                <div className="md:hidden mt-4 flex justify-center">
-                  <img
-                    src={HERO_IMG}
-                    alt=""
-                    className="max-h-36 w-auto object-contain drop-shadow-lg"
-                    onError={() => setHeroImgOk(false)}
-                  />
+                <div className="md:hidden mt-6 flex justify-center">
+                  <div className="relative">
+                    <div className="absolute -inset-6 bg-gradient-to-br from-blue-500/30 to-orange-500/25 rounded-full blur-2xl" />
+                    <img
+                      src={HERO_IMG}
+                      alt=""
+                      className="relative max-h-40 w-auto object-contain drop-shadow-2xl"
+                      onError={() => setHeroImgOk(false)}
+                    />
+                  </div>
                 </div>
               )}
-              <div className="mt-4 md:mt-8 flex flex-col sm:flex-row flex-wrap gap-2.5 md:gap-4 justify-center md:justify-start">
+
+              <div className="mt-6 md:mt-9 flex flex-col sm:flex-row flex-wrap gap-2.5 md:gap-3 justify-center md:justify-start">
                 <Link
                   to="/book"
-                  className="inline-flex items-center justify-center gap-2 bg-white text-slate-900 font-bold px-5 py-3 md:px-8 md:py-3.5 rounded-xl text-sm md:text-base shadow-xl shadow-orange-900/25 hover:bg-orange-50 transition"
+                  className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-bold px-5 py-3 md:px-8 md:py-3.5 rounded-xl text-sm md:text-base shadow-xl shadow-orange-900/30 transition"
                 >
                   Book Appointment
-                  <FaIcon icon="fa-calendar-check" className="text-sm text-orange-500" />
+                  <FaIcon icon="fa-calendar-check" className="text-sm" />
                 </Link>
                 <Link
                   to="/doctors"
-                  className="inline-flex items-center justify-center gap-2 px-5 py-3 md:px-8 md:py-3.5 text-sm md:text-base rounded-xl font-semibold text-white bg-white/10 border border-white/25 backdrop-blur-md hover:bg-white/20 transition"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3 md:px-8 md:py-3.5 text-sm md:text-base rounded-xl font-semibold text-white bg-blue-500/20 border border-blue-400/35 backdrop-blur-md hover:bg-blue-500/30 transition"
                 >
-                  Find Physiotherapists
-                  <FaIcon icon="fa-user-doctor" className="text-sm" />
+                  Find Doctor
+                  <FaIcon icon="fa-user-doctor" className="text-sm text-sky-200" />
                 </Link>
                 <Link
                   to="/clinics"
-                  className="inline-flex items-center justify-center gap-2 px-5 py-3 md:px-8 md:py-3.5 text-sm md:text-base rounded-xl font-semibold text-white bg-emerald-500/20 border border-emerald-300/35 backdrop-blur-md hover:bg-emerald-500/30 transition"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3 md:px-8 md:py-3.5 text-sm md:text-base rounded-xl font-semibold text-white bg-white/10 border border-orange-300/35 backdrop-blur-md hover:bg-orange-500/20 transition"
                 >
                   Find Clinic
-                  <FaIcon icon="fa-hospital" className="text-sm" />
+                  <FaIcon icon="fa-hospital" className="text-sm text-orange-200" />
                 </Link>
               </div>
             </div>
 
-            {/* Hero right: frontend/public/hero-illustration.svg */}
             <div className="hidden md:flex items-center justify-center animate-fade-in h-full" style={{ animationDelay: '0.2s' }}>
-              <div className="relative w-full max-h-[520px] flex items-center justify-center">
-                <div className="absolute -inset-4 bg-gradient-to-br from-orange-400/30 via-amber-400/20 to-orange-600/20 rounded-full blur-3xl" />
+              <div className="relative w-full max-h-[540px] flex items-center justify-center">
+                <div className="absolute -inset-8 bg-gradient-to-br from-blue-500/35 via-sky-400/20 to-orange-500/30 rounded-full blur-3xl" />
+                <div className="absolute inset-0 rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-[2px]" aria-hidden />
                 {heroImgOk ? (
                   <img
                     src={HERO_IMG}
                     alt="Physiotherapy care illustration"
-                    className="relative w-full max-w-md lg:max-w-lg max-h-[480px] object-contain drop-shadow-2xl animate-float"
+                    className="relative w-full max-w-md lg:max-w-lg max-h-[500px] object-contain drop-shadow-2xl animate-float"
                     onError={() => setHeroImgOk(false)}
                   />
                 ) : (
-                <div className="glass-hero-panel p-8 relative">
-                  <div className="absolute -top-4 -right-4 w-24 h-24 bg-orange-400/30 rounded-full blur-2xl" />
+                <div className="glass-hero-panel p-8 relative w-full max-w-md">
+                  <div className="absolute -top-4 -right-4 w-28 h-28 bg-orange-500/25 rounded-full blur-2xl" />
+                  <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-blue-500/25 rounded-full blur-2xl" />
                   <div className="space-y-4 relative">
-                    <div className="glass-dark rounded-2xl p-5 flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center">
-                        <FaIcon icon="fa-stethoscope" className="text-2xl text-orange-200" />
+                    <div className="glass-dark rounded-2xl p-5 flex items-center gap-4 border border-blue-400/20">
+                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500/40 to-orange-500/40 flex items-center justify-center">
+                        <FaIcon icon="fa-stethoscope" className="text-2xl text-sky-100" />
                       </div>
                       <div>
                         <p className="font-semibold text-white">Expert Physiotherapists</p>
-                        <p className="text-primary-200 text-sm">Sports · Ortho · Neuro · Spine</p>
+                        <p className="text-blue-200/90 text-sm">Sports · Ortho · Neuro · Spine</p>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                       {HERO_FEATURES.map((t) => (
-                        <div key={t.label} className="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/20 text-center">
-                          <FaIcon icon={t.icon} className="text-xl text-orange-200 mb-2" />
+                        <div key={t.label} className="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/15 text-center hover:border-orange-400/30 transition-colors">
+                          <FaIcon icon={t.icon} className="text-xl text-orange-300 mb-2" />
                           <p className="text-white font-medium text-sm">{t.label}</p>
                         </div>
                       ))}
@@ -227,12 +247,13 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 hidden sm:block">
+        <div className="absolute bottom-0 left-0 right-0 hidden sm:block pointer-events-none">
           <svg viewBox="0 0 1440 80" fill="none" className="w-full h-8 md:h-auto">
-            <path d="M0 40L60 35C120 30 240 20 360 18.7C480 17 600 23 720 28C840 33 960 37 1080 35C1200 33 1320 25 1380 21.7L1440 18.7V80H1380C1320 80 1200 80 1080 80C960 80 840 80 720 80C600 80 480 80 360 80C240 80 120 80 60 80H0V40Z" fill="url(#wave)" fillOpacity="0.9" />
+            <path d="M0 40L60 35C120 30 240 20 360 18.7C480 17 600 23 720 28C840 33 960 37 1080 35C1200 33 1320 25 1380 21.7L1440 18.7V80H1380C1320 80 1200 80 1080 80C960 80 840 80 720 80C600 80 480 80 360 80C240 80 120 80 60 80H0V40Z" fill="url(#heroWave)" fillOpacity="0.95" />
             <defs>
-              <linearGradient id="wave" x1="0" y1="0" x2="0" y2="1">
-                <stop stopColor="#fff7ed" />
+              <linearGradient id="heroWave" x1="0" y1="0" x2="1440" y2="80">
+                <stop stopColor="#eff6ff" />
+                <stop offset="0.5" stopColor="#fff7ed" />
                 <stop offset="1" stopColor="#f8fafc" />
               </linearGradient>
             </defs>
