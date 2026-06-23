@@ -9,6 +9,7 @@ import ClinicLogoUpload from '../../components/ClinicLogoUpload';
 import ClinicGalleryUpload from '../../components/clinic/ClinicGalleryUpload';
 import {
   ClinicOpeningHoursFields,
+  ClinicLocationFields,
   ClinicProfileDetailsFields,
   ClinicSocialLinksFields,
   ClinicStatisticsFields,
@@ -258,19 +259,7 @@ function ClinicFormModal({ open, onClose, initial, onSave }) {
                     <input type="email" className="input-field" value={form.email || ''} onChange={(e) => set('email', e.target.value)} />
                   </div>
                 </div>
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="font-semibold text-slate-800 text-sm flex items-center gap-2">
-                    <FaIcon icon="fa-map-location-dot" className="text-primary-600" /> Map location
-                  </p>
-                  <button type="button" className="btn-outline text-sm mt-3 w-full" onClick={() => setMapOpen(true)}>
-                    Pick on map
-                  </button>
-                  {form.latitude != null && (
-                    <p className="text-xs text-slate-600 mt-2">
-                      Pin: {Number(form.latitude).toFixed(5)}, {Number(form.longitude).toFixed(5)}
-                    </p>
-                  )}
-                </div>
+                <ClinicLocationFields form={form} set={set} onPickMap={() => setMapOpen(true)} />
               </AdminFormSection>
 
               <AdminFormSection title="About, cover & website" icon="fa-circle-info">

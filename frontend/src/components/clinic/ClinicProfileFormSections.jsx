@@ -76,11 +76,11 @@ export function ClinicOpeningHoursFields({ form, setHours }) {
 export function ClinicSocialLinksFields({ form, setSocial }) {
   return (
     <div className="grid sm:grid-cols-2 gap-3">
-      {SOCIAL_FIELDS.map(({ key, label, icon, placeholder }) => (
+      {SOCIAL_FIELDS.map(({ key, label, icon, placeholder, brand }) => (
         <div key={key}>
           <FieldLabel>
             <span className="inline-flex items-center gap-1.5">
-              <FaIcon icon={icon} className="text-slate-400 text-xs" />
+              <FaIcon icon={icon} brand={brand} className="text-slate-500 text-xs" />
               {label}
             </span>
           </FieldLabel>
@@ -92,6 +92,46 @@ export function ClinicSocialLinksFields({ form, setSocial }) {
           />
         </div>
       ))}
+    </div>
+  );
+}
+
+/**
+ * Google Maps profile link (primary) + optional GPS pin for map embed.
+ * @param {{ form: object, set: (k: string, v: unknown) => void, onPickMap?: () => void }} props
+ */
+export function ClinicLocationFields({ form, set, onPickMap }) {
+  return (
+    <div className="space-y-4">
+      <div>
+        <FieldLabel hint="Paste your Google Maps business / place link — shown as primary map on profile">
+          Google Maps profile link
+        </FieldLabel>
+        <input
+          className="input-field"
+          type="url"
+          value={form.google_maps_url || ''}
+          onChange={(e) => set('google_maps_url', e.target.value)}
+          placeholder="https://maps.google.com/… or https://goo.gl/maps/…"
+        />
+      </div>
+      {onPickMap && (
+        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-4">
+          <p className="font-semibold text-slate-800 text-sm flex items-center gap-2">
+            <FaIcon icon="fa-map-location-dot" className="text-emerald-600" />
+            Optional GPS pin
+          </p>
+          <p className="text-xs text-slate-500 mt-1">For precise map embed — not required if you added the Google Maps link above.</p>
+          <button type="button" className="btn-outline text-sm mt-3 w-full sm:w-auto" onClick={onPickMap}>
+            Pick on map
+          </button>
+          {form.latitude != null && (
+            <p className="text-xs text-slate-600 mt-2">
+              Pin: {Number(form.latitude).toFixed(5)}, {Number(form.longitude).toFixed(5)}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

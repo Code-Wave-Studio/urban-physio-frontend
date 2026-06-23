@@ -9,7 +9,7 @@ export const SEARCH_CATALOG = [
   { title: 'Ankle Pain', slug: 'ankle-pain', keywords: ['ankle', 'foot'] },
 ];
 
-export const QUICK_SEARCH_TAGS = ['Back pain', 'Knee pain', 'Neck pain', 'Sports injury'];
+export const QUICK_SEARCH_TAGS = ['Back pain', 'Knee pain', 'Neck pain'];
 
 function norm(s) {
   return String(s || '')

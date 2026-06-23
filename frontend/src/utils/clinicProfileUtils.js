@@ -9,12 +9,12 @@ export const WEEKDAYS = [
 ];
 
 export const SOCIAL_FIELDS = [
-  { key: 'facebook', label: 'Facebook', icon: 'fa-facebook', placeholder: 'https://facebook.com/...' },
-  { key: 'instagram', label: 'Instagram', icon: 'fa-instagram', placeholder: 'https://instagram.com/...' },
-  { key: 'twitter', label: 'X / Twitter', icon: 'fa-x-twitter', placeholder: 'https://x.com/...' },
-  { key: 'linkedin', label: 'LinkedIn', icon: 'fa-linkedin', placeholder: 'https://linkedin.com/...' },
-  { key: 'youtube', label: 'YouTube', icon: 'fa-youtube', placeholder: 'https://youtube.com/...' },
-  { key: 'whatsapp', label: 'WhatsApp', icon: 'fa-whatsapp', placeholder: 'https://wa.me/91...' },
+  { key: 'facebook', label: 'Facebook', icon: 'fa-facebook', brand: true, placeholder: 'https://facebook.com/...' },
+  { key: 'instagram', label: 'Instagram', icon: 'fa-instagram', brand: true, placeholder: 'https://instagram.com/...' },
+  { key: 'twitter', label: 'X / Twitter', icon: 'fa-x-twitter', brand: true, placeholder: 'https://x.com/...' },
+  { key: 'linkedin', label: 'LinkedIn', icon: 'fa-linkedin', brand: true, placeholder: 'https://linkedin.com/...' },
+  { key: 'youtube', label: 'YouTube', icon: 'fa-youtube', brand: true, placeholder: 'https://youtube.com/...' },
+  { key: 'whatsapp', label: 'WhatsApp', icon: 'fa-whatsapp', brand: true, placeholder: 'https://wa.me/91...' },
 ];
 
 export function emptyOpeningHours() {
@@ -45,13 +45,15 @@ export function normalizeOpeningHours(raw) {
   return out;
 }
 
-export function parseTagInput(text) {
-  if (!text || typeof text !== 'string') return [];
-  return [...new Set(text.split(/[,;\n]+/).map((s) => s.trim()).filter(Boolean))];
+export function tagsToInput(list) {
+  if (typeof list === 'string') return list;
+  return Array.isArray(list) ? list.join(', ') : '';
 }
 
-export function tagsToInput(list) {
-  return Array.isArray(list) ? list.join(', ') : '';
+export function parseTagInput(text) {
+  if (Array.isArray(text)) return text.filter(Boolean).map(String);
+  if (!text || typeof text !== 'string') return [];
+  return [...new Set(text.split(/[,;\n]+/).map((s) => s.trim()).filter(Boolean))];
 }
 
 export function normalizeSocialLinks(raw) {
@@ -94,6 +96,7 @@ export function emptyClinicForm() {
     logo: '',
     cover_image: '',
     website: '',
+    google_maps_url: '',
     description: '',
     latitude: null,
     longitude: null,
@@ -121,6 +124,7 @@ export function clinicRecordToForm(c) {
     logo: c.logo || '',
     cover_image: c.cover_image || '',
     website: c.website || '',
+    google_maps_url: c.google_maps_url || '',
     description: c.description || '',
     latitude: c.latitude != null ? parseFloat(c.latitude) : null,
     longitude: c.longitude != null ? parseFloat(c.longitude) : null,
@@ -150,6 +154,7 @@ export function buildClinicPayload(form) {
     logo: form.logo || undefined,
     cover_image: form.cover_image.trim() || undefined,
     website: form.website.trim() || undefined,
+    google_maps_url: form.google_maps_url.trim() || undefined,
     description: form.description.trim() || undefined,
     latitude: form.latitude,
     longitude: form.longitude,
@@ -188,4 +193,65 @@ export function formatOpeningHoursRows(hours) {
       closed: !slots?.length,
     };
   });
+}
+
+const JS_DAY_TO_KEY = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+
+function parseTimeToMinutes(hhmm) {
+  const m = String(hhmm).trim().match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return null;
+  return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+}
+
+function parseSlotRange(slot) {
+  const parts = String(slot).split('-').map((s) => s.trim());
+  if (parts.length !== 2) return null;
+  const start = parseTimeToMinutes(parts[0]);
+  const end = parseTimeToMinutes(parts[1]);
+  if (start == null || end == null) return null;
+  return { start, end };
+}
+
+function formatMinutes(mins) {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  const period = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return m ? `${h12}:${String(m).padStart(2, '0')} ${period}` : `${h12} ${period}`;
+}
+
+/** Today's open/closed status from opening hours. */
+export function todayOpenStatus(hours, now = new Date()) {
+  const normalized = normalizeOpeningHours(hours);
+  const dayKey = JS_DAY_TO_KEY[now.getDay()];
+  const slots = normalized[dayKey] || [];
+  if (!slots.length) {
+    return { open: false, text: 'Closed today' };
+  }
+
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+  const ranges = slots.map(parseSlotRange).filter(Boolean);
+
+  if (!ranges.length) {
+    return { open: false, text: 'Hours not listed for today' };
+  }
+
+  for (const range of ranges) {
+    if (nowMins >= range.start && nowMins < range.end) {
+      return { open: true, text: `Open now · Closes at ${formatMinutes(range.end)}` };
+    }
+  }
+
+  const nextToday = ranges.find((r) => nowMins < r.start);
+  if (nextToday) {
+    return { open: false, text: `Closed · Opens today at ${formatMinutes(nextToday.start)}` };
+  }
+
+  return { open: false, text: 'Closed for today' };
+}
+
+export function isValidHttpUrl(url) {
+  if (!url || typeof url !== 'string') return false;
+  const u = url.trim();
+  return u.startsWith('http://') || u.startsWith('https://');
 }

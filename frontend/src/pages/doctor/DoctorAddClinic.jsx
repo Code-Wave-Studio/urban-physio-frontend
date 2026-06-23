@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import LocationMapModal from '../../components/LocationMapModal';
@@ -8,6 +8,7 @@ import ClinicLogoUpload from '../../components/ClinicLogoUpload';
 import ClinicGalleryUpload from '../../components/clinic/ClinicGalleryUpload';
 import {
   ClinicOpeningHoursFields,
+  ClinicLocationFields,
   ClinicProfileDetailsFields,
   ClinicSocialLinksFields,
   ClinicStatisticsFields,
@@ -97,11 +98,6 @@ export default function DoctorAddClinic() {
       .catch(() => toast.error('Could not load clinic'));
   }, [editId]);
 
-  const selectedCity = useMemo(
-    () => cities.find((c) => String(c.id) === String(form.city_id)),
-    [cities, form.city_id]
-  );
-
   const submit = async (e) => {
     e.preventDefault();
     if (!form.name.trim() || !form.address.trim() || !form.city_id || !form.phone.trim()) {
@@ -189,20 +185,7 @@ export default function DoctorAddClinic() {
             <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
             <input type="email" className="input-field" value={form.email} onChange={(e) => set('email', e.target.value)} />
           </div>
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <p className="font-semibold text-slate-800 text-sm flex items-center gap-2">
-              <FaIcon icon="fa-map-location-dot" className="text-emerald-600" /> Map location
-            </p>
-            <button type="button" className="btn-outline text-sm mt-3 w-full sm:w-auto" onClick={() => setMapOpen(true)}>
-              Pick on map
-            </button>
-            {form.latitude != null && (
-              <p className="text-xs text-slate-600 mt-2">
-                Pin: {form.latitude.toFixed(5)}, {form.longitude?.toFixed(5)}
-                {selectedCity?.name ? ` · ${selectedCity.name}` : ''}
-              </p>
-            )}
-          </div>
+          <ClinicLocationFields form={form} set={set} onPickMap={() => setMapOpen(true)} />
         </FormSection>
 
         <FormSection title="About & website" icon="fa-circle-info">

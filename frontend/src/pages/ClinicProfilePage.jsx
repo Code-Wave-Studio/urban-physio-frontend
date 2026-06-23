@@ -14,7 +14,7 @@ import ReviewForm from '../components/platform/ReviewForm';
 import { clinics } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { resolveMediaUrl } from '../utils/mediaUrl';
-import { formatOpeningHoursRows, getBannerImages, openingHoursSummary, SOCIAL_FIELDS } from '../utils/clinicProfileUtils';
+import { formatOpeningHoursRows, getBannerImages, isValidHttpUrl, SOCIAL_FIELDS, todayOpenStatus } from '../utils/clinicProfileUtils';
 import { googleMapsUrl } from '../utils/locationHelpers';
 import { clinicBookUrl, clinicProfileUrl, doctorProfileUrl, formatOpeningHours } from '../utils/profileUrls';
 
@@ -98,7 +98,7 @@ export default function ClinicProfilePage() {
 
   const hoursText = formatOpeningHours(clinic?.opening_hours_parsed || clinic?.opening_hours);
   const hoursRows = formatOpeningHoursRows(clinic?.opening_hours_parsed || clinic?.opening_hours);
-  const hoursSummary = openingHoursSummary(clinic?.opening_hours_parsed || clinic?.opening_hours);
+  const todayHours = todayOpenStatus(clinic?.opening_hours_parsed || clinic?.opening_hours);
   const services = clinic?.services_list?.length ? clinic.services_list : [];
   const facilities = clinic?.facilities_list?.length ? clinic.facilities_list : [];
   const equipment = clinic?.equipment_list?.length ? clinic.equipment_list : [];
@@ -108,7 +108,7 @@ export default function ClinicProfilePage() {
   const rating = Number(stats.avg_rating ?? clinic?.rating_avg) || 0;
   const bannerImages = useMemo(() => getBannerImages(clinic), [clinic]);
   const websiteUrl = clinic?.website_url || clinic?.website;
-  const activeSocials = SOCIAL_FIELDS.filter(({ key }) => social[key]);
+  const activeSocials = SOCIAL_FIELDS.filter(({ key }) => isValidHttpUrl(social[key]));
 
   if (loading) {
     return (
@@ -144,10 +144,12 @@ export default function ClinicProfilePage() {
     );
   }
 
-  const mapUrl =
-    clinic.latitude && clinic.longitude
-      ? googleMapsUrl(clinic.latitude, clinic.longitude)
-      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(clinic.address || clinic.name)}`;
+  const mapUrl = (() => {
+    const gmaps = clinic.google_maps_url?.trim();
+    if (gmaps) return gmaps.startsWith('http') ? gmaps : `https://${gmaps}`;
+    if (clinic.latitude && clinic.longitude) return googleMapsUrl(clinic.latitude, clinic.longitude);
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(clinic.address || clinic.name)}`;
+  })();
 
   const locationLine = [clinic.address, clinic.city_name, clinic.state_name].filter(Boolean).join(', ');
 
@@ -162,35 +164,37 @@ export default function ClinicProfilePage() {
       />
       <Navbar />
 
-      {/* Light hero + auto-scrolling banner */}
-      <div className="relative bg-slate-50">
+      {/* Banner hero — image as background, logo on top */}
+      <div className="relative bg-white">
         <div className="relative pt-14 sm:pt-16 md:pt-[4.5rem]">
           <ClinicBannerCarousel
             images={bannerImages}
-            className="h-44 sm:h-52 md:h-60 w-full"
+            className="h-52 sm:h-60 md:h-72 w-full"
             alt={`${clinic.name} banner`}
+            showOverlay={false}
           />
-          <div className="absolute top-3 left-0 right-0 z-10 max-w-6xl mx-auto px-4">
+          <div className="absolute top-3 left-0 right-0 z-20 max-w-6xl mx-auto px-4">
             <Link
               to="/clinics"
-              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-slate-800 bg-white/90 backdrop-blur-sm border border-white/80 shadow-sm px-3 py-1.5 rounded-full hover:bg-white transition"
+              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-white bg-black/40 backdrop-blur-sm border border-white/20 shadow-sm px-3 py-1.5 rounded-full hover:bg-black/55 transition"
             >
               <FaIcon icon="fa-arrow-left" className="text-xs" />
               All clinics
             </Link>
           </div>
-        </div>
-
-        <div className="relative max-w-6xl mx-auto px-4 pb-8 sm:pb-10 md:pb-12">
-          <div className="flex flex-col md:flex-row gap-4 sm:gap-6 md:gap-8 items-center md:items-start -mt-10 sm:-mt-12 md:-mt-14">
-            <div className="shrink-0">
+          <div className="absolute bottom-0 left-0 right-0 z-20 max-w-6xl mx-auto px-4 pointer-events-none">
+            <div className="flex justify-center md:justify-start translate-y-1/2">
               <ClinicLogo
                 clinic={clinic}
                 size="xl"
-                className="!w-24 !h-24 sm:!w-32 sm:!h-32 md:!w-36 md:!h-36 !rounded-2xl sm:!rounded-3xl ring-4 ring-white shadow-xl"
+                className="!w-24 !h-24 sm:!w-32 sm:!h-32 md:!w-36 md:!h-36 !rounded-2xl sm:!rounded-3xl ring-4 ring-white shadow-2xl pointer-events-auto"
               />
             </div>
-            <div className="flex-1 min-w-0 w-full text-center md:text-left pt-1">
+          </div>
+        </div>
+
+        <div className="relative max-w-6xl mx-auto px-4 pt-16 sm:pt-20 md:pt-24 pb-8 sm:pb-10 md:pb-12">
+          <div className="text-center md:text-left">
               <div className="flex flex-wrap justify-center md:justify-start gap-1.5 sm:gap-2 mb-2 sm:mb-3">
                 <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full">
                   <FaIcon icon="fa-circle-check" className="text-emerald-600" />
@@ -217,10 +221,17 @@ export default function ClinicProfilePage() {
                 <ReviewStars rating={clinic.rating_avg} count={clinic.rating_count} size="lg" />
               </div>
 
-              {hoursSummary && (
-                <p className="mt-3 text-xs sm:text-sm text-slate-600 inline-flex items-center gap-2 justify-center md:justify-start">
-                  <FaIcon icon="fa-clock" className="text-emerald-600 shrink-0" />
-                  {hoursSummary}
+              {todayHours?.text && (
+                <p
+                  className={`mt-3 text-xs sm:text-sm inline-flex items-center gap-2 justify-center md:justify-start font-medium ${
+                    todayHours.open ? 'text-emerald-700' : 'text-slate-600'
+                  }`}
+                >
+                  <FaIcon
+                    icon={todayHours.open ? 'fa-circle-check' : 'fa-clock'}
+                    className={todayHours.open ? 'text-emerald-600' : 'text-slate-400'}
+                  />
+                  {todayHours.text}
                 </p>
               )}
 
@@ -237,16 +248,17 @@ export default function ClinicProfilePage() {
                       Website
                     </a>
                   )}
-                  {activeSocials.map(({ key, icon }) => (
+                  {activeSocials.map(({ key, icon, brand, label }) => (
                     <a
                       key={key}
                       href={social[key]}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200/80"
-                      aria-label={key}
+                      aria-label={label}
+                      title={label}
                     >
-                      <FaIcon icon={icon} className="text-sm" />
+                      <FaIcon icon={icon} brand={brand} className="text-sm" />
                     </a>
                   ))}
                 </div>
@@ -273,7 +285,6 @@ export default function ClinicProfilePage() {
               <div className="mt-4 flex sm:hidden justify-center">
                 <ShareProfileButton title={clinic.name} className="!py-2.5 !text-sm w-full max-w-xs justify-center" />
               </div>
-            </div>
           </div>
 
           <div className="mt-6 sm:mt-8">

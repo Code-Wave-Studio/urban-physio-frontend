@@ -6,7 +6,13 @@ import { hapticTap } from '../../utils/haptics';
  * Auto-scrolling clinic banner — up to 10 images, fade transition.
  * @param {{ images: string[], className?: string, intervalMs?: number, alt?: string }} props
  */
-export default function ClinicBannerCarousel({ images = [], className = '', intervalMs = 4500, alt = 'Clinic banner' }) {
+export default function ClinicBannerCarousel({
+  images = [],
+  className = '',
+  intervalMs = 4500,
+  alt = 'Clinic banner',
+  showOverlay = false,
+}) {
   const slides = useMemo(() => {
     const seen = new Set();
     const out = [];
@@ -53,7 +59,9 @@ export default function ClinicBannerCarousel({ images = [], className = '', inte
           <img src={src} alt="" className="w-full h-full object-cover" loading={i === 0 ? 'eager' : 'lazy'} />
         </div>
       ))}
-      <div className="absolute inset-0 z-[2] bg-gradient-to-t from-white via-white/50 to-white/10 pointer-events-none" />
+      {showOverlay && (
+        <div className="absolute inset-0 z-[2] bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+      )}
 
       {slides.length > 1 && (
         <div className="absolute bottom-3 left-0 right-0 z-[3] flex justify-center gap-1.5 px-4">
