@@ -10,6 +10,15 @@ import { doctorProfileUrl, clinicProfileUrl } from '../utils/profileUrls';
 
 const QUICK_TAGS = QUICK_SEARCH_TAGS;
 
+const HERO_TYPE_QUERIES = [
+  'knee pain specialist near me',
+  'physio in Noida',
+  'back pain treatment',
+  'home visit physiotherapy',
+  'sports injury rehab',
+  'neck pain doctor',
+];
+
 const MENU_Z = 10060;
 const SEARCH_HINT = 'Try knee pain, Mumbai, physio near me…';
 
@@ -44,6 +53,10 @@ export default function GlobalSearch({
   const [results, setResults] = useState(EMPTY_RESULTS);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [apiFailed, setApiFailed] = useState(false);
+  const [typedPlaceholder, setTypedPlaceholder] = useState('');
+  const [phraseIdx, setPhraseIdx] = useState(0);
+  const [charIdx, setCharIdx] = useState(0);
+  const [deleting, setDeleting] = useState(false);
 
   const wrapRef = useRef(null);
   const inputRef = useRef(null);
@@ -55,6 +68,32 @@ export default function GlobalSearch({
   const isHero = variant === 'hero';
   const isHeader = variant === 'header';
   const isMobile = variant === 'mobile';
+
+  useEffect(() => {
+    if (!isHero || query.trim()) {
+      setTypedPlaceholder('');
+      return undefined;
+    }
+    const phrase = HERO_TYPE_QUERIES[phraseIdx % HERO_TYPE_QUERIES.length];
+    const delay = deleting ? 35 : charIdx === phrase.length ? 1800 : 65;
+    const t = setTimeout(() => {
+      if (!deleting) {
+        if (charIdx < phrase.length) {
+          setTypedPlaceholder(phrase.slice(0, charIdx + 1));
+          setCharIdx((c) => c + 1);
+        } else {
+          setDeleting(true);
+        }
+      } else if (charIdx > 0) {
+        setTypedPlaceholder(phrase.slice(0, charIdx - 1));
+        setCharIdx((c) => c - 1);
+      } else {
+        setDeleting(false);
+        setPhraseIdx((i) => (i + 1) % HERO_TYPE_QUERIES.length);
+      }
+    }, delay);
+    return () => clearTimeout(t);
+  }, [isHero, query, phraseIdx, charIdx, deleting]);
 
   const flatItems = useMemo(() => {
     const items = [];
@@ -336,8 +375,10 @@ export default function GlobalSearch({
   };
 
   const showDropdown = open && query.trim().length >= 2;
-  const showQuickTags = isHero || isMobile;
+  const showQuickTags = isHero;
   const trimmedQuery = query.trim();
+
+  const heroPlaceholder = typedPlaceholder ? `Search ${typedPlaceholder}` : 'Search physiotherapy…';
 
   const inputClass = isHero
     ? 'w-full bg-white/95 backdrop-blur-md border-0 rounded-xl sm:rounded-2xl py-3.5 sm:py-4 pl-12 pr-28 sm:pr-32 text-sm sm:text-base text-slate-900 placeholder:text-slate-400 shadow-xl shadow-black/10 focus:ring-2 focus:ring-orange-400/80 outline-none'
@@ -468,8 +509,8 @@ export default function GlobalSearch({
             icon="fa-magnifying-glass"
             className={`absolute top-1/2 -translate-y-1/2 pointer-events-none ${
               isHero
-                ? 'left-4 text-base text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]'
-                : 'left-3 text-sm text-orange-500'
+                ? 'left-4 text-base text-slate-700'
+                : 'left-3 text-sm text-slate-600'
             }`}
           />
           <input
@@ -484,7 +525,7 @@ export default function GlobalSearch({
             }}
             onFocus={() => setOpen(true)}
             onKeyDown={onKeyDown}
-            placeholder={isHero || isMobile ? SEARCH_HINT : 'Search…'}
+            placeholder={isHero ? heroPlaceholder : isMobile ? SEARCH_HINT : 'Search…'}
             aria-label="Universal search"
             aria-expanded={showDropdown}
             aria-autocomplete="list"

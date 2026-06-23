@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import FaIcon from '../components/FaIcon';
 import { physioFeed } from '../services/api';
+import { resolveMediaUrl } from '../utils/mediaUrl';
 
 export default function PhysioFeedDetail() {
   const { slug } = useParams();
@@ -47,7 +48,18 @@ export default function PhysioFeedDetail() {
   return (
     <>
       <Navbar />
-      <article className="max-w-3xl mx-auto px-4 pt-24 pb-16">
+      {post.featured_image && (
+        <div className="pt-16 sm:pt-20">
+          <div className="h-48 sm:h-64 md:h-72 w-full overflow-hidden bg-slate-200">
+            <img
+              src={resolveMediaUrl(post.featured_image) || post.featured_image}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </div>
+      )}
+      <article className={`max-w-3xl mx-auto px-4 pb-16 ${post.featured_image ? 'pt-8' : 'pt-24'}`}>
         <Link to="/physiofeed" className="text-sm text-indigo-600 font-semibold inline-flex items-center gap-1 mb-6">
           <FaIcon icon="fa-arrow-left" /> Back to PhysioFeed
         </Link>

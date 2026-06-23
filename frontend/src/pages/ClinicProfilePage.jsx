@@ -5,6 +5,7 @@ import Footer from '../components/Footer';
 import FaIcon from '../components/FaIcon';
 import ClinicLogo from '../components/ClinicLogo';
 import ClinicBannerCarousel from '../components/clinic/ClinicBannerCarousel';
+import ClinicSlotsPreview from '../components/clinic/ClinicSlotsPreview';
 import DoctorAvatar from '../components/DoctorAvatar';
 import BadgeList from '../components/platform/BadgeList';
 import ReviewStars from '../components/platform/ReviewStars';
@@ -31,6 +32,11 @@ function Section({ title, icon, children, accent = 'emerald' }) {
       {children}
     </section>
   );
+}
+
+function formatPatientsTreated(count) {
+  if (!count || count <= 0) return '—';
+  return `${Number(count).toLocaleString('en-IN')}+`;
 }
 
 function StatPill({ label, value, icon, tone = 'emerald', compact = false }) {
@@ -298,7 +304,7 @@ export default function ClinicProfilePage() {
               />
               <StatPill
                 label="Patients"
-                value={stats.patients_treated > 0 ? stats.patients_treated.toLocaleString('en-IN') : '—'}
+                value={formatPatientsTreated(stats.patients_treated)}
                 icon="fa-users"
                 compact
               />
@@ -320,7 +326,7 @@ export default function ClinicProfilePage() {
               />
               <StatPill
                 label="Patients treated"
-                value={stats.patients_treated > 0 ? stats.patients_treated.toLocaleString('en-IN') : '—'}
+                value={formatPatientsTreated(stats.patients_treated)}
                 icon="fa-users"
               />
               <StatPill label="Staff" value={stats.staff_count || doctorCount || '—'} icon="fa-user-doctor" />
@@ -365,12 +371,19 @@ export default function ClinicProfilePage() {
               </p>
             </Section>
 
+            <Section title="Appointment availability" icon="fa-calendar-check">
+              <p className="text-sm text-slate-600 mb-4">
+                Live open slots at this clinic — pick a date and time to book your visit.
+              </p>
+              <ClinicSlotsPreview clinicId={clinic.id} />
+            </Section>
+
             <Section title="Clinic statistics" icon="fa-chart-simple">
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4 text-center">
                   <p className="text-[10px] font-bold uppercase text-emerald-700/80">Patients treated</p>
                   <p className="text-2xl font-bold text-emerald-900 mt-1">
-                    {stats.patients_treated > 0 ? stats.patients_treated.toLocaleString('en-IN') : '—'}
+                    {formatPatientsTreated(stats.patients_treated)}
                   </p>
                 </div>
                 <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-4 text-center">
@@ -532,9 +545,10 @@ export default function ClinicProfilePage() {
               <p className="text-sm text-slate-600 mb-4">
                 Choose a physiotherapist and time for your in-clinic visit.
               </p>
+              <ClinicSlotsPreview clinicId={clinic.id} />
               <Link
                 to={clinicBookUrl(clinic)}
-                className="btn-primary w-full text-center block mb-3 !bg-emerald-600 hover:!bg-emerald-700"
+                className="btn-primary w-full text-center block mt-4 mb-3 !bg-emerald-600 hover:!bg-emerald-700"
               >
                 Book now
               </Link>

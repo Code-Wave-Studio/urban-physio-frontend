@@ -288,6 +288,7 @@ export const admin = {
   treatmentDelete: (id, permanent = false) =>
     api.delete(`/admin/treatments/${id}`, { params: permanent ? { hard: '1' } : {} }),
   invoiceSettings: () => api.get('/admin/invoice-settings'),
+  repairHtmlEntities: () => api.post('/admin/maintenance/fix-html-entities', {}),
   updateInvoiceSettings: (data) => api.put('/admin/invoice-settings', data),
   contactSettings: () => api.get('/admin/contact-settings'),
   updateContactSettings: (data) => api.put('/admin/contact-settings', data),

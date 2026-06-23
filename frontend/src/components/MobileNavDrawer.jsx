@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import FaIcon from './FaIcon';
-import GlobalSearch from './GlobalSearch';
 import { hapticClose, hapticOpen } from '../utils/haptics';
 
 const EXPLORE_LINKS = [
@@ -165,10 +164,6 @@ export default function MobileNavDrawer({
         </div>
 
         <nav className="flex-1 overflow-y-auto p-3 sm:p-4">
-          <div className="pb-4 mb-3 border-b border-slate-100">
-            <GlobalSearch variant="mobile" autoFocus={open} onNavigate={onClose} />
-          </div>
-
           {user ? (
             accountLinks.length > 0 && (
               <NavSection title={accountTitle}>
