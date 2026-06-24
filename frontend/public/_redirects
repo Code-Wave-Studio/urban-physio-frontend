@@ -1,11 +1,5 @@
-# Cloudflare Pages — SPA routing (static /assets/* are served first when present in the build)
-# If you see "MIME type text/html" for .js files, redeploy the FULL dist/ folder (index.html + assets/).
+# Cloudflare Pages — SPA fallback (static files in /assets/ are served automatically when present)
 
-/assets/*
-  /assets/:splat
-  200
-
-# Optional: proxy API when frontend uses same-origin /backend/api (fallback)
 /backend/api/*
   https://mediumorchid-monkey-387815.hostingersite.com/backend/api/:splat
   200

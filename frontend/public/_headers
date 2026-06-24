@@ -1,8 +1,13 @@
-/assets/*
-  Content-Type: application/javascript; charset=utf-8
+# Cloudflare Pages — MIME types per extension only (never use /assets/* blanket — it breaks .css)
 
 /assets/*.css
   Content-Type: text/css; charset=utf-8
+
+/assets/*.js
+  Content-Type: application/javascript; charset=utf-8
+
+/assets/*.mjs
+  Content-Type: application/javascript; charset=utf-8
 
 /assets/*.woff2
   Content-Type: font/woff2
@@ -19,8 +24,11 @@
 /assets/*.svg
   Content-Type: image/svg+xml
 
-/assets/*.js
-  Content-Type: application/javascript; charset=utf-8
+/logo.png
+  Content-Type: image/png
 
-/assets/*.mjs
-  Content-Type: application/javascript; charset=utf-8
+/*.png
+  Content-Type: image/png
+
+/*.svg
+  Content-Type: image/svg+xml
