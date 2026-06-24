@@ -23,8 +23,21 @@ export default defineConfig(({ mode }) => {
 
   return {
     base,
+    build: {
+      // New folder name — bypasses Cloudflare edge cache that wrongly tagged /assets/*.css as JS
+      assetsDir: 'static',
+    },
     plugins: [
       react(),
+      {
+        name: 'html-css-before-js',
+        transformIndexHtml(html) {
+          return html.replace(
+            /(<script type="module" crossorigin src="[^"]+"><\/script>\s*)(<link rel="stylesheet" crossorigin href="[^"]+">)/,
+            '$2\n    $1',
+          )
+        },
+      },
       // Cloudflare Pages ignores .htaccess — keep it out of dist to avoid confusion
       {
         name: 'cloudflare-dist-cleanup',

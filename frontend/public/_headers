@@ -1,0 +1,25 @@
+# Cloudflare Pages — extension-only MIME (NEVER use /static/* or /assets/* blanket rules)
+
+/static/*.css
+  Content-Type: text/css; charset=utf-8
+
+/static/*.js
+  Content-Type: application/javascript; charset=utf-8
+
+/static/*.mjs
+  Content-Type: application/javascript; charset=utf-8
+
+/static/*.woff2
+  Content-Type: font/woff2
+
+/static/*.woff
+  Content-Type: font/woff
+
+/static/*.png
+  Content-Type: image/png
+
+/static/*.svg
+  Content-Type: image/svg+xml
+
+/logo.png
+  Content-Type: image/png
