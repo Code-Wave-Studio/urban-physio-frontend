@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
 import FaIcon from '../components/FaIcon';
+import Logo from '../components/Logo';
 import { notifications } from '../services/api';
 import { hasStoredToken } from '../utils/authSession';
 
@@ -84,12 +85,13 @@ export default function DashboardLayout({ children, links = [], variant }) {
             {isAdmin ? (
               <div className="dashboard-sidebar-header mb-4 pb-4 border-b border-slate-200/80 shrink-0">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary-600 to-primary-700 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-primary-600/25 shrink-0">
-                    UP
-                  </div>
+                  <Logo
+                    linkToHome={false}
+                    showText={false}
+                    className="h-11 w-auto max-w-[130px] object-contain shrink-0"
+                  />
                   <div className="min-w-0">
-                    <p className="font-bold text-slate-900 text-sm leading-tight truncate">The Urban Physio</p>
-                    <p className="text-[11px] font-semibold text-primary-600 uppercase tracking-wider mt-0.5">
+                    <p className="text-[11px] font-semibold text-primary-600 uppercase tracking-wider">
                       Admin Console
                     </p>
                   </div>
@@ -101,9 +103,11 @@ export default function DashboardLayout({ children, links = [], variant }) {
             ) : isPatient ? (
               <div className="dashboard-sidebar-header shrink-0 mb-4 pb-4 border-b border-slate-200/80">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-orange-500 to-primary-600 text-white flex items-center justify-center shadow-md shadow-orange-500/25 shrink-0">
-                    <FaIcon icon="fa-heart-pulse" className="text-lg" />
-                  </div>
+                  <Logo
+                    linkToHome={false}
+                    showText={false}
+                    className="h-10 w-auto max-w-[120px] object-contain shrink-0"
+                  />
                   <div className="min-w-0">
                     <p className="font-bold text-slate-900 text-sm leading-tight">Patient Portal</p>
                     <p className="text-[11px] font-semibold text-primary-600 uppercase tracking-wider mt-0.5">
@@ -118,9 +122,11 @@ export default function DashboardLayout({ children, links = [], variant }) {
             ) : isDoctor ? (
               <div className="dashboard-sidebar-header shrink-0 mb-4 pb-4 border-b border-slate-200/80">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-600 to-primary-600 text-white flex items-center justify-center shadow-md shadow-teal-600/25 shrink-0">
-                    <FaIcon icon="fa-user-doctor" className="text-lg" />
-                  </div>
+                  <Logo
+                    linkToHome={false}
+                    showText={false}
+                    className="h-10 w-auto max-w-[120px] object-contain shrink-0"
+                  />
                   <div className="min-w-0">
                     <p className="font-bold text-slate-900 text-sm leading-tight">Doctor Portal</p>
                     <p className="text-[11px] font-semibold text-teal-700 uppercase tracking-wider mt-0.5">

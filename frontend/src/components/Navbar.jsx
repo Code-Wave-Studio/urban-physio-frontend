@@ -132,7 +132,11 @@ export default function Navbar({ beforeLogo = null, headerSpacerClass = '' }) {
             <div className="flex items-center gap-2 shrink-0">
               {beforeLogo}
               <Link to="/" className="flex items-center shrink-0" onClick={() => setMobileOpen(false)}>
-                <Logo className="h-8 md:h-9 w-auto max-w-[120px] md:max-w-[150px] object-contain" showText={false} />
+                <Logo
+                  linkToHome={false}
+                  className="h-9 md:h-10 w-auto max-w-[100px] md:max-w-[120px] object-contain"
+                  showText={false}
+                />
               </Link>
             </div>
 

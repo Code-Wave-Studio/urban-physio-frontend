@@ -1,38 +1,23 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import FaIcon from './FaIcon';
-
-/** Logo file: frontend/public/logo.png */
-const LOGO_FILES = ['logo.svg', 'logo.png', 'logo.webp', 'logo.jpg'];
+import { SITE_LOGO_SRC } from '../constants/siteBrand';
 
 export default function Logo({
   className = 'h-10 w-auto max-w-[180px] object-contain',
-  showText = true,
+  showText = false,
   textClassName = '',
   linkToHome = true,
   lightText = false,
 }) {
-  const base = import.meta.env.BASE_URL;
-  const [srcIndex, setSrcIndex] = useState(0);
   const [failed, setFailed] = useState(false);
-
-  const src = `${base}${LOGO_FILES[srcIndex]}`;
-
-  const handleError = () => {
-    if (srcIndex < LOGO_FILES.length - 1) {
-      setSrcIndex((i) => i + 1);
-    } else {
-      setFailed(true);
-    }
-  };
 
   const image = !failed ? (
     <img
-      key={src}
-      src={src}
+      src={SITE_LOGO_SRC}
       alt="The Urban Physio"
       className={`${className} group-hover:scale-105 transition-transform`}
-      onError={handleError}
+      onError={() => setFailed(true)}
     />
   ) : (
     <div className="w-10 h-10 bg-primary-600/90 backdrop-blur rounded-xl flex items-center justify-center shadow-lg shrink-0">

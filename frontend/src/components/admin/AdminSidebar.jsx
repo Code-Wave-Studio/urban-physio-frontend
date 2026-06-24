@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import FaIcon from '../FaIcon';
+import { SITE_LOGO_SRC } from '../../constants/siteBrand';
 
 export default function AdminSidebar({ open, onClose, links, unreadCount = 0 }) {
   const { pathname } = useLocation();
@@ -25,9 +26,7 @@ export default function AdminSidebar({ open, onClose, links, unreadCount = 0 }) 
       >
         <div className="flex items-center justify-between gap-2 p-4 border-b border-slate-200/80 lg:hidden shrink-0">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-800 to-primary-700 text-white flex items-center justify-center shrink-0">
-              <FaIcon icon="fa-shield-halved" className="text-sm" />
-            </div>
+            <img src={SITE_LOGO_SRC} alt="The Urban Physio" className="h-9 w-auto max-w-[110px] object-contain shrink-0" />
             <div className="min-w-0">
               <p className="font-bold text-slate-900 text-sm">Admin Console</p>
               <p className="text-xs text-slate-500 truncate">
@@ -42,12 +41,9 @@ export default function AdminSidebar({ open, onClose, links, unreadCount = 0 }) 
 
         <div className="hidden lg:block p-4 pb-3 border-b border-slate-200/80 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-slate-800 via-slate-900 to-primary-700 text-white flex items-center justify-center shadow-md shadow-slate-900/25 shrink-0">
-              <FaIcon icon="fa-shield-halved" className="text-lg" />
-            </div>
+            <img src={SITE_LOGO_SRC} alt="The Urban Physio" className="h-11 w-auto max-w-[130px] object-contain shrink-0" />
             <div className="min-w-0">
-              <p className="font-bold text-slate-900 text-sm leading-tight">The Urban Physio</p>
-              <p className="text-[10px] font-semibold text-primary-600 uppercase tracking-wider mt-0.5">
+              <p className="text-[10px] font-semibold text-primary-600 uppercase tracking-wider">
                 Admin Console
               </p>
               <p className="text-[10px] text-slate-500 truncate mt-1">

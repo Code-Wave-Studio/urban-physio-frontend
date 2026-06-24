@@ -4,6 +4,7 @@ import FooterCookieSettings from './FooterCookieSettings';
 import { ALL_POLICIES } from '../constants/policyPages';
 import { useContact } from '../contexts/ContactContext';
 import { displayContactText } from '../utils/contactText';
+import { SITE_LOGO_SRC } from '../constants/siteBrand';
 
 const QUICK_LINKS = [
   { to: '/doctors', label: 'Find Doctors', icon: 'fa-user-doctor' },
@@ -47,7 +48,6 @@ function FooterLinkColumn({ title, links }) {
 }
 
 export default function Footer() {
-  const logoBase = import.meta.env.BASE_URL;
   const contact = useContact();
   const email = displayContactText(contact.email);
   const phone = displayContactText(contact.phone);
@@ -68,16 +68,12 @@ export default function Footer() {
             <div className="lg:col-span-5">
               <div className="inline-flex items-center bg-white rounded-2xl px-4 py-2.5 shadow-xl shadow-black/25 mb-5">
                 <img
-                  src={`${logoBase}logo.png`}
+                  src={SITE_LOGO_SRC}
                   alt="The Urban Physio"
                   className="h-11 sm:h-12 w-auto max-w-[200px] object-contain"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                  }}
                 />
               </div>
-              <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">The Urban Physio</h3>
-              <p className="text-primary-200/85 max-w-md mt-3 text-sm leading-relaxed">{footer_tagline}</p>
+              <p className="text-primary-200/85 max-w-md mt-1 text-sm leading-relaxed">{footer_tagline}</p>
               {address && (
                 <p className="text-primary-300/70 text-xs mt-3 flex items-start gap-2 max-w-md">
                   <FaIcon icon="fa-location-dot" className="mt-0.5 shrink-0 text-orange-400/80" />
