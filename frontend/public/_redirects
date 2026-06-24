@@ -1,10 +1,24 @@
-# Cloudflare Pages — SPA fallback only.
-# Do NOT add _headers that set Content-Type on /assets/* — Cloudflare auto-detects .css / .js correctly.
+# =============================================================================
+# Cloudflare Pages — The Urban Physio
+# =============================================================================
+# Rules run top → bottom. Static files that EXIST in the build (assets/, logo.png)
+# are served by Cloudflare BEFORE redirects. These rules are for routing only.
+#
+# NEVER add a _headers file that sets Content-Type on /assets/* — it breaks CSS.
+# =============================================================================
 
-/backend/api/*
-  https://mediumorchid-monkey-387815.hostingersite.com/backend/api/:splat
-  200
+# 1) Vite build output — do not send to index.html
+/assets/*  /assets/:splat  200
 
-/*
-  /index.html
-  200
+# 2) Public root files (logo, robots, svg)
+/logo.png       /logo.png       200
+/robots.txt     /robots.txt     200
+/faqs.svg       /faqs.svg       200
+/hero-illustration.svg  /hero-illustration.svg  200
+/pain-runner.svg        /pain-runner.svg        200
+
+# 3) API proxy (only if something calls same-origin /backend/api)
+/backend/api/*  https://mediumorchid-monkey-387815.hostingersite.com/backend/api/:splat  200
+
+# 4) React Router SPA — must be last
+/*  /index.html  200

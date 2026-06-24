@@ -1,41 +1,34 @@
-# Apache / LiteSpeed (Hostinger public_html) — SPA + correct MIME types
-# Copy this file to public_html/.htaccess when deploying frontend at domain root.
-# Keep backend/ folder alongside index.html (do not route /backend to SPA).
+# =============================================================================
+# Hostinger / Apache ONLY — NOT used by Cloudflare Pages
+# After npm run build: copy dist/htaccess-hostinger.txt → public_html/.htaccess
+# =============================================================================
 
 Options -Indexes
 DirectoryIndex index.html
 
+# MIME types only (do NOT use mod_headers Content-Type — causes duplicate/wrong headers)
 <IfModule mod_mime.c>
+  AddType text/css              .css
   AddType application/javascript .js .mjs
-  AddType text/css .css
-  AddType image/svg+xml .svg
-  AddType font/woff2 .woff2
+  AddType image/svg+xml         .svg
+  AddType image/png             .png
+  AddType image/jpeg            .jpg .jpeg
+  AddType image/webp            .webp
+  AddType font/woff2            .woff2
 </IfModule>
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
 
-  # Never rewrite real files or folders
+  # Serve real files & folders (assets/, logo.png, etc.)
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
-  # API + uploads — pass through to PHP backend
+  # PHP backend — do not route to React
   RewriteRule ^backend/ - [L]
 
-  # Built assets — must exist on disk; do not fall back to index.html
-  RewriteRule ^assets/ - [L]
-
-  # SPA fallback for client-side routes only
+  # React SPA fallback
   RewriteRule ^ index.html [L]
-</IfModule>
-
-<IfModule mod_headers.c>
-  <FilesMatch "\.(js|mjs)$">
-    Header set Content-Type "application/javascript; charset=utf-8"
-  </FilesMatch>
-  <FilesMatch "\.css$">
-    Header set Content-Type "text/css; charset=utf-8"
-  </FilesMatch>
 </IfModule>
