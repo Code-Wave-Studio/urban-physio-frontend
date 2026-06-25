@@ -1,6 +1,7 @@
 export const PATIENT_NAV = [
   { to: '/patient', label: 'Overview', icon: 'fa-house' },
   { to: '/patient/appointments', label: 'Appointments', icon: 'fa-calendar-check' },
+  { to: '/patient/saved', label: 'Saved', icon: 'fa-heart' },
   { to: '/patient/packages', label: 'My Packages', icon: 'fa-box-open' },
   { to: '/patient/notifications', label: 'Notifications', icon: 'fa-bell', notifyKey: true },
   { to: '/patient/reports', label: 'My Reports', icon: 'fa-file-medical' },

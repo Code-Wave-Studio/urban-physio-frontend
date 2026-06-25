@@ -5,6 +5,7 @@ import GlassModal, { GlassModalBody } from '../components/GlassModal';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import FaIcon from '../components/FaIcon';
+import SaveExerciseButton from '../components/exercise/SaveExerciseButton';
 import { exercises } from '../services/api';
 import { bookExerciseUrl } from '../utils/bookUrl';
 
@@ -235,9 +236,12 @@ export default function ExerciseLibrary() {
                 <div className="p-5">
                   <div className="flex justify-between items-start gap-2">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 capitalize">{ex.body_area}</span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border capitalize ${DIFFICULTY_STYLES[ex.difficulty]}`}>
-                      {ex.difficulty}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <SaveExerciseButton exercise={ex} stopPropagation />
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border capitalize ${DIFFICULTY_STYLES[ex.difficulty]}`}>
+                        {ex.difficulty}
+                      </span>
+                    </div>
                   </div>
                   <h3 className="font-bold text-lg text-slate-800 mt-2 group-hover:text-teal-700 transition-colors">{ex.name}</h3>
                   <div className="flex flex-wrap gap-2 mt-3">

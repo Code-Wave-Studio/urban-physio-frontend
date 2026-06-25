@@ -10,6 +10,8 @@ import DoctorAvatar from '../../components/DoctorAvatar';
 import { googleMapsUrl } from '../../utils/locationHelpers';
 import { DOCTOR_NAV } from '../../constants/doctorNav';
 import { useAuth } from '../../contexts/AuthContext';
+import { ClinicSocialLinksFields } from '../../components/clinic/ClinicProfileFormSections';
+import { normalizeSocialLinks } from '../../utils/clinicProfileUtils';
 import toast from 'react-hot-toast';
 
 const TABS = [
@@ -44,6 +46,10 @@ const emptyForm = () => ({
   rating_avg: 0,
   rating_count: 0,
   avatar: '',
+  social_links: normalizeSocialLinks(),
+  profile_public: 1,
+  seo_title: '',
+  seo_description: '',
 });
 
 function profileToForm(p) {
@@ -72,6 +78,10 @@ function profileToForm(p) {
     rating_avg: p.rating_avg,
     rating_count: p.rating_count,
     avatar: p.avatar || '',
+    social_links: normalizeSocialLinks(p.social_links_parsed || p.social_links),
+    profile_public: p.profile_public != null ? Number(p.profile_public) : 1,
+    seo_title: p.seo_title || '',
+    seo_description: p.seo_description || '',
   };
 }
 
@@ -194,6 +204,10 @@ export default function DoctorProfile() {
         license_number: form.license_number.trim(),
         experience_years: parseInt(form.experience_years, 10) || 0,
         bio: form.bio.trim(),
+        social_links: form.social_links,
+        profile_public: form.profile_public ? 1 : 0,
+        seo_title: form.seo_title.trim(),
+        seo_description: form.seo_description.trim(),
       },
       'Professional details saved'
     );
@@ -469,6 +483,27 @@ export default function DoctorProfile() {
               onChange={(e) => set('bio', e.target.value)}
             />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Social media links</label>
+            <ClinicSocialLinksFields
+              form={form}
+              setSocial={(key, value) => setForm((f) => ({ ...f, social_links: { ...f.social_links, [key]: value } }))}
+            />
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">SEO title</label>
+              <input className="input-field" value={form.seo_title} onChange={(e) => set('seo_title', e.target.value)} placeholder="Public profile title" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">SEO description</label>
+              <input className="input-field" value={form.seo_description} onChange={(e) => set('seo_description', e.target.value)} placeholder="Short meta description" />
+            </div>
+          </div>
+          <label className="flex items-center gap-2 text-sm text-slate-700">
+            <input type="checkbox" checked={!!form.profile_public} onChange={(e) => set('profile_public', e.target.checked ? 1 : 0)} />
+            Show my public profile on the website (SEO on)
+          </label>
           <button type="button" onClick={saveProfessional} disabled={saving} className="btn-primary">
             {saving ? 'Saving...' : 'Save professional details'}
           </button>

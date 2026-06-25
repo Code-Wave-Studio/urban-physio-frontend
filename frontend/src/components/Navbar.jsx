@@ -15,6 +15,7 @@ const PRIMARY_NAV_LINKS = [
 
 const MORE_NAV_LINKS = [
   { to: '/book', label: 'Book Appointment', icon: 'fa-calendar-plus' },
+  { to: '/patient/saved', label: 'Saved', icon: 'fa-heart', patientOnly: true },
   { to: '/about', label: 'About Us', icon: 'fa-building' },
   { to: '/book?type=home_visit', label: 'Home Physiotherapy', icon: 'fa-house-medical' },
   { to: '/treatments', label: 'Treatments', icon: 'fa-kit-medical' },
@@ -168,7 +169,7 @@ export default function Navbar({ beforeLogo = null, headerSpacerClass = '' }) {
                       <p className="text-xs text-slate-500 mt-0.5">Book care, explore content &amp; get help</p>
                     </div>
                     <div className="site-nav-mega-menu__grid">
-                      {MORE_NAV_LINKS.map((link) => (
+                      {MORE_NAV_LINKS.filter((link) => !link.patientOnly || (user && hasRole('patient'))).map((link) => (
                         <Link
                           key={link.to + link.label}
                           to={link.to}

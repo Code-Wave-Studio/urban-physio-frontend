@@ -243,6 +243,13 @@ export const patients = {
   favouriteDoctors: () => api.get('/patients/favourite-doctors'),
   addFavouriteDoctor: (doctorId) => api.post(`/patients/favourite-doctors/${doctorId}`),
   removeFavouriteDoctor: (doctorId) => api.delete(`/patients/favourite-doctors/${doctorId}`),
+  favouriteClinics: () => api.get('/patients/favourite-clinics'),
+  addFavouriteClinic: (clinicId) => api.post(`/patients/favourite-clinics/${clinicId}`),
+  removeFavouriteClinic: (clinicId) => api.delete(`/patients/favourite-clinics/${clinicId}`),
+  savedExercises: () => api.get('/patients/saved-exercises'),
+  addSavedExercise: (exerciseId) => api.post(`/patients/saved-exercises/${exerciseId}`),
+  removeSavedExercise: (exerciseId) => api.delete(`/patients/saved-exercises/${exerciseId}`),
+  saved: () => api.get('/patients/saved'),
   visitCredits: () => api.get('/patients/visit-credits'),
 };
 
@@ -302,6 +309,7 @@ export const admin = {
   clinicReject: (id, reason) => api.put(`/admin/clinics/${id}/reject`, { reason }),
   clinicDoctors: (id) => api.get(`/admin/clinics/${id}/doctors`),
   clinicAttachDoctor: (id, doctorId, isPrimary = 0) => api.post(`/admin/clinics/${id}/doctors`, { doctor_id: doctorId, is_primary: isPrimary }),
+  clinicAttachAdminSelf: (id) => api.post(`/admin/clinics/${id}/doctors/attach-self`),
   clinicDetachDoctor: (id, doctorId) => api.delete(`/admin/clinics/${id}/doctors/${doctorId}`),
   locationsOverview: () => api.get('/admin/locations'),
   locationsCities: (stateId) => api.get(`/admin/locations/states/${stateId}/cities`),

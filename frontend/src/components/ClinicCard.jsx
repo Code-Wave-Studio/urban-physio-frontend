@@ -2,14 +2,19 @@ import { Link } from 'react-router-dom';
 import FaIcon from './FaIcon';
 import ClinicLogo from './ClinicLogo';
 import BadgeList from './platform/BadgeList';
+import SaveClinicButton from './clinic/SaveClinicButton';
+import PartnerClinicBadge from './PartnerClinicBadge';
+import { showPartnerClinicBadge } from '../utils/clinicBadges';
 import { bookClinicUrl } from '../utils/bookUrl';
 import { clinicProfileUrl } from '../utils/profileUrls';
+import { clinicMapsUrl } from '../utils/locationHelpers';
 
 /**
  * @param {{ clinic: object, compact?: boolean, variant?: 'default' | 'listing' }} props
  */
 export default function ClinicCard({ clinic, compact = false, variant = 'default' }) {
   const bookTo = bookClinicUrl(clinic.id);
+  const mapUrl = clinicMapsUrl(clinic);
   const rating = Number(clinic.rating_avg) || 0;
   const ratingCount = Number(clinic.rating_count) || 0;
   const doctorCount = Number(clinic.doctor_count) || 0;
@@ -63,10 +68,7 @@ export default function ClinicCard({ clinic, compact = false, variant = 'default
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 text-xs font-semibold border border-emerald-100 shrink-0">
-              <FaIcon icon="fa-circle-check" className="text-emerald-600" />
-              Partner clinic
-            </span>
+            {showPartnerClinicBadge(clinic) && <PartnerClinicBadge />}
             <BadgeList badges={clinic.badges} compact className="!mt-0" />
             {Number(clinic.is_featured) ? (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-violet-50 text-violet-900 text-xs font-semibold border border-violet-100 shrink-0">
@@ -113,17 +115,30 @@ export default function ClinicCard({ clinic, compact = false, variant = 'default
             </p>
           )}
 
-          <div className="mt-auto pt-5 flex gap-2">
+          <div className="mt-auto pt-5 flex flex-wrap gap-2">
             <Link
               to={clinicProfileUrl(clinic)}
-              className="btn-outline flex-1 text-center text-sm !py-2.5 inline-flex items-center justify-center gap-2"
+              className="btn-outline flex-1 min-w-[7rem] text-center text-sm !py-2.5 inline-flex items-center justify-center gap-2"
             >
               <FaIcon icon="fa-hospital" className="text-xs btn-icon" />
               Profile
             </Link>
+            {clinic.phone && (
+              <a href={`tel:${clinic.phone}`} className="btn-outline text-sm !py-2.5 !px-3 inline-flex items-center justify-center gap-1.5">
+                <FaIcon icon="fa-phone" />
+                Call
+              </a>
+            )}
+            {mapUrl && (
+              <a href={mapUrl} target="_blank" rel="noopener noreferrer" className="btn-outline text-sm !py-2.5 !px-3 inline-flex items-center justify-center gap-1.5">
+                <FaIcon icon="fa-diamond-turn-right" />
+                Map
+              </a>
+            )}
+            <SaveClinicButton clinic={clinic} compact className="!py-2.5" />
             <Link
               to={bookTo}
-              className="btn-primary flex-1 text-center text-sm !py-2.5 inline-flex items-center justify-center gap-2 !bg-emerald-600 hover:!bg-emerald-700"
+              className="btn-primary flex-1 min-w-[7rem] text-center text-sm !py-2.5 inline-flex items-center justify-center gap-2 !bg-emerald-600 hover:!bg-emerald-700"
             >
               <FaIcon icon="fa-calendar-check" className="text-xs btn-icon" />
               Book
@@ -155,10 +170,7 @@ export default function ClinicCard({ clinic, compact = false, variant = 'default
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 text-xs font-medium border border-emerald-100 shrink-0">
-          <FaIcon icon="fa-circle-check" className="text-emerald-600" />
-          Partner clinic
-        </span>
+        {showPartnerClinicBadge(clinic) && <PartnerClinicBadge className="text-xs font-medium" />}
         <BadgeList badges={clinic.badges} compact className="!mt-0" />
         {clinic.distance_km != null && (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-50 text-sky-800 text-xs font-medium border border-sky-100">
@@ -175,11 +187,24 @@ export default function ClinicCard({ clinic, compact = false, variant = 'default
         </p>
       )}
 
-      <div className="mt-auto pt-4 flex gap-2">
-        <Link to={clinicProfileUrl(clinic)} className="btn-outline flex-1 text-center text-sm py-2.5">
+      <div className="mt-auto pt-4 flex flex-wrap gap-2">
+        <Link to={clinicProfileUrl(clinic)} className="btn-outline flex-1 min-w-[7rem] text-center text-sm py-2.5">
           View clinic
         </Link>
-        <Link to={bookTo} className="btn-primary flex-1 text-center text-sm py-2.5 inline-flex items-center justify-center gap-2">
+        {clinic.phone && (
+          <a href={`tel:${clinic.phone}`} className="btn-outline text-sm py-2.5 px-3 inline-flex items-center justify-center gap-1.5">
+            <FaIcon icon="fa-phone" />
+            Call
+          </a>
+        )}
+        {mapUrl && (
+          <a href={mapUrl} target="_blank" rel="noopener noreferrer" className="btn-outline text-sm py-2.5 px-3 inline-flex items-center justify-center gap-1.5">
+            <FaIcon icon="fa-diamond-turn-right" />
+            Directions
+          </a>
+        )}
+        <SaveClinicButton clinic={clinic} compact />
+        <Link to={bookTo} className="btn-primary flex-1 min-w-[7rem] text-center text-sm py-2.5 inline-flex items-center justify-center gap-2">
           Book clinic visit
           <FaIcon icon="fa-arrow-right" className="text-xs" />
         </Link>

@@ -10,6 +10,7 @@ import BadgeList from '../components/platform/BadgeList';
 import ReviewStars from '../components/platform/ReviewStars';
 import PageMeta, { doctorSchema } from '../components/seo/PageMeta';
 import ShareProfileButton from '../components/profile/ShareProfileButton';
+import SaveDoctorButton from '../components/SaveDoctorButton';
 import ReviewForm from '../components/platform/ReviewForm';
 import ProfileSlotsPreview from '../components/profile/ProfileSlotsPreview';
 import { doctors } from '../services/api';
@@ -22,12 +23,15 @@ import {
   doctorProfileUrl,
   formatAvailabilitySummary,
 } from '../utils/profileUrls';
+import { isValidHttpUrl, SOCIAL_FIELDS } from '../utils/clinicProfileUtils';
 
 const SERVICE_META = {
   clinic: { icon: 'fa-hospital', label: 'Clinic visit', feeKey: 'consultation_fee' },
   online: { icon: 'fa-video', label: 'Online consult', feeKey: 'online_fee' },
-  home: { icon: 'fa-house-medical', label: 'Home visit', feeKey: 'home_visit_fee' },
+  home_visit: { icon: 'fa-house-medical', label: 'Home visit', feeKey: 'home_visit_fee' },
 };
+
+const SERVICE_TYPES = ['clinic', 'online', 'home_visit'];
 
 function Section({ title, icon, children }) {
   return (
@@ -143,6 +147,8 @@ export default function DoctorProfilePage() {
   }
 
   const enabled = doctor.enabled_services || [];
+  const social = doctor.social_links_parsed || {};
+  const activeSocials = SOCIAL_FIELDS.filter(({ key }) => isValidHttpUrl(social[key]));
   const expertise = doctor.expertise_list?.length
     ? doctor.expertise_list
     : [doctor.specialization].filter(Boolean);
@@ -244,14 +250,33 @@ export default function DoctorProfilePage() {
                 <FaIcon icon="fa-calendar-check" />
                 Book appointment
               </Link>
-              <ShareProfileButton title={fullName} />
               {doctor.phone && (
                 <a href={`tel:${doctor.phone}`} className="btn-outline text-sm !px-5 !py-3">
                   <FaIcon icon="fa-phone" />
                   Call
                 </a>
               )}
+              <SaveDoctorButton doctor={doctor} compact />
+              <ShareProfileButton title={fullName} />
             </div>
+
+            {activeSocials.length > 0 && (
+              <div className="mt-3 flex flex-wrap justify-center md:justify-start gap-2">
+                {activeSocials.map(({ key, icon, brand, label }) => (
+                  <a
+                    key={key}
+                    href={social[key]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200/80"
+                    aria-label={label}
+                    title={label}
+                  >
+                    <FaIcon icon={icon} brand={brand} className="text-sm" />
+                  </a>
+                ))}
+              </div>
+            )}
 
             <div className="mt-4 flex sm:hidden justify-center">
               <ShareProfileButton title={fullName} className="!py-2.5 !text-sm w-full max-w-xs justify-center" />
@@ -308,7 +333,7 @@ export default function DoctorProfilePage() {
 
       <div className="max-w-6xl mx-auto px-4 pt-4 sm:pt-6 pb-24 sm:pb-8 md:pb-10 space-y-4 sm:space-y-6">
         <div className="grid md:grid-cols-3 gap-3 sm:gap-4">
-          {['clinic', 'online', 'home'].map((type) => {
+          {SERVICE_TYPES.map((type) => {
             const meta = SERVICE_META[type];
             const active = enabled.includes(type);
             const fee = doctor[meta.feeKey];

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import GlassModal, { GlassModalBody, GlassModalFooter, GlassModalHeader } from '../../components/GlassModal';
+import MediaUrlOrUpload from '../../components/admin/MediaUrlOrUpload';
 import FaIcon from '../../components/FaIcon';
-import { admin } from '../../services/api';
+import { admin, uploadCmsImage, uploadCmsVideo } from '../../services/api';
 import toast from 'react-hot-toast';
 
 const EMPTY = {
@@ -196,6 +197,28 @@ export default function AdminExercises() {
               <input className="input-field" type="number" placeholder="Hold (s)" value={form.default_hold_seconds} onChange={(e) => setForm({ ...form, default_hold_seconds: e.target.value })} />
             </div>
             <input className="input-field" placeholder="Equipment (optional)" value={form.equipment} onChange={(e) => setForm({ ...form, equipment: e.target.value })} />
+            <MediaUrlOrUpload
+              label="Exercise video (URL or upload)"
+              hint="MP4 or external video link"
+              icon="fa-video"
+              urlValue={form.video_url}
+              onUrlChange={(v) => setForm({ ...form, video_url: v })}
+              onUpload={uploadCmsVideo}
+              accept="video/mp4,video/webm"
+              maxMb={50}
+              preview="none"
+            />
+            <MediaUrlOrUpload
+              label="Demo GIF / image (URL or upload)"
+              hint="Animated GIF or still image for the exercise"
+              icon="fa-image"
+              urlValue={form.image_url}
+              onUrlChange={(v) => setForm({ ...form, image_url: v })}
+              onUpload={uploadCmsImage}
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              maxMb={8}
+              preview="image"
+            />
             <textarea className="input-field min-h-[100px]" placeholder="Step-by-step instructions" value={form.instructions} onChange={(e) => setForm({ ...form, instructions: e.target.value })} required />
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={!!form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked ? 1 : 0 })} />

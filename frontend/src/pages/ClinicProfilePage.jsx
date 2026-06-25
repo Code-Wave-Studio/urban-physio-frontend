@@ -16,6 +16,7 @@ import { clinics } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import { formatOpeningHoursRows, getBannerImages, isValidHttpUrl, SOCIAL_FIELDS, todayOpenStatus } from '../utils/clinicProfileUtils';
+import { showPartnerClinicBadge } from '../utils/clinicBadges';
 import { googleMapsUrl } from '../utils/locationHelpers';
 import { clinicBookUrl, clinicProfileUrl, doctorProfileUrl, formatOpeningHours } from '../utils/profileUrls';
 
@@ -202,10 +203,12 @@ export default function ClinicProfilePage() {
         <div className="relative max-w-6xl mx-auto px-4 pt-16 sm:pt-20 md:pt-24 pb-8 sm:pb-10 md:pb-12">
           <div className="text-center md:text-left">
               <div className="flex flex-wrap justify-center md:justify-start items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
+                {showPartnerClinicBadge(clinic) && (
                 <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full shrink-0">
                   <FaIcon icon="fa-circle-check" className="text-emerald-600" />
                   Partner clinic
                 </span>
+                )}
                 <BadgeList badges={clinic.badges} compact className="!mt-0" />
                 {(clinic.is_featured === 1 || clinic.is_featured === '1') && (
                   <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1 rounded-full shrink-0">

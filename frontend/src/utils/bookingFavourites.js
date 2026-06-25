@@ -19,6 +19,7 @@ export function toggleLocalFavourite(doctorId) {
   const list = getLocalFavourites();
   const next = list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
   setLocalFavourites(next);
+  window.dispatchEvent(new CustomEvent('saved-doctors-changed'));
   return next.includes(id);
 }
 

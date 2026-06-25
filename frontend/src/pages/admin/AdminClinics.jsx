@@ -359,6 +359,16 @@ function ClinicDoctorsModal({ open, onClose, clinic }) {
     }
   };
 
+  const attachSelf = async () => {
+    try {
+      await admin.clinicAttachAdminSelf(clinic.id);
+      toast.success('You are attached — manage this clinic from Doctor dashboard → My Clinics');
+      load();
+    } catch (e) {
+      toast.error(e.message || 'Could not attach your admin account');
+    }
+  };
+
   const detach = async (doctorId) => {
     try {
       await admin.clinicDetachDoctor(clinic.id, doctorId);
@@ -395,6 +405,10 @@ function ClinicDoctorsModal({ open, onClose, clinic }) {
               Attach
             </button>
           </div>
+          <button type="button" className="btn-outline text-sm w-full mt-3 inline-flex items-center justify-center gap-2" onClick={attachSelf}>
+            <FaIcon icon="fa-user-shield" />
+            Attach me as clinic manager (full edit access)
+          </button>
         </div>
 
         {loading ? (

@@ -61,6 +61,7 @@ import ExerciseLibrary from './pages/ExerciseLibrary';
 import AdminTreatmentPackages from './pages/admin/AdminTreatmentPackages';
 import AdminExercises from './pages/admin/AdminExercises';
 import PatientPackages from './pages/patient/PatientPackages';
+import PatientSaved from './pages/patient/PatientSaved';
 import DoctorPackages from './pages/doctor/DoctorPackages';
 import DoctorPrescriptions from './pages/doctor/DoctorPrescriptions';
 import PhysioFeed from './pages/PhysioFeed';
@@ -153,6 +154,7 @@ export default function App() {
       <Route path="/patient" element={<ProtectedRoute roles={['patient']}><PatientDashboard /></ProtectedRoute>} />
       <Route path="/patient/appointments" element={<ProtectedRoute roles={['patient']}><PatientAppointments /></ProtectedRoute>} />
       <Route path="/patient/packages" element={<ProtectedRoute roles={['patient']}><PatientPackages /></ProtectedRoute>} />
+      <Route path="/patient/saved" element={<ProtectedRoute roles={['patient']}><PatientSaved /></ProtectedRoute>} />
       <Route path="/patient/reports" element={<ProtectedRoute roles={['patient']}><PatientReports /></ProtectedRoute>} />
       <Route path="/patient/profile" element={<ProtectedRoute roles={['patient']}><PatientProfile /></ProtectedRoute>} />
       <Route path="/patient/notifications" element={<ProtectedRoute roles={['patient']}><NotificationsPage /></ProtectedRoute>} />

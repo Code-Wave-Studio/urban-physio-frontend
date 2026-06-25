@@ -32,7 +32,7 @@ export function doctorMinFee(doctor, enabled = []) {
   const fees = [];
   if (enabled.includes('clinic')) fees.push(Number(doctor?.consultation_fee));
   if (enabled.includes('online')) fees.push(Number(doctor?.online_fee));
-  if (enabled.includes('home')) fees.push(Number(doctor?.home_visit_fee));
+  if (enabled.includes('home_visit') || enabled.includes('home')) fees.push(Number(doctor?.home_visit_fee));
   const valid = fees.filter((f) => f > 0);
   return valid.length ? Math.min(...valid) : null;
 }

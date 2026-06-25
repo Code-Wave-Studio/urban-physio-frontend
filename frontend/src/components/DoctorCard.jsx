@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import FaIcon from './FaIcon';
 import DoctorAvatar from './DoctorAvatar';
+import SaveDoctorButton from './SaveDoctorButton';
 import { bookDoctorUrl } from '../utils/bookUrl';
 import { doctorProfileUrl } from '../utils/profileUrls';
 
@@ -94,17 +95,18 @@ export default function DoctorCard({ doctor, compact = false, variant = 'default
             </div>
           </div>
 
-          <div className="mt-auto pt-5 flex gap-2">
+          <div className="mt-auto pt-5 flex flex-wrap gap-2">
             <Link
               to={doctorProfileUrl(doctor)}
-              className="btn-outline flex-1 text-center text-sm !py-2.5 inline-flex items-center justify-center gap-2"
+              className="btn-outline flex-1 min-w-[6rem] text-center text-sm !py-2.5 inline-flex items-center justify-center gap-2"
             >
               <FaIcon icon="fa-user" className="text-xs btn-icon" />
               Profile
             </Link>
+            <SaveDoctorButton doctor={doctor} compact className="!py-2.5" />
             <Link
               to={bookDoctorUrl(doctor.id)}
-              className="btn-primary flex-1 text-center text-sm !py-2.5 inline-flex items-center justify-center gap-2"
+              className="btn-primary flex-1 min-w-[6rem] text-center text-sm !py-2.5 inline-flex items-center justify-center gap-2"
             >
               <FaIcon icon="fa-calendar-check" className="text-xs btn-icon" />
               Book
@@ -135,9 +137,12 @@ export default function DoctorCard({ doctor, compact = false, variant = 'default
           </div>
         </div>
       </div>
-      <Link to={bookDoctorUrl(doctor.id)} className="btn-primary w-full mt-3 md:mt-4 text-center block text-sm">
-        Book Appointment
-      </Link>
+      <div className="mt-3 md:mt-4 flex gap-2">
+        <SaveDoctorButton doctor={doctor} compact className="!py-2" />
+        <Link to={bookDoctorUrl(doctor.id)} className="btn-primary flex-1 text-center block text-sm">
+          Book Appointment
+        </Link>
+      </div>
     </div>
   );
 }

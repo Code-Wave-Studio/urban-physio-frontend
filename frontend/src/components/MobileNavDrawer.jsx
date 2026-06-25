@@ -100,6 +100,7 @@ export default function MobileNavDrawer({
   }, [open]);
 
   const patientLinks = [
+    { to: '/patient/saved', label: 'Saved', icon: 'fa-heart' },
     { to: '/patient/profile', label: 'Profile', icon: 'fa-user' },
     { to: '/patient/appointments', label: 'Appointments', icon: 'fa-calendar-check' },
     { to: '/patient/packages', label: 'Orders', icon: 'fa-box-open' },

@@ -11,6 +11,13 @@ import toast from 'react-hot-toast';
 
 const QUICK = [
   {
+    to: '/patient/saved',
+    title: 'Saved',
+    desc: 'Doctors, clinics & exercises',
+    icon: 'fa-heart',
+    color: 'from-rose-500 to-pink-600',
+  },
+  {
     to: '/book',
     title: 'Book appointment',
     desc: 'Online, clinic or home visit',
