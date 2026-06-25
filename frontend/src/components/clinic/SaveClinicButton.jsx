@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import FaIcon from '../FaIcon';
 
 import { useAuth } from '../../contexts/AuthContext';
-
+import { useRequireAuth } from '../../utils/requireAuth';
 import { patients } from '../../services/api';
 
 import { isClinicSaved, toggleSavedClinic } from '../../utils/savedClinics';
@@ -15,6 +15,7 @@ import toast from 'react-hot-toast';
 export default function SaveClinicButton({ clinic, className = '', compact = false }) {
 
   const { user, hasRole } = useAuth();
+  const { requireAuth } = useRequireAuth();
 
   const [saved, setSaved] = useState(() => isClinicSaved(clinic?.id));
 
@@ -35,7 +36,7 @@ export default function SaveClinicButton({ clinic, className = '', compact = fal
 
 
   const toggle = async () => {
-
+    if (!requireAuth('Log in to save clinics')) return;
     const { saved: next } = toggleSavedClinic(clinic);
 
     setSaved(next);

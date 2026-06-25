@@ -27,7 +27,7 @@ import BookingPolicyAcceptance, {
 } from '../components/booking/BookingPolicyAcceptance';
 import BookingStepProgress from '../components/booking/BookingStepProgress';
 import BookingProviderSelectStep from '../components/booking/BookingProviderSelectStep';
-import BookingScheduleStep from '../components/booking/BookingScheduleStep';
+import BookingScheduleStep, { CUSTOM_PACKAGE_ID, SINGLE_PACKAGE_ID } from '../components/booking/BookingScheduleStep';
 import BookingChiefComplaintStep from '../components/booking/BookingChiefComplaintStep';
 import BookingPersonalDetailsStep from '../components/booking/BookingPersonalDetailsStep';
 import { POLICY_LAST_UPDATED } from '../constants/policyPages';
@@ -131,9 +131,18 @@ export default function BookAppointmentWizard() {
   const [providerSearch, setProviderSearch] = useState('');
   const [sortBy, setSortBy] = useState('recommended');
   const [specialization, setSpecialization] = useState('all');
-  const [packageId, setPackageId] = useState('single');
+  const [packageId, setPackageId] = useState(SINGLE_PACKAGE_ID);
+  const [doctorPackages, setDoctorPackages] = useState([]);
+  const [selectedDoctorPackage, setSelectedDoctorPackage] = useState(null);
+  const [scheduleSessions, setScheduleSessions] = useState([{ date: '', time: '' }]);
+  const [slotsCache, setSlotsCache] = useState({});
+  const [slotsLoadingDate, setSlotsLoadingDate] = useState('');
+  const [onlineStateId, setOnlineStateId] = useState('');
+  const [indianStates, setIndianStates] = useState([]);
 
-  const prefillSlotTime = searchParams.get('start_time') || searchParams.get('slot') || '';
+  const prefillSlotTime = searchParams.get('start_time') || searchParams.get('slot') || searchParams.get('time') || '';
+  const prefillDate = searchParams.get('date') || '';
+  const prefillPackageId = searchParams.get('package_id') || '';
   const preselectedClinicId = searchParams.get('clinic_id');
   const preselectedDoctorFromQuery = searchParams.get('doctor_id');
   const lockedClinic = Boolean(preselectedClinicId && form.consultation_type === 'clinic');
@@ -158,6 +167,9 @@ export default function BookAppointmentWizard() {
     });
   }, [doctorList, form.consultation_type]);
   const totalFee = () => {
+    if (selectedDoctorPackage?.discount_price != null) {
+      return Number(selectedDoctorPackage.discount_price);
+    }
     if (!selectedDoctor) return 0;
     const base =
       form.consultation_type === 'online'
@@ -216,6 +228,48 @@ export default function BookAppointmentWizard() {
     : null;
 
   useEffect(() => {
+    location.states().then((res) => setIndianStates(res.data || [])).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!form.doctor_id) {
+      setDoctorPackages([]);
+      return;
+    }
+    const type = form.consultation_type;
+    doctors
+      .publicPackages(form.doctor_id)
+      .then((res) => {
+        let list = res.data || [];
+        if (type) {
+          list = list.filter(
+            (p) => !p.consultation_type || p.consultation_type === 'any' || p.consultation_type === type
+          );
+        }
+        setDoctorPackages(list);
+      })
+      .catch(() => setDoctorPackages([]));
+  }, [form.doctor_id, form.consultation_type]);
+
+  useEffect(() => {
+    if (prefillPackageId && doctorPackages.length) {
+      const pkg = doctorPackages.find((p) => String(p.id) === String(prefillPackageId));
+      if (pkg) {
+        setPackageId(String(pkg.id));
+        setSelectedDoctorPackage(pkg);
+        const n = pkg.total_sessions || 1;
+        setScheduleSessions(
+          Array.from({ length: n }, (_, i) =>
+            i === 0 && prefillDate ? { date: prefillDate, time: prefillSlotTime || '' } : { date: '', time: '' }
+          )
+        );
+      }
+    } else if (prefillDate) {
+      setScheduleSessions([{ date: prefillDate, time: prefillSlotTime || '' }]);
+    }
+  }, [prefillPackageId, prefillDate, prefillSlotTime, doctorPackages]);
+
+  useEffect(() => {
     const t = searchParams.get('type');
     if (t && ['online', 'clinic', 'home_visit'].includes(t)) {
       patch({ consultation_type: t });
@@ -259,9 +313,16 @@ export default function BookAppointmentWizard() {
         sort: sortBy,
         specialization,
         limit: 40,
-        ...(coords?.lat != null ? { lat: coords.lat, lng: coords.lng } : {}),
-        ...(city?.id ? { city_id: city.id } : {}),
       };
+      if (form.consultation_type === 'online') {
+        if (onlineStateId) params.state_id = onlineStateId;
+      } else {
+        if (coords?.lat != null) {
+          params.lat = coords.lat;
+          params.lng = coords.lng;
+        }
+        if (city?.id) params.city_id = city.id;
+      }
       const res = await booking.searchProviders(params);
       let docs = res.data?.doctors || [];
       let clins = res.data?.clinics || [];
@@ -292,7 +353,7 @@ export default function BookAppointmentWizard() {
     } finally {
       setDoctorsLoading(false);
     }
-  }, [coords, city, form.consultation_type, form.doctor_id, lockedDoctor, selectedDoctor, providerSearch, sortBy, specialization]);
+  }, [coords, city, form.consultation_type, form.doctor_id, lockedDoctor, selectedDoctor, providerSearch, sortBy, specialization, onlineStateId]);
 
   useEffect(() => {
     loadProvidersForLocation();
@@ -450,6 +511,34 @@ export default function BookAppointmentWizard() {
     }
   }, [form.doctor_id, form.consultation_type]);
 
+  const loadSlotsForDate = useCallback(
+    (date) => {
+      if (!date) return;
+      if (form.consultation_type === 'clinic') {
+        if (!form.clinic_id) return;
+      } else if (!form.doctor_id) {
+        return;
+      }
+      if (slotsCache[date]) return;
+      setSlotsLoadingDate(date);
+      const req =
+        form.consultation_type === 'clinic'
+          ? form.doctor_id
+            ? booking.slotsForClinic(form.doctor_id, form.clinic_id, date)
+            : booking.slots(null, date, form.clinic_id)
+          : booking.slots(form.doctor_id, date);
+      req
+        .then((res) => {
+          setSlotsCache((prev) => ({ ...prev, [date]: res.data || [] }));
+        })
+        .catch(() => {
+          setSlotsCache((prev) => ({ ...prev, [date]: [] }));
+        })
+        .finally(() => setSlotsLoadingDate(''));
+    },
+    [form.doctor_id, form.clinic_id, form.consultation_type, slotsCache]
+  );
+
   const loadSlots = useCallback(() => {
     if (!form.appointment_date) return;
     if (form.consultation_type === 'clinic') {
@@ -516,11 +605,27 @@ export default function BookAppointmentWizard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefillSlotTime, timeSlots]);
 
-  const handlePackageChange = (pkg) => {
-    setPackageId(pkg.id);
+  const handlePackageChange = (id, pkg = null) => {
+    setPackageId(id);
+    if (id === SINGLE_PACKAGE_ID) {
+      setSelectedDoctorPackage(null);
+      setScheduleSessions([{ date: '', time: '' }]);
+      patch({ number_of_sessions: 1, package_label: 'Single Visit', doctor_package_id: '' });
+      return;
+    }
+    if (id === CUSTOM_PACKAGE_ID) {
+      setSelectedDoctorPackage(null);
+      setScheduleSessions([{ date: '', time: '' }]);
+      patch({ number_of_sessions: 1, package_label: 'Custom schedule', doctor_package_id: '' });
+      return;
+    }
+    const sessions = pkg?.total_sessions || 1;
+    setSelectedDoctorPackage(pkg);
+    setScheduleSessions(Array.from({ length: sessions }, () => ({ date: '', time: '' })));
     patch({
-      number_of_sessions: pkg.sessions,
-      package_label: pkg.label,
+      number_of_sessions: sessions,
+      package_label: pkg?.name || 'Package',
+      doctor_package_id: pkg?.id || id,
     });
   };
 
@@ -530,7 +635,7 @@ export default function BookAppointmentWizard() {
       return false;
     }
     if (s === 1) {
-      if (!doctorIdParam && !city && !coords) {
+      if (form.consultation_type !== 'online' && !doctorIdParam && !city && !coords) {
         toast.error('Please select your location first');
         setShowSelector(true);
         return false;
@@ -550,14 +655,17 @@ export default function BookAppointmentWizard() {
       }
     }
     if (s === 2) {
-      if (!form.appointment_date || !form.start_time) {
-        toast.error('Select date and time slot');
+      const incomplete = scheduleSessions.find((sess) => !sess.date || !sess.time);
+      if (incomplete) {
+        toast.error('Complete date and time for every session');
         return false;
       }
-      if (form.number_of_sessions < 1) {
-        toast.error('Invalid package');
+      if (packageId !== CUSTOM_PACKAGE_ID && scheduleSessions.length < (form.number_of_sessions || 1)) {
+        toast.error('Select all required session dates');
         return false;
       }
+      const first = scheduleSessions[0];
+      patch({ appointment_date: first.date, start_time: first.time });
     }
     if (s === 3) {
       if (!form.pain_type) {
@@ -684,6 +792,8 @@ export default function BookAppointmentWizard() {
         policies_accepted: true,
         accepted_policies: Object.keys(policyAcceptance).filter((k) => policyAcceptance[k]),
         policies_version: POLICY_LAST_UPDATED,
+        schedule_sessions: scheduleSessions.map((s) => ({ date: s.date, start_time: s.time, time: s.time })),
+        ...(selectedDoctorPackage?.id ? { doctor_package_id: selectedDoctorPackage.id } : {}),
       };
       if (appliedCoupon?.code) payload.coupon_code = appliedCoupon.code;
       const res = await appointments.book(payload);
@@ -798,6 +908,9 @@ export default function BookAppointmentWizard() {
               city={city}
               coords={coords}
               onSelectLocation={() => setShowSelector(true)}
+              onlineStateId={onlineStateId}
+              onOnlineStateChange={setOnlineStateId}
+              indianStates={indianStates}
               doctors={doctorsForType}
               clinics={clinicList}
               clinicDoctors={clinicDoctors}
@@ -824,13 +937,16 @@ export default function BookAppointmentWizard() {
             <BookingScheduleStep
               form={form}
               patch={patch}
-              packageId={packageId}
+              doctorPackages={doctorPackages}
+              selectedPackageId={packageId}
               onPackageChange={handlePackageChange}
+              scheduleSessions={scheduleSessions}
+              onScheduleChange={setScheduleSessions}
               availableDates={availableDates}
               availableDatesLoading={availableDatesLoading}
-              timeSlots={timeSlots}
-              slotsLoading={slotsLoading}
-              prefillTime={prefillSlotTime}
+              loadSlotsForDate={loadSlotsForDate}
+              slotsCache={slotsCache}
+              slotsLoadingDate={slotsLoadingDate}
             />
           )}
 

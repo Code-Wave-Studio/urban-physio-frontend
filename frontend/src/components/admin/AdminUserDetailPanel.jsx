@@ -1,6 +1,49 @@
+import { useState } from 'react';
 import FaIcon from '../FaIcon';
 import PatientReportsPanel from '../PatientReportsPanel';
+import { admin } from '../../services/api';
+import toast from 'react-hot-toast';
 import { formatDate, formatDateTime, DAYS } from '../../utils/adminUserUtils';
+
+function DoctorRatingEditor({ doctorId, initialAvg, initialCount }) {
+  const [avg, setAvg] = useState(initialAvg ?? '');
+  const [count, setCount] = useState(initialCount ?? '');
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await admin.updateDoctorRating(doctorId, {
+        rating_avg: Number(avg),
+        rating_count: count === '' ? undefined : Number(count),
+      });
+      toast.success('Doctor rating updated — shown everywhere on the platform');
+    } catch (e) {
+      toast.error(e.message || 'Could not update rating');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50/50 p-3">
+      <p className="text-xs font-bold uppercase tracking-wide text-amber-900 mb-2">Admin rating (single source of truth)</p>
+      <div className="flex flex-wrap gap-2 items-end">
+        <div>
+          <label className="text-xs text-slate-600">Average (0–5)</label>
+          <input type="number" min={0} max={5} step={0.1} className="input-field !py-2 !text-sm w-24 mt-0.5" value={avg} onChange={(e) => setAvg(e.target.value)} />
+        </div>
+        <div>
+          <label className="text-xs text-slate-600">Review count</label>
+          <input type="number" min={0} className="input-field !py-2 !text-sm w-24 mt-0.5" value={count} onChange={(e) => setCount(e.target.value)} />
+        </div>
+        <button type="button" className="btn-primary text-sm !py-2" onClick={save} disabled={saving}>
+          {saving ? 'Saving…' : 'Save rating'}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function Detail({ label, value, mono }) {
   if (value == null || value === '') return null;
@@ -87,12 +130,13 @@ export default function AdminUserDetailPanel({
                 label="Verified"
                 value={Number(doctor.is_verified) === 1 ? `Yes — ${formatDateTime(doctor.verified_at)}` : 'Not verified'}
               />
-              <Detail label="Rating" value={Number(doctor.rating_avg) > 0 ? `${doctor.rating_avg} (${doctor.rating_count} reviews)` : 'No reviews yet'} />
+              <Detail label="Rating" value={Number(doctor.rating_avg) > 0 ? `${doctor.rating_avg} (${doctor.rating_count} reviews)` : 'Not set'} />
               <Detail label="Clinic fee" value={money(doctor.consultation_fee)} />
               <Detail label="Online fee" value={money(doctor.online_fee)} />
               <Detail label="Home visit fee" value={money(doctor.home_visit_fee)} />
               <Detail label="Home radius" value={doctor.service_radius_km ? `${doctor.service_radius_km} km` : null} />
             </div>
+            <DoctorRatingEditor doctorId={doctor.id} initialAvg={doctor.rating_avg} initialCount={doctor.rating_count} />
             {doctor.bio && (
               <p className="text-sm text-slate-600 mt-3 rounded-lg bg-white border border-slate-200 p-3">{doctor.bio}</p>
             )}

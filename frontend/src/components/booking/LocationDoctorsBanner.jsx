@@ -1,6 +1,7 @@
 import FaIcon from '../FaIcon';
 
-export default function LocationDoctorsBanner({ city, hasLocation, onSelectLocation, accent = 'primary' }) {
+export default function LocationDoctorsBanner({ city, hasLocation, onSelectLocation, accent = 'primary', hideForOnline = false }) {
+  if (hideForOnline) return null;
   const isOrange = accent === 'orange';
 
   if (hasLocation && city) {

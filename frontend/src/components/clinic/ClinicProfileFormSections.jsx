@@ -194,7 +194,7 @@ export function ClinicStatisticsFields({ form, set }) {
         />
       </div>
       <div>
-        <FieldLabel hint="0–100% · leave blank to auto-calculate from ratings">Satisfaction rate (%)</FieldLabel>
+        <FieldLabel hint="Optional display metric — star rating is set by main admin only">Satisfaction rate (%)</FieldLabel>
         <input
           type="number"
           min={0}

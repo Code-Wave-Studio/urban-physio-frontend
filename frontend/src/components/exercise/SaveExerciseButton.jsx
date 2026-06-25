@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import FaIcon from '../FaIcon';
 import { useAuth } from '../../contexts/AuthContext';
+import { useRequireAuth } from '../../utils/requireAuth';
 import { patients } from '../../services/api';
 import { isExerciseSaved, toggleSavedExercise } from '../../utils/savedExercises';
 import toast from 'react-hot-toast';
 
 export default function SaveExerciseButton({ exercise, className = '', compact = true, stopPropagation = false }) {
   const { user, hasRole } = useAuth();
+  const { requireAuth } = useRequireAuth();
   const [saved, setSaved] = useState(() => isExerciseSaved(exercise?.id));
 
   useEffect(() => {
@@ -19,6 +21,7 @@ export default function SaveExerciseButton({ exercise, className = '', compact =
   const toggle = async (e) => {
     if (stopPropagation) e.stopPropagation();
     if (!exercise?.id) return;
+    if (!requireAuth('Log in to save exercises')) return;
     const { saved: next } = toggleSavedExercise(exercise);
     setSaved(next);
 

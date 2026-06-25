@@ -118,6 +118,13 @@ export const doctors = {
   updateEmergencyStatus: (id, emergency_status) => api.put(`/doctors/emergency/${id}/status`, { emergency_status }),
   bookingFilters: () => api.get('/doctors/booking-filters'),
   updateBookingFilters: (filter_ids) => api.put('/doctors/booking-filters', { filter_ids }),
+  publicPackages: (doctorId) => api.get(`/doctors/${doctorId}/packages`),
+  servicePackages: {
+    list: () => api.get('/doctors/service-packages'),
+    create: (data) => api.post('/doctors/service-packages', data),
+    update: (id, data) => api.put(`/doctors/service-packages/${id}`, data),
+    delete: (id) => api.delete(`/doctors/service-packages/${id}`),
+  },
 };
 
 export const license = {
@@ -309,8 +316,10 @@ export const admin = {
   clinicReject: (id, reason) => api.put(`/admin/clinics/${id}/reject`, { reason }),
   clinicDoctors: (id) => api.get(`/admin/clinics/${id}/doctors`),
   clinicAttachDoctor: (id, doctorId, isPrimary = 0) => api.post(`/admin/clinics/${id}/doctors`, { doctor_id: doctorId, is_primary: isPrimary }),
-  clinicAttachAdminSelf: (id) => api.post(`/admin/clinics/${id}/doctors/attach-self`),
+  clinicSetManager: (id, doctorId) => api.post(`/admin/clinics/${id}/doctors/manager`, { doctor_id: doctorId }),
   clinicDetachDoctor: (id, doctorId) => api.delete(`/admin/clinics/${id}/doctors/${doctorId}`),
+  updateDoctorRating: (doctorId, data) => api.put(`/admin/doctors/${doctorId}/rating`, data),
+  updateClinicRating: (clinicId, data) => api.put(`/admin/clinics/${clinicId}/rating`, data),
   locationsOverview: () => api.get('/admin/locations'),
   locationsCities: (stateId) => api.get(`/admin/locations/states/${stateId}/cities`),
   locationCityUsers: (cityId) => api.get(`/admin/locations/cities/${cityId}/users`),
@@ -380,6 +389,9 @@ export const admin = {
   emergencyCancel: (id) => api.post(`/admin/emergency/${id}/cancel`),
   updateEmergencySettings: (data) => api.put('/admin/emergency/settings', data),
   treatmentPackagesList: (params) => api.get('/admin/treatment-packages', { params }),
+  doctorPackagesList: (params) => api.get('/admin/doctor-packages', { params }),
+  approveDoctorPackage: (id) => api.put(`/admin/doctor-packages/${id}/approve`),
+  rejectDoctorPackage: (id, reason) => api.put(`/admin/doctor-packages/${id}/reject`, { reason }),
   treatmentPackageGet: (id) => api.get(`/admin/treatment-packages/${id}`),
   treatmentPackageCreate: (data) => api.post('/admin/treatment-packages', data),
   treatmentPackageUpdate: (id, data) => api.put(`/admin/treatment-packages/${id}`, data),

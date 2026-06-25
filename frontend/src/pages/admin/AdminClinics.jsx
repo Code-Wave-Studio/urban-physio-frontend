@@ -359,13 +359,13 @@ function ClinicDoctorsModal({ open, onClose, clinic }) {
     }
   };
 
-  const attachSelf = async () => {
+  const setManager = async (doctorId) => {
     try {
-      await admin.clinicAttachAdminSelf(clinic.id);
-      toast.success('You are attached — manage this clinic from Doctor dashboard → My Clinics');
+      await admin.clinicSetManager(clinic.id, doctorId);
+      toast.success('Full edit access granted');
       load();
     } catch (e) {
-      toast.error(e.message || 'Could not attach your admin account');
+      toast.error(e.message || 'Could not assign clinic manager');
     }
   };
 
@@ -405,10 +405,6 @@ function ClinicDoctorsModal({ open, onClose, clinic }) {
               Attach
             </button>
           </div>
-          <button type="button" className="btn-outline text-sm w-full mt-3 inline-flex items-center justify-center gap-2" onClick={attachSelf}>
-            <FaIcon icon="fa-user-shield" />
-            Attach me as clinic manager (full edit access)
-          </button>
         </div>
 
         {loading ? (
@@ -418,16 +414,32 @@ function ClinicDoctorsModal({ open, onClose, clinic }) {
         ) : (
           <div className="rounded-xl border border-slate-200 overflow-hidden bg-white/60">
             {list.map((d) => (
-              <div key={d.doctor_id} className="flex items-center justify-between gap-3 p-4 border-b border-slate-100 last:border-0">
+              <div key={d.doctor_id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 border-b border-slate-100 last:border-0">
                 <div className="min-w-0">
                   <p className="font-medium text-slate-900 truncate">
                     Dr. {d.first_name} {d.last_name}
+                    {d.is_clinic_manager ? (
+                      <span className="ml-2 text-[10px] font-bold uppercase tracking-wide text-emerald-800 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-full">
+                        Full edit access
+                      </span>
+                    ) : null}
                   </p>
                   <p className="text-xs text-slate-500 truncate">{d.specialization || '—'} · {d.email}</p>
                 </div>
-                <button type="button" className="btn-outline text-sm border-red-200 text-red-700 hover:bg-red-50" onClick={() => detach(d.doctor_id)}>
-                  Detach
-                </button>
+                <div className="flex flex-wrap gap-2 shrink-0">
+                  {!d.is_clinic_manager && (
+                    <button
+                      type="button"
+                      className="btn-outline text-sm border-emerald-200 text-emerald-800 hover:bg-emerald-50"
+                      onClick={() => setManager(d.doctor_id)}
+                    >
+                      Full edit access
+                    </button>
+                  )}
+                  <button type="button" className="btn-outline text-sm border-red-200 text-red-700 hover:bg-red-50" onClick={() => detach(d.doctor_id)}>
+                    Detach
+                  </button>
+                </div>
               </div>
             ))}
           </div>

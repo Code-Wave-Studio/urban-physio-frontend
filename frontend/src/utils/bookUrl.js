@@ -3,9 +3,16 @@
  * Plain `/book` opens the normal empty wizard.
  */
 
-export function bookDoctorUrl(doctorId) {
+export function bookDoctorUrl(doctorId, opts = {}) {
   if (!doctorId) return '/book';
-  return `/doctors/${doctorId}/book`;
+  const params = new URLSearchParams();
+  if (opts.type) params.set('type', opts.type);
+  if (opts.date) params.set('date', opts.date);
+  if (opts.time) params.set('time', opts.time);
+  if (opts.packageId) params.set('package_id', String(opts.packageId));
+  const q = params.toString();
+  const base = `/doctors/${doctorId}/book`;
+  return q ? `${base}?${q}` : base;
 }
 
 export function bookClinicUrl(clinicId) {

@@ -133,6 +133,9 @@ export default function BookingProviderSelectStep({
   city,
   coords,
   onSelectLocation,
+  onlineStateId = '',
+  onOnlineStateChange,
+  indianStates = [],
   doctors,
   clinics,
   clinicDoctors,
@@ -200,7 +203,34 @@ export default function BookingProviderSelectStep({
         <p className="text-sm text-slate-600 mt-1">Search, filter and pick the best match for your care.</p>
       </div>
 
-      <LocationDoctorsBanner city={city} hasLocation={!!city || !!coords} onSelectLocation={onSelectLocation} />
+      <LocationDoctorsBanner
+        city={city}
+        hasLocation={consultationType === 'online' ? true : !!city || !!coords}
+        onSelectLocation={onSelectLocation}
+        hideForOnline={consultationType === 'online'}
+      />
+
+      {consultationType === 'online' && (
+        <div className="rounded-xl border border-sky-200 bg-sky-50/60 p-4">
+          <p className="text-sm font-semibold text-sky-900 flex items-center gap-2">
+            <FaIcon icon="fa-video" />
+            Online consultation — search across India
+          </p>
+          <p className="text-xs text-sky-800/80 mt-1">Optionally filter by state. Your fixed city location is not required.</p>
+          <select
+            className="input-field mt-3"
+            value={onlineStateId}
+            onChange={(e) => onOnlineStateChange?.(e.target.value)}
+          >
+            <option value="">All states</option>
+            {indianStates.map((st) => (
+              <option key={st.id} value={st.id}>
+                {st.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div className="relative">
         <FaIcon icon="fa-magnifying-glass" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />

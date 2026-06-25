@@ -17,9 +17,9 @@ import { doctors } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { googleMapsUrl } from '../utils/locationHelpers';
 import { doctorMinFee, formatReviewCount } from '../utils/doctorProfileUtils';
+import { bookDoctorUrl } from '../utils/bookUrl';
 import {
   clinicProfileUrl,
-  doctorBookUrl,
   doctorProfileUrl,
   formatAvailabilitySummary,
 } from '../utils/profileUrls';
@@ -90,6 +90,7 @@ export default function DoctorProfilePage() {
   const profileKey = slug || legacyId;
   const { hasRole } = useAuth();
   const [doctor, setDoctor] = useState(null);
+  const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -98,7 +99,16 @@ export default function DoctorProfilePage() {
     setNotFound(false);
     doctors
       .get(profileKey)
-      .then((res) => setDoctor(res?.data ?? res))
+      .then((res) => {
+        const d = res?.data ?? res;
+        setDoctor(d);
+        if (d?.id) {
+          doctors
+            .publicPackages(d.id)
+            .then((pkgRes) => setPackages(pkgRes?.data ?? pkgRes ?? []))
+            .catch(() => setPackages([]));
+        }
+      })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
   };
@@ -246,7 +256,7 @@ export default function DoctorProfilePage() {
             </div>
 
             <div className="mt-4 sm:mt-6 hidden sm:flex flex-wrap gap-2 sm:gap-3 justify-center md:justify-start">
-              <Link to={doctorBookUrl(doctor)} className="btn-primary text-sm !px-5 !py-3">
+              <Link to={bookDoctorUrl(doctor.id)} className="btn-primary text-sm !px-5 !py-3">
                 <FaIcon icon="fa-calendar-check" />
                 Book appointment
               </Link>
@@ -337,22 +347,76 @@ export default function DoctorProfilePage() {
             const meta = SERVICE_META[type];
             const active = enabled.includes(type);
             const fee = doctor[meta.feeKey];
-            return (
-              <div
-                key={type}
-                className={`rounded-2xl border p-4 ${
-                  active ? 'bg-white border-primary-200 shadow-md' : 'bg-slate-50 border-slate-200 opacity-60'
-                }`}
-              >
+            const bookLink = active ? bookDoctorUrl(doctor.id, { type }) : null;
+            const inner = (
+              <>
                 <FaIcon icon={meta.icon} className={`text-xl mb-2 ${active ? 'text-primary-600' : 'text-slate-400'}`} />
                 <p className="font-semibold text-slate-900">{meta.label}</p>
                 <p className="text-sm text-slate-600 mt-1">
                   {active ? `₹${Number(fee || 0).toLocaleString('en-IN')}` : 'Not available'}
                 </p>
+                {active && (
+                  <p className="text-xs font-semibold text-primary-700 mt-3 inline-flex items-center gap-1">
+                    Book now <FaIcon icon="fa-arrow-right" className="text-[10px]" />
+                  </p>
+                )}
+              </>
+            );
+            return bookLink ? (
+              <Link
+                key={type}
+                to={bookLink}
+                className="rounded-2xl border p-4 bg-white border-primary-200 shadow-md hover:shadow-lg hover:border-primary-400 hover:-translate-y-0.5 transition-all block"
+              >
+                {inner}
+              </Link>
+            ) : (
+              <div key={type} className="rounded-2xl border p-4 bg-slate-50 border-slate-200 opacity-60">
+                {inner}
               </div>
             );
           })}
         </div>
+
+        {packages.length > 0 && (
+          <Section title="Treatment packages" icon="fa-box-open">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {packages.map((pkg) => (
+                <Link
+                  key={pkg.id}
+                  to={bookDoctorUrl(doctor.id, { type: pkg.consultation_type !== 'any' ? pkg.consultation_type : undefined, packageId: pkg.id })}
+                  className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-white to-emerald-50/40 p-4 hover:shadow-md hover:border-emerald-400 transition block"
+                >
+                  <p className="font-bold text-slate-900">{pkg.name}</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {pkg.total_sessions} session{pkg.total_sessions !== 1 ? 's' : ''} · {pkg.duration_days} days
+                  </p>
+                  <div className="mt-3 flex items-baseline gap-2 flex-wrap">
+                    {Number(pkg.mrp_price) > Number(pkg.discount_price) && (
+                      <span className="text-sm text-slate-400 line-through">₹{Number(pkg.mrp_price).toLocaleString('en-IN')}</span>
+                    )}
+                    <span className="text-lg font-bold text-emerald-700">₹{Number(pkg.discount_price).toLocaleString('en-IN')}</span>
+                    {pkg.discount_percent > 0 && (
+                      <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
+                        {pkg.discount_percent}% off
+                      </span>
+                    )}
+                  </div>
+                  {pkg.features_list?.length > 0 && (
+                    <ul className="mt-3 space-y-1 text-xs text-slate-600">
+                      {pkg.features_list.slice(0, 3).map((f) => (
+                        <li key={f} className="flex gap-1.5">
+                          <FaIcon icon="fa-check" className="text-emerald-600 mt-0.5 shrink-0" />
+                          <span>{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </Section>
+        )}
 
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="lg:col-span-2 space-y-4 sm:space-y-6 order-2 lg:order-1">
@@ -476,7 +540,7 @@ export default function DoctorProfilePage() {
               </div>
               <p className="text-sm text-slate-600 mb-4">Secure booking with Razorpay — pick a slot that works for you.</p>
               <ProfileSlotsPreview doctorId={doctor.id} />
-              <Link to={doctorBookUrl(doctor)} className="btn-primary w-full text-center block mt-4 mb-3">
+              <Link to={bookDoctorUrl(doctor.id)} className="btn-primary w-full text-center block mt-4 mb-3">
                 Book now
               </Link>
               <Link to="/doctors" className="text-sm text-primary-700 hover:text-primary-900 font-semibold hover:underline block text-center">
@@ -565,7 +629,7 @@ export default function DoctorProfilePage() {
             </a>
           )}
           <Link
-            to={doctorBookUrl(doctor)}
+            to={bookDoctorUrl(doctor.id)}
             className={`btn-primary !py-3 text-sm inline-flex items-center justify-center gap-2 ${doctor.phone ? 'flex-[1.6]' : 'flex-1'}`}
           >
             <FaIcon icon="fa-calendar-check" />

@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import FaIcon from './FaIcon';
 import ClinicLogo from './ClinicLogo';
 import BadgeList from './platform/BadgeList';
-import SaveClinicButton from './clinic/SaveClinicButton';
 import PartnerClinicBadge from './PartnerClinicBadge';
 import { showPartnerClinicBadge } from '../utils/clinicBadges';
 import { bookClinicUrl } from '../utils/bookUrl';
@@ -108,12 +107,6 @@ export default function ClinicCard({ clinic, compact = false, variant = 'default
             </div>
           </div>
 
-          {clinic.phone && (
-            <p className="text-slate-600 text-xs mt-3 inline-flex items-center gap-1.5">
-              <FaIcon icon="fa-phone" className="text-slate-400" />
-              {clinic.phone}
-            </p>
-          )}
 
           <div className="mt-auto pt-5 flex flex-wrap gap-2">
             <Link
@@ -135,7 +128,7 @@ export default function ClinicCard({ clinic, compact = false, variant = 'default
                 Map
               </a>
             )}
-            <SaveClinicButton clinic={clinic} compact className="!py-2.5" />
+
             <Link
               to={bookTo}
               className="btn-primary flex-1 min-w-[7rem] text-center text-sm !py-2.5 inline-flex items-center justify-center gap-2 !bg-emerald-600 hover:!bg-emerald-700"
@@ -180,12 +173,6 @@ export default function ClinicCard({ clinic, compact = false, variant = 'default
         )}
       </div>
 
-      {clinic.phone && (
-        <p className="text-slate-600 text-sm mt-3 inline-flex items-center gap-1.5">
-          <FaIcon icon="fa-phone" className="text-slate-400" />
-          {clinic.phone}
-        </p>
-      )}
 
       <div className="mt-auto pt-4 flex flex-wrap gap-2">
         <Link to={clinicProfileUrl(clinic)} className="btn-outline flex-1 min-w-[7rem] text-center text-sm py-2.5">
@@ -203,7 +190,7 @@ export default function ClinicCard({ clinic, compact = false, variant = 'default
             Directions
           </a>
         )}
-        <SaveClinicButton clinic={clinic} compact />
+
         <Link to={bookTo} className="btn-primary flex-1 min-w-[7rem] text-center text-sm py-2.5 inline-flex items-center justify-center gap-2">
           Book clinic visit
           <FaIcon icon="fa-arrow-right" className="text-xs" />
