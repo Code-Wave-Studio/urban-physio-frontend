@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import FaIcon from '../FaIcon';
+import FaIcon from '../../FaIcon';
 import toast from 'react-hot-toast';
 
 export default function BookingFilterManager({
