@@ -317,6 +317,7 @@ export const admin = {
   clinicDoctors: (id) => api.get(`/admin/clinics/${id}/doctors`),
   clinicAttachDoctor: (id, doctorId, isPrimary = 0) => api.post(`/admin/clinics/${id}/doctors`, { doctor_id: doctorId, is_primary: isPrimary }),
   clinicSetManager: (id, doctorId) => api.post(`/admin/clinics/${id}/doctors/manager`, { doctor_id: doctorId }),
+  clinicClearManager: (id) => api.post(`/admin/clinics/${id}/doctors/manager`, { doctor_id: 0 }),
   clinicDetachDoctor: (id, doctorId) => api.delete(`/admin/clinics/${id}/doctors/${doctorId}`),
   updateDoctorRating: (doctorId, data) => api.put(`/admin/doctors/${doctorId}/rating`, data),
   updateClinicRating: (clinicId, data) => api.put(`/admin/clinics/${clinicId}/rating`, data),

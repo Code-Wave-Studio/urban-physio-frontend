@@ -326,6 +326,7 @@ function ClinicDoctorsModal({ open, onClose, clinic }) {
   const [doctorList, setDoctorList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [addDoctorId, setAddDoctorId] = useState('');
+  const [managerUpdating, setManagerUpdating] = useState(null);
 
   const load = async () => {
     if (!clinic?.id) return;
@@ -359,13 +360,21 @@ function ClinicDoctorsModal({ open, onClose, clinic }) {
     }
   };
 
-  const setManager = async (doctorId) => {
+  const toggleManager = async (doctorId, isCurrentlyManager) => {
+    setManagerUpdating(doctorId);
     try {
-      await admin.clinicSetManager(clinic.id, doctorId);
-      toast.success('Full edit access granted');
+      if (isCurrentlyManager) {
+        await admin.clinicClearManager(clinic.id);
+        toast.success('Full edit access removed');
+      } else {
+        await admin.clinicSetManager(clinic.id, doctorId);
+        toast.success('Full edit access granted');
+      }
       load();
     } catch (e) {
-      toast.error(e.message || 'Could not assign clinic manager');
+      toast.error(e.message || 'Could not update clinic manager');
+    } finally {
+      setManagerUpdating(null);
     }
   };
 
@@ -384,7 +393,7 @@ function ClinicDoctorsModal({ open, onClose, clinic }) {
       <GlassModalHeader
         titleId="clinic-doctors-modal"
         title={clinic?.name || 'Assign doctors'}
-        subtitle="Attach one or multiple doctors. Assigned clinics appear in each doctor's dashboard for editing, timings, and appointments."
+        subtitle="Attach doctors to this clinic. Tick Full edit access for one doctor who can fully manage the clinic."
         icon="fa-user-doctor"
         accent="primary"
         onClose={onClose}
@@ -413,30 +422,49 @@ function ClinicDoctorsModal({ open, onClose, clinic }) {
           <p className="text-sm text-slate-600">No doctors attached yet.</p>
         ) : (
           <div className="rounded-xl border border-slate-200 overflow-hidden bg-white/60">
+            <div className="hidden sm:grid grid-cols-[1fr_auto_auto] gap-3 px-4 py-2 bg-slate-50 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+              <span>Doctor</span>
+              <span className="text-center w-36">Full edit access</span>
+              <span className="text-right w-20">Action</span>
+            </div>
             {list.map((d) => (
-              <div key={d.doctor_id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 border-b border-slate-100 last:border-0">
+              <div
+                key={d.doctor_id}
+                className={`grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-3 sm:items-center p-4 border-b border-slate-100 last:border-0 ${
+                  d.is_clinic_manager ? 'bg-emerald-50/60' : ''
+                }`}
+              >
                 <div className="min-w-0">
                   <p className="font-medium text-slate-900 truncate">
                     Dr. {d.first_name} {d.last_name}
-                    {d.is_clinic_manager ? (
-                      <span className="ml-2 text-[10px] font-bold uppercase tracking-wide text-emerald-800 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-full">
-                        Full edit access
-                      </span>
-                    ) : null}
                   </p>
                   <p className="text-xs text-slate-500 truncate">{d.specialization || '—'} · {d.email}</p>
                 </div>
-                <div className="flex flex-wrap gap-2 shrink-0">
-                  {!d.is_clinic_manager && (
-                    <button
-                      type="button"
-                      className="btn-outline text-sm border-emerald-200 text-emerald-800 hover:bg-emerald-50"
-                      onClick={() => setManager(d.doctor_id)}
-                    >
-                      Full edit access
-                    </button>
-                  )}
-                  <button type="button" className="btn-outline text-sm border-red-200 text-red-700 hover:bg-red-50" onClick={() => detach(d.doctor_id)}>
+
+                <label
+                  className={`inline-flex items-center justify-center sm:justify-start gap-2.5 cursor-pointer select-none rounded-xl border px-3 py-2.5 w-full sm:w-36 transition ${
+                    d.is_clinic_manager
+                      ? 'border-emerald-300 bg-emerald-100/80 text-emerald-900'
+                      : 'border-slate-200 bg-white text-slate-700 hover:border-emerald-200 hover:bg-emerald-50/40'
+                  } ${managerUpdating === d.doctor_id ? 'opacity-60 pointer-events-none' : ''}`}
+                >
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                    checked={!!d.is_clinic_manager}
+                    disabled={managerUpdating === d.doctor_id}
+                    onChange={() => toggleManager(d.doctor_id, !!d.is_clinic_manager)}
+                  />
+                  <span className="text-xs font-semibold whitespace-nowrap">Full edit access</span>
+                </label>
+
+                <div className="flex sm:justify-end shrink-0">
+                  <button
+                    type="button"
+                    className="btn-outline text-sm border-red-200 text-red-700 hover:bg-red-50 w-full sm:w-auto"
+                    onClick={() => detach(d.doctor_id)}
+                    disabled={managerUpdating === d.doctor_id}
+                  >
                     Detach
                   </button>
                 </div>
