@@ -128,6 +128,7 @@ export const appointments = {
 export const booking = {
   options: () => api.get('/booking/options'),
   availableDates: (params) => api.get('/booking/available-dates', { params }),
+  searchProviders: (params) => api.get('/booking/search-providers', { params }),
   slots: (doctorId, date, clinicId = null) =>
     api.get('/booking/slots', {
       params: {
@@ -232,6 +233,10 @@ export const payments = {
 export const patients = {
   getProfile: () => api.get('/patients/profile'),
   updateProfile: (data) => api.put('/patients/profile', data),
+  favouriteDoctors: () => api.get('/patients/favourite-doctors'),
+  addFavouriteDoctor: (doctorId) => api.post(`/patients/favourite-doctors/${doctorId}`),
+  removeFavouriteDoctor: (doctorId) => api.delete(`/patients/favourite-doctors/${doctorId}`),
+  visitCredits: () => api.get('/patients/visit-credits'),
 };
 
 export const notifications = {

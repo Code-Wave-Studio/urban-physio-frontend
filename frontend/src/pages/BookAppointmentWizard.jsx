@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import FaIcon from '../components/FaIcon';
 import LocationMapModal from '../components/LocationMapModal';
@@ -16,10 +16,7 @@ import {
   uploadReport,
   treatments,
   conditions,
-  treatmentPackages,
 } from '../services/api';
-import CouponInput from '../components/platform/CouponInput';
-import { bookPackageUrl } from '../utils/bookUrl';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocation } from '../contexts/LocationContext';
 import toast from 'react-hot-toast';
@@ -29,22 +26,22 @@ import BookingPolicyAcceptance, {
   emptyPolicyAcceptance,
 } from '../components/booking/BookingPolicyAcceptance';
 import BookingStepProgress from '../components/booking/BookingStepProgress';
-import LocationDoctorsBanner from '../components/booking/LocationDoctorsBanner';
-import DoctorSelectCards from '../components/booking/DoctorSelectCards';
+import BookingProviderSelectStep from '../components/booking/BookingProviderSelectStep';
+import BookingScheduleStep from '../components/booking/BookingScheduleStep';
+import BookingChiefComplaintStep from '../components/booking/BookingChiefComplaintStep';
+import BookingPersonalDetailsStep from '../components/booking/BookingPersonalDetailsStep';
 import { POLICY_LAST_UPDATED } from '../constants/policyPages';
 import { matchPainTypeLabel, matchHomeConditionLabel } from '../utils/bookUrl';
+import CouponInput from '../components/platform/CouponInput';
 
 const STEPS = [
   'Service Type',
-  'Problem & Pain',
   'Doctor & Clinic',
+  'Package & Schedule',
+  'Chief Complaint',
   'Your Details',
-  'Date & Time',
-  'Rehab Packages',
   'Payment',
 ];
-
-const POPULAR_PACKAGE_DAYS = [10, 15, 20];
 
 const SERVICE_TYPES = [
   { id: 'online', label: 'Online Consultation', icon: 'fa-video', desc: 'Video call via Jitsi Meet' },
@@ -67,7 +64,13 @@ function mergeClinicIntoList(list, clinic) {
 const initialForm = () => ({
   consultation_type: '',
   pain_type: '',
+  pain_area: '',
   pain_description: '',
+  pain_duration: '',
+  pain_level: '',
+  medical_history: '',
+  additional_notes: '',
+  package_label: 'Single Visit',
   doctor_id: '',
   clinic_id: '',
   full_name: '',
@@ -75,6 +78,7 @@ const initialForm = () => ({
   email: '',
   age: '',
   gender: '',
+  patient_address: '',
   number_of_sessions: 1,
   session_type_id: 1,
   appointment_date: '',
@@ -100,7 +104,7 @@ export default function BookAppointmentWizard() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { city, coords, nearbyClinics, loading: locLoading, setShowSelector } = useLocation();
+  const { city, coords, loading: locLoading, setShowSelector } = useLocation();
   const [step, setStep] = useState(0);
   const [doctorsLoading, setDoctorsLoading] = useState(false);
   const [form, setForm] = useState(initialForm);
@@ -121,10 +125,13 @@ export default function BookAppointmentWizard() {
   const [mapOpen, setMapOpen] = useState(false);
   const [policyAcceptance, setPolicyAcceptance] = useState(emptyPolicyAcceptance);
   const [prefillLabel, setPrefillLabel] = useState('');
-  const [packageList, setPackageList] = useState([]);
-  const [packagesLoading, setPackagesLoading] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [providerSearch, setProviderSearch] = useState('');
+  const [sortBy, setSortBy] = useState('recommended');
+  const [specialization, setSpecialization] = useState('all');
+  const [packageId, setPackageId] = useState('single');
 
+  const prefillSlotTime = searchParams.get('start_time') || searchParams.get('slot') || '';
   const preselectedClinicId = searchParams.get('clinic_id');
   const preselectedDoctorFromQuery = searchParams.get('doctor_id');
   const lockedClinic = Boolean(preselectedClinicId && form.consultation_type === 'clinic');
@@ -242,35 +249,29 @@ export default function BookAppointmentWizard() {
   const loadProvidersForLocation = useCallback(async () => {
     setDoctorsLoading(true);
     try {
-      let docs = [];
-      let clins = [];
+      const params = {
+        consultation_type: form.consultation_type || undefined,
+        search: providerSearch || undefined,
+        sort: sortBy,
+        specialization,
+        limit: 40,
+        ...(coords?.lat != null ? { lat: coords.lat, lng: coords.lng } : {}),
+        ...(city?.id ? { city_id: city.id } : {}),
+      };
+      const res = await booking.searchProviders(params);
+      let docs = res.data?.doctors || [];
+      let clins = res.data?.clinics || [];
 
-      if (coords?.lat != null && coords?.lng != null) {
-        const docRes = await location.nearbyDoctors(coords.lat, coords.lng, 50, city?.id);
-        docs = docRes.data || [];
-        if (docs.length === 0 && city?.id) {
-          const fallback = await doctors.list({ verified: 1, city_id: city.id });
-          docs = fallback.data || [];
-        }
-        if (nearbyClinics?.length) {
-          clins = nearbyClinics;
-        } else if (city?.id) {
-          const clinRes = await clinics.list({ city_id: city.id });
-          clins = clinRes.data || [];
-        }
-      } else if (city?.id) {
-        const [docRes, clinRes] = await Promise.all([
-          doctors.list({ verified: 1, city_id: city.id }),
-          clinics.list({ city_id: city.id }),
-        ]);
-        docs = docRes.data || [];
+      if (docs.length === 0 && city?.id) {
+        const fallback = await doctors.list({ verified: 1, city_id: city.id });
+        docs = fallback.data || [];
+      }
+      if (clins.length === 0 && city?.id && form.consultation_type === 'clinic') {
+        const clinRes = await clinics.list({ city_id: city.id });
         clins = clinRes.data || [];
       }
 
-      if (selectedDoctor) {
-        docs = mergeDoctorIntoList(docs, selectedDoctor);
-      }
-
+      if (selectedDoctor) docs = mergeDoctorIntoList(docs, selectedDoctor);
       setDoctorList(docs);
       setClinicList(clins);
 
@@ -287,7 +288,7 @@ export default function BookAppointmentWizard() {
     } finally {
       setDoctorsLoading(false);
     }
-  }, [coords, city, nearbyClinics, form.doctor_id, form.consultation_type, lockedDoctor, selectedDoctor]);
+  }, [coords, city, form.consultation_type, form.doctor_id, lockedDoctor, selectedDoctor, providerSearch, sortBy, specialization]);
 
   useEffect(() => {
     loadProvidersForLocation();
@@ -466,7 +467,7 @@ export default function BookAppointmentWizard() {
   }, [form.doctor_id, form.clinic_id, form.consultation_type, form.appointment_date]);
 
   const loadAvailableDates = useCallback(() => {
-    if (step !== 4) return;
+    if (step !== 2) return;
     if (!form.consultation_type) return;
     if (form.consultation_type === 'clinic') {
       if (!form.clinic_id) return;
@@ -495,7 +496,7 @@ export default function BookAppointmentWizard() {
   }, [step, form.consultation_type, form.doctor_id, form.clinic_id, form.appointment_date]);
 
   useEffect(() => {
-    if (step === 4) loadSlots();
+    if (step === 2) loadSlots();
   }, [step, loadSlots]);
 
   useEffect(() => {
@@ -504,21 +505,20 @@ export default function BookAppointmentWizard() {
 
   const fee = totalFee;
 
-  const popularPackages = useMemo(() => {
-    const fromPreferred = POPULAR_PACKAGE_DAYS.map((d) => packageList.find((p) => Number(p.duration_days) === d)).filter(Boolean);
-    if (fromPreferred.length) return fromPreferred;
-    return packageList.slice(0, 3);
-  }, [packageList]);
-
   useEffect(() => {
-    if (step !== 5) return;
-    setPackagesLoading(true);
-    treatmentPackages
-      .list()
-      .then((res) => setPackageList(res.data || []))
-      .catch(() => setPackageList([]))
-      .finally(() => setPackagesLoading(false));
-  }, [step]);
+    if (prefillSlotTime && timeSlots.some((s) => s.time === prefillSlotTime)) {
+      patch({ start_time: prefillSlotTime });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefillSlotTime, timeSlots]);
+
+  const handlePackageChange = (pkg) => {
+    setPackageId(pkg.id);
+    patch({
+      number_of_sessions: pkg.sessions,
+      package_label: pkg.label,
+    });
+  };
 
   const validateStep = (s) => {
     if (s === 0 && !form.consultation_type) {
@@ -526,16 +526,6 @@ export default function BookAppointmentWizard() {
       return false;
     }
     if (s === 1) {
-      if (!form.pain_type) {
-        toast.error('Select pain / problem type');
-        return false;
-      }
-      if (!form.pain_description?.trim()) {
-        toast.error('Describe your pain or problem');
-        return false;
-      }
-    }
-    if (s === 2) {
       if (!doctorIdParam && !city && !coords) {
         toast.error('Please select your location first');
         setShowSelector(true);
@@ -555,23 +545,33 @@ export default function BookAppointmentWizard() {
         }
       }
     }
+    if (s === 2) {
+      if (!form.appointment_date || !form.start_time) {
+        toast.error('Select date and time slot');
+        return false;
+      }
+      if (form.number_of_sessions < 1) {
+        toast.error('Invalid package');
+        return false;
+      }
+    }
     if (s === 3) {
+      if (!form.pain_type) {
+        toast.error('Select pain area');
+        return false;
+      }
+      if (!form.pain_description?.trim()) {
+        toast.error('Describe your symptoms');
+        return false;
+      }
+    }
+    if (s === 4) {
       const req = ['full_name', 'mobile', 'email', 'age', 'gender'];
       for (const k of req) {
         if (!String(form[k] ?? '').trim()) {
           toast.error('Fill all personal details');
           return false;
         }
-      }
-      if (form.number_of_sessions < 1) {
-        toast.error('Sessions must be at least 1');
-        return false;
-      }
-    }
-    if (s === 4) {
-      if (!form.appointment_date || !form.start_time) {
-        toast.error('Select date and time slot');
-        return false;
       }
       if (form.consultation_type === 'online') {
         if (!form.device_type || !form.internet_quality || !form.preferred_language) {
@@ -584,6 +584,10 @@ export default function BookAppointmentWizard() {
           toast.error('Complete home visit address details');
           return false;
         }
+        if (form.map_latitude == null || form.map_longitude == null) {
+          toast.error('Capture GPS location for home visit');
+          return false;
+        }
       }
     }
     return true;
@@ -591,7 +595,7 @@ export default function BookAppointmentWizard() {
 
   const next = () => {
     if (!validateStep(step)) return;
-    if (step === 2 && form.doctor_id) {
+    if (step === 1 && form.doctor_id) {
       const doc =
         doctorList.find((d) => d.id === Number(form.doctor_id)) ||
         clinicDoctors.find((d) => d.id === Number(form.doctor_id)) ||
@@ -655,7 +659,7 @@ export default function BookAppointmentWizard() {
     }
     if (!(await slotStillAvailable())) {
       toast.error('This slot was just booked. Please pick another time.');
-      setStep(4);
+      setStep(2);
       loadSlots();
       return;
     }
@@ -708,7 +712,7 @@ export default function BookAppointmentWizard() {
       const msg = err.message || 'Booking failed';
       toast.error(msg);
       if (msg.includes('already booked') || err.message?.includes('slot')) {
-        setStep(4);
+        setStep(2);
         loadSlots();
         patch({ start_time: '' });
       }
@@ -783,578 +787,65 @@ export default function BookAppointmentWizard() {
           )}
 
           {step === 1 && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold text-slate-800">Tell us about your problem</h2>
-              <label className="block text-sm font-medium text-slate-700">Pain type</label>
-              <select
-                className="input-field"
-                value={form.pain_type}
-                onChange={(e) => patch({ pain_type: e.target.value })}
-              >
-                <option value="">Select...</option>
-                {(painTypes.length ? painTypes : ['Back Pain', 'Neck Pain', 'Knee Pain', 'Shoulder Pain', 'Other']).map(
-                  (p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                  )
-                )}
-              </select>
-              <label className="block text-sm font-medium text-slate-700">Pain description</label>
-              <textarea
-                className="input-field"
-                rows={4}
-                placeholder="When did it start? Severity, movement limits..."
-                value={form.pain_description}
-                onChange={(e) => patch({ pain_description: e.target.value })}
-              />
-              <label className="block text-sm font-medium text-slate-700">Number of sessions</label>
-              <input
-                type="number"
-                min={1}
-                max={20}
-                className="input-field"
-                value={form.number_of_sessions}
-                onChange={(e) => patch({ number_of_sessions: parseInt(e.target.value, 10) || 1 })}
-              />
-            </div>
+            <BookingProviderSelectStep
+              form={form}
+              patch={patch}
+              consultationType={form.consultation_type}
+              city={city}
+              coords={coords}
+              onSelectLocation={() => setShowSelector(true)}
+              doctors={doctorsForType}
+              clinics={clinicList}
+              clinicDoctors={clinicDoctors}
+              selectedDoctor={selectedDoctor}
+              setSelectedDoctor={setSelectedDoctor}
+              loading={doctorsLoading || locLoading}
+              lockedDoctor={lockedDoctor}
+              lockedClinic={lockedClinic}
+              selectedClinic={selectedClinic}
+              clinicMapUrl={clinicMapUrl}
+              searchQuery={providerSearch}
+              onSearchChange={setProviderSearch}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+              specialization={specialization}
+              onSpecializationChange={setSpecialization}
+              onRefresh={loadProvidersForLocation}
+            />
           )}
 
           {step === 2 && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold text-slate-800">
-                {form.consultation_type === 'clinic' ? 'Clinic & doctor' : 'Choose your doctor'}
-              </h2>
-
-              <LocationDoctorsBanner
-                city={city}
-                hasLocation={!!city || !!coords}
-                onSelectLocation={() => setShowSelector(true)}
-              />
-
-              {form.consultation_type === 'clinic' && (
-                <>
-                  {lockedClinic && selectedClinic ? (
-                    <div className="glass-card border-emerald-200/60 space-y-2">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Your clinic</p>
-                      <p className="font-bold text-slate-800 text-lg inline-flex items-center gap-2">
-                        <FaIcon icon="fa-hospital" className="text-emerald-600" />
-                        {selectedClinic.name}
-                      </p>
-                      {selectedClinic.address && (
-                        <p className="text-sm text-slate-600">{selectedClinic.address}</p>
-                      )}
-                      {selectedClinic.city_name && (
-                        <p className="text-sm text-slate-500 inline-flex items-center gap-1">
-                          <FaIcon icon="fa-location-dot" className="text-primary-600" />
-                          {selectedClinic.city_name}
-                        </p>
-                      )}
-                      {clinicMapUrl && (
-                        <a
-                          href={clinicMapUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-sm text-primary-600 font-medium inline-flex items-center gap-1 hover:underline"
-                        >
-                          <FaIcon icon="fa-map-location-dot" />
-                          View on map
-                        </a>
-                      )}
-                    </div>
-                  ) : (
-                    <>
-                      <label className="block text-sm font-medium">Select clinic</label>
-                      <select
-                        className="input-field"
-                        value={form.clinic_id}
-                        onChange={(e) => patch({ clinic_id: e.target.value, doctor_id: '' })}
-                      >
-                        <option value="">Choose clinic...</option>
-                        {clinicList.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name} {c.city_name ? `— ${c.city_name}` : ''}
-                          </option>
-                        ))}
-                      </select>
-                      {selectedClinic && (
-                        <div className="bg-primary-50/80 border border-primary-200/50 rounded-xl p-3 text-sm space-y-1">
-                          <p className="font-semibold text-slate-800">
-                            <FaIcon icon="fa-hospital" className="mr-1 text-primary-600" />
-                            {selectedClinic.name}
-                          </p>
-                          {selectedClinic.address && (
-                            <p className="text-slate-600">{selectedClinic.address}</p>
-                          )}
-                          {selectedClinic.city_name && (
-                            <p className="text-slate-500">{selectedClinic.city_name}</p>
-                          )}
-                          {clinicMapUrl && (
-                            <a
-                              href={clinicMapUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-primary-600 font-medium inline-flex items-center gap-1"
-                            >
-                              <FaIcon icon="fa-map-location-dot" />
-                              View on map
-                            </a>
-                          )}
-                        </div>
-                      )}
-                    </>
-                  )}
-                </>
-              )}
-
-              {lockedDoctor && selectedDoctor ? (
-                <div className="glass-card border-primary-200/60 space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-primary-600">Your doctor</p>
-                  <p className="font-bold text-slate-800 text-lg">
-                    Dr. {selectedDoctor.first_name} {selectedDoctor.last_name}
-                  </p>
-                  <p className="text-sm text-slate-600">{selectedDoctor.specialization}</p>
-                  {selectedDoctor.city_name && (
-                    <p className="text-sm text-slate-500 inline-flex items-center gap-1">
-                      <FaIcon icon="fa-location-dot" className="text-primary-600" />
-                      {selectedDoctor.city_name}
-                    </p>
-                  )}
-                  {selectedDoctor.latitude != null && selectedDoctor.longitude != null && (
-                    <a
-                      href={googleMapsUrl(selectedDoctor.latitude, selectedDoctor.longitude)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-sm text-primary-600 font-medium inline-flex items-center gap-1 hover:underline"
-                    >
-                      <FaIcon icon="fa-map-location-dot" />
-                      View doctor on map
-                    </a>
-                  )}
-                </div>
-              ) : form.consultation_type === 'clinic' ? (
-                <>
-                  <label className="block text-sm font-medium text-slate-700">Select doctor (optional)</label>
-                  {doctorsLoading || locLoading ? (
-                    <div className="input-field flex items-center gap-2 text-slate-500 text-sm">
-                      <span className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-                      Loading doctors…
-                    </div>
-                  ) : (
-                    <select
-                      className="input-field"
-                      value={form.doctor_id}
-                      disabled={!city && !coords}
-                      onChange={(e) => {
-                        const id = e.target.value;
-                        patch({ doctor_id: id });
-                        const doc = clinicDoctors.find((d) => String(d.id) === id);
-                        if (doc) setSelectedDoctor(doc);
-                      }}
-                    >
-                      <option value="">
-                        {!form.clinic_id
-                          ? 'Select a clinic first…'
-                          : 'Auto assign from clinic availability'}
-                      </option>
-                      {clinicDoctors.map((d) => (
-                        <option key={d.id} value={d.id}>
-                          Dr. {d.first_name} {d.last_name} — {d.specialization}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                </>
-              ) : (
-                <>
-                  {doctorsLoading || locLoading ? (
-                    <div className="flex items-center justify-center gap-2 py-10 text-slate-500 text-sm">
-                      <span className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-                      Loading doctors in {city?.name || 'your area'}…
-                    </div>
-                  ) : (
-                    <DoctorSelectCards
-                      doctors={doctorsForType}
-                      selectedId={form.doctor_id}
-                      onSelect={(id, doc) => {
-                        patch({ doctor_id: id });
-                        setSelectedDoctor(doc);
-                      }}
-                      disabled={!city && !coords}
-                      emptyMessage={
-                        city
-                          ? `No doctors found in ${city.name}. Try another city.`
-                          : 'Select your city to see available doctors.'
-                      }
-                    />
-                  )}
-                </>
-              )}
-
-              {!lockedDoctor &&
-                !doctorsLoading &&
-                !locLoading &&
-                city &&
-                (form.consultation_type === 'clinic' && form.clinic_id
-                  ? clinicDoctors.length === 0
-                  : doctorsForType.length === 0) && (
-                  <p className="text-sm text-slate-600 bg-white/50 border border-white/70 rounded-xl px-3 py-2">
-                    No doctors found near {city.name}. Try another city or{' '}
-                    <button
-                      type="button"
-                      className="text-primary-600 font-semibold hover:underline"
-                      onClick={() => setShowSelector(true)}
-                    >
-                      change location
-                    </button>
-                    .
-                  </p>
-                )}
-
-              {form.consultation_type === 'clinic' && (
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={form.first_time_visit}
-                    onChange={(e) => patch({ first_time_visit: e.target.checked })}
-                    className="rounded border-slate-300"
-                  />
-                  <span className="text-sm">First-time visit?</span>
-                </label>
-              )}
-
-              {selectedDoctor && (
-                <p className="text-sm text-slate-600 bg-white/40 p-3 rounded-xl">
-                  Fee (per session): ₹
-                  {form.consultation_type === 'online'
-                    ? selectedDoctor.online_fee
-                    : form.consultation_type === 'home_visit'
-                      ? selectedDoctor.home_visit_fee
-                      : selectedDoctor.consultation_fee}
-                </p>
-              )}
-            </div>
+            <BookingScheduleStep
+              form={form}
+              patch={patch}
+              packageId={packageId}
+              onPackageChange={handlePackageChange}
+              availableDates={availableDates}
+              availableDatesLoading={availableDatesLoading}
+              timeSlots={timeSlots}
+              slotsLoading={slotsLoading}
+              prefillTime={prefillSlotTime}
+            />
           )}
 
           {step === 3 && (
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Personal Details</h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <input
-                    className="input-field"
-                    placeholder="Full name *"
-                    value={form.full_name}
-                    onChange={(e) => patch({ full_name: e.target.value })}
-                  />
-                </div>
-                <input
-                  className="input-field"
-                  placeholder="Mobile number *"
-                  value={form.mobile}
-                  onChange={(e) => patch({ mobile: e.target.value })}
-                />
-                <input
-                  type="email"
-                  className="input-field"
-                  placeholder="Email *"
-                  value={form.email}
-                  onChange={(e) => patch({ email: e.target.value })}
-                />
-                <input
-                  type="number"
-                  min={1}
-                  max={120}
-                  className="input-field"
-                  placeholder="Age *"
-                  value={form.age}
-                  onChange={(e) => patch({ age: e.target.value })}
-                />
-                <select
-                  className="input-field"
-                  value={form.gender}
-                  onChange={(e) => patch({ gender: e.target.value })}
-                >
-                  <option value="">Gender *</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-              {sessions.length > 0 && (
-                <select
-                  className="input-field"
-                  value={form.session_type_id}
-                  onChange={(e) => patch({ session_type_id: parseInt(e.target.value, 10) })}
-                >
-                  {sessions.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} ({s.duration_minutes} min)
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
+            <BookingChiefComplaintStep form={form} patch={patch} painTypes={painTypes} />
           )}
 
           {step === 4 && (
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Date & Time</h2>
-              <input
-                type="date"
-                className="input-field"
-                min={new Date().toISOString().split('T')[0]}
-                value={form.appointment_date}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  if (availableDates.length && v && !availableDates.includes(v)) {
-                    toast.error('All slots are booked for this date. Please choose another date.');
-                    return;
-                  }
-                  patch({ appointment_date: v, start_time: '' });
-                }}
-              />
-
-              {(availableDatesLoading || availableDates.length > 0) && (
-                <div className="rounded-xl bg-white/40 border border-white/70 p-3">
-                  <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
-                    Next available dates
-                  </p>
-                  {availableDatesLoading ? (
-                    <p className="text-sm text-slate-500 mt-2">Loading...</p>
-                  ) : availableDates.length === 0 ? (
-                    <p className="text-sm text-amber-700 mt-2">No availability found in the next 60 days.</p>
-                  ) : (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {availableDates.slice(0, 12).map((d) => (
-                        <button
-                          key={d}
-                          type="button"
-                          onClick={() => patch({ appointment_date: d, start_time: '' })}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold border ${
-                            form.appointment_date === d
-                              ? 'bg-primary-600 text-white border-primary-600'
-                              : 'bg-white/60 text-slate-700 border-white/70 hover:bg-white/80'
-                          }`}
-                        >
-                          {d}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {form.appointment_date && (
-                <div>
-                  <p className="text-sm font-medium mb-2">Available slots</p>
-                  {slotsLoading ? (
-                    <p className="text-slate-500 text-sm">Loading slots...</p>
-                  ) : timeSlots.length === 0 ? (
-                    <p className="text-amber-700 text-sm">
-                      All slots booked for this date — choose another date
-                    </p>
-                  ) : (
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                      {timeSlots.map((slot) => (
-                        <button
-                          key={slot.value}
-                          type="button"
-                          onClick={() => patch({ start_time: slot.time })}
-                          className={`py-2 rounded-lg text-sm ${
-                            form.start_time === slot.time
-                              ? 'bg-primary-600 text-white'
-                              : 'bg-white/50 hover:bg-white/70'
-                          }`}
-                        >
-                          {slot.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {form.consultation_type === 'online' && (
-                <div className="space-y-3 pt-2 border-t border-white/50">
-                  <p className="font-medium text-sm">Online consultation details</p>
-                  <select
-                    className="input-field"
-                    value={form.device_type}
-                    onChange={(e) => patch({ device_type: e.target.value })}
-                  >
-                    <option value="">Device type</option>
-                    <option value="Mobile">Mobile</option>
-                    <option value="Laptop">Laptop</option>
-                  </select>
-                  <select
-                    className="input-field"
-                    value={form.internet_quality}
-                    onChange={(e) => patch({ internet_quality: e.target.value })}
-                  >
-                    <option value="">Internet quality</option>
-                    <option value="Good">Good</option>
-                    <option value="Average">Average</option>
-                    <option value="Poor">Poor</option>
-                  </select>
-                  <select
-                    className="input-field"
-                    value={form.preferred_language}
-                    onChange={(e) => patch({ preferred_language: e.target.value })}
-                  >
-                    <option value="">Preferred language</option>
-                    <option value="Hindi">Hindi</option>
-                    <option value="English">English</option>
-                  </select>
-                  <div>
-                    <label className="text-sm font-medium">Upload reports (PDF / image)</label>
-                    <input
-                      type="file"
-                      accept=".pdf,image/*"
-                      className="input-field mt-1"
-                      onChange={handleReportUpload}
-                      disabled={uploading}
-                    />
-                    {form.report_file && (
-                      <p className="text-xs text-green-700 mt-1">Uploaded ✓</p>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-500">
-                    A secure video call link will be emailed after booking.
-                  </p>
-                </div>
-              )}
-
-              {form.consultation_type === 'home_visit' && (
-                <div className="space-y-3 pt-2 border-t border-white/50">
-                  <p className="font-medium text-sm">Home visit address</p>
-                  <textarea
-                    className="input-field"
-                    rows={2}
-                    placeholder="Full address *"
-                    value={form.full_address}
-                    onChange={(e) => patch({ full_address: e.target.value })}
-                  />
-                  <input
-                    className="input-field"
-                    placeholder="Landmark"
-                    value={form.landmark}
-                    onChange={(e) => patch({ landmark: e.target.value })}
-                  />
-                  <div className="grid grid-cols-2 gap-3">
-                    <input
-                      className="input-field"
-                      placeholder="Pincode *"
-                      value={form.pincode}
-                      onChange={(e) => patch({ pincode: e.target.value })}
-                    />
-                    <input
-                      className="input-field"
-                      placeholder="City *"
-                      value={form.city}
-                      onChange={(e) => patch({ city: e.target.value })}
-                    />
-                  </div>
-                  <button type="button" onClick={openLocationMap} className="btn-outline text-sm w-full">
-                    <FaIcon icon="fa-map" className="mr-2" />
-                    Pick location on map
-                  </button>
-                  {form.map_latitude != null && (
-                    <div className="text-xs text-slate-600 bg-white/40 rounded-lg p-2">
-                      <p>
-                        Pin: {form.map_latitude?.toFixed(4)}, {form.map_longitude?.toFixed(4)}
-                      </p>
-                      <a
-                        href={googleMapsUrl(form.map_latitude, form.map_longitude)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-primary-600 font-medium"
-                      >
-                        Preview on map
-                      </a>
-                    </div>
-                  )}
-                  <select
-                    className="input-field"
-                    value={form.patient_condition}
-                    onChange={(e) => patch({ patient_condition: e.target.value })}
-                  >
-                    <option value="">Patient condition *</option>
-                    {(homeConditions.length ? homeConditions : ['Bedridden', 'Can Walk', 'Post Surgery', 'Injury']).map(
-                      (c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                      )
-                    )}
-                  </select>
-                  <textarea
-                    className="input-field"
-                    rows={2}
-                    placeholder="Special instructions (stairs, no lift...)"
-                    value={form.special_instructions}
-                    onChange={(e) => patch({ special_instructions: e.target.value })}
-                  />
-                </div>
-              )}
-            </div>
+            <BookingPersonalDetailsStep
+              form={form}
+              patch={patch}
+              consultationType={form.consultation_type}
+              sessions={sessions}
+              homeConditions={homeConditions}
+              onOpenMap={openLocationMap}
+              uploading={uploading}
+              onReportUpload={handleReportUpload}
+            />
           )}
 
           {step === 5 && (
-            <div className="space-y-5">
-              <div className="text-center sm:text-left">
-                <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-primary-600 bg-primary-50 px-2.5 py-1 rounded-full">
-                  <FaIcon icon="fa-gift" /> Optional upgrade
-                </span>
-                <h2 className="text-xl font-bold text-slate-800 mt-3">Popular rehab packages</h2>
-                <p className="text-sm text-slate-600 mt-1">
-                  Multi-day programs can save you money vs. booking single sessions. You can skip and pay for this appointment only.
-                </p>
-              </div>
-
-              {packagesLoading ? (
-                <div className="grid gap-3 sm:grid-cols-3 animate-pulse">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-36 rounded-2xl bg-slate-200" />
-                  ))}
-                </div>
-              ) : popularPackages.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
-                  No featured packages right now — continue to payment for this appointment.
-                </div>
-              ) : (
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {popularPackages.map((p) => (
-                    <Link
-                      key={p.id}
-                      to={bookPackageUrl(p.slug, {
-                        doctor_id: form.doctor_id || undefined,
-                        pain_type: form.pain_type || undefined,
-                      })}
-                      className="group rounded-2xl border-2 border-slate-200 bg-white/90 p-4 hover:border-primary-400 hover:shadow-md transition text-left"
-                    >
-                      <p className="text-xs font-bold text-primary-600">{p.duration_days}-day program</p>
-                      <p className="font-bold text-slate-900 mt-1 group-hover:text-primary-800">{p.name}</p>
-                      <p className="text-xs text-slate-500 mt-1 line-clamp-2">{p.short_description}</p>
-                      <p className="text-lg font-bold text-primary-700 mt-3">₹{Number(p.price).toLocaleString('en-IN')}</p>
-                      <p className="text-xs text-primary-600 font-semibold mt-2 inline-flex items-center gap-1">
-                        Book package <FaIcon icon="fa-arrow-right" className="text-[10px]" />
-                      </p>
-                    </Link>
-                  ))}
-                </div>
-              )}
-
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-                <Link to="/packages" className="text-sm font-semibold text-primary-600 hover:underline">
-                  View all treatment packages
-                </Link>
-                <p className="text-xs text-slate-500">Tap Continue below to skip and pay for this appointment only</p>
-              </div>
-            </div>
-          )}
-
-          {step === 6 && (
             <div className="space-y-4">
               <h2 className="text-lg font-semibold">Review & Pay</h2>
               {createdAppt?.booking_id && (
@@ -1369,7 +860,11 @@ export default function BookAppointmentWizard() {
                   <strong className="capitalize">{form.consultation_type?.replace('_', ' ')}</strong>
                 </p>
                 <p>
+                  <span className="text-slate-500">Package:</span> {form.package_label || 'Single Visit'} ({form.number_of_sessions} visit{form.number_of_sessions > 1 ? 's' : ''})
+                </p>
+                <p>
                   <span className="text-slate-500">Pain:</span> {form.pain_type}
+                  {form.pain_duration ? ` · ${form.pain_duration}` : ''}
                 </p>
                 {form.consultation_type === 'clinic' && selectedClinic && (
                   <p>
@@ -1490,6 +985,13 @@ export default function BookAppointmentWizard() {
               </div>
 
               <BookingPolicyAcceptance acceptance={policyAcceptance} onChange={setPolicyAcceptance} />
+
+              <p className="text-xs text-slate-500 text-center">
+                Looking for multi-day rehab programs?{' '}
+                <a href="/packages" className="text-primary-600 font-semibold hover:underline">
+                  Browse treatment packages
+                </a>
+              </p>
 
               {createdAppt?.google_meet_link && (
                 <p className="text-sm text-green-800">

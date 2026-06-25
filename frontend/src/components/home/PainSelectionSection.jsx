@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import FaIcon from '../FaIcon';
 import { painSelection } from '../../services/api';
@@ -11,6 +11,8 @@ import {
   mapApiPainPoint,
   resolveTreatmentLink,
 } from '../../constants/painSelectionData';
+import { bookPainAreaUrl } from '../../utils/bookUrl';
+import { useAuth } from '../../contexts/AuthContext';
 
 const BOOK_ANCHOR_ID = 'book-care';
 
@@ -133,6 +135,8 @@ function PainRunnerVisual({ activeId, activeLabel, painPoints }) {
 
 function PainTreatAccordion({ selectedId, onSelect, treatmentLink, painPoints, showInactiveList = true, className = '' }) {
   const selected = useMemo(() => getPainPointById(selectedId, painPoints), [selectedId, painPoints]);
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const inactiveItems = useMemo(
     () => painPoints.filter((p) => p.id !== selectedId),
     [painPoints, selectedId],
@@ -166,13 +170,32 @@ function PainTreatAccordion({ selectedId, onSelect, treatmentLink, painPoints, s
             <p className="mt-3 line-clamp-3 text-xs leading-relaxed text-slate-600 sm:line-clamp-4 sm:text-sm lg:text-[15px]">
               {description}
             </p>
-            <Link
-              to={treatmentLink}
-              className="mt-4 inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-full bg-orange-500 px-4 py-2 text-xs font-semibold text-white shadow-sm shadow-orange-500/25 transition hover:bg-orange-600 active:scale-[0.98] sm:px-5 sm:text-sm"
-            >
-              Know more
-              <FaIcon icon="fa-arrow-right" className="text-[10px]" />
-            </Link>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link
+                to={treatmentLink}
+                className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-full bg-orange-500 px-4 py-2 text-xs font-semibold text-white shadow-sm shadow-orange-500/25 transition hover:bg-orange-600 active:scale-[0.98] sm:px-5 sm:text-sm"
+              >
+                Know more
+                <FaIcon icon="fa-arrow-right" className="text-[10px]" />
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  const url = bookPainAreaUrl(selected.chipLabel, {
+                    pain_description: selected.accordionDescription || selected.headline,
+                  });
+                  if (!user) {
+                    navigate(`/login?redirect=${encodeURIComponent(url)}`);
+                    return;
+                  }
+                  navigate(url);
+                }}
+                className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-full border-2 border-orange-500 bg-white px-4 py-2 text-xs font-semibold text-orange-600 transition hover:bg-orange-50 active:scale-[0.98] sm:px-5 sm:text-sm"
+              >
+                <FaIcon icon="fa-calendar-check" className="text-[10px]" />
+                Book Appointment
+              </button>
+            </div>
           </motion.div>
         </AnimatePresence>
 

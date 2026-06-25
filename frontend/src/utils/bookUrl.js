@@ -74,6 +74,14 @@ export function matchPainTypeLabel(title, painTypes = []) {
   return hit || cleaned;
 }
 
+export function bookPainAreaUrl(painLabel, extra = {}) {
+  const params = new URLSearchParams();
+  if (painLabel) params.set('pain_type', painLabel);
+  if (extra.pain_description) params.set('pain_description', extra.pain_description);
+  const q = params.toString();
+  return q ? `/book?${q}` : '/book';
+}
+
 export function matchHomeConditionLabel(title, homeConditions = []) {
   if (!title || !homeConditions.length) return '';
   const lower = title.toLowerCase();

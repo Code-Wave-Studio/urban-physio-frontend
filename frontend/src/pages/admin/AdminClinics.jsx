@@ -85,8 +85,9 @@ function ClinicRow({ clinic, onApprove, onReject, onEdit, onDelete, onManageDoct
         </div>
 
         <div className="admin-table-scroll flex flex-nowrap md:flex-wrap gap-2 md:justify-end shrink-0 pb-1 md:pb-0">
-          <button type="button" className="btn-outline text-sm" onClick={() => onManageDoctors(clinic)}>
-            Doctors
+          <button type="button" className="btn-outline text-sm inline-flex items-center gap-1.5" onClick={() => onManageDoctors(clinic)}>
+            <FaIcon icon="fa-user-doctor" />
+            Assign Doctors
           </button>
           <button type="button" className="btn-outline text-sm" onClick={() => onEdit(clinic)}>
             Edit
@@ -372,8 +373,8 @@ function ClinicDoctorsModal({ open, onClose, clinic }) {
     <GlassModal open={open} onClose={onClose} size="lg" titleId="clinic-doctors-modal">
       <GlassModalHeader
         titleId="clinic-doctors-modal"
-        title={clinic?.name || 'Clinic doctors'}
-        subtitle="Attach or detach doctors for this clinic."
+        title={clinic?.name || 'Assign doctors'}
+        subtitle="Attach one or multiple doctors. Assigned clinics appear in each doctor's dashboard for editing, timings, and appointments."
         icon="fa-user-doctor"
         accent="primary"
         onClose={onClose}

@@ -104,7 +104,19 @@ export default function DoctorClinics() {
                 <div className="flex gap-3 min-w-0">
                   <ClinicLogo clinic={c} size="lg" />
                   <div className="min-w-0">
-                  <p className="font-bold text-slate-900 truncate">{c.name}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-bold text-slate-900 truncate">{c.name}</p>
+                    {c.is_assigned && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-100 text-violet-800 border border-violet-200 font-semibold">
+                        Assigned
+                      </span>
+                    )}
+                    {c.is_owner && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200 font-semibold">
+                        Your clinic
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-slate-600 mt-1 line-clamp-2">{c.address}</p>
                   <p className="text-xs text-slate-500 mt-2 flex flex-wrap gap-x-3 gap-y-1">
                     {c.city_name && (
@@ -137,7 +149,7 @@ export default function DoctorClinics() {
                 </Link>
                 <Link to={`/doctor/clinics/new?edit=${c.id}`} className="btn-outline text-sm inline-flex items-center gap-2">
                   <FaIcon icon="fa-pen" />
-                  {c.approval_status === 'approved' ? 'Edit profile' : 'Edit'}
+                  {(c.can_edit !== false) ? (c.approval_status === 'approved' ? 'Edit profile' : 'Edit') : 'View'}
                 </Link>
               </div>
             </div>
