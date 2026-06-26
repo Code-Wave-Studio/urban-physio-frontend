@@ -8,6 +8,10 @@ function isStaffDashboard(pathname) {
   return /^\/(doctor|admin)(\/|$)/.test(pathname);
 }
 
+function isClinicProfile(pathname) {
+  return /^\/clinic(\/|$)/.test(pathname);
+}
+
 const SCROLL_SHOW_AFTER = 320;
 
 function IconWhatsApp({ className = 'w-7 h-7' }) {
@@ -31,6 +35,7 @@ export default function FloatingActions() {
   const { whatsapp } = useContact();
   const [showScrollTop, setShowScrollTop] = useState(false);
   const hideWhatsApp = isStaffDashboard(pathname);
+  const hideWhatsAppOnMobile = isClinicProfile(pathname);
 
   const waDigits = whatsappDigits(whatsapp);
   const waUrl = hideWhatsApp
@@ -55,7 +60,7 @@ export default function FloatingActions() {
           href={waUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="fab fab-whatsapp"
+          className={`fab fab-whatsapp ${hideWhatsAppOnMobile ? 'max-md:hidden' : ''}`}
           aria-label={`Chat on WhatsApp${waDigits ? ` (${whatsapp})` : ''}`}
           title={whatsapp || 'WhatsApp'}
         >

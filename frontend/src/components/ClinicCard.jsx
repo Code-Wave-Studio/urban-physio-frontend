@@ -35,7 +35,7 @@ export default function ClinicCard({ clinic, compact = false, variant = 'default
           tabIndex={0}
           onClick={openPreview}
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openPreview()}
-          className="glass-card p-4 animate-fade-in cursor-pointer hover:shadow-md transition-shadow focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500"
+          className="premium-preview-card premium-preview-card--clinic p-4 animate-fade-in cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500"
         >
           <div className="flex gap-3 items-center">
             <div className="w-12 h-12 bg-gradient-to-br from-emerald-400/30 to-teal-600/40 rounded-xl flex items-center justify-center text-emerald-800 shrink-0">
@@ -66,8 +66,12 @@ export default function ClinicCard({ clinic, compact = false, variant = 'default
           tabIndex={0}
           onClick={openPreview}
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openPreview()}
-          className="interactive-card group relative flex flex-col h-full cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500"
+          className="premium-preview-card premium-preview-card--clinic interactive-card group relative flex flex-col h-full cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500"
         >
+          <span className="premium-preview-hint premium-preview-hint--clinic">
+            <FaIcon icon="fa-up-right-and-down-left-from-center" className="text-[9px]" />
+            Quick view
+          </span>
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-400/10 to-transparent rounded-bl-full pointer-events-none" />
           <div className="p-5 md:p-6 flex-1 flex flex-col relative">
             <div className="flex gap-4">
@@ -177,8 +181,12 @@ export default function ClinicCard({ clinic, compact = false, variant = 'default
         tabIndex={0}
         onClick={openPreview}
         onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openPreview()}
-        className="glass-card p-5 md:p-6 flex flex-col h-full animate-fade-in group hover:shadow-lg transition-shadow cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500"
+        className="premium-preview-card premium-preview-card--clinic p-5 md:p-6 flex flex-col h-full animate-fade-in group cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500"
       >
+        <span className="premium-preview-hint premium-preview-hint--clinic">
+          <FaIcon icon="fa-up-right-and-down-left-from-center" className="text-[9px]" />
+          Tap to preview
+        </span>
         <div className="flex gap-4">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shrink-0 shadow-md">
             <FaIcon icon="fa-hospital" className="text-xl" />

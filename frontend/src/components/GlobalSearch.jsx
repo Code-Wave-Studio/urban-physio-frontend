@@ -235,7 +235,7 @@ export default function GlobalSearch({
   const runSearch = useCallback(
     async (q) => {
       const term = q.trim();
-      if (term.length < 2) {
+      if (term.length < 1) {
         setResults(EMPTY_RESULTS);
         setLoading(false);
         setApiFailed(false);
@@ -244,6 +244,12 @@ export default function GlobalSearch({
 
       const local = localSearchMatches(term);
       setResults(mergeSearchResults({}, local));
+      if (term.length < 2) {
+        setLoading(false);
+        setApiFailed(false);
+        return;
+      }
+
       setLoading(true);
       setApiFailed(false);
 
@@ -284,7 +290,7 @@ export default function GlobalSearch({
       setLoading(false);
       return undefined;
     }
-    debounceRef.current = setTimeout(() => runSearch(query), 280);
+    debounceRef.current = setTimeout(() => runSearch(query), 200);
     return () => clearTimeout(debounceRef.current);
   }, [query, runSearch]);
 
@@ -304,8 +310,11 @@ export default function GlobalSearch({
   useEffect(() => {
     const onDocPointer = (e) => {
       if (wrapRef.current?.contains(e.target) || menuRef.current?.contains(e.target)) return;
-      setOpen(false);
-      setActiveIndex(-1);
+      // Keep results visible until the search box is cleared
+      if (!query.trim()) {
+        setOpen(false);
+        setActiveIndex(-1);
+      }
     };
     document.addEventListener('mousedown', onDocPointer);
     document.addEventListener('touchstart', onDocPointer, { passive: true });
@@ -322,8 +331,6 @@ export default function GlobalSearch({
   }, [autoFocus]);
 
   const goTo = (path) => {
-    setOpen(false);
-    setQuery('');
     setActiveIndex(-1);
     onNavigate?.();
     navigate(path);
@@ -376,7 +383,7 @@ export default function GlobalSearch({
     }
   };
 
-  const showDropdown = open && query.trim().length >= 2;
+  const showDropdown = open && query.trim().length >= 1;
   const showQuickTags = isHero;
   const trimmedQuery = query.trim();
 
@@ -536,12 +543,12 @@ export default function GlobalSearch({
             className={inputClass}
             autoComplete="off"
           />
-          {trimmedQuery && !isHero && (
+          {trimmedQuery && (
             <button
               type="button"
               onClick={clearQuery}
               className={`absolute top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 active:text-slate-800 touch-manipulation ${
-                isMobile ? 'right-3 p-1' : 'right-2.5'
+                isHero ? 'right-[6.5rem] sm:right-[7.5rem]' : isMobile ? 'right-3 p-1' : 'right-2.5'
               }`}
               aria-label="Clear search"
             >

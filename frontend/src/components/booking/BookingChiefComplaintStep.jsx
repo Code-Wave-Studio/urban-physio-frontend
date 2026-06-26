@@ -1,15 +1,5 @@
-const PAIN_LEVELS = [
-  { value: 1, label: '1 — Mild' },
-  { value: 2, label: '2' },
-  { value: 3, label: '3' },
-  { value: 4, label: '4' },
-  { value: 5, label: '5 — Moderate' },
-  { value: 6, label: '6' },
-  { value: 7, label: '7' },
-  { value: 8, label: '8' },
-  { value: 9, label: '9' },
-  { value: 10, label: '10 — Severe' },
-];
+import { useEffect } from 'react';
+import RulerSlider from '../ui/RulerSlider';
 
 const DURATION_OPTIONS = [
   'Less than 1 week',
@@ -20,8 +10,37 @@ const DURATION_OPTIONS = [
   'More than 6 months',
 ];
 
+const PAIN_LABELS = {
+  1: 'Mild',
+  2: 'Mild',
+  3: 'Mild',
+  4: 'Low–mod',
+  5: 'Moderate',
+  6: 'Moderate',
+  7: 'High',
+  8: 'Severe',
+  9: 'Severe',
+  10: 'Worst',
+};
+
+function durationIndex(value) {
+  const idx = DURATION_OPTIONS.indexOf(value);
+  return idx >= 0 ? idx : 0;
+}
+
 export default function BookingChiefComplaintStep({ form, patch, painTypes }) {
   const types = painTypes.length ? painTypes : ['Back Pain', 'Neck Pain', 'Knee Pain', 'Shoulder Pain', 'Other'];
+  const painLevel = Number(form.pain_level) || 5;
+  const durationIdx = durationIndex(form.pain_duration);
+
+  useEffect(() => {
+    patch((f) => ({
+      ...f,
+      pain_duration: f.pain_duration || DURATION_OPTIONS[0],
+      pain_level: f.pain_level || '5',
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="space-y-5">
@@ -56,32 +75,33 @@ export default function BookingChiefComplaintStep({ form, patch, painTypes }) {
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Duration</label>
-          <select
-            className="input-field"
-            value={form.pain_duration}
-            onChange={(e) => patch({ pain_duration: e.target.value })}
-          >
-            <option value="">How long?</option>
-            {DURATION_OPTIONS.map((d) => (
-              <option key={d} value={d}>{d}</option>
-            ))}
-          </select>
+        <div className="md:col-span-2 rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white to-slate-50/80 p-4 sm:p-5 shadow-sm">
+          <RulerSlider
+            label="How long have you had this?"
+            icon="fa-clock"
+            min={0}
+            max={DURATION_OPTIONS.length - 1}
+            step={1}
+            value={durationIdx}
+            onChange={(idx) => patch({ pain_duration: DURATION_OPTIONS[idx] })}
+            ticks={['1', '2', '3', '4', '5', '6']}
+            formatValue={(idx) => DURATION_OPTIONS[idx] || DURATION_OPTIONS[0]}
+            accent="primary"
+          />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Pain level (1–10)</label>
-          <select
-            className="input-field"
-            value={form.pain_level}
-            onChange={(e) => patch({ pain_level: e.target.value })}
-          >
-            <option value="">Select severity…</option>
-            {PAIN_LEVELS.map((l) => (
-              <option key={l.value} value={l.value}>{l.label}</option>
-            ))}
-          </select>
+        <div className="md:col-span-2 rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white to-amber-50/40 p-4 sm:p-5 shadow-sm">
+          <RulerSlider
+            label="Pain level (1–10)"
+            icon="fa-heart-pulse"
+            min={1}
+            max={10}
+            step={1}
+            value={painLevel}
+            onChange={(n) => patch({ pain_level: String(n) })}
+            formatValue={(n) => `${n} — ${PAIN_LABELS[n] || ''}`}
+            accent="amber"
+          />
         </div>
 
         <div className="md:col-span-2">

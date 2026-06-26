@@ -11,7 +11,7 @@ import { getSavedClinics } from '../../utils/savedClinics';
 import { getSavedExercises } from '../../utils/savedExercises';
 import { getLocalFavourites } from '../../utils/bookingFavourites';
 import { doctorProfileUrl, clinicProfileUrl } from '../../utils/profileUrls';
-import { bookDoctorUrl } from '../../utils/bookUrl';
+import { bookDoctorUrl, bookClinicUrl } from '../../utils/bookUrl';
 import { clinicMapsUrl } from '../../utils/locationHelpers';
 import toast from 'react-hot-toast';
 
@@ -173,6 +173,9 @@ export default function PatientSaved() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Link to={clinicProfileUrl(c)} className="btn-outline text-sm">Profile</Link>
+                    <Link to={bookClinicUrl(c.id)} className="btn-primary text-sm inline-flex items-center gap-1.5">
+                      <FaIcon icon="fa-calendar-check" /> Book appointment
+                    </Link>
                     {c.phone && (
                       <a href={`tel:${c.phone}`} className="btn-outline text-sm inline-flex items-center gap-1">
                         <FaIcon icon="fa-phone" /> Call

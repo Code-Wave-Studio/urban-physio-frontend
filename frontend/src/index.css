@@ -139,6 +139,116 @@
     .interactive-card:hover .icon-hover-shift {
       transform: translateX(3px);
     }
+
+    .premium-preview-card:hover .premium-preview-hint {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Premium listing cards — doctor / clinic */
+  .premium-preview-card {
+    @apply relative rounded-3xl border border-white/80 overflow-hidden;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 247, 237, 0.55) 48%, rgba(255, 255, 255, 0.88) 100%);
+    box-shadow:
+      0 4px 6px -2px rgb(15 23 42 / 0.06),
+      0 16px 32px -12px rgb(249 115 22 / 0.12);
+    transition:
+      transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.35s ease;
+  }
+
+  .premium-preview-card--doctor {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 237, 213, 0.35) 50%, rgba(255, 255, 255, 0.9) 100%);
+  }
+
+  .premium-preview-card--clinic {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(209, 250, 229, 0.35) 50%, rgba(255, 255, 255, 0.9) 100%);
+    box-shadow:
+      0 4px 6px -2px rgb(15 23 42 / 0.06),
+      0 16px 32px -12px rgb(16 185 129 / 0.14);
+  }
+
+  .premium-preview-card:active {
+    transform: scale(0.985);
+  }
+
+  @media (hover: hover) {
+    .premium-preview-card--doctor:hover {
+      border-color: rgb(251 146 60 / 0.45);
+      box-shadow:
+        0 24px 48px -16px rgb(249 115 22 / 0.22),
+        0 12px 24px -12px rgb(15 23 42 / 0.1);
+      transform: translateY(-5px);
+    }
+
+    .premium-preview-card--clinic:hover {
+      border-color: rgb(52 211 153 / 0.45);
+      box-shadow:
+        0 24px 48px -16px rgb(16 185 129 / 0.2),
+        0 12px 24px -12px rgb(15 23 42 / 0.1);
+      transform: translateY(-5px);
+    }
+  }
+
+  .premium-preview-hint {
+    @apply absolute top-3 right-3 z-[2] inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide
+           px-2 py-1 rounded-full border pointer-events-none;
+    opacity: 0.85;
+    transform: translateY(-2px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+
+  .premium-preview-hint--doctor {
+    @apply bg-white/90 text-primary-700 border-primary-200/80 shadow-sm;
+  }
+
+  .premium-preview-hint--clinic {
+    @apply bg-white/90 text-emerald-700 border-emerald-200/80 shadow-sm;
+  }
+
+  /* Ruler-style range slider */
+  .ruler-slider-input {
+    @apply relative z-[1] w-full h-8 appearance-none bg-transparent cursor-pointer touch-manipulation;
+  }
+
+  .ruler-slider-input::-webkit-slider-runnable-track {
+    @apply h-2 rounded-full bg-transparent;
+  }
+
+  .ruler-slider-input::-webkit-slider-thumb {
+    @apply appearance-none w-6 h-6 rounded-full bg-white border-2 shadow-lg cursor-grab active:cursor-grabbing;
+    margin-top: -8px;
+    border-color: rgb(249 115 22);
+    box-shadow: 0 4px 14px rgb(249 115 22 / 0.35);
+  }
+
+  .ruler-slider-input.accent-amber-500::-webkit-slider-thumb {
+    border-color: rgb(245 158 11);
+    box-shadow: 0 4px 14px rgb(245 158 11 / 0.35);
+  }
+
+  .ruler-slider-input::-moz-range-track {
+    @apply h-2 rounded-full bg-transparent border-0;
+  }
+
+  .ruler-slider-input::-moz-range-thumb {
+    @apply w-6 h-6 rounded-full bg-white border-2 border-primary-500 shadow-lg cursor-grab;
+    box-shadow: 0 4px 14px rgb(249 115 22 / 0.35);
+  }
+
+  .ruler-slider-input.accent-amber-500::-moz-range-thumb {
+    border-color: rgb(245 158 11);
+    box-shadow: 0 4px 14px rgb(245 158 11 / 0.35);
+  }
+
+  .ruler-slider-input:focus-visible {
+    outline: none;
+  }
+
+  .ruler-slider-input:focus-visible::-webkit-slider-thumb {
+    @apply ring-2 ring-offset-2 ring-primary-400;
   }
 
   /* Site header — solid white (used in Navbar.jsx) */
