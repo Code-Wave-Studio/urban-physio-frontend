@@ -216,7 +216,7 @@ export default function BookingProviderSelectStep({
             <FaIcon icon="fa-video" />
             Online consultation — search across India
           </p>
-          <p className="text-xs text-sky-800/80 mt-1">Optionally filter by state. Your fixed city location is not required.</p>
+          <p className="text-xs text-sky-800/80 mt-1">Only states with available doctors are listed. All cities in the selected state are included.</p>
           <select
             className="input-field mt-3"
             value={onlineStateId}

@@ -120,6 +120,10 @@ export default function DoctorServicePackages() {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-slate-800">My service packages</h1>
+          <p className="text-slate-600 text-sm mt-1 max-w-2xl">
+            Create custom packages for your patients. Admin-created platform packages are managed under{' '}
+            <strong>Platform prices</strong> — you set your own price there, not here.
+          </p>
           <p className="text-slate-600 text-sm mt-1">Create packages for patients — admin must approve before they appear publicly.</p>
         </div>
         <button type="button" onClick={openCreate} className="btn-primary inline-flex items-center gap-2">

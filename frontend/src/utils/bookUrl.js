@@ -10,6 +10,7 @@ export function bookDoctorUrl(doctorId, opts = {}) {
   if (opts.date) params.set('date', opts.date);
   if (opts.time) params.set('time', opts.time);
   if (opts.packageId) params.set('package_id', String(opts.packageId));
+  if (opts.treatmentPackageId) params.set('treatment_package_id', String(opts.treatmentPackageId));
   const q = params.toString();
   const base = `/doctors/${doctorId}/book`;
   return q ? `${base}?${q}` : base;

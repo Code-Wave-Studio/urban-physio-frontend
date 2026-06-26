@@ -13,7 +13,7 @@ import ShareProfileButton from '../components/profile/ShareProfileButton';
 import SaveDoctorButton from '../components/SaveDoctorButton';
 import ReviewForm from '../components/platform/ReviewForm';
 import ProfileSlotsPreview from '../components/profile/ProfileSlotsPreview';
-import { doctors } from '../services/api';
+import { doctors, booking } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { googleMapsUrl } from '../utils/locationHelpers';
 import { doctorMinFee, formatReviewCount } from '../utils/doctorProfileUtils';
@@ -90,7 +90,8 @@ export default function DoctorProfilePage() {
   const profileKey = slug || legacyId;
   const { hasRole } = useAuth();
   const [doctor, setDoctor] = useState(null);
-  const [packages, setPackages] = useState([]);
+  const [adminPackages, setAdminPackages] = useState([]);
+  const [doctorPackages, setDoctorPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -103,10 +104,17 @@ export default function DoctorProfilePage() {
         const d = res?.data ?? res;
         setDoctor(d);
         if (d?.id) {
-          doctors
-            .publicPackages(d.id)
-            .then((pkgRes) => setPackages(pkgRes?.data ?? pkgRes ?? []))
-            .catch(() => setPackages([]));
+          booking
+            .doctorPackages(d.id)
+            .then((pkgRes) => {
+              const data = pkgRes?.data ?? pkgRes ?? {};
+              setAdminPackages(data.admin_packages || []);
+              setDoctorPackages(data.doctor_packages || []);
+            })
+            .catch(() => {
+              setAdminPackages([]);
+              setDoctorPackages([]);
+            });
         }
       })
       .catch(() => setNotFound(true))
@@ -378,43 +386,67 @@ export default function DoctorProfilePage() {
           })}
         </div>
 
-        {packages.length > 0 && (
+        {(adminPackages.length > 0 || doctorPackages.length > 0) && (
           <Section title="Treatment packages" icon="fa-box-open">
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {packages.map((pkg) => (
-                <Link
-                  key={pkg.id}
-                  to={bookDoctorUrl(doctor.id, { type: pkg.consultation_type !== 'any' ? pkg.consultation_type : undefined, packageId: pkg.id })}
-                  className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-white to-emerald-50/40 p-4 hover:shadow-md hover:border-emerald-400 transition block"
-                >
-                  <p className="font-bold text-slate-900">{pkg.name}</p>
-                  <p className="text-xs text-slate-500 mt-1">
-                    {pkg.total_sessions} session{pkg.total_sessions !== 1 ? 's' : ''} · {pkg.duration_days} days
-                  </p>
-                  <div className="mt-3 flex items-baseline gap-2 flex-wrap">
-                    {Number(pkg.mrp_price) > Number(pkg.discount_price) && (
-                      <span className="text-sm text-slate-400 line-through">₹{Number(pkg.mrp_price).toLocaleString('en-IN')}</span>
-                    )}
-                    <span className="text-lg font-bold text-emerald-700">₹{Number(pkg.discount_price).toLocaleString('en-IN')}</span>
-                    {pkg.discount_percent > 0 && (
-                      <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
-                        {pkg.discount_percent}% off
-                      </span>
-                    )}
-                  </div>
-                  {pkg.features_list?.length > 0 && (
-                    <ul className="mt-3 space-y-1 text-xs text-slate-600">
-                      {pkg.features_list.slice(0, 3).map((f) => (
-                        <li key={f} className="flex gap-1.5">
-                          <FaIcon icon="fa-check" className="text-emerald-600 mt-0.5 shrink-0" />
-                          <span>{f}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </Link>
-              ))}
-            </div>
+            {adminPackages.length > 0 && (
+              <div className="mb-5">
+                <p className="text-xs font-bold uppercase tracking-wide text-sky-700 mb-3">Platform packages</p>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {adminPackages.map((pkg) => (
+                    <Link
+                      key={`admin-${pkg.id}`}
+                      to={bookDoctorUrl(doctor.id, {
+                        type: pkg.consultation_type !== 'any' ? pkg.consultation_type : undefined,
+                        treatmentPackageId: pkg.id,
+                      })}
+                      className="rounded-2xl border border-sky-200 bg-gradient-to-br from-white to-sky-50/40 p-4 hover:shadow-md hover:border-sky-400 transition block"
+                    >
+                      <p className="font-bold text-slate-900">{pkg.name}</p>
+                      <p className="text-[10px] font-bold uppercase text-sky-700 mt-1">Admin package</p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        {pkg.total_sessions} session{pkg.total_sessions !== 1 ? 's' : ''} · {pkg.duration_days} days
+                      </p>
+                      <div className="mt-3 flex items-baseline gap-2 flex-wrap">
+                        {Number(pkg.mrp_price) > Number(pkg.discount_price) && (
+                          <span className="text-sm text-slate-400 line-through">₹{Number(pkg.mrp_price).toLocaleString('en-IN')}</span>
+                        )}
+                        <span className="text-lg font-bold text-sky-700">₹{Number(pkg.discount_price).toLocaleString('en-IN')}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+            {doctorPackages.length > 0 && (
+              <div>
+                {adminPackages.length > 0 && (
+                  <p className="text-xs font-bold uppercase tracking-wide text-emerald-700 mb-3">Doctor packages</p>
+                )}
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {doctorPackages.map((pkg) => (
+                    <Link
+                      key={`doctor-${pkg.id}`}
+                      to={bookDoctorUrl(doctor.id, {
+                        type: pkg.consultation_type !== 'any' ? pkg.consultation_type : undefined,
+                        packageId: pkg.id,
+                      })}
+                      className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-white to-emerald-50/40 p-4 hover:shadow-md hover:border-emerald-400 transition block"
+                    >
+                      <p className="font-bold text-slate-900">{pkg.name}</p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        {pkg.total_sessions} session{pkg.total_sessions !== 1 ? 's' : ''} · {pkg.duration_days} days
+                      </p>
+                      <div className="mt-3 flex items-baseline gap-2 flex-wrap">
+                        {Number(pkg.mrp_price) > Number(pkg.discount_price) && (
+                          <span className="text-sm text-slate-400 line-through">₹{Number(pkg.mrp_price).toLocaleString('en-IN')}</span>
+                        )}
+                        <span className="text-lg font-bold text-emerald-700">₹{Number(pkg.discount_price).toLocaleString('en-IN')}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </Section>
         )}
 

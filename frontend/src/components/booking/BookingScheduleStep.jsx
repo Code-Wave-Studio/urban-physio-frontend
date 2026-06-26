@@ -4,6 +4,27 @@ import FaIcon from '../FaIcon';
 export const CUSTOM_PACKAGE_ID = 'custom';
 export const SINGLE_PACKAGE_ID = 'single';
 
+export function adminPackageKey(id) {
+  return `admin-${id}`;
+}
+
+export function doctorPackageKey(id) {
+  return `doctor-${id}`;
+}
+
+export function parsePackageKey(key) {
+  if (!key || key === SINGLE_PACKAGE_ID || key === CUSTOM_PACKAGE_ID) {
+    return { source: key, id: null };
+  }
+  if (String(key).startsWith('admin-')) {
+    return { source: 'admin', id: parseInt(String(key).slice(6), 10) };
+  }
+  if (String(key).startsWith('doctor-')) {
+    return { source: 'doctor', id: parseInt(String(key).slice(7), 10) };
+  }
+  return { source: 'doctor', id: parseInt(key, 10) };
+}
+
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -13,9 +34,60 @@ function formatDateChip(d) {
   return new Date(`${d}T12:00:00`).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
+function PackageCard({ pkg, selected, onSelect, tone = 'sky' }) {
+  const toneMap = {
+    sky: {
+      active: 'border-sky-500 bg-sky-50 ring-2 ring-sky-200',
+      badge: 'text-sky-700',
+      hover: 'hover:border-sky-200',
+    },
+    emerald: {
+      active: 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-200',
+      badge: 'text-emerald-700',
+      hover: 'hover:border-emerald-200',
+    },
+    violet: {
+      active: 'border-violet-500 bg-violet-50 ring-2 ring-violet-200',
+      badge: 'text-violet-700',
+      hover: 'hover:border-violet-200',
+    },
+    primary: {
+      active: 'border-primary-500 bg-primary-50 ring-2 ring-primary-200',
+      badge: 'text-primary-700',
+      hover: 'hover:border-primary-200',
+    },
+  };
+  const t = toneMap[tone] || toneMap.sky;
+  const price = pkg.discount_price ?? pkg.price;
+  const mrp = pkg.mrp_price;
+
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`rounded-2xl border-2 p-3 text-left transition w-full ${
+        selected ? t.active : `border-slate-200 bg-white/80 ${t.hover}`
+      }`}
+    >
+      <p className={`text-xs font-bold uppercase ${t.badge}`}>
+        {pkg.total_sessions} session{pkg.total_sessions !== 1 ? 's' : ''}
+        {pkg.duration_days ? ` · ${pkg.duration_days} days` : ''}
+      </p>
+      <p className="font-bold text-slate-900 text-sm mt-1 line-clamp-2">{pkg.name}</p>
+      <p className="text-[11px] text-slate-500 mt-1">
+        ₹{Number(price || 0).toLocaleString('en-IN')}
+        {Number(mrp) > Number(price) && (
+          <span className="line-through ml-1 text-slate-400">₹{Number(mrp).toLocaleString('en-IN')}</span>
+        )}
+      </p>
+    </button>
+  );
+}
+
 export default function BookingScheduleStep({
   form,
   patch,
+  adminPackages = [],
   doctorPackages = [],
   selectedPackageId,
   onPackageChange,
@@ -29,37 +101,44 @@ export default function BookingScheduleStep({
 }) {
   const [activeSessionIndex, setActiveSessionIndex] = useState(0);
 
+  const allPackages = useMemo(
+    () => [...adminPackages, ...doctorPackages],
+    [adminPackages, doctorPackages]
+  );
+
   const selectedPkg = useMemo(() => {
     if (selectedPackageId === SINGLE_PACKAGE_ID || !selectedPackageId) {
-      return { id: SINGLE_PACKAGE_ID, label: 'Single Visit', sessions: 1, days: 1 };
+      return { id: SINGLE_PACKAGE_ID, label: 'Single visit', sessions: 1, days: 1 };
     }
     if (selectedPackageId === CUSTOM_PACKAGE_ID) {
-      return { id: CUSTOM_PACKAGE_ID, label: 'Custom schedule', sessions: scheduleSessions.length || 1, days: null };
+      return { id: CUSTOM_PACKAGE_ID, label: 'Flexible consultation', sessions: scheduleSessions.length || 1, days: null };
     }
-    const found = doctorPackages.find((p) => String(p.id) === String(selectedPackageId));
+    const parsed = parsePackageKey(selectedPackageId);
+    const found = allPackages.find((p) => {
+      if (parsed.source === 'admin') return String(p.id) === String(parsed.id) && (p.package_source === 'admin' || !p.package_source);
+      if (parsed.source === 'doctor') return String(p.id) === String(parsed.id);
+      return String(p.id) === String(selectedPackageId);
+    });
     if (found) {
       return {
-        id: found.id,
+        id: selectedPackageId,
         label: found.name,
         sessions: found.total_sessions || found.duration_days || 1,
         days: found.duration_days,
-        price: found.discount_price,
+        price: found.discount_price ?? found.price,
         mrp: found.mrp_price,
       };
     }
-    return { id: SINGLE_PACKAGE_ID, label: 'Single Visit', sessions: 1, days: 1 };
-  }, [selectedPackageId, doctorPackages, scheduleSessions.length]);
+    return { id: SINGLE_PACKAGE_ID, label: 'Single visit', sessions: 1, days: 1 };
+  }, [selectedPackageId, allPackages, scheduleSessions.length]);
 
-  const requiredSessions = selectedPackageId === CUSTOM_PACKAGE_ID
-    ? Math.max(1, scheduleSessions.length)
-    : selectedPkg.sessions;
+  const requiredSessions =
+    selectedPackageId === CUSTOM_PACKAGE_ID ? Math.max(1, scheduleSessions.length) : selectedPkg.sessions;
 
   useEffect(() => {
     if (scheduleSessions.length < requiredSessions) {
       const next = [...scheduleSessions];
-      while (next.length < requiredSessions) {
-        next.push({ date: '', time: '' });
-      }
+      while (next.length < requiredSessions) next.push({ date: '', time: '' });
       onScheduleChange(next);
     } else if (selectedPackageId !== CUSTOM_PACKAGE_ID && scheduleSessions.length > requiredSessions) {
       onScheduleChange(scheduleSessions.slice(0, requiredSessions));
@@ -69,16 +148,13 @@ export default function BookingScheduleStep({
 
   useEffect(() => {
     const first = scheduleSessions[0];
-    if (first?.date) {
-      patch({ appointment_date: first.date, start_time: first.time || '' });
-    }
+    if (first?.date) patch({ appointment_date: first.date, start_time: first.time || '' });
     patch({ number_of_sessions: requiredSessions, package_label: selectedPkg.label });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scheduleSessions, requiredSessions, selectedPkg.label]);
 
   const updateSession = (index, fields) => {
-    const next = scheduleSessions.map((s, i) => (i === index ? { ...s, ...fields } : s));
-    onScheduleChange(next);
+    onScheduleChange(scheduleSessions.map((s, i) => (i === index ? { ...s, ...fields } : s)));
   };
 
   const addCustomSession = () => {
@@ -96,74 +172,105 @@ export default function BookingScheduleStep({
   const activeSlots = activeSession.date ? slotsCache[activeSession.date] || [] : [];
 
   useEffect(() => {
-    if (activeSession.date && loadSlotsForDate) {
-      loadSlotsForDate(activeSession.date);
-    }
+    if (activeSession.date && loadSlotsForDate) loadSlotsForDate(activeSession.date);
   }, [activeSession.date, loadSlotsForDate]);
+
+  const hasStructuredPackage =
+    selectedPackageId !== SINGLE_PACKAGE_ID && selectedPackageId !== CUSTOM_PACKAGE_ID;
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-bold text-slate-800">Package & schedule</h2>
         <p className="text-sm text-slate-600 mt-1">
-          Choose a treatment package or build a custom schedule with multiple dates and times.
+          Choose a platform or doctor package, or book a flexible consultation without a package.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <button
-          type="button"
-          onClick={() => onPackageChange(SINGLE_PACKAGE_ID)}
-          className={`rounded-2xl border-2 p-3 text-left transition ${
-            selectedPackageId === SINGLE_PACKAGE_ID
-              ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-200'
-              : 'border-slate-200 bg-white/80 hover:border-primary-200'
-          }`}
-        >
-          <p className="text-xs font-bold text-primary-600 uppercase">No package</p>
-          <p className="font-bold text-slate-900 text-sm mt-1">Single visit</p>
-          <p className="text-[11px] text-slate-500 mt-1">One appointment</p>
-        </button>
+      {adminPackages.length > 0 && (
+        <section className="space-y-2">
+          <p className="text-xs font-bold uppercase tracking-wide text-sky-700 flex items-center gap-2">
+            <FaIcon icon="fa-shield-halved" />
+            Admin packages
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {adminPackages.map((pkg) => {
+              const key = adminPackageKey(pkg.id);
+              return (
+                <PackageCard
+                  key={key}
+                  pkg={pkg}
+                  tone="sky"
+                  selected={selectedPackageId === key}
+                  onSelect={() => onPackageChange(key, { ...pkg, package_source: 'admin' })}
+                />
+              );
+            })}
+          </div>
+        </section>
+      )}
 
-        {doctorPackages.map((pkg) => (
+      {doctorPackages.length > 0 && (
+        <section className="space-y-2">
+          <p className="text-xs font-bold uppercase tracking-wide text-emerald-700 flex items-center gap-2">
+            <FaIcon icon="fa-user-doctor" />
+            Doctor packages
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {doctorPackages.map((pkg) => {
+              const key = doctorPackageKey(pkg.id);
+              return (
+                <PackageCard
+                  key={key}
+                  pkg={pkg}
+                  tone="emerald"
+                  selected={selectedPackageId === key}
+                  onSelect={() => onPackageChange(key, { ...pkg, package_source: 'doctor' })}
+                />
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      <section className="space-y-2">
+        <p className="text-xs font-bold uppercase tracking-wide text-violet-700 flex items-center gap-2">
+          <FaIcon icon="fa-calendar-plus" />
+          Without package
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <button
-            key={pkg.id}
             type="button"
-            onClick={() => onPackageChange(String(pkg.id), pkg)}
+            onClick={() => onPackageChange(CUSTOM_PACKAGE_ID)}
             className={`rounded-2xl border-2 p-3 text-left transition ${
-              String(selectedPackageId) === String(pkg.id)
-                ? 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-200'
-                : 'border-slate-200 bg-white/80 hover:border-emerald-200'
+              selectedPackageId === CUSTOM_PACKAGE_ID
+                ? 'border-violet-500 bg-violet-50 ring-2 ring-violet-200'
+                : 'border-slate-200 bg-white/80 hover:border-violet-200'
             }`}
           >
-            <p className="text-xs font-bold text-emerald-700 uppercase">{pkg.total_sessions} sessions</p>
-            <p className="font-bold text-slate-900 text-sm mt-1 line-clamp-1">{pkg.name}</p>
-            <p className="text-[11px] text-slate-500 mt-1">
-              ₹{Number(pkg.discount_price).toLocaleString('en-IN')}
-              {Number(pkg.mrp_price) > Number(pkg.discount_price) && (
-                <span className="line-through ml-1 text-slate-400">₹{Number(pkg.mrp_price).toLocaleString('en-IN')}</span>
-              )}
-            </p>
+            <p className="text-xs font-bold text-violet-700 uppercase">Flexible</p>
+            <p className="font-bold text-slate-900 text-sm mt-1">No package / custom schedule</p>
+            <p className="text-[11px] text-slate-500 mt-1">Pick multiple dates & times freely</p>
           </button>
-        ))}
 
-        <button
-          type="button"
-          onClick={() => onPackageChange(CUSTOM_PACKAGE_ID)}
-          className={`rounded-2xl border-2 p-3 text-left transition ${
-            selectedPackageId === CUSTOM_PACKAGE_ID
-              ? 'border-violet-500 bg-violet-50 ring-2 ring-violet-200'
-              : 'border-slate-200 bg-white/80 hover:border-violet-200'
-          }`}
-        >
-          <p className="text-xs font-bold text-violet-700 uppercase">Flexible</p>
-          <p className="font-bold text-slate-900 text-sm mt-1">Custom schedule</p>
-          <p className="text-[11px] text-slate-500 mt-1">Multiple dates & times</p>
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={() => onPackageChange(SINGLE_PACKAGE_ID)}
+            className={`rounded-2xl border-2 p-3 text-left transition ${
+              selectedPackageId === SINGLE_PACKAGE_ID
+                ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-200'
+                : 'border-slate-200 bg-white/80 hover:border-primary-200'
+            }`}
+          >
+            <p className="text-xs font-bold text-primary-600 uppercase">Single visit</p>
+            <p className="font-bold text-slate-900 text-sm mt-1">One appointment only</p>
+            <p className="text-[11px] text-slate-500 mt-1">Pay per session — no package</p>
+          </button>
+        </div>
+      </section>
 
-      {selectedPackageId !== SINGLE_PACKAGE_ID && selectedPackageId !== CUSTOM_PACKAGE_ID && (
-        <div className="rounded-xl bg-emerald-50 border border-emerald-200/70 px-4 py-3 text-sm text-emerald-900">
+      {hasStructuredPackage && (
+        <div className="rounded-xl bg-sky-50 border border-sky-200/70 px-4 py-3 text-sm text-sky-900">
           <FaIcon icon="fa-circle-info" className="mr-1.5" />
           Select all <strong>{requiredSessions}</strong> session dates and preferred times below.
         </div>

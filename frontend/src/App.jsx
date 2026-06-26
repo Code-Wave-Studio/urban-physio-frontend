@@ -65,6 +65,7 @@ import PatientPackages from './pages/patient/PatientPackages';
 import PatientSaved from './pages/patient/PatientSaved';
 import DoctorPackages from './pages/doctor/DoctorPackages';
 import DoctorServicePackages from './pages/doctor/DoctorServicePackages';
+import DoctorAdminPackagePrices from './pages/doctor/DoctorAdminPackagePrices';
 import DoctorPrescriptions from './pages/doctor/DoctorPrescriptions';
 import PhysioFeed from './pages/PhysioFeed';
 import PhysioFeedDetail from './pages/PhysioFeedDetail';
@@ -174,6 +175,7 @@ export default function App() {
       <Route path="/doctor/custom-slots" element={<ProtectedRoute roles={['doctor']}><DoctorCustomSlots /></ProtectedRoute>} />
       <Route path="/doctor/packages" element={<ProtectedRoute roles={['doctor']}><DoctorPackages /></ProtectedRoute>} />
       <Route path="/doctor/service-packages" element={<ProtectedRoute roles={['doctor']}><DoctorServicePackages /></ProtectedRoute>} />
+      <Route path="/doctor/admin-package-prices" element={<ProtectedRoute roles={['doctor']}><DoctorAdminPackagePrices /></ProtectedRoute>} />
       <Route path="/doctor/prescriptions" element={<ProtectedRoute roles={['doctor']}><DoctorPrescriptions /></ProtectedRoute>} />
       <Route path="/doctor/requests" element={<ProtectedRoute roles={['doctor']}><AppointmentRequestsPage navItems={DOCTOR_NAV} title="Appointment Requests" /></ProtectedRoute>} />
       <Route path="/doctor/emergency" element={<ProtectedRoute roles={['doctor']}><DoctorEmergency /></ProtectedRoute>} />

@@ -5,13 +5,12 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import FaIcon from '../components/FaIcon';
 import DoctorAvatar from '../components/DoctorAvatar';
-import { emergency, payments } from '../services/api';
+import { emergency } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocation } from '../contexts/LocationContext';
 import toast from 'react-hot-toast';
-import { openRazorpayCheckout, handlePaymentError } from '../utils/razorpayCheckout';
 
-const STEPS = ['Emergency Type', 'Your Details', 'Severity', 'Choose Doctor', 'Pricing', 'Payment'];
+const STEPS = ['Emergency Type', 'Your Details', 'Severity', 'Choose Doctor'];
 
 const EMERGENCY_TYPES = [
   { id: 'online', label: 'Instant Online Consultation', icon: 'fa-video', desc: 'Video call with a physio in minutes' },
@@ -54,108 +53,69 @@ export default function EmergencyBookingWizard() {
   const [clinics, setClinics] = useState([]);
   const [loadingDoctors, setLoadingDoctors] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [confirmedAppt, setConfirmedAppt] = useState(null);
-  const [trackStatus, setTrackStatus] = useState(null);
-
-  useEffect(() => {
-    if (!confirmedAppt?.id || step !== 5) return undefined;
-    let active = true;
-    const poll = async () => {
-      try {
-        const res = await emergency.status(confirmedAppt.id);
-        if (active) setTrackStatus(res.data?.appointment || null);
-      } catch {
-        /* ignore poll errors */
-      }
-    };
-    poll();
-    const t = setInterval(poll, 15000);
-    return () => {
-      active = false;
-      clearInterval(t);
-    };
-  }, [confirmedAppt?.id, step]);
 
   const patch = (fields) => setForm((f) => ({ ...f, ...fields }));
 
-  const resolvedLocation = useMemo(() => {
-    if (locationSource === 'city' && city?.id) {
-      return {
-        lat: null,
-        lng: null,
-        hasLocation: true,
-        label: city.name,
-        cityId: city.id,
-        mode: 'city',
-      };
-    }
-    if (locationSource === 'gps' && (coords?.lat || form.latitude)) {
-      const lat = form.latitude ?? coords?.lat;
-      const lng = form.longitude ?? coords?.lng;
-      return {
-        lat,
-        lng,
-        hasLocation: Boolean(lat && lng),
-        label: city?.name ? `Near ${city.name} (GPS)` : 'Your current location',
-        cityId: city?.id,
-        mode: 'gps',
-      };
-    }
-    if (city?.id) {
-      return {
-        lat: null,
-        lng: null,
-        hasLocation: true,
-        label: city.name,
-        cityId: city.id,
-        mode: 'city',
-      };
-    }
-    return { lat: null, lng: null, hasLocation: false, label: null, cityId: null, mode: 'auto' };
-  }, [form.latitude, form.longitude, coords, city, locationSource]);
+  useEffect(() => {
+    emergency.settings().then((res) => setSettings(res.data)).catch(() => {});
+  }, []);
 
   useEffect(() => {
-    const type = searchParams.get('type');
-    if (type && ['online', 'home_visit', 'clinic'].includes(type)) {
-      patch({ emergency_type: type });
+    const t = searchParams.get('type');
+    if (t && ['online', 'home_visit', 'clinic'].includes(t)) {
+      patch({ emergency_type: t });
     }
-    emergency.settings().then((res) => setSettings(res.data)).catch(() => {});
   }, [searchParams]);
 
   useEffect(() => {
     if (user) {
       patch({
-        full_name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
+        full_name: [user.first_name, user.last_name].filter(Boolean).join(' '),
         email: user.email || '',
         mobile: user.phone || '',
       });
     }
   }, [user]);
 
-  useEffect(() => {
-    if (locationSource === 'gps' && coords?.lat) {
-      patch({ latitude: coords.lat, longitude: coords.lng });
-    } else if (locationSource === 'city') {
-      patch({ latitude: null, longitude: null });
+  const resolvedLocation = useMemo(() => {
+    if (coords?.lat != null && coords?.lng != null) {
+      return {
+        hasLocation: true,
+        lat: coords.lat,
+        lng: coords.lng,
+        label: city?.name ? `${city.name} (GPS)` : 'Your location',
+      };
     }
-  }, [coords, city, locationSource]);
+    if (city?.id) {
+      return {
+        hasLocation: true,
+        lat: city.latitude ?? null,
+        lng: city.longitude ?? null,
+        cityId: city.id,
+        label: city.name,
+      };
+    }
+    return { hasLocation: false, label: '' };
+  }, [coords, city]);
+
+  useEffect(() => {
+    if (resolvedLocation.hasLocation) {
+      patch({
+        latitude: resolvedLocation.lat,
+        longitude: resolvedLocation.lng,
+      });
+    }
+  }, [resolvedLocation]);
 
   const loadDoctors = useCallback(async () => {
-    if (!form.emergency_type) return;
-    if (!resolvedLocation.hasLocation) {
-      setDoctors([]);
-      setClinics([]);
-      return;
-    }
+    if (!resolvedLocation.hasLocation) return;
     setLoadingDoctors(true);
     try {
       const params = {
         emergency_type: form.emergency_type,
-        lat: resolvedLocation.lat,
-        lng: resolvedLocation.lng,
-        city_id: resolvedLocation.cityId,
-        location_mode: resolvedLocation.mode,
+        latitude: resolvedLocation.lat,
+        longitude: resolvedLocation.lng,
+        ...(resolvedLocation.cityId ? { city_id: resolvedLocation.cityId } : {}),
       };
       if (form.emergency_type === 'clinic') {
         const cRes = await emergency.openClinics(params);
@@ -175,11 +135,6 @@ export default function EmergencyBookingWizard() {
     if (step === 3) loadDoctors();
   }, [step, loadDoctors]);
 
-  const fees = useMemo(() => {
-    if (selectedDoctor?.fees) return selectedDoctor.fees;
-    return null;
-  }, [selectedDoctor]);
-
   const canNext = () => {
     if (step === 0) return !!form.emergency_type;
     if (step === 1) {
@@ -192,31 +147,35 @@ export default function EmergencyBookingWizard() {
     return true;
   };
 
-  const handleBookAndPay = async () => {
+  const continueToFullBooking = () => {
     if (!user) {
       toast.error('Please log in to book emergency care');
       navigate('/login?redirect=/emergency/book');
       return;
     }
-    setSubmitting(true);
-    try {
-      const res = await emergency.book({
-        ...form,
-        doctor_id: Number(form.doctor_id),
-        clinic_id: form.clinic_id ? Number(form.clinic_id) : null,
-        eta_minutes: selectedDoctor?.estimated_response_minutes ?? 15,
-      });
-      const appt = res.data;
-      const orderRes = await payments.createOrder(appt.id);
-      const verified = await openRazorpayCheckout(orderRes);
-      setConfirmedAppt(verified.data?.appointment || appt);
-      toast.success('Emergency booking confirmed!');
-      setStep(5);
-    } catch (e) {
-      handlePaymentError(e);
-    } finally {
-      setSubmitting(false);
+    if (!form.doctor_id) {
+      toast.error('Please select a physiotherapist');
+      return;
     }
+    sessionStorage.setItem(
+      'emergency_booking_context',
+      JSON.stringify({
+        emergency_type: form.emergency_type,
+        emergency_level: form.emergency_level,
+        full_name: form.full_name,
+        mobile: form.mobile,
+        email: form.email,
+        pain_area: form.pain_area,
+        pain_description: form.pain_description,
+        full_address: form.full_address,
+        latitude: form.latitude,
+        longitude: form.longitude,
+        clinic_id: form.clinic_id || null,
+        eta_minutes: selectedDoctor?.estimated_response_minutes ?? 15,
+        fees: selectedDoctor?.fees || null,
+      })
+    );
+    navigate(`/doctors/${form.doctor_id}/book?type=${encodeURIComponent(form.emergency_type)}&emergency=1`);
   };
 
   const painAreas = settings?.pain_areas || ['Neck', 'Shoulder', 'Upper Back', 'Lower Back', 'Hip', 'Knee', 'Ankle'];
@@ -389,6 +348,9 @@ export default function EmergencyBookingWizard() {
                               )}
                               <span className="text-amber-600"><FaIcon icon="fa-star" /> {d.rating_avg || '—'}</span>
                               <span className="text-red-600 font-semibold">{BUCKET_LABEL[d.availability_bucket] || 'Soon'}</span>
+                              {d.fees?.total != null && (
+                                <span className="text-slate-700 font-semibold">₹{d.fees.total}</span>
+                              )}
                             </div>
                           </div>
                         </button>
@@ -405,82 +367,47 @@ export default function EmergencyBookingWizard() {
                       ))}
                     </div>
                   )}
-                </div>
-              )}
-
-              {step === 4 && fees && (
-                <div className="space-y-4">
-                  <h2 className="font-bold text-lg text-slate-900">Emergency pricing</h2>
-                  <div className="rounded-xl bg-slate-50 border border-slate-200 divide-y text-sm">
-                    <div className="flex justify-between px-4 py-3">
-                      <span>Consultation fee</span>
-                      <span>₹{fees.consultation_fee}</span>
-                    </div>
-                    <div className="flex justify-between px-4 py-3">
-                      <span>Emergency fee</span>
-                      <span>₹{fees.emergency_fee}</span>
-                    </div>
-                    <div className="flex justify-between px-4 py-3">
-                      <span>Platform fee</span>
-                      <span>₹{fees.platform_fee}</span>
-                    </div>
-                    <div className="flex justify-between px-4 py-3 font-bold text-red-700 text-base">
-                      <span>Total</span>
-                      <span>₹{fees.total}</span>
-                    </div>
-                  </div>
-                  <p className="text-xs text-slate-500">Payment via Razorpay. Appointment confirmed only after successful payment.</p>
-                </div>
-              )}
-
-              {step === 5 && confirmedAppt && (
-                <div className="text-center space-y-4">
-                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-2xl">
-                    <FaIcon icon="fa-circle-check" />
-                  </div>
-                  <h2 className="font-bold text-xl text-slate-900">Emergency confirmed!</h2>
-                  <p className="text-sm text-slate-600">Booking ID: <strong>{confirmedAppt.booking_id}</strong></p>
-                  {(trackStatus || confirmedAppt).google_meet_link && (
-                    <a href={(trackStatus || confirmedAppt).google_meet_link} target="_blank" rel="noreferrer" className="btn-primary inline-flex gap-2">
-                      <FaIcon icon="fa-video" /> Join Meeting
-                    </a>
-                  )}
-                  {form.emergency_type === 'home_visit' && (
-                    <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 text-left text-sm space-y-2">
-                      <p className="font-semibold text-slate-900">Home visit tracking</p>
-                      <p className="text-slate-600 capitalize">
-                        Status: {(trackStatus || confirmedAppt).emergency_status?.replace(/_/g, ' ') || 'Doctor assigned'}
-                      </p>
-                      {(trackStatus || confirmedAppt).eta_minutes && (
-                        <p className="text-slate-600">Estimated arrival: ~{(trackStatus || confirmedAppt).eta_minutes} minutes</p>
-                      )}
+                  {selectedDoctor?.fees && (
+                    <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 text-sm space-y-2">
+                      <p className="font-semibold text-slate-900">Estimated emergency total</p>
+                      <div className="flex justify-between"><span>Consultation</span><span>₹{selectedDoctor.fees.consultation_fee}</span></div>
+                      <div className="flex justify-between"><span>Emergency fee</span><span>₹{selectedDoctor.fees.emergency_fee}</span></div>
+                      <div className="flex justify-between"><span>Platform fee</span><span>₹{selectedDoctor.fees.platform_fee}</span></div>
+                      <div className="flex justify-between font-bold text-red-700 border-t pt-2"><span>Total</span><span>₹{selectedDoctor.fees.total}</span></div>
+                      <p className="text-xs text-slate-500">You will pick your slot and complete payment in the next step.</p>
                     </div>
                   )}
-                  <Link to="/patient/appointments" className="block text-orange-600 text-sm font-semibold">View my appointments</Link>
                 </div>
               )}
             </motion.div>
           </AnimatePresence>
 
-          {step < 5 && (
-            <div className="mt-8 flex gap-3">
-              {step > 0 && (
-                <button type="button" className="btn-outline flex-1" onClick={() => setStep((s) => s - 1)} disabled={submitting}>
-                  Back
-                </button>
-              )}
-              {step < 4 && (
-                <button type="button" className="btn-primary flex-1 bg-red-600 hover:bg-red-700 shadow-red-600/30" disabled={!canNext()} onClick={() => setStep((s) => s + 1)}>
-                  Continue
-                </button>
-              )}
-              {step === 4 && (
-                <button type="button" className="btn-primary flex-1 bg-red-600 hover:bg-red-700" disabled={submitting || !fees} onClick={handleBookAndPay}>
-                  {submitting ? 'Processing…' : `Pay ₹${fees?.total ?? '—'} & Confirm`}
-                </button>
-              )}
-            </div>
-          )}
+          <div className="mt-8 flex gap-3">
+            {step > 0 && (
+              <button type="button" className="btn-outline flex-1" onClick={() => setStep((s) => s - 1)}>
+                Back
+              </button>
+            )}
+            {step < 3 ? (
+              <button
+                type="button"
+                className="btn-primary flex-1 bg-red-600 hover:bg-red-700 shadow-red-600/30"
+                disabled={!canNext()}
+                onClick={() => setStep((s) => s + 1)}
+              >
+                Continue
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn-primary flex-1 bg-red-600 hover:bg-red-700"
+                disabled={!canNext()}
+                onClick={continueToFullBooking}
+              >
+                Continue to schedule & pay
+              </button>
+            )}
+          </div>
         </div>
       </main>
       <Footer />

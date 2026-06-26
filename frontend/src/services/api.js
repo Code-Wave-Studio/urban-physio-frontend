@@ -125,6 +125,10 @@ export const doctors = {
     update: (id, data) => api.put(`/doctors/service-packages/${id}`, data),
     delete: (id) => api.delete(`/doctors/service-packages/${id}`),
   },
+  adminPackagePrices: {
+    list: () => api.get('/doctors/treatment-package-prices'),
+    update: (packageId, data) => api.put(`/doctors/treatment-package-prices/${packageId}`, data),
+  },
 };
 
 export const license = {
@@ -143,6 +147,8 @@ export const booking = {
   options: () => api.get('/booking/options'),
   availableDates: (params) => api.get('/booking/available-dates', { params }),
   searchProviders: (params) => api.get('/booking/search-providers', { params }),
+  doctorPackages: (doctorId, params) => api.get('/booking/doctor-packages', { params: { doctor_id: doctorId, ...params } }),
+  onlineStates: (params) => api.get('/booking/online-states', { params }),
   slots: (doctorId, date, clinicId = null) =>
     api.get('/booking/slots', {
       params: {

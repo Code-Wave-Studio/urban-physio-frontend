@@ -27,7 +27,12 @@ import BookingPolicyAcceptance, {
 } from '../components/booking/BookingPolicyAcceptance';
 import BookingStepProgress from '../components/booking/BookingStepProgress';
 import BookingProviderSelectStep from '../components/booking/BookingProviderSelectStep';
-import BookingScheduleStep, { CUSTOM_PACKAGE_ID, SINGLE_PACKAGE_ID } from '../components/booking/BookingScheduleStep';
+import BookingScheduleStep, {
+  CUSTOM_PACKAGE_ID,
+  SINGLE_PACKAGE_ID,
+  adminPackageKey,
+  parsePackageKey,
+} from '../components/booking/BookingScheduleStep';
 import BookingChiefComplaintStep from '../components/booking/BookingChiefComplaintStep';
 import BookingPersonalDetailsStep from '../components/booking/BookingPersonalDetailsStep';
 import { POLICY_LAST_UPDATED } from '../constants/policyPages';
@@ -132,6 +137,7 @@ export default function BookAppointmentWizard() {
   const [sortBy, setSortBy] = useState('recommended');
   const [specialization, setSpecialization] = useState('all');
   const [packageId, setPackageId] = useState(SINGLE_PACKAGE_ID);
+  const [adminPackages, setAdminPackages] = useState([]);
   const [doctorPackages, setDoctorPackages] = useState([]);
   const [selectedDoctorPackage, setSelectedDoctorPackage] = useState(null);
   const [scheduleSessions, setScheduleSessions] = useState([{ date: '', time: '' }]);
@@ -143,6 +149,9 @@ export default function BookAppointmentWizard() {
   const prefillSlotTime = searchParams.get('start_time') || searchParams.get('slot') || searchParams.get('time') || '';
   const prefillDate = searchParams.get('date') || '';
   const prefillPackageId = searchParams.get('package_id') || '';
+  const prefillTreatmentPackageId = searchParams.get('treatment_package_id') || '';
+  const isEmergency = searchParams.get('emergency') === '1';
+  const [emergencyCtx, setEmergencyCtx] = useState(null);
   const preselectedClinicId = searchParams.get('clinic_id');
   const preselectedDoctorFromQuery = searchParams.get('doctor_id');
   const lockedClinic = Boolean(preselectedClinicId && form.consultation_type === 'clinic');
@@ -167,8 +176,12 @@ export default function BookAppointmentWizard() {
     });
   }, [doctorList, form.consultation_type]);
   const totalFee = () => {
-    if (selectedDoctorPackage?.discount_price != null) {
-      return Number(selectedDoctorPackage.discount_price);
+    if (isEmergency && emergencyCtx?.fees?.total != null) {
+      return Number(emergencyCtx.fees.total);
+    }
+    if (selectedDoctorPackage) {
+      const p = selectedDoctorPackage.discount_price ?? selectedDoctorPackage.price;
+      if (p != null) return Number(p);
     }
     if (!selectedDoctor) return 0;
     const base =
@@ -228,34 +241,90 @@ export default function BookAppointmentWizard() {
     : null;
 
   useEffect(() => {
-    location.states().then((res) => setIndianStates(res.data || [])).catch(() => {});
-  }, []);
+    if (!isEmergency) return;
+    try {
+      const raw = sessionStorage.getItem('emergency_booking_context');
+      if (!raw) return;
+      const ctx = JSON.parse(raw);
+      setEmergencyCtx(ctx);
+      patch({
+        consultation_type: ctx.emergency_type || form.consultation_type,
+        full_name: ctx.full_name || '',
+        mobile: ctx.mobile || '',
+        email: ctx.email || '',
+        pain_type: ctx.pain_area || '',
+        pain_description: ctx.pain_description || '',
+        full_address: ctx.full_address || '',
+        patient_address: ctx.full_address || '',
+        map_latitude: ctx.latitude ?? null,
+        map_longitude: ctx.longitude ?? null,
+        ...(ctx.clinic_id ? { clinic_id: String(ctx.clinic_id) } : {}),
+      });
+      if (doctorIdParam) {
+        setStep(2);
+        setPackageId(SINGLE_PACKAGE_ID);
+      }
+    } catch {
+      /* ignore invalid session payload */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEmergency, doctorIdParam]);
+
+  useEffect(() => {
+    if (form.consultation_type === 'online') {
+      booking
+        .onlineStates({ consultation_type: 'online' })
+        .then((res) => setIndianStates(res.data || []))
+        .catch(() => location.states().then((r) => setIndianStates(r.data || [])).catch(() => {}));
+    } else {
+      location.states().then((res) => setIndianStates(res.data || [])).catch(() => {});
+    }
+  }, [form.consultation_type]);
 
   useEffect(() => {
     if (!form.doctor_id) {
+      setAdminPackages([]);
       setDoctorPackages([]);
       return;
     }
-    const type = form.consultation_type;
-    doctors
-      .publicPackages(form.doctor_id)
+    booking
+      .doctorPackages(form.doctor_id, { consultation_type: form.consultation_type || undefined })
       .then((res) => {
-        let list = res.data || [];
-        if (type) {
-          list = list.filter(
-            (p) => !p.consultation_type || p.consultation_type === 'any' || p.consultation_type === type
-          );
-        }
-        setDoctorPackages(list);
+        const data = res?.data ?? res;
+        setAdminPackages(data?.admin_packages || []);
+        setDoctorPackages(data?.doctor_packages || []);
       })
-      .catch(() => setDoctorPackages([]));
+      .catch(() => {
+        setAdminPackages([]);
+        setDoctorPackages([]);
+      });
   }, [form.doctor_id, form.consultation_type]);
 
   useEffect(() => {
-    if (prefillPackageId && doctorPackages.length) {
+    if (prefillTreatmentPackageId && adminPackages.length) {
+      const pkg = adminPackages.find((p) => String(p.id) === String(prefillTreatmentPackageId));
+      if (pkg) {
+        const key = adminPackageKey(pkg.id);
+        setPackageId(key);
+        setSelectedDoctorPackage({ ...pkg, package_source: 'admin' });
+        const n = pkg.total_sessions || 1;
+        setScheduleSessions(
+          Array.from({ length: n }, (_, i) =>
+            i === 0 && prefillDate ? { date: prefillDate, time: prefillSlotTime || '' } : { date: '', time: '' }
+          )
+        );
+        patch({
+          number_of_sessions: n,
+          package_label: pkg.name,
+          treatment_package_id: pkg.id,
+          doctor_package_id: '',
+        });
+      }
+    } else if (prefillPackageId && doctorPackages.length) {
       const pkg = doctorPackages.find((p) => String(p.id) === String(prefillPackageId));
       if (pkg) {
-        setPackageId(String(pkg.id));
+        const key = `doctor-${pkg.id}`;
+        setPackageId(key);
         setSelectedDoctorPackage(pkg);
         const n = pkg.total_sessions || 1;
         setScheduleSessions(
@@ -263,11 +332,12 @@ export default function BookAppointmentWizard() {
             i === 0 && prefillDate ? { date: prefillDate, time: prefillSlotTime || '' } : { date: '', time: '' }
           )
         );
+        patch({ number_of_sessions: n, package_label: pkg.name, doctor_package_id: pkg.id, treatment_package_id: '' });
       }
     } else if (prefillDate) {
       setScheduleSessions([{ date: prefillDate, time: prefillSlotTime || '' }]);
     }
-  }, [prefillPackageId, prefillDate, prefillSlotTime, doctorPackages]);
+  }, [prefillPackageId, prefillTreatmentPackageId, prefillDate, prefillSlotTime, adminPackages, doctorPackages]);
 
   useEffect(() => {
     const t = searchParams.get('type');
@@ -610,23 +680,34 @@ export default function BookAppointmentWizard() {
     if (id === SINGLE_PACKAGE_ID) {
       setSelectedDoctorPackage(null);
       setScheduleSessions([{ date: '', time: '' }]);
-      patch({ number_of_sessions: 1, package_label: 'Single Visit', doctor_package_id: '' });
+      patch({ number_of_sessions: 1, package_label: 'Single Visit', doctor_package_id: '', treatment_package_id: '' });
       return;
     }
     if (id === CUSTOM_PACKAGE_ID) {
       setSelectedDoctorPackage(null);
       setScheduleSessions([{ date: '', time: '' }]);
-      patch({ number_of_sessions: 1, package_label: 'Custom schedule', doctor_package_id: '' });
+      patch({ number_of_sessions: 1, package_label: 'Flexible consultation', doctor_package_id: '', treatment_package_id: '' });
       return;
     }
-    const sessions = pkg?.total_sessions || 1;
+    const sessions = pkg?.total_sessions || pkg?.duration_days || 1;
     setSelectedDoctorPackage(pkg);
     setScheduleSessions(Array.from({ length: sessions }, () => ({ date: '', time: '' })));
-    patch({
-      number_of_sessions: sessions,
-      package_label: pkg?.name || 'Package',
-      doctor_package_id: pkg?.id || id,
-    });
+    const parsed = parsePackageKey(id);
+    if (parsed.source === 'admin') {
+      patch({
+        number_of_sessions: sessions,
+        package_label: pkg?.name || 'Admin package',
+        treatment_package_id: parsed.id,
+        doctor_package_id: '',
+      });
+    } else {
+      patch({
+        number_of_sessions: sessions,
+        package_label: pkg?.name || 'Doctor package',
+        doctor_package_id: parsed.id || pkg?.id,
+        treatment_package_id: '',
+      });
+    }
   };
 
   const validateStep = (s) => {
@@ -692,11 +773,12 @@ export default function BookAppointmentWizard() {
         }
       }
       if (form.consultation_type === 'home_visit') {
-        if (!form.full_address || !form.pincode || !form.city || !form.patient_condition) {
+        const hasEmergencyAddress = isEmergency && emergencyCtx?.full_address?.trim();
+        if (!hasEmergencyAddress && (!form.full_address || !form.pincode || !form.city || !form.patient_condition)) {
           toast.error('Complete home visit address details');
           return false;
         }
-        if (form.map_latitude == null || form.map_longitude == null) {
+        if (!hasEmergencyAddress && (form.map_latitude == null || form.map_longitude == null)) {
           toast.error('Capture GPS location for home visit');
           return false;
         }
@@ -793,12 +875,30 @@ export default function BookAppointmentWizard() {
         accepted_policies: Object.keys(policyAcceptance).filter((k) => policyAcceptance[k]),
         policies_version: POLICY_LAST_UPDATED,
         schedule_sessions: scheduleSessions.map((s) => ({ date: s.date, start_time: s.time, time: s.time })),
-        ...(selectedDoctorPackage?.id ? { doctor_package_id: selectedDoctorPackage.id } : {}),
+        ...(selectedDoctorPackage?.package_source === 'admin' && form.treatment_package_id
+          ? { treatment_package_id: Number(form.treatment_package_id) }
+          : {}),
+        ...(selectedDoctorPackage?.package_source === 'doctor' && form.doctor_package_id
+          ? { doctor_package_id: Number(form.doctor_package_id) }
+          : {}),
+        ...(isEmergency && emergencyCtx
+          ? {
+              is_emergency: true,
+              emergency_type: emergencyCtx.emergency_type,
+              emergency_level: emergencyCtx.emergency_level,
+              eta_minutes: emergencyCtx.eta_minutes ?? 15,
+              latitude: emergencyCtx.latitude,
+              longitude: emergencyCtx.longitude,
+            }
+          : {}),
       };
       if (appliedCoupon?.code) payload.coupon_code = appliedCoupon.code;
       const res = await appointments.book(payload);
       const appt = res.data;
       setCreatedAppt(appt);
+      if (isEmergency) {
+        sessionStorage.removeItem('emergency_booking_context');
+      }
       const dest = user?.role_slug === 'patient' ? '/patient/appointments' : '/admin';
 
       if (payNowAmount() > 0) {
@@ -852,9 +952,23 @@ export default function BookAppointmentWizard() {
         </button>
 
         <div className="mb-2">
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-800">Book Appointment</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-800">
+            {isEmergency ? 'Emergency Booking' : 'Book Appointment'}
+          </h1>
           <p className="text-slate-600 text-sm mt-1">{STEPS[step]}</p>
         </div>
+
+        {isEmergency && (
+          <div className="mb-4 flex items-start gap-2 rounded-xl bg-red-50 border border-red-200 px-3 py-2.5 text-sm text-red-900">
+            <FaIcon icon="fa-truck-medical" className="text-red-600 mt-0.5 shrink-0" />
+            <p>
+              Emergency request — complete schedule, details, and payment below.
+              {emergencyCtx?.fees?.total != null && (
+                <span className="block mt-1 font-semibold">Emergency total: ₹{Number(emergencyCtx.fees.total).toLocaleString('en-IN')}</span>
+              )}
+            </p>
+          </div>
+        )}
 
         <BookingStepProgress steps={STEPS} currentStep={step} accent="primary" />
 
@@ -937,6 +1051,7 @@ export default function BookAppointmentWizard() {
             <BookingScheduleStep
               form={form}
               patch={patch}
+              adminPackages={adminPackages}
               doctorPackages={doctorPackages}
               selectedPackageId={packageId}
               onPackageChange={handlePackageChange}
