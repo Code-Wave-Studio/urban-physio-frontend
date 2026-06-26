@@ -355,6 +355,14 @@ export default function BookAppointmentWizard() {
   }, [searchParams, doctorIdParam]);
 
   useEffect(() => {
+    const t = searchParams.get('type');
+    if (!doctorIdParam || isEmergency) return;
+    if (t && ['online', 'clinic', 'home_visit'].includes(t)) {
+      setStep((s) => (s === 0 ? 2 : s));
+    }
+  }, [doctorIdParam, searchParams, isEmergency]);
+
+  useEffect(() => {
     sessionTypes().then((res) => setSessions(res.data || []));
   }, []);
 

@@ -150,24 +150,49 @@ export default function DoctorPreviewModal({ doctor: initialDoctor, open, onClos
       )}
 
       <PreviewSection title="Consultation fees" icon="fa-indian-rupee-sign">
+        <p className="text-xs text-slate-500 mb-3">Tap a fee to book with that consultation type</p>
         <div className="grid grid-cols-3 gap-2 sm:gap-3">
           {ALL_SERVICES.map((type) => {
             const meta = SERVICE_META[type];
             const active = enabled.includes(type);
             const fee = Number(d[meta.feeKey]) || 0;
-            return (
-              <div
-                key={type}
-                className={`rounded-xl border p-3 text-center transition ${
-                  active ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-50/80 border-slate-100 opacity-60'
-                }`}
-              >
+            const cardClass = `rounded-xl border p-3 text-center transition ${
+              active
+                ? 'bg-white border-slate-200 shadow-sm hover:border-primary-300 hover:bg-primary-50/40 hover:shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500'
+                : 'bg-slate-50/80 border-slate-100 opacity-60 cursor-not-allowed'
+            }`;
+
+            const inner = (
+              <>
                 <FaIcon icon={meta.icon} className={`text-sm mb-1.5 ${active ? 'text-primary-600' : 'text-slate-400'}`} />
                 <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wide">{meta.label}</p>
                 <p className="text-sm font-bold text-slate-900 mt-0.5">
                   {active && fee > 0 ? `₹${fee.toLocaleString('en-IN')}` : '—'}
                 </p>
-              </div>
+              </>
+            );
+
+            if (!active) {
+              return (
+                <div key={type} className={cardClass} aria-disabled>
+                  {inner}
+                </div>
+              );
+            }
+
+            return (
+              <Link
+                key={type}
+                to={bookDoctorUrl(d.id, { type })}
+                onClick={() => onClose()}
+                className={`${cardClass} group relative`}
+                aria-label={`Book ${meta.label}${fee > 0 ? ` — ₹${fee.toLocaleString('en-IN')}` : ''}`}
+              >
+                {inner}
+                <span className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <FaIcon icon="fa-arrow-right" className="text-[10px] text-primary-500" />
+                </span>
+              </Link>
             );
           })}
         </div>

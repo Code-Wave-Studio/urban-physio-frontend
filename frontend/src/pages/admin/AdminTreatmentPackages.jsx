@@ -123,8 +123,10 @@ export default function AdminTreatmentPackages() {
     <AdminDashboardLayout>
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-800">Treatment Packages</h1>
-          <p className="text-slate-600 text-sm mt-1">Create custom-day rehab programs (7, 10, 15, 20 days or any duration)</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-800">Platform packages</h1>
+          <p className="text-slate-600 text-sm mt-1">
+            Manage all treatment packages shown on the website packages page and offered to doctors for pricing.
+          </p>
         </div>
         <button type="button" onClick={openCreate} className="btn-primary inline-flex items-center gap-2">
           <FaIcon icon="fa-plus" /> Add package
@@ -142,6 +144,17 @@ export default function AdminTreatmentPackages() {
 
       {loading ? (
         <p className="text-slate-500">Loading…</p>
+      ) : list.length === 0 ? (
+        <div className="glass-card p-10 text-center">
+          <FaIcon icon="fa-box-open" className="text-3xl text-slate-300 mb-3" />
+          <p className="font-semibold text-slate-800">No platform packages yet</p>
+          <p className="text-sm text-slate-500 mt-1 max-w-md mx-auto">
+            Packages shown on the public <strong>/packages</strong> page appear here. Add one below or run the database migration if you see a server error.
+          </p>
+          <button type="button" onClick={openCreate} className="btn-primary mt-4 inline-flex items-center gap-2">
+            <FaIcon icon="fa-plus" /> Add first package
+          </button>
+        </div>
       ) : (
         <div className="overflow-x-auto glass-card">
           <table className="w-full text-sm">
