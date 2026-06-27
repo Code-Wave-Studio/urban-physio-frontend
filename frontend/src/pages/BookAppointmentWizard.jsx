@@ -37,6 +37,7 @@ import BookingChiefComplaintStep from '../components/booking/BookingChiefComplai
 import BookingPersonalDetailsStep from '../components/booking/BookingPersonalDetailsStep';
 import { POLICY_LAST_UPDATED } from '../constants/policyPages';
 import { matchPainTypeLabel, matchHomeConditionLabel } from '../utils/bookUrl';
+import { applyPatientProfileToBooking } from '../utils/patientBookingPrefill';
 import CouponInput from '../components/platform/CouponInput';
 
 const STEPS = [
@@ -560,17 +561,7 @@ export default function BookAppointmentWizard() {
       .getProfile()
       .then((res) => {
         const p = res?.data ?? res;
-        patch((f) => ({
-          ...f,
-          gender: f.gender || p?.gender || '',
-          age: f.age || (p?.age != null ? String(p.age) : ''),
-          full_name:
-            f.full_name ||
-            [p?.first_name, p?.last_name].filter(Boolean).join(' ') ||
-            f.full_name,
-          email: f.email || p?.email || '',
-          mobile: f.mobile || p?.phone || '',
-        }));
+        patch((f) => applyPatientProfileToBooking(f, p));
       })
       .catch(() => {});
   }, [user]);

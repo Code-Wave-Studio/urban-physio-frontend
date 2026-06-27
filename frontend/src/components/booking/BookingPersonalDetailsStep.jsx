@@ -16,6 +16,9 @@ export default function BookingPersonalDetailsStep({
       <div>
         <h2 className="text-xl font-bold text-slate-800">Personal details</h2>
         <p className="text-sm text-slate-600 mt-1">We use this to confirm your booking and reach you.</p>
+        {form.full_name && (
+          <p className="text-xs text-primary-700 mt-1">Prefilled from your profile — edit if needed.</p>
+        )}
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
