@@ -18,6 +18,13 @@ const emptyAddressForm = () => ({
   is_primary: false,
 });
 
+function addressesFromResponse(res) {
+  const body = res?.data ?? res;
+  if (Array.isArray(body)) return body;
+  if (Array.isArray(body?.addresses)) return body.addresses;
+  return [];
+}
+
 export default function PatientAddressSection({ addresses: initialAddresses = [], onChange }) {
   const [addresses, setAddresses] = useState(initialAddresses);
   const [states, setStates] = useState([]);
@@ -55,7 +62,7 @@ export default function PatientAddressSection({ addresses: initialAddresses = []
   const loadAddresses = () =>
     patients
       .listAddresses()
-      .then((res) => sync(res.data || []))
+      .then((res) => sync(addressesFromResponse(res)))
       .catch((err) => toast.error(err.message || 'Could not load addresses'));
 
   const openCreate = () => {
@@ -113,7 +120,7 @@ export default function PatientAddressSection({ addresses: initialAddresses = []
       const res = editingId
         ? await patients.updateAddress(editingId, payload)
         : await patients.createAddress(payload);
-      sync(res.data || []);
+      sync(addressesFromResponse(res));
       toast.success(editingId ? 'Address updated' : 'Address saved');
       resetForm();
     } catch (err) {
@@ -126,7 +133,7 @@ export default function PatientAddressSection({ addresses: initialAddresses = []
   const makePrimary = async (id) => {
     try {
       const res = await patients.setPrimaryAddress(id);
-      sync(res.data || []);
+      sync(addressesFromResponse(res));
       toast.success('Primary address updated');
     } catch (err) {
       toast.error(err.message || 'Could not update primary address');
@@ -137,7 +144,7 @@ export default function PatientAddressSection({ addresses: initialAddresses = []
     if (!window.confirm(`Delete "${addr.label || 'this address'}"?`)) return;
     try {
       const res = await patients.deleteAddress(addr.id);
-      sync(res.data || []);
+      sync(addressesFromResponse(res));
       toast.success('Address deleted');
       if (editingId === addr.id) resetForm();
     } catch (err) {

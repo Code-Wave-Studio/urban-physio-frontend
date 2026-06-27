@@ -256,11 +256,16 @@ export const payments = {
 export const patients = {
   getProfile: () => api.get('/patients/profile'),
   updateProfile: (data) => api.put('/patients/profile', data),
-  listAddresses: () => api.get('/patients/addresses'),
-  createAddress: (data) => api.post('/patients/addresses', data),
-  updateAddress: (id, data) => api.put(`/patients/addresses/${id}`, data),
-  deleteAddress: (id) => api.delete(`/patients/addresses/${id}`),
-  setPrimaryAddress: (id) => api.put(`/patients/addresses/${id}/primary`),
+  listAddresses: () =>
+    api.get('/patients/profile').then((res) => {
+      const profile = res?.data ?? res;
+      return { ...res, data: profile?.addresses ?? [] };
+    }),
+  createAddress: (data) => api.put('/patients/profile', { address_op: 'create', address_data: data }),
+  updateAddress: (id, data) =>
+    api.put('/patients/profile', { address_op: 'update', address_id: id, address_data: data }),
+  deleteAddress: (id) => api.put('/patients/profile', { address_op: 'delete', address_id: id }),
+  setPrimaryAddress: (id) => api.put('/patients/profile', { address_op: 'set_primary', address_id: id }),
   favouriteDoctors: () => api.get('/patients/favourite-doctors'),
   addFavouriteDoctor: (doctorId) => api.post(`/patients/favourite-doctors/${doctorId}`),
   removeFavouriteDoctor: (doctorId) => api.delete(`/patients/favourite-doctors/${doctorId}`),
