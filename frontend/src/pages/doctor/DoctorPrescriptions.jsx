@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../../components/FaIcon';
 import GlassModal, { GlassModalFooter, GlassModalHeader } from '../../components/GlassModal';
-import { admin, doctors, exercisePrescriptions, exercises } from '../../services/api';
+import { doctors, exercisePrescriptions, exercises } from '../../services/api';
 import { DOCTOR_NAV } from '../../constants/doctorNav';
 import toast from 'react-hot-toast';
 
@@ -36,9 +36,10 @@ export default function DoctorPrescriptions() {
   useEffect(() => {
     load();
     doctors.patients().then((res) => setPatients(res.data || [])).catch(() => {});
-    admin.exercisesList().then((res) => setExerciseList(res.data || [])).catch(() => {
-      exercises.list().then((r) => setExerciseList(r.data || [])).catch(() => {});
-    });
+    exercises
+      .list()
+      .then((res) => setExerciseList(res.data || []))
+      .catch((err) => toast.error(err.message || 'Could not load exercises'));
   }, [load]);
 
   const addExercise = () => {
@@ -215,7 +216,7 @@ export default function DoctorPrescriptions() {
                 {form.exercises.map((item, idx) => (
                   <div key={idx} className="p-4 rounded-xl bg-slate-50/90 border border-slate-100 space-y-3">
                     <select className="input-field w-full" value={item.exercise_id} onChange={(e) => updateExercise(idx, 'exercise_id', e.target.value)}>
-                      <option value="">Select exercise</option>
+                      <option value="">{exerciseList.length ? 'Select exercise' : 'No exercises available — ask admin to add exercises'}</option>
                       {exerciseList.map((ex) => (
                         <option key={ex.id} value={ex.id}>{ex.name}</option>
                       ))}
