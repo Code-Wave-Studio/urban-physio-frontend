@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import FaIcon from './FaIcon';
-import SearchableLocationSelect from './SearchableLocationSelect';
-import LocationMapModal from './LocationMapModal';
-import { location, patients } from '../services/api';
+import FaIcon from '../FaIcon';
+import SearchableLocationSelect from '../SearchableLocationSelect';
+import LocationMapModal from '../LocationMapModal';
+import { location, patients } from '../../services/api';
 import toast from 'react-hot-toast';
 
 const emptyAddressForm = () => ({
