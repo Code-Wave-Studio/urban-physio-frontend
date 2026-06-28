@@ -47,6 +47,7 @@ api.interceptors.response.use(
       message,
       errors: err.response?.data?.errors,
       status,
+      code: err.code,
     });
   }
 );
@@ -505,9 +506,13 @@ export const physioFeed = {
 
 export const sessionTypes = () => api.get('/session-types');
 
+const SEARCH_TIMEOUT_MS = 60000;
+
 export const search = {
-  universal: (params) => api.get('/search', { params }),
-  suggest: (params) => api.get('/search/suggest', { params }),
+  universal: (params, config = {}) =>
+    api.get('/search', { params, timeout: SEARCH_TIMEOUT_MS, ...config }),
+  suggest: (params, config = {}) =>
+    api.get('/search/suggest', { params, timeout: 15000, ...config }),
   trackClick: (data) => api.post('/search/track', data),
 };
 

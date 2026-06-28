@@ -15,14 +15,14 @@ export default function SearchAIOverview({ text, parsed }) {
   return (
     <section
       className="rounded-2xl border border-orange-200/80 bg-gradient-to-br from-orange-50 via-white to-amber-50/40 p-4 sm:p-5 mb-6 shadow-sm"
-      aria-label="AI search overview"
+      aria-label="Search insight"
     >
       <div className="flex items-start gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/20">
-          <FaIcon icon="fa-wand-magic-sparkles" />
+          <FaIcon icon="fa-lightbulb" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-bold uppercase tracking-wide text-orange-700 mb-1">AI Overview</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-orange-700 mb-1">Quick insight</p>
           <p className="text-sm sm:text-base text-slate-700 leading-relaxed">{text}</p>
           {tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-3">

@@ -56,5 +56,6 @@ export function handlePackagePaymentError(err) {
     toast.error('Payment not completed. Your package was not booked.');
     return;
   }
-  toast.error(err?.message || 'Payment failed');
+  const msg = err?.message || 'Payment failed';
+  toast.error(msg === 'A server error occurred' ? 'Payment could not be started. Please try again.' : msg);
 }

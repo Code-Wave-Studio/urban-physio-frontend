@@ -118,10 +118,14 @@ export default function SearchResultsPage() {
     if (q.length < 2) {
       setResults(null);
       setLoading(false);
-      return;
+      return undefined;
     }
-    setLoading(true);
+
+    const controller = new AbortController();
     const local = localSearchMatches(q);
+    setResults(mergeSearchResults({}, local));
+    setLoading(true);
+
     const apiParams = { q, search: q, limit: 20 };
     if (typeParam) apiParams.type = TYPE_MAP[typeParam] || typeParam;
     if (city?.id) apiParams.city_id = city.id;
@@ -129,17 +133,27 @@ export default function SearchResultsPage() {
       apiParams.lat = coords.lat;
       apiParams.lng = coords.lng;
     }
+
     search
-      .universal(apiParams)
-      .then((res) => setResults(mergeSearchResults(res?.data ?? res, local)))
+      .universal(apiParams, { signal: controller.signal })
+      .then((res) => {
+        if (!controller.signal.aborted) {
+          setResults(mergeSearchResults(res?.data ?? res, local));
+        }
+      })
       .catch((err) => {
+        if (controller.signal.aborted || err?.code === 'ERR_CANCELED') return;
         const merged = mergeSearchResults({}, local);
         setResults(merged);
-        if (!merged.treatments?.length) {
+        if (!merged.treatments?.length && !merged.symptoms?.length && !merged.doctors?.length) {
           toast.error(err?.status === 429 ? 'Too many searches — wait a moment' : 'Search temporarily unavailable');
         }
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+
+    return () => controller.abort();
   }, [q, typeParam, city?.id, coords?.lat, coords?.lng]);
 
   const trackClick = useCallback(
@@ -189,10 +203,10 @@ export default function SearchResultsPage() {
         <div className="glass-card p-4 sm:p-6 mb-6 border border-white/80 shadow-sm">
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-1 flex items-center gap-2">
             <FaIcon icon="fa-magnifying-glass" className="text-orange-600" />
-            AI Search
+            Smart Search
           </h1>
           <p className="text-sm text-slate-600 mb-4">
-            Semantic healthcare search — doctors, clinics, conditions, treatments &amp; more
+            Find doctors, clinics, treatments &amp; conditions — instantly
           </p>
           <form onSubmit={handleSubmit} className="relative flex gap-2" role="search">
             <div className="relative flex-1">
@@ -219,7 +233,7 @@ export default function SearchResultsPage() {
                           runSearch(s);
                         }}
                       >
-                        <FaIcon icon="fa-wand-magic-sparkles" className="text-orange-400 mr-2 text-xs" />
+                        <FaIcon icon="fa-magnifying-glass" className="text-orange-400 mr-2 text-xs" />
                         {s}
                       </button>
                     </li>
