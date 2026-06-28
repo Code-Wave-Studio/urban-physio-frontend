@@ -25,6 +25,7 @@ import {
 import { isValidHttpUrl, SOCIAL_FIELDS } from '../utils/clinicProfileUtils';
 import ProfileSectionNav from '../components/profile/ProfileSectionNav';
 import ProfileServicesGrid from '../components/profile/ProfileServicesGrid';
+import TreatmentPackagesBrowser from '../components/packages/TreatmentPackagesBrowser';
 import { HEALTHCARE_IMAGES } from '../utils/healthcareImages';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 
@@ -134,6 +135,13 @@ export default function DoctorProfilePage() {
   const canonical = doctor?.canonical_path || (doctor?.slug ? `/doctor/${doctor.slug}` : legacyId ? `/doctors/${legacyId}` : '');
   const canonicalUrl = typeof window !== 'undefined' ? `${window.location.origin}${canonical}` : canonical;
   const jsonLd = useMemo(() => (doctor ? doctorSchema(doctor, canonicalUrl) : null), [doctor, canonicalUrl]);
+  const profilePackages = useMemo(
+    () => [
+      ...adminPackages.map((p) => ({ ...p, package_source: 'admin' })),
+      ...doctorPackages.map((p) => ({ ...p, package_source: 'doctor' })),
+    ],
+    [adminPackages, doctorPackages]
+  );
 
   if (!loading && doctor?.slug && profileKey !== doctor.slug) {
     return <Navigate to={doctorProfileUrl(doctor)} replace />;
@@ -408,67 +416,19 @@ export default function DoctorProfilePage() {
 
         <ProfileSectionNav accent="primary" />
 
-        {(adminPackages.length > 0 || doctorPackages.length > 0) && (
-          <Section title="Treatment packages" icon="fa-box-open">
-            {adminPackages.length > 0 && (
-              <div className="mb-5">
-                <p className="text-xs font-bold uppercase tracking-wide text-sky-700 mb-3">Platform packages</p>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {adminPackages.map((pkg) => (
-                    <Link
-                      key={`admin-${pkg.id}`}
-                      to={bookDoctorUrl(doctor.id, {
-                        type: pkg.consultation_type !== 'any' ? pkg.consultation_type : undefined,
-                        treatmentPackageId: pkg.id,
-                      })}
-                      className="rounded-2xl border border-sky-200 bg-gradient-to-br from-white to-sky-50/40 p-4 hover:shadow-md hover:border-sky-400 transition block"
-                    >
-                      <p className="font-bold text-slate-900">{pkg.name}</p>
-                      <p className="text-[10px] font-bold uppercase text-sky-700 mt-1">Admin package</p>
-                      <p className="text-xs text-slate-500 mt-1">
-                        {pkg.total_sessions} session{pkg.total_sessions !== 1 ? 's' : ''} · {pkg.duration_days} days
-                      </p>
-                      <div className="mt-3 flex items-baseline gap-2 flex-wrap">
-                        {Number(pkg.mrp_price) > Number(pkg.discount_price) && (
-                          <span className="text-sm text-slate-400 line-through">₹{Number(pkg.mrp_price).toLocaleString('en-IN')}</span>
-                        )}
-                        <span className="text-lg font-bold text-sky-700">₹{Number(pkg.discount_price).toLocaleString('en-IN')}</span>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-            {doctorPackages.length > 0 && (
-              <div>
-                {adminPackages.length > 0 && (
-                  <p className="text-xs font-bold uppercase tracking-wide text-emerald-700 mb-3">Doctor packages</p>
-                )}
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {doctorPackages.map((pkg) => (
-                    <Link
-                      key={`doctor-${pkg.id}`}
-                      to={bookDoctorUrl(doctor.id, {
-                        type: pkg.consultation_type !== 'any' ? pkg.consultation_type : undefined,
-                        packageId: pkg.id,
-                      })}
-                      className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-white to-emerald-50/40 p-4 hover:shadow-md hover:border-emerald-400 transition block"
-                    >
-                      <p className="font-bold text-slate-900">{pkg.name}</p>
-                      <p className="text-xs text-slate-500 mt-1">
-                        {pkg.total_sessions} session{pkg.total_sessions !== 1 ? 's' : ''} · {pkg.duration_days} days
-                      </p>
-                      <div className="mt-3 flex items-baseline gap-2 flex-wrap">
-                        {Number(pkg.mrp_price) > Number(pkg.discount_price) && (
-                          <span className="text-sm text-slate-400 line-through">₹{Number(pkg.mrp_price).toLocaleString('en-IN')}</span>
-                        )}
-                        <span className="text-lg font-bold text-emerald-700">₹{Number(pkg.discount_price).toLocaleString('en-IN')}</span>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
+        {profilePackages.length > 0 && (
+          <Section title="Treatment packages" icon="fa-box-open" id="profile-packages">
+            <TreatmentPackagesBrowser
+              packages={profilePackages}
+              getBookUrl={(pkg) =>
+                bookDoctorUrl(doctor.id, {
+                  type: pkg.consultation_type !== 'any' ? pkg.consultation_type : undefined,
+                  ...(pkg.package_source === 'admin'
+                    ? { treatmentPackageId: pkg.id }
+                    : { packageId: pkg.id }),
+                })
+              }
+            />
           </Section>
         )}
 

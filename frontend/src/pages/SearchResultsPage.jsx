@@ -1,15 +1,16 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import FaIcon from '../components/FaIcon';
-import DoctorAvatar from '../components/DoctorAvatar';
-import ClinicLogo from '../components/ClinicLogo';
+import SearchAIOverview from '../components/search/SearchAIOverview';
+import SearchFilterChips from '../components/search/SearchFilterChips';
+import SearchDoctorCard from '../components/search/SearchDoctorCard';
+import SearchClinicCard from '../components/search/SearchClinicCard';
 import { search } from '../services/api';
 import { useLocation } from '../contexts/LocationContext';
 import { localSearchMatches, mergeSearchResults, QUICK_SEARCH_TAGS } from '../utils/searchCatalog';
-import { doctorProfileUrl, clinicProfileUrl } from '../utils/profileUrls';
 import {
   addRecentSearch,
   clearRecentSearches,
@@ -18,16 +19,49 @@ import {
   TRENDING_SEARCHES,
 } from '../utils/searchHistory';
 
-function ResultSection({ title, icon, items, renderItem }) {
+const TYPE_MAP = {
+  doctors: 'doctors',
+  clinics: 'clinics',
+  services: 'services',
+  treatments: 'treatments',
+  conditions: 'conditions',
+  exercises: 'exercises',
+  articles: 'articles',
+  blogs: 'articles',
+  packages: 'packages',
+  symptoms: 'symptoms',
+  locations: 'locations',
+  faqs: 'faqs',
+};
+
+function EntityGrid({ title, icon, items, children, treatmentIntent, type }) {
   if (!items?.length) return null;
+  const eduTypes = ['articles', 'conditions', 'treatments', 'exercises', 'faqs'];
+  if (treatmentIntent && eduTypes.includes(type)) return null;
+
   return (
-    <section className="mb-10">
-      <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
-        <FaIcon icon={icon} className="text-primary-600" />
+    <section className="mb-10" aria-labelledby={`section-${type}`}>
+      <h2 id={`section-${type}`} className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
+        <FaIcon icon={icon} className="text-orange-600" />
         {title}
         <span className="text-sm font-normal text-slate-500">({items.length})</span>
       </h2>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">{items.map(renderItem)}</div>
+      <div className="grid sm:grid-cols-2 gap-4">{items.map(children)}</div>
+    </section>
+  );
+}
+
+function EduSection({ title, icon, items, render, treatmentIntent, type, forceShow }) {
+  if (!items?.length) return null;
+  if (treatmentIntent && !forceShow) return null;
+  return (
+    <section className="mb-10">
+      <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
+        <FaIcon icon={icon} className="text-slate-500" />
+        {title}
+        <span className="text-sm font-normal text-slate-500">({items.length})</span>
+      </h2>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{items.map(render)}</div>
     </section>
   );
 }
@@ -36,7 +70,9 @@ export default function SearchResultsPage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const q = params.get('q') || '';
+  const typeParam = params.get('type') || '';
   const [input, setInput] = useState(q);
+  const [suggestions, setSuggestions] = useState([]);
   const { city, coords } = useLocation();
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -47,15 +83,36 @@ export default function SearchResultsPage() {
   }, [q]);
 
   const runSearch = useCallback(
-    (term) => {
+    (term, type = typeParam) => {
       const trimmed = String(term || '').trim();
       if (trimmed.length < 2) return;
       addRecentSearch(trimmed);
       setRecent(getRecentSearches());
-      setParams({ q: trimmed });
+      const next = { q: trimmed };
+      if (type) next.type = type;
+      setParams(next);
     },
-    [setParams]
+    [setParams, typeParam]
   );
+
+  const setTypeFilter = (type) => {
+    const next = { q };
+    if (type) next.type = type;
+    setParams(next);
+  };
+
+  useEffect(() => {
+    if (input.length >= 2) {
+      const t = setTimeout(() => {
+        search.suggest({ q: input, limit: 6 }).then((res) => {
+          setSuggestions(res?.data?.suggestions || res?.suggestions || []);
+        }).catch(() => setSuggestions([]));
+      }, 150);
+      return () => clearTimeout(t);
+    }
+    setSuggestions([]);
+    return undefined;
+  }, [input]);
 
   useEffect(() => {
     if (q.length < 2) {
@@ -66,6 +123,7 @@ export default function SearchResultsPage() {
     setLoading(true);
     const local = localSearchMatches(q);
     const apiParams = { q, search: q, limit: 20 };
+    if (typeParam) apiParams.type = TYPE_MAP[typeParam] || typeParam;
     if (city?.id) apiParams.city_id = city.id;
     if (coords?.lat != null && coords?.lng != null) {
       apiParams.lat = coords.lat;
@@ -77,47 +135,97 @@ export default function SearchResultsPage() {
       .catch((err) => {
         const merged = mergeSearchResults({}, local);
         setResults(merged);
-        const hasLocal = merged.treatments.length + merged.symptoms.length > 0;
-        if (!hasLocal) {
-          toast.error(err?.status === 429 ? 'Too many searches — wait a moment' : 'Search is temporarily unavailable');
+        if (!merged.treatments?.length) {
+          toast.error(err?.status === 429 ? 'Too many searches — wait a moment' : 'Search temporarily unavailable');
         }
       })
       .finally(() => setLoading(false));
-  }, [q, city?.id, coords?.lat, coords?.lng]);
+  }, [q, typeParam, city?.id, coords?.lat, coords?.lng]);
+
+  const trackClick = useCallback(
+    (entityType, entityId) => {
+      if (!q) return;
+      search.trackClick({ query: q, entity_type: entityType, entity_id: entityId }).catch(() => {});
+    },
+    [q]
+  );
 
   const handleSubmit = (e) => {
     e.preventDefault();
     runSearch(input);
   };
 
+  const treatmentIntent = results?.parsed?.treatment_intent ?? true;
   const chipClass =
-    'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border border-slate-200 bg-white text-slate-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-800 transition';
+    'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border border-slate-200 bg-white text-slate-700 hover:border-orange-300 hover:bg-orange-50 transition';
 
   const showLanding = !q || q.length < 2;
+
+  const filtered = useMemo(() => {
+    if (!results || !typeParam) return results;
+    const key = TYPE_MAP[typeParam] || typeParam;
+    return {
+      ...results,
+      doctors: key === 'doctors' ? results.doctors : [],
+      clinics: key === 'clinics' ? results.clinics : [],
+      services: key === 'services' ? results.services : [],
+      treatments: key === 'treatments' ? results.treatments : [],
+      conditions: key === 'conditions' ? results.conditions : [],
+      exercises: key === 'exercises' ? results.exercises : [],
+      articles: key === 'articles' ? results.articles : [],
+      packages: key === 'packages' ? results.packages : [],
+      symptoms: key === 'symptoms' ? results.symptoms : [],
+      locations: key === 'locations' ? results.locations : [],
+      faqs: key === 'faqs' ? results.faqs : [],
+    };
+  }, [results, typeParam]);
+
+  const data = filtered || results;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <Navbar />
       <div className="flex-1 max-w-6xl mx-auto px-4 py-8 sm:py-10 w-full">
-        <div className="glass-card p-4 sm:p-6 mb-8 border border-white/80 shadow-sm">
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-1">Search</h1>
+        <div className="glass-card p-4 sm:p-6 mb-6 border border-white/80 shadow-sm">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-1 flex items-center gap-2">
+            <FaIcon icon="fa-magnifying-glass" className="text-orange-600" />
+            AI Search
+          </h1>
           <p className="text-sm text-slate-600 mb-4">
-            Find doctors, clinics, treatments &amp; cities across India
+            Semantic healthcare search — doctors, clinics, conditions, treatments &amp; more
           </p>
-          <form onSubmit={handleSubmit} className="flex gap-2">
+          <form onSubmit={handleSubmit} className="relative flex gap-2" role="search">
             <div className="relative flex-1">
-              <FaIcon
-                icon="fa-magnifying-glass"
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"
-              />
+              <FaIcon icon="fa-magnifying-glass" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
               <input
                 type="search"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Try knee pain, Noida, sports injury…"
+                placeholder="Try: back pain near me, female physio Noida, ACL rehab…"
                 className="input-field w-full !pl-10 !py-3"
                 autoFocus
+                aria-label="Search query"
+                autoComplete="off"
               />
+              {suggestions.length > 0 && input.length >= 2 && !loading && (
+                <ul className="absolute z-20 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+                  {suggestions.map((s) => (
+                    <li key={s}>
+                      <button
+                        type="button"
+                        className="w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50 text-slate-700"
+                        onClick={() => {
+                          setInput(s);
+                          runSearch(s);
+                        }}
+                      >
+                        <FaIcon icon="fa-wand-magic-sparkles" className="text-orange-400 mr-2 text-xs" />
+                        {s}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
             <button type="submit" className="btn-primary shrink-0 !px-5">
               Search
@@ -128,7 +236,7 @@ export default function SearchResultsPage() {
         {showLanding ? (
           <div className="space-y-8">
             <section>
-              <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500 mb-3">Suggestions</h2>
+              <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500 mb-3">Try asking</h2>
               <div className="flex flex-wrap gap-2">
                 {SEARCH_SUGGESTIONS.map((s) => (
                   <button key={s} type="button" className={chipClass} onClick={() => runSearch(s)}>
@@ -138,7 +246,6 @@ export default function SearchResultsPage() {
                 ))}
               </div>
             </section>
-
             <section>
               <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500 mb-3">Trending</h2>
               <div className="flex flex-wrap gap-2">
@@ -150,9 +257,8 @@ export default function SearchResultsPage() {
                 ))}
               </div>
             </section>
-
             <section>
-              <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500 mb-3">Popular tags</h2>
+              <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500 mb-3">Popular</h2>
               <div className="flex flex-wrap gap-2">
                 {QUICK_SEARCH_TAGS.map((s) => (
                   <button key={s} type="button" className={chipClass} onClick={() => runSearch(s)}>
@@ -161,19 +267,11 @@ export default function SearchResultsPage() {
                 ))}
               </div>
             </section>
-
             {recent.length > 0 && (
               <section>
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">Recent searches</h2>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      clearRecentSearches();
-                      setRecent([]);
-                    }}
-                    className="text-xs text-slate-500 hover:text-red-600 font-medium"
-                  >
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">Recent</h2>
+                  <button type="button" onClick={() => { clearRecentSearches(); setRecent([]); }} className="text-xs text-slate-500 hover:text-red-600">
                     Clear
                   </button>
                 </div>
@@ -187,155 +285,150 @@ export default function SearchResultsPage() {
                 </div>
               </section>
             )}
-
-            <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              {[
-                { to: '/doctors', label: 'Browse doctors', icon: 'fa-user-doctor', tone: 'text-primary-600 bg-primary-50' },
-                { to: '/clinics', label: 'Browse clinics', icon: 'fa-hospital', tone: 'text-emerald-600 bg-emerald-50' },
-                { to: '/treatments', label: 'Treatments', icon: 'fa-hand-holding-medical', tone: 'text-sky-600 bg-sky-50' },
-                {
-                  to: city?.id ? `/doctors?city_id=${city.id}` : '/doctors',
-                  label: city?.name ? `Doctors in ${city.name}` : 'By city',
-                  icon: 'fa-location-dot',
-                  tone: 'text-violet-600 bg-violet-50',
-                },
-              ].map((item) => (
-                <Link
-                  key={item.label}
-                  to={item.to}
-                  className="glass-card p-4 flex items-center gap-3 hover:shadow-md transition"
-                >
-                  <span className={`flex h-10 w-10 items-center justify-center rounded-xl shrink-0 ${item.tone}`}>
-                    <FaIcon icon={item.icon} />
-                  </span>
-                  <span className="font-semibold text-slate-800 text-sm">{item.label}</span>
-                </Link>
-              ))}
-            </section>
           </div>
         ) : loading ? (
-          <p className="text-slate-500">
-            <FaIcon icon="fa-spinner" className="fa-spin mr-2" />
-            Searching for &ldquo;{q}&rdquo;…
-          </p>
+          <div className="space-y-4" aria-live="polite">
+            <div className="h-24 rounded-2xl bg-slate-200 animate-pulse" />
+            <div className="h-10 rounded-full bg-slate-200 animate-pulse w-2/3" />
+            <div className="grid sm:grid-cols-2 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-40 rounded-2xl bg-slate-200 animate-pulse" />
+              ))}
+            </div>
+          </div>
         ) : (
           <>
-            <p className="text-slate-600 mb-6">
-              Results for <strong className="text-slate-900">&ldquo;{q}&rdquo;</strong>
-              {city?.name ? ` near ${city.name}` : ''}
-            </p>
-            <ResultSection
-              title="Doctors"
-              icon="fa-user-doctor"
-              items={results?.doctors}
-              renderItem={(d) => (
-                <Link key={d.id} to={doctorProfileUrl(d)} className="glass-card p-4 hover:shadow-md transition block group">
-                  <div className="flex items-center gap-3">
-                    <DoctorAvatar doctor={d} size="md" />
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-slate-900 truncate group-hover:text-primary-700">
-                        Dr. {d.first_name} {d.last_name}
-                      </p>
-                      <p className="text-sm text-primary-600 truncate">{d.specialization || 'Physiotherapist'}</p>
-                      {d.city_name && <p className="text-xs text-slate-500 truncate">{d.city_name}</p>}
-                    </div>
-                  </div>
+            <SearchAIOverview text={data?.ai_overview} parsed={data?.parsed} />
+
+            <SearchFilterChips
+              filters={results?.filters}
+              activeType={typeParam ? (TYPE_MAP[typeParam] || typeParam) : ''}
+              onSelect={setTypeFilter}
+              query={q}
+            />
+
+            <EntityGrid title="Top Physiotherapists" icon="fa-user-doctor" items={data?.doctors} type="doctors" treatmentIntent={false}>
+              {(d) => <SearchDoctorCard key={d.id} doctor={d} onTrack={trackClick} />}
+            </EntityGrid>
+
+            <EntityGrid title="Top Clinics" icon="fa-hospital" items={data?.clinics} type="clinics" treatmentIntent={false}>
+              {(c) => <SearchClinicCard key={c.id} clinic={c} onTrack={trackClick} />}
+            </EntityGrid>
+
+            <EntityGrid title="Related Services" icon="fa-hand-holding-medical" items={data?.services} type="services" treatmentIntent={treatmentIntent}>
+              {(s, i) => (
+                <Link key={`${s.id}-${i}`} to="/treatments" className="glass-card p-4 hover:shadow-md block">
+                  <p className="font-semibold text-slate-900">{s.name || s.title}</p>
+                  <p className="text-sm text-slate-600 line-clamp-2 mt-1">{s.short_description}</p>
+                  {s.price > 0 && <p className="text-sm font-bold text-orange-700 mt-2">₹{Number(s.price).toLocaleString('en-IN')}</p>}
                 </Link>
               )}
-            />
-            <ResultSection
-              title="Clinics"
-              icon="fa-hospital"
-              items={results?.clinics}
-              renderItem={(c) => (
-                <Link key={c.id} to={clinicProfileUrl(c)} className="glass-card p-4 hover:shadow-md transition block group">
-                  <div className="flex items-center gap-3">
-                    <ClinicLogo clinic={c} size="md" />
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-slate-900 truncate group-hover:text-emerald-700">{c.name}</p>
-                      <p className="text-sm text-emerald-700 truncate">{c.city_name || 'Clinic'}</p>
-                    </div>
-                  </div>
-                </Link>
-              )}
-            />
-            <ResultSection
-              title="Cities"
-              icon="fa-location-dot"
-              items={results?.locations}
-              renderItem={(loc) => (
-                <div key={loc.id} className="glass-card p-4 flex flex-col gap-2">
-                  <p className="font-semibold text-slate-900">{loc.name}</p>
-                  <p className="text-xs text-slate-500">{loc.state_name}</p>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    <Link
-                      to={`/doctors?city_id=${loc.id}`}
-                      className="text-xs font-semibold text-primary-700 hover:underline"
-                    >
-                      Doctors
-                    </Link>
-                    <Link
-                      to={`/clinics?city_id=${loc.id}`}
-                      className="text-xs font-semibold text-emerald-700 hover:underline"
-                    >
-                      Clinics
-                    </Link>
-                  </div>
-                </div>
-              )}
-            />
-            <ResultSection
-              title="Treatments"
-              icon="fa-hand-holding-medical"
-              items={results?.treatments}
-              renderItem={(t, i) => (
-                <Link
-                  key={`${t.id ?? t.slug}-${i}`}
-                  to={t.slug ? `/treatments/${t.slug}` : '/treatments'}
-                  className="glass-card p-4 hover:shadow-md transition block"
-                >
+            </EntityGrid>
+
+            <EntityGrid title="Related Treatments" icon="fa-spa" items={data?.treatments} type="treatments" treatmentIntent={treatmentIntent}>
+              {(t, i) => (
+                <Link key={`${t.id ?? t.slug}-${i}`} to={t.slug ? `/treatments/${t.slug}` : '/treatments'} className="glass-card p-4 hover:shadow-md block">
                   <p className="font-semibold text-slate-900">{t.title}</p>
                   <p className="text-sm text-slate-600 line-clamp-2">{t.short_description}</p>
                 </Link>
               )}
-            />
-            <ResultSection
-              title="Conditions"
-              icon="fa-notes-medical"
-              items={results?.conditions}
-              renderItem={(c) => (
-                <Link key={c.id} to={`/conditions/${c.slug}`} className="glass-card p-4 hover:shadow-md transition block">
+            </EntityGrid>
+
+            <EntityGrid title="Related Conditions" icon="fa-notes-medical" items={data?.conditions} type="conditions" treatmentIntent={treatmentIntent}>
+              {(c) => (
+                <Link key={c.id} to={`/conditions/${c.slug}`} className="glass-card p-4 hover:shadow-md block">
                   <p className="font-semibold text-slate-900">{c.title}</p>
+                  <p className="text-xs text-slate-500 capitalize mt-1">{c.category}</p>
                 </Link>
               )}
-            />
-            <ResultSection
-              title="Symptoms"
-              icon="fa-heart-pulse"
-              items={results?.symptoms}
-              renderItem={(s, i) => (
-                <Link
-                  key={`${s.id}-${i}`}
-                  to={`/conditions?search=${encodeURIComponent(s.title || s.chip_label || '')}`}
-                  className="glass-card p-4 hover:shadow-md transition block"
-                >
+            </EntityGrid>
+
+            <EntityGrid title="Symptoms" icon="fa-heart-pulse" items={data?.symptoms} type="symptoms" treatmentIntent={treatmentIntent}>
+              {(s, i) => (
+                <Link key={`${s.id}-${i}`} to={`/book?pain_type=${encodeURIComponent(s.title || '')}`} className="glass-card p-4 hover:shadow-md block">
                   <p className="font-semibold text-slate-900">{s.title || s.chip_label}</p>
                 </Link>
               )}
-            />
-            {!results?.doctors?.length &&
-              !results?.clinics?.length &&
-              !results?.treatments?.length &&
-              !results?.conditions?.length &&
-              !results?.symptoms?.length &&
-              !results?.locations?.length && (
-                <div className="text-center py-12">
-                  <p className="text-slate-600 mb-4">No results found for &ldquo;{q}&rdquo;.</p>
-                  <button type="button" className="btn-outline text-sm" onClick={() => navigate('/search')}>
-                    Try another search
-                  </button>
-                </div>
+            </EntityGrid>
+
+            <EntityGrid title="Exercises" icon="fa-person-running" items={data?.exercises} type="exercises" treatmentIntent={treatmentIntent}>
+              {(e) => (
+                <Link key={e.id} to={`/exercises/${e.slug}`} className="glass-card p-4 hover:shadow-md block">
+                  <p className="font-semibold text-slate-900">{e.name}</p>
+                  <p className="text-xs text-slate-500 capitalize">{e.body_area}</p>
+                </Link>
               )}
+            </EntityGrid>
+
+            <EduSection
+              title="Blogs & articles"
+              icon="fa-newspaper"
+              items={data?.articles}
+              type="articles"
+              treatmentIntent={treatmentIntent}
+              forceShow={!!typeParam}
+              render={(a) => (
+                <Link key={a.id} to={`/physiofeed/${a.slug}`} className="glass-card p-4 hover:shadow-md block h-full">
+                  <p className="font-semibold text-slate-900 line-clamp-2">{a.title}</p>
+                  <p className="text-sm text-slate-600 line-clamp-2 mt-1">{a.excerpt}</p>
+                </Link>
+              )}
+            />
+
+            <EduSection
+              title="Treatment packages"
+              icon="fa-box-open"
+              items={data?.packages}
+              type="packages"
+              treatmentIntent={treatmentIntent}
+              forceShow={!!typeParam}
+              render={(p) => (
+                <Link key={p.id} to={`/packages/book/${p.slug}`} className="glass-card p-4 hover:shadow-md block">
+                  <p className="font-semibold text-slate-900">{p.name}</p>
+                  <p className="text-sm text-slate-600">{p.total_sessions} sessions · {p.duration_days} days</p>
+                </Link>
+              )}
+            />
+
+            {data?.locations?.length > 0 && (
+              <section className="mb-10">
+                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
+                  <FaIcon icon="fa-location-dot" className="text-violet-600" />
+                  Locations
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {data.locations.map((loc) => (
+                    <Link
+                      key={loc.id}
+                      to={`/doctors?city_id=${loc.id}`}
+                      className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-sm font-medium hover:border-violet-300"
+                    >
+                      {loc.name}, {loc.state_name}
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {!data?.total && (
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center">
+                <FaIcon icon="fa-compass" className="text-3xl text-slate-300 mb-3" />
+                <p className="font-semibold text-slate-800">No exact matches for &ldquo;{q}&rdquo;</p>
+                <p className="text-sm text-slate-600 mt-2">We searched synonyms, related conditions, and nearby options.</p>
+                {data?.recovery?.length > 0 && (
+                  <div className="flex flex-wrap justify-center gap-2 mt-4">
+                    {data.recovery.map((s) => (
+                      <button key={s} type="button" className={chipClass} onClick={() => runSearch(s.replace('Try searching: ', ''))}>
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <button type="button" className="btn-outline text-sm mt-6" onClick={() => navigate('/doctors')}>
+                  Browse all doctors
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>

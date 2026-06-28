@@ -245,26 +245,24 @@ export function mergeSearchResults(apiData, localData) {
 
 
   return {
-
     doctors: data.doctors ?? [],
-
     clinics: data.clinics ?? [],
-
     conditions: data.conditions ?? [],
-
     treatments,
-
     symptoms,
-
     locations: data.locations ?? [],
-
     packages: data.packages ?? [],
-
     articles: data.articles ?? [],
-
     exercises: data.exercises ?? [],
-
+    services: data.services ?? [],
+    faqs: data.faqs ?? [],
+    query: data.query,
+    parsed: data.parsed,
+    ai_overview: data.ai_overview ?? '',
+    filters: data.filters ?? [],
+    counts: data.counts ?? {},
+    recovery: data.recovery ?? [],
+    total: data.total ?? 0,
   };
-
 }
 

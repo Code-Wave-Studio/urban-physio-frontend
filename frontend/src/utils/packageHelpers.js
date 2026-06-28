@@ -1,3 +1,24 @@
+export const PACKAGE_CATEGORIES = [
+  { id: 'clinic', label: 'Clinic', emoji: '🏥', icon: 'fa-hospital' },
+  { id: 'home_visit', label: 'Home Visit', emoji: '🏠', icon: 'fa-house-medical' },
+  { id: 'online', label: 'Online', emoji: '💻', icon: 'fa-video' },
+];
+
+export function packageMatchesCategory(pkg, categoryId) {
+  const type = pkg?.consultation_type || 'any';
+  return type === 'any' || type === categoryId;
+}
+
+export function normalizePackagePricing(pkg) {
+  const displayPrice = Number(pkg?.discount_price ?? pkg?.price ?? 0);
+  const displayMrp = Number(pkg?.mrp_price ?? pkg?.price ?? displayPrice);
+  const hasDiscount = displayMrp > displayPrice && displayMrp > 0;
+  const discountPercent =
+    pkg?.discount_percent ??
+    (hasDiscount ? Math.round((1 - displayPrice / displayMrp) * 100) : 0);
+  return { displayPrice, displayMrp, hasDiscount, discountPercent };
+}
+
 export function formatPackagePrice(n) {
   return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
 }

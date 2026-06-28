@@ -7,6 +7,7 @@ import SearchableLocationSelect from '../../components/SearchableLocationSelect'
 import ClinicLogo from '../../components/ClinicLogo';
 import ClinicLogoUpload from '../../components/ClinicLogoUpload';
 import ClinicGalleryUpload from '../../components/clinic/ClinicGalleryUpload';
+import AdminClinicProfileServices from '../../components/admin/AdminClinicProfileServices';
 import {
   ClinicOpeningHoursFields,
   ClinicLocationFields,
@@ -278,6 +279,12 @@ function ClinicFormModal({ open, onClose, initial, onSave }) {
               <AdminFormSection title="Services & equipment" icon="fa-hand-holding-medical" defaultOpen={false}>
                 <ClinicTagListFields form={form} set={set} />
               </AdminFormSection>
+
+              {initial?.id ? (
+                <AdminFormSection title="Treatment services (profile cards)" icon="fa-spa" defaultOpen>
+                  <AdminClinicProfileServices clinicId={initial.id} />
+                </AdminFormSection>
+              ) : null}
 
               <AdminFormSection title="Clinic statistics" icon="fa-chart-simple" defaultOpen={false}>
                 <ClinicStatisticsFields form={form} set={set} />

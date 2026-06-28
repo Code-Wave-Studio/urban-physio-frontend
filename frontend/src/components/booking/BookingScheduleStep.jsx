@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import FaIcon from '../FaIcon';
+import TreatmentPackagesBrowser from '../packages/TreatmentPackagesBrowser';
 
 export const CUSTOM_PACKAGE_ID = 'custom';
 export const SINGLE_PACKAGE_ID = 'single';
@@ -34,56 +35,6 @@ function formatDateChip(d) {
   return new Date(`${d}T12:00:00`).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
-function PackageCard({ pkg, selected, onSelect, tone = 'sky' }) {
-  const toneMap = {
-    sky: {
-      active: 'border-sky-500 bg-sky-50 ring-2 ring-sky-200',
-      badge: 'text-sky-700',
-      hover: 'hover:border-sky-200',
-    },
-    emerald: {
-      active: 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-200',
-      badge: 'text-emerald-700',
-      hover: 'hover:border-emerald-200',
-    },
-    violet: {
-      active: 'border-violet-500 bg-violet-50 ring-2 ring-violet-200',
-      badge: 'text-violet-700',
-      hover: 'hover:border-violet-200',
-    },
-    primary: {
-      active: 'border-primary-500 bg-primary-50 ring-2 ring-primary-200',
-      badge: 'text-primary-700',
-      hover: 'hover:border-primary-200',
-    },
-  };
-  const t = toneMap[tone] || toneMap.sky;
-  const price = pkg.discount_price ?? pkg.price;
-  const mrp = pkg.mrp_price;
-
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={`rounded-2xl border-2 p-3 text-left transition w-full ${
-        selected ? t.active : `border-slate-200 bg-white/80 ${t.hover}`
-      }`}
-    >
-      <p className={`text-xs font-bold uppercase ${t.badge}`}>
-        {pkg.total_sessions} session{pkg.total_sessions !== 1 ? 's' : ''}
-        {pkg.duration_days ? ` · ${pkg.duration_days} days` : ''}
-      </p>
-      <p className="font-bold text-slate-900 text-sm mt-1 line-clamp-2">{pkg.name}</p>
-      <p className="text-[11px] text-slate-500 mt-1">
-        ₹{Number(price || 0).toLocaleString('en-IN')}
-        {Number(mrp) > Number(price) && (
-          <span className="line-through ml-1 text-slate-400">₹{Number(mrp).toLocaleString('en-IN')}</span>
-        )}
-      </p>
-    </button>
-  );
-}
-
 export default function BookingScheduleStep({
   form,
   patch,
@@ -101,10 +52,15 @@ export default function BookingScheduleStep({
 }) {
   const [activeSessionIndex, setActiveSessionIndex] = useState(0);
 
-  const allPackages = useMemo(
-    () => [...adminPackages, ...doctorPackages],
+  const structuredPackages = useMemo(
+    () => [
+      ...adminPackages.map((p) => ({ ...p, package_source: 'admin' })),
+      ...doctorPackages.map((p) => ({ ...p, package_source: 'doctor' })),
+    ],
     [adminPackages, doctorPackages]
   );
+
+  const allPackages = structuredPackages;
 
   const selectedPkg = useMemo(() => {
     if (selectedPackageId === SINGLE_PACKAGE_ID || !selectedPackageId) {
@@ -115,8 +71,8 @@ export default function BookingScheduleStep({
     }
     const parsed = parsePackageKey(selectedPackageId);
     const found = allPackages.find((p) => {
-      if (parsed.source === 'admin') return String(p.id) === String(parsed.id) && (p.package_source === 'admin' || !p.package_source);
-      if (parsed.source === 'doctor') return String(p.id) === String(parsed.id);
+      if (parsed.source === 'admin') return String(p.id) === String(parsed.id) && p.package_source === 'admin';
+      if (parsed.source === 'doctor') return String(p.id) === String(parsed.id) && p.package_source === 'doctor';
       return String(p.id) === String(selectedPackageId);
     });
     if (found) {
@@ -178,58 +134,41 @@ export default function BookingScheduleStep({
   const hasStructuredPackage =
     selectedPackageId !== SINGLE_PACKAGE_ID && selectedPackageId !== CUSTOM_PACKAGE_ID;
 
+  const defaultCategory =
+    form.consultation_type && ['clinic', 'home_visit', 'online'].includes(form.consultation_type)
+      ? form.consultation_type
+      : 'clinic';
+
+  const handlePackageSelect = (key, pkg) => {
+    onPackageChange(key, { ...pkg, package_source: pkg.package_source || 'doctor' });
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-bold text-slate-800">Package & schedule</h2>
         <p className="text-sm text-slate-600 mt-1">
-          Choose a platform or doctor package, or book a flexible consultation without a package.
+          Choose a treatment package by service type, or book without a package.
         </p>
       </div>
 
-      {adminPackages.length > 0 && (
-        <section className="space-y-2">
-          <p className="text-xs font-bold uppercase tracking-wide text-sky-700 flex items-center gap-2">
-            <FaIcon icon="fa-shield-halved" />
-            Admin packages
+      {structuredPackages.length > 0 && (
+        <section className="space-y-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-orange-700 flex items-center gap-2">
+            <FaIcon icon="fa-box-open" />
+            Treatment packages
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {adminPackages.map((pkg) => {
-              const key = adminPackageKey(pkg.id);
-              return (
-                <PackageCard
-                  key={key}
-                  pkg={pkg}
-                  tone="sky"
-                  selected={selectedPackageId === key}
-                  onSelect={() => onPackageChange(key, { ...pkg, package_source: 'admin' })}
-                />
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      {doctorPackages.length > 0 && (
-        <section className="space-y-2">
-          <p className="text-xs font-bold uppercase tracking-wide text-emerald-700 flex items-center gap-2">
-            <FaIcon icon="fa-user-doctor" />
-            Doctor packages
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {doctorPackages.map((pkg) => {
-              const key = doctorPackageKey(pkg.id);
-              return (
-                <PackageCard
-                  key={key}
-                  pkg={pkg}
-                  tone="emerald"
-                  selected={selectedPackageId === key}
-                  onSelect={() => onPackageChange(key, { ...pkg, package_source: 'doctor' })}
-                />
-              );
-            })}
-          </div>
+          <TreatmentPackagesBrowser
+            packages={structuredPackages}
+            interaction="select"
+            selectedKey={hasStructuredPackage ? selectedPackageId : null}
+            defaultCategory={defaultCategory}
+            getPackageKey={(pkg) =>
+              pkg.package_source === 'admin' ? adminPackageKey(pkg.id) : doctorPackageKey(pkg.id)
+            }
+            onSelect={handlePackageSelect}
+            bookLabel="Select package"
+          />
         </section>
       )}
 
@@ -238,14 +177,14 @@ export default function BookingScheduleStep({
           <FaIcon icon="fa-calendar-plus" />
           Without package
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
             type="button"
             onClick={() => onPackageChange(CUSTOM_PACKAGE_ID)}
-            className={`rounded-2xl border-2 p-3 text-left transition ${
+            className={`rounded-2xl border-2 p-4 text-left transition ${
               selectedPackageId === CUSTOM_PACKAGE_ID
                 ? 'border-violet-500 bg-violet-50 ring-2 ring-violet-200'
-                : 'border-slate-200 bg-white/80 hover:border-violet-200'
+                : 'border-slate-200 bg-white hover:border-violet-200 hover:shadow-md'
             }`}
           >
             <p className="text-xs font-bold text-violet-700 uppercase">Flexible</p>
@@ -256,10 +195,10 @@ export default function BookingScheduleStep({
           <button
             type="button"
             onClick={() => onPackageChange(SINGLE_PACKAGE_ID)}
-            className={`rounded-2xl border-2 p-3 text-left transition ${
+            className={`rounded-2xl border-2 p-4 text-left transition ${
               selectedPackageId === SINGLE_PACKAGE_ID
                 ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-200'
-                : 'border-slate-200 bg-white/80 hover:border-primary-200'
+                : 'border-slate-200 bg-white hover:border-primary-200 hover:shadow-md'
             }`}
           >
             <p className="text-xs font-bold text-primary-600 uppercase">Single visit</p>

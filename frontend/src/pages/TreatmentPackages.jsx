@@ -5,14 +5,10 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import FaIcon from '../components/FaIcon';
 import PackageDetailModal from '../components/packages/PackageDetailModal';
+import TreatmentPackagesBrowser from '../components/packages/TreatmentPackagesBrowser';
 import { treatmentPackages } from '../services/api';
 import { bookPackageUrl } from '../utils/bookUrl';
-import {
-  formatPackagePrice,
-  PACKAGE_HIGHLIGHTS,
-  parsePackageIncludes,
-  perSessionPrice,
-} from '../utils/packageHelpers';
+import { formatPackagePrice, PACKAGE_HIGHLIGHTS } from '../utils/packageHelpers';
 
 const FALLBACK = [
   {
@@ -23,7 +19,10 @@ const FALLBACK = [
     total_sessions: 10,
     short_description: 'Intensive 10-day physiotherapy recovery program',
     description: 'Structured daily physiotherapy over 10 days — ideal for acute pain relief and early rehabilitation.',
-    price: 4999,
+    price: 5999,
+    discount_price: 4999,
+    mrp_price: 5999,
+    consultation_type: 'clinic',
   },
   {
     id: 2,
@@ -33,8 +32,10 @@ const FALLBACK = [
     total_sessions: 15,
     short_description: 'Complete 15-day rehabilitation program',
     description: 'Mid-term rehab package with progressive exercises and guided sessions over 15 days.',
-    price: 7499,
-    featured: true,
+    price: 8999,
+    discount_price: 7499,
+    mrp_price: 8999,
+    consultation_type: 'home_visit',
   },
   {
     id: 3,
@@ -44,97 +45,12 @@ const FALLBACK = [
     total_sessions: 30,
     short_description: 'Full 30-day comprehensive physiotherapy care',
     description: 'Long-term recovery and strength-building program with 30 guided sessions over 30 days.',
-    price: 12999,
+    price: 14999,
+    discount_price: 12999,
+    mrp_price: 14999,
+    consultation_type: 'online',
   },
 ];
-
-function PackageCard({ pkg, idx, onDetails, isFeatured }) {
-  const perSession = perSessionPrice(pkg.price, pkg.total_sessions);
-
-  return (
-    <motion.article
-      initial={{ opacity: 0, y: 28 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: idx * 0.08 }}
-      className={`relative flex flex-col rounded-2xl md:rounded-3xl overflow-hidden border transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 ${
-        isFeatured
-          ? 'bg-gradient-to-b from-orange-600 via-orange-700 to-orange-800 text-white border-orange-500 shadow-xl shadow-orange-600/25 md:scale-[1.02] z-[1]'
-          : 'glass-card border-white/80 bg-white/90'
-      }`}
-    >
-      {isFeatured && (
-        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-amber-300 via-white to-amber-300" />
-      )}
-      {isFeatured && (
-        <span className="absolute top-4 right-4 bg-white/20 backdrop-blur text-white text-[10px] font-bold uppercase px-3 py-1 rounded-full flex items-center gap-1">
-          <FaIcon icon="fa-fire" /> Most Popular
-        </span>
-      )}
-
-      <div className={`p-6 md:p-8 flex flex-col flex-1 ${isFeatured ? '' : 'pt-8'}`}>
-        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-5 ${isFeatured ? 'bg-white/15' : 'bg-gradient-to-br from-orange-100 to-amber-50 text-orange-600'}`}>
-          <FaIcon icon="fa-calendar-days" className="text-2xl" />
-        </div>
-
-        <p className={`text-xs font-bold uppercase tracking-wider ${isFeatured ? 'text-orange-100' : 'text-orange-600'}`}>
-          {pkg.duration_days}-Day · {pkg.total_sessions} Sessions
-        </p>
-        <h2 className={`text-xl md:text-2xl font-bold mt-2 leading-tight ${isFeatured ? 'text-white' : 'text-slate-800'}`}>
-          {pkg.name}
-        </h2>
-        <p className={`text-sm mt-3 flex-1 leading-relaxed ${isFeatured ? 'text-orange-50/90' : 'text-slate-600'}`}>
-          {pkg.short_description}
-        </p>
-
-        <ul className={`mt-5 space-y-2 text-sm ${isFeatured ? 'text-orange-50' : 'text-slate-600'}`}>
-          {parsePackageIncludes(pkg).slice(0, 3).map((item) => (
-            <li key={item} className="flex items-start gap-2">
-              <FaIcon icon="fa-check" className={`mt-0.5 shrink-0 ${isFeatured ? 'text-amber-200' : 'text-emerald-500'}`} />
-              <span className="line-clamp-1">{item}</span>
-            </li>
-          ))}
-        </ul>
-
-        <div className={`mt-6 pt-5 border-t ${isFeatured ? 'border-white/20' : 'border-slate-100'}`}>
-          <div className="flex items-end justify-between gap-2">
-            <div>
-              <p className={`text-3xl font-bold ${isFeatured ? 'text-white' : 'text-slate-800'}`}>
-                {formatPackagePrice(pkg.price)}
-              </p>
-              <p className={`text-xs mt-0.5 ${isFeatured ? 'text-orange-100' : 'text-slate-500'}`}>
-                {formatPackagePrice(perSession)}/session
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-6 space-y-2.5">
-          <Link
-            to={bookPackageUrl(pkg.slug)}
-            className={`w-full py-3.5 rounded-xl font-bold text-sm text-center block transition shadow-sm ${
-              isFeatured
-                ? 'bg-white text-orange-700 hover:bg-orange-50'
-                : 'bg-gradient-to-r from-orange-600 to-amber-600 text-white hover:opacity-95'
-            }`}
-          >
-            Book package
-          </Link>
-          <button
-            type="button"
-            onClick={() => onDetails(pkg.slug)}
-            className={`w-full py-3 rounded-xl font-semibold text-sm border transition ${
-              isFeatured
-                ? 'border-white/35 text-white hover:bg-white/10'
-                : 'border-slate-200 text-slate-700 hover:border-orange-300 hover:text-orange-700'
-            }`}
-          >
-            View details
-          </button>
-        </div>
-      </div>
-    </motion.article>
-  );
-}
 
 export default function TreatmentPackages() {
   const [list, setList] = useState([]);
@@ -146,7 +62,14 @@ export default function TreatmentPackages() {
       .list()
       .then((res) => {
         const data = res.data?.length ? res.data : FALLBACK;
-        setList(data.map((p, i) => ({ ...p, featured: p.duration_days === 15 || i === 1 })));
+        setList(
+          data.map((p) => ({
+            ...p,
+            discount_price: p.discount_price ?? p.price,
+            mrp_price: p.mrp_price ?? p.price,
+            consultation_type: p.consultation_type || 'any',
+          }))
+        );
       })
       .catch(() => setList(FALLBACK))
       .finally(() => setLoading(false));
@@ -165,7 +88,6 @@ export default function TreatmentPackages() {
     <div className="page-enter min-h-screen bg-gradient-to-b from-orange-50/60 via-white to-slate-50">
       <Navbar />
 
-      {/* Hero */}
       <section className="relative pt-24 pb-14 md:pt-28 md:pb-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-orange-600 via-orange-700 to-slate-900" />
         <div className="absolute inset-0 opacity-30 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.25),transparent_50%)]" />
@@ -193,7 +115,7 @@ export default function TreatmentPackages() {
               transition={{ delay: 0.16 }}
               className="mt-4 text-sm sm:text-lg text-orange-100/95 leading-relaxed max-w-2xl"
             >
-              Professional 10, 15 & 30-day physiotherapy programs — choose your package, pick your physiotherapist, pay securely, and track every session in your dashboard.
+              Browse clinic, home visit, and online programs — pick your package, choose your physiotherapist, and track every session.
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 12 }}
@@ -213,15 +135,14 @@ export default function TreatmentPackages() {
       </section>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 -mt-10 relative z-[2] pb-20">
-        {/* How it works */}
         <section className="glass-strong rounded-2xl p-5 sm:p-6 mb-8 md:mb-10">
           <h2 className="text-sm font-bold uppercase tracking-wider text-orange-600 mb-4">How booking works</h2>
           <div className="grid sm:grid-cols-4 gap-4">
             {[
-              { step: '1', title: 'Choose package', desc: 'Pick 10, 15 or 30-day program', icon: 'fa-box-open' },
-              { step: '2', title: 'Select doctor', desc: 'Your dedicated physiotherapist', icon: 'fa-user-doctor' },
-              { step: '3', title: 'Set start date', desc: 'Sessions auto-scheduled', icon: 'fa-calendar-check' },
-              { step: '4', title: 'Pay & track', desc: 'Razorpay + My Packages dashboard', icon: 'fa-chart-line' },
+              { step: '1', title: 'Choose category', desc: 'Clinic, home or online', icon: 'fa-layer-group' },
+              { step: '2', title: 'Select package', desc: 'Sessions & duration that fit you', icon: 'fa-box-open' },
+              { step: '3', title: 'Pick doctor', desc: 'Your dedicated physiotherapist', icon: 'fa-user-doctor' },
+              { step: '4', title: 'Pay & track', desc: 'Secure checkout + progress dashboard', icon: 'fa-chart-line' },
             ].map((s) => (
               <div key={s.step} className="flex gap-3 sm:flex-col sm:text-center sm:items-center">
                 <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center font-bold shrink-0 sm:mx-auto">
@@ -236,27 +157,44 @@ export default function TreatmentPackages() {
           </div>
         </section>
 
-        {loading ? (
-          <div className="grid md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="glass-card h-[420px] animate-pulse" />
-            ))}
+        <section className="glass-strong rounded-2xl md:rounded-3xl p-5 sm:p-6 md:p-8 mb-8 md:mb-10">
+          <div className="mb-6 md:mb-8">
+            <h2 className="text-xl md:text-2xl font-bold text-slate-900">Browse packages</h2>
+            <p className="text-sm text-slate-600 mt-1">
+              Filter by how you want to receive care — no more scrolling through one long list.
+            </p>
           </div>
-        ) : (
-          <div className="grid md:grid-cols-3 gap-5 md:gap-6 items-stretch">
-            {list.map((pkg, idx) => (
-              <PackageCard
-                key={pkg.id || pkg.slug}
-                pkg={pkg}
-                idx={idx}
-                isFeatured={pkg.featured || pkg.duration_days === 15}
-                onDetails={openDetail}
-              />
-            ))}
-          </div>
-        )}
 
-        {/* Comparison */}
+          {loading ? (
+            <div className="space-y-4">
+              <div className="h-12 rounded-2xl bg-slate-100 animate-pulse" />
+              <div className="grid sm:grid-cols-2 gap-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="h-48 rounded-2xl bg-slate-100 animate-pulse" />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <TreatmentPackagesBrowser
+              packages={list}
+              getBookUrl={(pkg) => bookPackageUrl(pkg.slug)}
+            />
+          )}
+
+          {!loading && list.length > 0 && (
+            <p className="text-center mt-6 text-sm text-slate-500">
+              Need more detail?{' '}
+              <button
+                type="button"
+                onClick={() => openDetail(list[0].slug)}
+                className="text-orange-600 font-semibold hover:underline"
+              >
+                View full package info
+              </button>
+            </p>
+          )}
+        </section>
+
         {!loading && list.length > 1 && (
           <section className="mt-14 md:mt-20 overflow-x-auto">
             <h2 className="section-title text-center mb-6">Compare programs</h2>
@@ -273,13 +211,15 @@ export default function TreatmentPackages() {
                 {[
                   { label: 'Total sessions', key: 'total_sessions' },
                   { label: 'Duration', key: 'duration_days', suffix: ' days' },
-                  { label: 'Price', key: 'price', format: formatPackagePrice },
+                  { label: 'Price', key: 'discount_price', alt: 'price', format: formatPackagePrice },
                 ].map((row) => (
                   <tr key={row.label} className="border-t border-slate-100">
                     <td className="p-4 text-slate-600">{row.label}</td>
                     {list.map((p) => (
                       <td key={p.slug} className="p-4 font-medium text-slate-800">
-                        {row.format ? row.format(p[row.key]) : `${p[row.key]}${row.suffix || ''}`}
+                        {row.format
+                          ? row.format(p[row.key] ?? p[row.alt])
+                          : `${p[row.key]}${row.suffix || ''}`}
                       </td>
                     ))}
                   </tr>
@@ -299,7 +239,6 @@ export default function TreatmentPackages() {
           </section>
         )}
 
-        {/* Benefits */}
         <section className="mt-14 md:mt-20">
           <div className="text-center mb-8 md:mb-10">
             <h2 className="section-title">What&apos;s included</h2>
@@ -325,7 +264,6 @@ export default function TreatmentPackages() {
           </div>
         </section>
 
-        {/* CTA */}
         <section className="mt-12 md:mt-16 rounded-2xl md:rounded-3xl overflow-hidden relative">
           <div className="absolute inset-0 bg-gradient-to-r from-orange-600 to-amber-600" />
           <div className="relative p-8 md:p-12 text-center text-white">
@@ -333,12 +271,12 @@ export default function TreatmentPackages() {
             <p className="mt-2 text-orange-100 max-w-lg mx-auto text-sm md:text-base">
               Book a structured package today — sessions appear in My Packages with full progress tracking.
             </p>
-            {list[1] && (
+            {list[0] && (
               <Link
-                to={bookPackageUrl(list[1].slug)}
+                to={bookPackageUrl(list[0].slug)}
                 className="inline-flex items-center gap-2 mt-6 bg-white text-orange-700 font-bold px-6 py-3 rounded-xl hover:bg-orange-50 transition"
               >
-                Book {list[1].duration_days}-Day Package
+                Book {list[0].duration_days}-Day Package
                 <FaIcon icon="fa-arrow-right" />
               </Link>
             )}

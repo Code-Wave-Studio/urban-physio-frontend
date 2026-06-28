@@ -289,7 +289,7 @@ export default function BookAppointmentWizard() {
       return;
     }
     booking
-      .doctorPackages(form.doctor_id, { consultation_type: form.consultation_type || undefined })
+      .doctorPackages(form.doctor_id)
       .then((res) => {
         const data = res?.data ?? res;
         setAdminPackages(data?.admin_packages || []);
@@ -299,7 +299,7 @@ export default function BookAppointmentWizard() {
         setAdminPackages([]);
         setDoctorPackages([]);
       });
-  }, [form.doctor_id, form.consultation_type]);
+  }, [form.doctor_id]);
 
   useEffect(() => {
     if (prefillTreatmentPackageId && adminPackages.length) {
@@ -1170,7 +1170,7 @@ export default function BookAppointmentWizard() {
                           }`}
                         >
                           <p className="font-semibold text-slate-800 text-sm">Pay online</p>
-                          <p className="text-xs text-slate-600 mt-0.5">Pay full amount via Razorpay</p>
+                          <p className="text-xs text-slate-600 mt-0.5">UPI, card &amp; wallet — instant confirmation</p>
                         </button>
                       </div>
                     )}
@@ -1199,7 +1199,7 @@ export default function BookAppointmentWizard() {
                           }`}
                         >
                           <p className="font-semibold text-slate-800 text-sm">Pay full online</p>
-                          <p className="text-xs text-slate-600 mt-0.5">Pay 100% via Razorpay</p>
+                          <p className="text-xs text-slate-600 mt-0.5">100% secure checkout before your visit</p>
                         </button>
                       </div>
                     )}
@@ -1255,14 +1255,25 @@ export default function BookAppointmentWizard() {
                 type="button"
                 onClick={handleBookAndPay}
                 disabled={submitting || !policiesOk}
-                className="btn-primary w-full sm:w-auto sm:min-w-[180px] sm:ml-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-primary w-full sm:w-auto sm:min-w-[200px] sm:ml-auto disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
                 title={!policiesOk ? 'Accept all policies first' : undefined}
               >
-                {submitting
-                  ? 'Processing...'
-                  : payNowAmount() > 0
-                    ? `Pay ₹${payNowAmount()} with Razorpay`
-                    : 'Confirm booking'}
+                {submitting ? (
+                  <>
+                    <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" aria-hidden />
+                    Processing…
+                  </>
+                ) : payNowAmount() > 0 ? (
+                  <>
+                    <FaIcon icon="fa-shield-halved" className="text-sm opacity-90" />
+                    Confirm &amp; pay ₹{payNowAmount().toLocaleString('en-IN')}
+                  </>
+                ) : (
+                  <>
+                    <FaIcon icon="fa-calendar-check" className="text-sm opacity-90" />
+                    Confirm booking
+                  </>
+                )}
               </button>
             )}
           </div>

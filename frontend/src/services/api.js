@@ -352,6 +352,12 @@ export const admin = {
   clinicSetManager: (id, doctorId) => api.post(`/admin/clinics/${id}/doctors/manager`, { doctor_id: doctorId }),
   clinicClearManager: (id) => api.post(`/admin/clinics/${id}/doctors/manager`, { doctor_id: 0 }),
   clinicDetachDoctor: (id, doctorId) => api.delete(`/admin/clinics/${id}/doctors/${doctorId}`),
+  clinicProfileServices: (clinicId) => api.get(`/admin/clinics/${clinicId}/profile-services`),
+  createClinicProfileService: (clinicId, data) => api.post(`/admin/clinics/${clinicId}/profile-services`, data),
+  updateClinicProfileService: (clinicId, serviceId, data) =>
+    api.put(`/admin/clinics/${clinicId}/profile-services/${serviceId}`, data),
+  deleteClinicProfileService: (clinicId, serviceId) =>
+    api.delete(`/admin/clinics/${clinicId}/profile-services/${serviceId}`),
   updateDoctorRating: (doctorId, data) => api.put(`/admin/doctors/${doctorId}/rating`, data),
   updateClinicRating: (clinicId, data) => api.put(`/admin/clinics/${clinicId}/rating`, data),
   locationsOverview: () => api.get('/admin/locations'),
@@ -501,6 +507,8 @@ export const sessionTypes = () => api.get('/session-types');
 
 export const search = {
   universal: (params) => api.get('/search', { params }),
+  suggest: (params) => api.get('/search/suggest', { params }),
+  trackClick: (data) => api.post('/search/track', data),
 };
 
 export const customSlots = {

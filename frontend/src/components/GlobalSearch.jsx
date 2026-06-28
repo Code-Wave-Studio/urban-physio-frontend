@@ -35,6 +35,8 @@ const EMPTY_RESULTS = {
   packages: [],
   articles: [],
   exercises: [],
+  services: [],
+  faqs: [],
 };
 
 function symptomSubtitle(s) {

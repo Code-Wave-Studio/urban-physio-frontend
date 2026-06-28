@@ -43,7 +43,7 @@ export default function BookingPolicyAcceptance({ acceptance, onChange }) {
           <div>
             <h3 className="font-semibold text-slate-900">Policy agreement required</h3>
             <p className="text-sm text-slate-600 mt-0.5">
-              Accept every policy below before proceeding to Razorpay payment.
+              Accept every policy below before completing your secure checkout.
             </p>
           </div>
         </div>
