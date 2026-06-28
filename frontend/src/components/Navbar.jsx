@@ -24,7 +24,6 @@ const MORE_NAV_LINKS = [
   { to: '/faq', label: 'FAQ', icon: 'fa-circle-question' },
   { to: '/contact', label: 'Contact Us', icon: 'fa-envelope' },
   { to: '/cancellation-help', label: 'Cancellation Help', icon: 'fa-calendar-xmark' },
-  { to: '/provider/register', label: 'Join as Clinic Partner', icon: 'fa-building' },
   { to: '/doctor/register', label: 'Join as Physiotherapist', icon: 'fa-user-doctor' },
 ];
 

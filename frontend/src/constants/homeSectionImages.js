@@ -36,15 +36,6 @@ export const HOME_SECTION_IMAGE_FIELDS = [
     icon: 'fa-house-medical',
     accent: 'violet',
   },
-  {
-    key: 'pain_selection',
-    label: 'Pain map body figure',
-    hint: 'Anatomy illustration in the “Where does it hurt?” section.',
-    recommendedSize: '500 × 500 px',
-    aspect: '1:1 square',
-    icon: 'fa-person-running',
-    accent: 'rose',
-  },
 ];
 
 export const emptySectionImages = () =>

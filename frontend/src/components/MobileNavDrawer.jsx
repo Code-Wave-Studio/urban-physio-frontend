@@ -23,7 +23,6 @@ const HELP_LINKS = [
 
 const PROVIDER_LINKS = [
   { to: '/doctor/register', label: 'Join as a Physiotherapist', icon: 'fa-user-doctor' },
-  { to: '/provider/register', label: 'Join as a Clinic Partner', icon: 'fa-building' },
   { to: '/contact', label: 'Provider Support', icon: 'fa-headset' },
 ];
 

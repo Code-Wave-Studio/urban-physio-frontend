@@ -11,7 +11,7 @@ import { getAuthPortal } from '../../constants/authPortals';
 import { navigateAfterAuth } from '../../utils/authRedirect';
 
 /**
- * @param {{ portalId: 'patient' | 'doctor' | 'provider' }} props
+ * @param {{ portalId: 'patient' | 'doctor' }} props
  */
 export default function AuthRegisterPage({ portalId }) {
   const portal = getAuthPortal(portalId);
@@ -98,14 +98,13 @@ export default function AuthRegisterPage({ portalId }) {
         <div className="mb-5 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 flex gap-2 items-start">
           <FaIcon icon="fa-circle-info" className="mt-0.5 shrink-0 text-sky-600" />
           <span>
-            <strong>Patients only.</strong> Doctors and clinics must use the{' '}
-            <Link to="/doctor/register" className="font-semibold underline">doctor</Link> or{' '}
-            <Link to="/provider/register" className="font-semibold underline">clinic partner</Link> registration pages.
+            <strong>Patients only.</strong> Doctors must use the{' '}
+            <Link to="/doctor/register" className="font-semibold underline">doctor registration</Link> page.
           </span>
         </div>
       )}
 
-      {(portal.id === 'doctor' || portal.id === 'provider') && (
+      {portal.id === 'doctor' && (
         <div className="mb-5 rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-900 flex gap-2 items-start">
           <FaIcon icon="fa-user-doctor" className="mt-0.5 shrink-0 text-violet-600" />
           <span>

@@ -72,29 +72,17 @@ function BodyPartHighlight({ activeId, spots }) {
   );
 }
 
-function PainRunnerVisual({ activeId, activeLabel, painPoints, customImage = '' }) {
+function PainRunnerVisual({ activeId, activeLabel, painPoints }) {
   const [srcIndex, setSrcIndex] = useState(0);
   const [imgBroken, setImgBroken] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const active = useMemo(() => getPainPointById(activeId, painPoints), [activeId, painPoints]);
   const highlightSpots = useMemo(() => getBodyHighlightSpots(active), [active]);
   const label = activeLabel || active?.label || 'Body';
-  const sources = useMemo(() => {
-    const list = [];
-    if (customImage) list.push(customImage);
-    list.push(...PAIN_RUNNER_SOURCES);
-    return list;
-  }, [customImage]);
-  const imgSrc = sources[srcIndex] || sources[0];
-
-  useEffect(() => {
-    setSrcIndex(0);
-    setImgBroken(false);
-    setLoaded(false);
-  }, [customImage]);
+  const imgSrc = PAIN_RUNNER_SOURCES[srcIndex] || PAIN_RUNNER_SOURCES[0];
 
   const onImgError = () => {
-    if (srcIndex < sources.length - 1) {
+    if (srcIndex < PAIN_RUNNER_SOURCES.length - 1) {
       setSrcIndex((i) => i + 1);
       setLoaded(false);
       return;
@@ -238,7 +226,7 @@ function PainTreatAccordion({ selectedId, onSelect, treatmentLink, painPoints, s
   );
 }
 
-export default function PainSelectionSection({ figureImage = '' }) {
+export default function PainSelectionSection() {
   const [painPoints, setPainPoints] = useState(PAIN_POINTS);
   const [selectedId, setSelectedId] = useState(PAIN_SELECTION_DEFAULT_ID);
   const [reduceMotion, setReduceMotion] = useState(false);
@@ -371,12 +359,7 @@ export default function PainSelectionSection({ figureImage = '' }) {
               transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             >
               <div className={reduceMotion ? undefined : 'motion-safe:lg:animate-float'}>
-                <PainRunnerVisual
-                  activeId={selectedId}
-                  activeLabel={selected.label}
-                  painPoints={painPoints}
-                  customImage={figureImage}
-                />
+                <PainRunnerVisual activeId={selectedId} activeLabel={selected.label} painPoints={painPoints} />
               </div>
             </motion.div>
             <p className="mt-2 text-center text-xs font-medium text-slate-500 lg:hidden">

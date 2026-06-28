@@ -100,7 +100,7 @@ export default function App() {
       <Route path="/doctor/login" element={<AuthLoginPage portalId="doctor" />} />
       <Route path="/doctor/register" element={<AuthRegisterPage portalId="doctor" />} />
       <Route path="/provider/login" element={<Navigate to="/doctor/login" replace />} />
-      <Route path="/provider/register" element={<AuthRegisterPage portalId="provider" />} />
+      <Route path="/provider/register" element={<Navigate to="/doctor/register" replace />} />
       <Route path="/verify-otp" element={<VerifyOtp />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />

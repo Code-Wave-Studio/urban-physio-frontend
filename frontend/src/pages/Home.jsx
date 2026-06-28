@@ -169,8 +169,6 @@ export default function Home() {
     [sectionImages],
   );
 
-  const painFigureImage = resolveMediaUrl(sectionImages.pain_selection) || sectionImages.pain_selection || '';
-
   return (
     <div className="relative overflow-x-hidden page-enter">
       <Navbar />
@@ -315,7 +313,7 @@ export default function Home() {
 
       <EmergencyCareSection />
 
-      <PainSelectionSection figureImage={painFigureImage} />
+      <PainSelectionSection />
 
       <StatsCounter />
 

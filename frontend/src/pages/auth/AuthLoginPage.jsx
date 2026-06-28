@@ -7,7 +7,7 @@ import FaIcon from '../../components/FaIcon';
 import { getAuthPortal } from '../../constants/authPortals';
 
 /**
- * @param {{ portalId: 'patient' | 'doctor' | 'provider' }} props
+ * @param {{ portalId: 'patient' | 'doctor' }} props
  */
 export default function AuthLoginPage({ portalId }) {
   const portal = getAuthPortal(portalId);

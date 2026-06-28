@@ -13,7 +13,7 @@ export default function Register() {
     return <Navigate to="/doctor/register" replace />;
   }
   if (role === 'provider') {
-    return <Navigate to="/provider/register" replace />;
+    return <Navigate to="/doctor/register" replace />;
   }
 
   return <AuthPortalPicker mode="register" />;
