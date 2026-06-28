@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 
 export const PROFILE_TABS = [
   { id: 'profile-overview', label: 'Overview' },
-  { id: 'profile-stories', label: 'Stories' },
   { id: 'profile-services', label: 'Services/Treatments' },
   { id: 'profile-media', label: 'Photos & Videos' },
 ];

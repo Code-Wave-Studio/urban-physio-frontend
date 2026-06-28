@@ -22,6 +22,7 @@ export const ADMIN_NAV = [
   { to: '/admin/notifications', label: 'Notifications', icon: 'fa-bell', notifyKey: true },
   { to: '/admin/contact', label: 'Contact & footer', icon: 'fa-envelope' },
   { to: '/admin/home-hero', label: 'Homepage hero', icon: 'fa-house-medical-circle-check' },
+  { to: '/admin/home-images', label: 'Homepage images', icon: 'fa-image' },
   { to: '/admin/home-banners', label: 'Homepage banner', icon: 'fa-images' },
   { to: '/admin/invoice-settings', label: 'Invoice', icon: 'fa-file-invoice' },
   { to: '/admin/logs', label: 'Audit Logs', icon: 'fa-clipboard-list' },

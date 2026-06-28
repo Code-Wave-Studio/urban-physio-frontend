@@ -11,15 +11,13 @@ import BadgeList from '../components/platform/BadgeList';
 import ReviewStars from '../components/platform/ReviewStars';
 import PageMeta, { clinicSchema } from '../components/seo/PageMeta';
 import ClinicProfileActions from '../components/clinic/ClinicProfileActions';
-import ReviewForm from '../components/platform/ReviewForm';
 import { clinics } from '../services/api';
-import { useAuth } from '../contexts/AuthContext';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import { formatOpeningHoursRows, getBannerImages, isValidHttpUrl, SOCIAL_FIELDS, todayOpenStatus } from '../utils/clinicProfileUtils';
 import { showPartnerClinicBadge } from '../utils/clinicBadges';
 import { googleMapsUrl } from '../utils/locationHelpers';
 import { clinicBookUrl, clinicProfileUrl, doctorProfileUrl, formatOpeningHours } from '../utils/profileUrls';
-import ProfileSectionNav, { scrollToProfileSection } from '../components/profile/ProfileSectionNav';
+import ProfileSectionNav from '../components/profile/ProfileSectionNav';
 import ProfileServicesGrid from '../components/profile/ProfileServicesGrid';
 import { HEALTHCARE_IMAGES } from '../utils/healthcareImages';
 
@@ -88,7 +86,6 @@ function StatPill({ label, value, icon, tone = 'emerald', compact = false, onCli
 export default function ClinicProfilePage() {
   const { slug, id } = useParams();
   const identifier = id ?? slug;
-  const { hasRole } = useAuth();
   const [clinic, setClinic] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -123,7 +120,6 @@ export default function ClinicProfilePage() {
   const social = clinic?.social_links_parsed || {};
   const doctorCount = stats.doctor_count ?? clinic?.doctors?.length ?? clinic?.doctor_count ?? 0;
   const rating = Number(stats.avg_rating ?? clinic?.rating_avg) || 0;
-  const scrollToReviews = () => scrollToProfileSection('profile-stories');
   const bannerImages = useMemo(() => getBannerImages(clinic), [clinic]);
   const websiteUrl = clinic?.website_url || clinic?.website;
   const activeSocials = SOCIAL_FIELDS.filter(({ key }) => isValidHttpUrl(social[key]));
@@ -243,7 +239,6 @@ export default function ClinicProfilePage() {
                   rating={clinic.rating_avg}
                   count={clinic.rating_count}
                   size="lg"
-                  onClick={scrollToReviews}
                 />
               </div>
 
@@ -292,7 +287,6 @@ export default function ClinicProfilePage() {
                 icon={rating > 0 ? 'fa-star' : undefined}
                 tone={rating > 0 ? 'amber' : 'slate'}
                 compact
-                onClick={scrollToReviews}
               />
               <StatPill
                 label="Patients"
@@ -494,30 +488,6 @@ export default function ClinicProfilePage() {
                 </ul>
               </Section>
             )}
-
-            <Section title="Patient feedback" icon="fa-star" id="profile-stories">
-              {clinic.reviews?.length > 0 ? (
-                <div className="space-y-3 mb-4">
-                  {clinic.reviews.map((r) => (
-                    <div key={r.id} className="p-4 md:p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-slate-100">
-                      <div className="flex items-center justify-between gap-2">
-                        <ReviewStars rating={r.rating} />
-                        {r.patient_first_name && (
-                          <span className="text-xs font-semibold text-slate-500">{r.patient_first_name}</span>
-                        )}
-                      </div>
-                      <p className="text-sm text-slate-600 mt-2 leading-relaxed">{r.comment || 'No comment'}</p>
-                      {r.created_at && <p className="text-xs text-slate-400 mt-2">{r.created_at.slice(0, 10)}</p>}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-slate-500 mb-4">No patient reviews yet. Be the first to share your experience.</p>
-              )}
-              {hasRole('patient') && (
-                <ReviewForm clinicId={+clinic.id} onSubmitted={load} />
-              )}
-            </Section>
           </div>
 
           <aside className="space-y-4 sm:space-y-6 order-1 lg:order-2">

@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import FaIcon from '../../components/FaIcon';
-import { AUTH_PORTAL_LIST, AUTH_PORTALS } from '../../constants/authPortals';
+import { AUTH_LOGIN_PORTAL_LIST, AUTH_PORTAL_LIST, AUTH_PORTALS } from '../../constants/authPortals';
 
 /**
  * @param {{ mode: 'login' | 'register' }} props
@@ -25,13 +25,13 @@ export default function AuthPortalPicker({ mode }) {
           </h1>
           <p className="text-sm text-slate-500 mt-2 max-w-lg mx-auto">
             {isLogin
-              ? 'Select your account type. Patients, doctors, and clinics use separate sign-in pages.'
+              ? 'Patients and doctors/clinic partners use separate sign-in pages.'
               : 'Doctors and clinics must not register as patients. Pick the account that matches you.'}
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-4 md:gap-5">
-          {AUTH_PORTAL_LIST.map((portalId) => {
+        <div className={`grid gap-4 md:gap-5 ${isLogin ? 'md:grid-cols-2 max-w-2xl mx-auto' : 'md:grid-cols-3'}`}>
+          {(isLogin ? AUTH_LOGIN_PORTAL_LIST : AUTH_PORTAL_LIST).map((portalId) => {
             const portal = AUTH_PORTALS[portalId];
             const target = isLogin ? portal.loginPath : portal.registerPath;
             return (
@@ -47,9 +47,13 @@ export default function AuthPortalPicker({ mode }) {
                   <FaIcon icon={portal.icon} />
                 </div>
                 <h2 className="font-bold text-lg text-slate-900 group-hover:text-primary-800 transition-colors">
-                  {portal.pickerTitle}
+                  {isLogin && portalId === 'doctor' ? 'Doctor & clinic' : portal.pickerTitle}
                 </h2>
-                <p className="text-sm text-slate-600 mt-2 flex-1 leading-relaxed">{portal.pickerDescription}</p>
+                <p className="text-sm text-slate-600 mt-2 flex-1 leading-relaxed">
+                  {isLogin && portalId === 'doctor'
+                    ? 'Sign in as a physiotherapist or clinic partner with one account.'
+                    : portal.pickerDescription}
+                </p>
                 <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary-600 group-hover:gap-3 transition-all">
                   {isLogin ? portal.loginCta : portal.registerCta}
                   <FaIcon icon="fa-arrow-right" className="text-xs" />

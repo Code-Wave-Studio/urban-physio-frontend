@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -18,11 +18,13 @@ import { useLocation } from '../contexts/LocationContext';
 import { treatments, conditions, home } from '../services/api';
 import { SITE_FAQS } from '../constants/supportPages';
 import { HEALTHCARE_IMAGES, SERVICE_CARD_IMAGES } from '../utils/healthcareImages';
+import { resolveMediaUrl } from '../utils/mediaUrl';
+import { emptySectionImages } from '../constants/homeSectionImages';
 
-const SERVICES = [
-  { title: 'Online Consultation', desc: 'HD video sessions via Jitsi Meet from your home', icon: 'fa-video', color: 'from-orange-400/20 to-amber-400/20', iconColor: 'text-orange-600', link: '/book?type=online', linkLabel: 'Book', image: SERVICE_CARD_IMAGES['Online Consultation'] },
-  { title: 'Clinic Visit', desc: 'Premium partner clinics with modern equipment', icon: 'fa-hospital', color: 'from-emerald-400/20 to-teal-400/20', iconColor: 'text-emerald-600', link: '/clinics', linkLabel: 'Find Clinic', image: SERVICE_CARD_IMAGES['Clinic Visit'] },
-  { title: 'Home Visit', desc: 'Licensed physiotherapist at your doorstep', icon: 'fa-house-medical', color: 'from-amber-400/20 to-orange-400/20', iconColor: 'text-orange-600', link: '/book?type=home_visit', linkLabel: 'Book', image: SERVICE_CARD_IMAGES['Home Visit'] },
+const SERVICE_DEFS = [
+  { title: 'Online Consultation', imageKey: 'online_consult', fallback: SERVICE_CARD_IMAGES['Online Consultation'], desc: 'HD video sessions via Jitsi Meet from your home', icon: 'fa-video', color: 'from-orange-400/20 to-amber-400/20', iconColor: 'text-orange-600', link: '/book?type=online', linkLabel: 'Book' },
+  { title: 'Clinic Visit', imageKey: 'clinic_visit', fallback: SERVICE_CARD_IMAGES['Clinic Visit'], desc: 'Premium partner clinics with modern equipment', icon: 'fa-hospital', color: 'from-emerald-400/20 to-teal-400/20', iconColor: 'text-emerald-600', link: '/clinics', linkLabel: 'Find Clinic' },
+  { title: 'Home Visit', imageKey: 'home_visit', fallback: SERVICE_CARD_IMAGES['Home Visit'], desc: 'Licensed physiotherapist at your doorstep', icon: 'fa-house-medical', color: 'from-amber-400/20 to-orange-400/20', iconColor: 'text-orange-600', link: '/book?type=home_visit', linkLabel: 'Book' },
 ];
 
 const STEPS = [
@@ -85,6 +87,7 @@ export default function Home() {
   const [conditionList, setConditionList] = useState([]);
   const [heroImgOk, setHeroImgOk] = useState(true);
   const [heroImgSrc, setHeroImgSrc] = useState(HERO_IMG);
+  const [sectionImages, setSectionImages] = useState(emptySectionImages);
   const [hero, setHero] = useState(HERO_DEFAULTS);
   const [promoBanner, setPromoBanner] = useState({ enabled: false, slides: [] });
   const areaName = locationLabel || city?.name;
@@ -104,6 +107,15 @@ export default function Home() {
           feature_pills:
             Array.isArray(d.feature_pills) && d.feature_pills.length ? d.feature_pills : HERO_DEFAULTS.feature_pills,
         });
+        if (d.section_images && typeof d.section_images === 'object') {
+          const merged = { ...emptySectionImages(), ...d.section_images };
+          setSectionImages(merged);
+          const heroFromApi = resolveMediaUrl(merged.hero) || merged.hero;
+          if (heroFromApi) {
+            setHeroImgSrc(heroFromApi);
+            setHeroImgOk(true);
+          }
+        }
       })
       .catch(() => {});
   }, []);
@@ -147,6 +159,17 @@ export default function Home() {
   const displayConditions = conditionList.length
     ? conditionList.map((c, i) => ({ ...c, icon: conditionIcons[i % 3] }))
     : defaultConditions;
+
+  const services = useMemo(
+    () =>
+      SERVICE_DEFS.map((s) => {
+        const fromApi = resolveMediaUrl(sectionImages[s.imageKey]) || sectionImages[s.imageKey];
+        return { ...s, image: fromApi || s.fallback };
+      }),
+    [sectionImages],
+  );
+
+  const painFigureImage = resolveMediaUrl(sectionImages.pain_selection) || sectionImages.pain_selection || '';
 
   return (
     <div className="relative overflow-x-hidden page-enter">
@@ -292,7 +315,7 @@ export default function Home() {
 
       <EmergencyCareSection />
 
-      <PainSelectionSection />
+      <PainSelectionSection figureImage={painFigureImage} />
 
       <StatsCounter />
 
@@ -303,7 +326,7 @@ export default function Home() {
           <p className="section-subtitle mx-auto mt-2">Online · Clinic · Home visit</p>
         </div>
         <div className="mobile-scroll-x md:grid md:grid-cols-3 md:gap-8 stagger-children">
-          {SERVICES.map((f) => (
+          {services.map((f) => (
             <div key={f.title} className={`mobile-scroll-item glass-card overflow-hidden bg-gradient-to-br ${f.color} p-0`}>
               <div className="h-32 sm:h-36 overflow-hidden">
                 <img src={f.image} alt={f.title} className="w-full h-full object-cover" loading="lazy" />

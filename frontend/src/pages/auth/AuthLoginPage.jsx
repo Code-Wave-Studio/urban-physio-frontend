@@ -71,10 +71,12 @@ export default function AuthLoginPage({ portalId }) {
         {portal.alternatePortals.map((alt) => {
           const altPortal = getAuthPortal(alt.portalId);
           if (!altPortal) return null;
+          const isRegister = alt.linkMode === 'register';
+          const linkTo = isRegister ? altPortal.registerPath : altPortal.loginPath;
           return (
             <p key={alt.portalId} className="text-center text-sm text-slate-500">
               {alt.label}{' '}
-              <Link to={altPortal.loginPath} state={{ from: redirectTo }} className="font-semibold text-slate-700 hover:text-primary-600">
+              <Link to={linkTo} state={{ from: redirectTo }} className="font-semibold text-slate-700 hover:text-primary-600">
                 {alt.linkLabel}
               </Link>
             </p>

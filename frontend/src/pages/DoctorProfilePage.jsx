@@ -12,10 +12,8 @@ import ReviewStars from '../components/platform/ReviewStars';
 import PageMeta, { doctorSchema } from '../components/seo/PageMeta';
 import ShareProfileButton from '../components/profile/ShareProfileButton';
 import SaveDoctorButton from '../components/SaveDoctorButton';
-import ReviewForm from '../components/platform/ReviewForm';
 import ProfileSlotsPreview from '../components/profile/ProfileSlotsPreview';
 import { doctors, booking } from '../services/api';
-import { useAuth } from '../contexts/AuthContext';
 import { googleMapsUrl } from '../utils/locationHelpers';
 import { doctorMinFee, formatReviewCount } from '../utils/doctorProfileUtils';
 import { bookDoctorUrl } from '../utils/bookUrl';
@@ -25,7 +23,7 @@ import {
   formatAvailabilitySummary,
 } from '../utils/profileUrls';
 import { isValidHttpUrl, SOCIAL_FIELDS } from '../utils/clinicProfileUtils';
-import ProfileSectionNav, { scrollToProfileSection } from '../components/profile/ProfileSectionNav';
+import ProfileSectionNav from '../components/profile/ProfileSectionNav';
 import ProfileServicesGrid from '../components/profile/ProfileServicesGrid';
 import { HEALTHCARE_IMAGES } from '../utils/healthcareImages';
 import { resolveMediaUrl } from '../utils/mediaUrl';
@@ -97,7 +95,6 @@ function StatPill({ label, value, icon, tone = 'primary', compact = false, onCli
 export default function DoctorProfilePage() {
   const { slug, id: legacyId } = useParams();
   const profileKey = slug || legacyId;
-  const { hasRole } = useAuth();
   const [doctor, setDoctor] = useState(null);
   const [adminPackages, setAdminPackages] = useState([]);
   const [doctorPackages, setDoctorPackages] = useState([]);
@@ -182,7 +179,6 @@ export default function DoctorProfilePage() {
   const languages = doctor.languages_list || ['English', 'Hindi'];
   const rating = Number(doctor.rating_avg) || 0;
   const reviewCount = Number(doctor.rating_count) || 0;
-  const scrollToReviews = () => scrollToProfileSection('profile-stories');
   const minFee = doctorMinFee(doctor, enabled);
   const fullName = `Dr. ${doctor.first_name} ${doctor.last_name}`;
   const locationLine = [doctor.address, doctor.city_name, doctor.state_name].filter(Boolean).join(', ');
@@ -270,7 +266,6 @@ export default function DoctorProfilePage() {
                 rating={doctor.rating_avg}
                 count={doctor.rating_count}
                 size="lg"
-                onClick={scrollToReviews}
               />
             </div>
 
@@ -324,7 +319,6 @@ export default function DoctorProfilePage() {
                 icon={rating > 0 ? 'fa-star' : undefined}
                 tone={rating > 0 ? 'amber' : 'slate'}
                 compact
-                onClick={scrollToReviews}
               />
               <StatPill
                 label="Experience"
@@ -337,7 +331,6 @@ export default function DoctorProfilePage() {
                 value={formatReviewCount(reviewCount)}
                 icon="fa-comment-dots"
                 compact
-                onClick={scrollToReviews}
               />
               <StatPill
                 label="From"
@@ -353,7 +346,6 @@ export default function DoctorProfilePage() {
                 value={rating > 0 ? `${rating.toFixed(1)} / 5` : 'New'}
                 icon={rating > 0 ? 'fa-star' : undefined}
                 tone={rating > 0 ? 'amber' : 'slate'}
-                onClick={scrollToReviews}
               />
               <StatPill
                 label="Experience"
@@ -364,7 +356,6 @@ export default function DoctorProfilePage() {
                 label="Patient reviews"
                 value={formatReviewCount(reviewCount)}
                 icon="fa-comment-dots"
-                onClick={scrollToReviews}
               />
               <StatPill
                 label="Starting fee"
@@ -574,28 +565,6 @@ export default function DoctorProfilePage() {
                   />
                 </div>
               </div>
-            </Section>
-
-            <Section title="Patient feedback" icon="fa-star" id="profile-stories">
-              {doctor.reviews?.length > 0 ? (
-                <div className="space-y-3 mb-4">
-                  {doctor.reviews.map((r) => (
-                    <div key={r.id} className="p-4 md:p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-slate-100">
-                      <div className="flex items-center justify-between gap-2">
-                        <ReviewStars rating={r.rating} />
-                        {r.first_name && (
-                          <span className="text-xs font-semibold text-slate-500">{r.first_name}</span>
-                        )}
-                      </div>
-                      <p className="text-sm text-slate-600 mt-2 leading-relaxed">{r.comment || 'No comment'}</p>
-                      {r.created_at && <p className="text-xs text-slate-400 mt-2">{r.created_at.slice(0, 10)}</p>}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-slate-500 mb-4">No patient reviews yet. Be the first to share your experience.</p>
-              )}
-              {hasRole('patient') && <ReviewForm doctorId={+doctor.id} onSubmitted={load} />}
             </Section>
           </div>
 

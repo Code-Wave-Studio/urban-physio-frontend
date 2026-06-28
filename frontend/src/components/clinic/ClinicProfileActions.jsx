@@ -8,15 +8,6 @@ import SaveClinicButton from './SaveClinicButton';
 
 import { clinicBookUrl } from '../../utils/profileUrls';
 
-
-
-function scrollToReviews() {
-  const el = document.getElementById('profile-stories');
-  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-
-
 /**
 
  * @param {{ clinic: object, mapUrl?: string, websiteUrl?: string, className?: string }} props
@@ -120,24 +111,6 @@ export default function ClinicProfileActions({ clinic, mapUrl, websiteUrl, class
         </a>
 
       )}
-
-
-
-      <button
-
-        type="button"
-
-        onClick={scrollToReviews}
-
-        className="btn-outline text-xs sm:text-sm !px-3 sm:!px-4 !py-2.5 sm:!py-3 shrink-0 snap-start inline-flex items-center gap-1.5"
-
-      >
-
-        <FaIcon icon="fa-star" />
-
-        <span className="whitespace-nowrap">Reviews</span>
-
-      </button>
 
 
 

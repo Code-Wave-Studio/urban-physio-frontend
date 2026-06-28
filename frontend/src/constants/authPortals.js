@@ -25,8 +25,8 @@ export const AUTH_PORTALS = {
     termsLabel: 'Patient Registration Terms',
     requireMedicoLegal: false,
     alternatePortals: [
-      { portalId: 'doctor', label: 'Physiotherapist?', linkLabel: 'Doctor sign in' },
-      { portalId: 'provider', label: 'Clinic owner?', linkLabel: 'Clinic partner sign in' },
+      { portalId: 'doctor', label: 'Physiotherapist or clinic?', linkLabel: 'Doctor sign in' },
+      { portalId: 'provider', label: 'Clinic owner?', linkLabel: 'Register your clinic', linkMode: 'register' },
     ],
   },
   doctor: {
@@ -39,12 +39,12 @@ export const AUTH_PORTALS = {
     icon: 'fa-user-doctor',
     accent: 'from-violet-600 to-indigo-700',
     softAccent: 'bg-violet-50 text-violet-900 border-violet-200',
-    loginTitle: 'Doctor sign in',
-    loginSubtitle: 'Manage your practice, appointments, patients & earnings',
+    loginTitle: 'Doctor & clinic sign in',
+    loginSubtitle: 'For physiotherapists and clinic partners — manage practice, appointments & earnings',
     registerTitle: 'Doctor registration',
     registerSubtitle: 'For licensed physiotherapists joining as independent practitioners',
     registerCta: 'Register as doctor',
-    loginCta: 'Sign in as doctor',
+    loginCta: 'Sign in',
     pickerTitle: 'Physiotherapist',
     pickerDescription: 'Individual doctor account for verified physiotherapists on the platform.',
     showSpecialization: true,
@@ -55,14 +55,14 @@ export const AUTH_PORTALS = {
     requireMedicoLegal: true,
     alternatePortals: [
       { portalId: 'patient', label: 'Looking to book care?', linkLabel: 'Patient sign in' },
-      { portalId: 'provider', label: 'Registering a clinic?', linkLabel: 'Clinic partner registration' },
+      { portalId: 'provider', label: 'Registering a clinic?', linkLabel: 'Clinic partner registration', linkMode: 'register' },
     ],
   },
   provider: {
     id: 'provider',
     role: 'doctor',
     registrationIntent: 'clinic',
-    loginPath: '/provider/login',
+    loginPath: '/doctor/login',
     registerPath: '/provider/register',
     forgotPasswordRole: 'doctor',
     icon: 'fa-hospital',
@@ -94,3 +94,6 @@ export function getAuthPortal(portalId) {
 }
 
 export const AUTH_PORTAL_LIST = ['patient', 'doctor', 'provider'];
+
+/** Login picker — clinic partners use doctor sign-in. */
+export const AUTH_LOGIN_PORTAL_LIST = ['patient', 'doctor'];

@@ -15,7 +15,7 @@ export default function Login() {
     return <Navigate to="/doctor/login" replace state={redirectState} />;
   }
   if (role === 'provider') {
-    return <Navigate to="/provider/login" replace state={redirectState} />;
+    return <Navigate to="/doctor/login" replace state={redirectState} />;
   }
 
   return <AuthPortalPicker mode="login" />;

@@ -24,7 +24,6 @@ const HELP_LINKS = [
 const PROVIDER_LINKS = [
   { to: '/doctor/register', label: 'Join as a Physiotherapist', icon: 'fa-user-doctor' },
   { to: '/provider/register', label: 'Join as a Clinic Partner', icon: 'fa-building' },
-  { to: '/provider/login', label: 'Clinic partner login', icon: 'fa-right-to-bracket' },
   { to: '/contact', label: 'Provider Support', icon: 'fa-headset' },
 ];
 
@@ -132,7 +131,7 @@ export default function MobileNavDrawer({
     }
   }
 
-  const providerDashboardTo = user && hasRole('doctor', 'admin', 'super_admin') ? dashboardPath() : '/provider/login';
+  const providerDashboardTo = user && hasRole('doctor', 'admin', 'super_admin') ? dashboardPath() : '/doctor/login';
   const providerDashboardLabel =
     user && hasRole('doctor') ? 'Provider Dashboard' : user && hasRole('admin', 'super_admin') ? 'Admin Dashboard' : 'Provider Login';
 

@@ -73,6 +73,7 @@ import PhysioFeedDetail from './pages/PhysioFeedDetail';
 import AdminPhysioFeed from './pages/admin/AdminPhysioFeed';
 import AdminAbout from './pages/admin/AdminAbout';
 import AdminHomeHero from './pages/admin/AdminHomeHero';
+import AdminHomeImages from './pages/admin/AdminHomeImages';
 import AdminHomeBanners from './pages/admin/AdminHomeBanners';
 import AdminBadges from './pages/admin/AdminBadges';
 import AdminCoupons from './pages/admin/AdminCoupons';
@@ -98,7 +99,7 @@ export default function App() {
       <Route path="/patient/register" element={<AuthRegisterPage portalId="patient" />} />
       <Route path="/doctor/login" element={<AuthLoginPage portalId="doctor" />} />
       <Route path="/doctor/register" element={<AuthRegisterPage portalId="doctor" />} />
-      <Route path="/provider/login" element={<AuthLoginPage portalId="provider" />} />
+      <Route path="/provider/login" element={<Navigate to="/doctor/login" replace />} />
       <Route path="/provider/register" element={<AuthRegisterPage portalId="provider" />} />
       <Route path="/verify-otp" element={<VerifyOtp />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -211,6 +212,7 @@ export default function App() {
       <Route path="/admin/physiofeed" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminPhysioFeed /></ProtectedRoute>} />
       <Route path="/admin/about" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminAbout /></ProtectedRoute>} />
       <Route path="/admin/home-hero" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminHomeHero /></ProtectedRoute>} />
+      <Route path="/admin/home-images" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminHomeImages /></ProtectedRoute>} />
       <Route path="/admin/home-banners" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminHomeBanners /></ProtectedRoute>} />
       <Route path="/admin/badges" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminBadges /></ProtectedRoute>} />
       <Route path="/admin/coupons" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminCoupons /></ProtectedRoute>} />
