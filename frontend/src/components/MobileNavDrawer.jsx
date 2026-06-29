@@ -1,30 +1,16 @@
 import { useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import FaIcon from './FaIcon';
+import Logo from './Logo';
+import NavDrawerProfileCard from './nav/NavDrawerProfileCard';
+import {
+  EXPLORE_LINKS,
+  PROVIDER_LINKS,
+  MORE_LINKS,
+  speedDialForRole,
+} from './nav/navDrawerLinks';
+import { useNavDrawerSummary } from '../hooks/useNavDrawerSummary';
 import { hapticClose, hapticOpen } from '../utils/haptics';
-
-const EXPLORE_LINKS = [
-  { to: '/search', label: 'Search', icon: 'fa-magnifying-glass' },
-  { to: '/', label: 'Home', icon: 'fa-house' },
-  { to: '/doctors', label: 'Find Physiotherapists', icon: 'fa-user-doctor' },
-  { to: '/clinics', label: 'Find Clinic', icon: 'fa-hospital', tone: 'emerald' },
-  { to: '/book?type=home_visit', label: 'Home Physiotherapy', icon: 'fa-house-medical' },
-  { to: '/treatments', label: 'Services', icon: 'fa-kit-medical' },
-  { to: '/exercises', label: 'Exercise Library', icon: 'fa-dumbbell' },
-  { to: '/physiofeed', label: 'Blogs / PhysioFeed', icon: 'fa-newspaper' },
-  { to: '/about', label: 'About Us', icon: 'fa-building' },
-];
-
-const HELP_LINKS = [
-  { to: '/faq', label: 'FAQ', icon: 'fa-circle-question' },
-  { to: '/contact', label: 'Contact Us', icon: 'fa-envelope' },
-  { to: '/cancellation-help', label: 'Cancellation Help', icon: 'fa-calendar-xmark' },
-];
-
-const PROVIDER_LINKS = [
-  { to: '/doctor/register', label: 'Join as a Physiotherapist', icon: 'fa-user-doctor' },
-  { to: '/contact', label: 'Provider Support', icon: 'fa-headset' },
-];
 
 function isLinkActive(pathname, search, to) {
   const [path, query = ''] = to.split('?');
@@ -41,50 +27,81 @@ function isLinkActive(pathname, search, to) {
   return pathname === path || pathname.startsWith(`${path}/`);
 }
 
-function NavSection({ title, children }) {
+function NavCategoryCard({ title, children, className = '' }) {
   return (
-    <div className="mb-5">
-      <p className="px-3 mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">{title}</p>
-      <div className="space-y-0.5">{children}</div>
-    </div>
+    <section
+      className={`rounded-2xl border border-slate-200/80 bg-white shadow-[0_4px_24px_-10px_rgba(15,23,42,0.12)] p-4 ${className}`}
+    >
+      <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3 px-0.5">{title}</h2>
+      {children}
+    </section>
   );
 }
 
-function NavItem({ to, label, icon, pathname, search, onNavigate, tone = 'primary' }) {
+function NavListItem({ to, label, icon, pathname, search, onNavigate, tone = 'primary' }) {
   const active = isLinkActive(pathname, search, to);
-  const activeBg = tone === 'emerald' ? 'bg-emerald-50 text-emerald-800' : 'bg-primary-50 text-primary-700';
-  const activeIcon = tone === 'emerald' ? 'bg-emerald-100 text-emerald-600' : 'bg-primary-100 text-primary-600';
-  const hoverBg = tone === 'emerald' ? 'hover:bg-emerald-50' : 'hover:bg-slate-50';
+  const iconTone =
+    tone === 'emerald'
+      ? active
+        ? 'bg-emerald-100 text-emerald-600'
+        : 'bg-emerald-50 text-emerald-500'
+      : active
+        ? 'bg-primary-100 text-primary-600'
+        : 'bg-slate-100 text-slate-500';
+
   return (
     <Link
       to={to}
       onClick={onNavigate}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-medium transition-colors ${
-        active ? activeBg : `text-slate-700 ${hoverBg}`
+      className={`flex items-center gap-3 py-3 px-1 rounded-xl transition-colors active:scale-[0.99] ${
+        active ? 'bg-primary-50/80' : 'hover:bg-slate-50'
       }`}
     >
-      <span
-        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm ${
-          active ? activeIcon : 'bg-slate-100 text-slate-500'
-        }`}
-      >
+      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm ${iconTone}`}>
         <FaIcon icon={icon} />
       </span>
-      <span className="leading-snug">{label}</span>
+      <span className={`flex-1 text-[15px] font-medium leading-snug ${active ? 'text-primary-800' : 'text-slate-700'}`}>
+        {label}
+      </span>
+      <FaIcon icon="fa-chevron-right" className="text-[10px] text-slate-300 shrink-0" />
+    </Link>
+  );
+}
+
+function SpeedDialTile({ item, onNavigate, unreadCount = 0 }) {
+  const badge = item.notifyKey ? unreadCount : 0;
+  return (
+    <Link
+      to={item.to}
+      onClick={onNavigate}
+      className="group relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-3.5 min-h-[5.5rem] shadow-sm active:scale-[0.98] transition-transform"
+    >
+      <div
+        className={`absolute -right-3 -top-3 w-16 h-16 rounded-full bg-gradient-to-br ${item.color} opacity-15 group-active:opacity-25`}
+      />
+      <div
+        className={`relative w-10 h-10 rounded-xl bg-gradient-to-br ${item.color} text-white flex items-center justify-center shadow-md mb-2.5`}
+      >
+        <FaIcon icon={item.icon} className="text-sm" />
+        {badge > 0 && (
+          <span className="absolute -top-1.5 -right-1.5 min-w-[1.125rem] h-[1.125rem] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-0.5 ring-2 ring-white">
+            {badge > 99 ? '99+' : badge}
+          </span>
+        )}
+      </div>
+      <p className="relative text-sm font-bold text-slate-800 leading-tight pr-1">{item.label}</p>
     </Link>
   );
 }
 
 /**
- * Mobile slide-out menu — full site navigation for small screens.
+ * Full-screen mobile navigation drawer — Zomato-inspired healthcare layout.
  */
 export default function MobileNavDrawer({
   open,
   onClose,
   user,
   hasRole,
-  dashboardPath,
-  dashboardLabel,
   city,
   locationLabel,
   onShowLocation,
@@ -92,6 +109,10 @@ export default function MobileNavDrawer({
 }) {
   const { pathname, search } = useLocation();
   const wasOpen = useRef(false);
+  const { summary, loading: summaryLoading } = useNavDrawerSummary(open, user);
+  const speedDial = speedDialForRole(hasRole);
+  const speedDialTitle = user ? 'Speed Dial' : 'Quick access';
+  const gridCols = speedDial.length === 5 ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2';
 
   useEffect(() => {
     if (open && !wasOpen.current) hapticOpen();
@@ -99,171 +120,135 @@ export default function MobileNavDrawer({
     wasOpen.current = open;
   }, [open]);
 
-  const patientLinks = [
-    { to: '/patient/saved', label: 'Saved', icon: 'fa-heart' },
-    { to: '/patient/profile', label: 'Profile', icon: 'fa-user' },
-    { to: '/patient/appointments', label: 'Appointments', icon: 'fa-calendar-check' },
-    { to: '/patient/packages', label: 'Orders', icon: 'fa-box-open' },
-  ];
-
-  const doctorLinks = [
-    { to: '/doctor', label: 'Dashboard', icon: 'fa-gauge-high' },
-    { to: '/doctor/profile', label: 'Profile', icon: 'fa-user-doctor' },
-    { to: '/doctor/clinics', label: 'My Clinics', icon: 'fa-hospital' },
-  ];
-
-  const adminLinks = [{ to: '/admin', label: 'Admin Dashboard', icon: 'fa-shield-halved' }];
-
-  let accountLinks = [];
-  let accountTitle = 'My account';
-  if (user) {
-    if (hasRole('super_admin', 'admin')) {
-      accountLinks = adminLinks;
-      accountTitle = 'Admin';
-    } else if (hasRole('doctor')) {
-      accountLinks = doctorLinks;
-      accountTitle = 'Provider account';
-    } else if (hasRole('patient')) {
-      accountLinks = patientLinks;
-    } else {
-      accountLinks = [{ to: dashboardPath(), label: dashboardLabel(), icon: 'fa-gauge-high' }];
-    }
-  }
-
-  const providerDashboardTo = user && hasRole('doctor', 'admin', 'super_admin') ? dashboardPath() : '/doctor/login';
-  const providerDashboardLabel =
-    user && hasRole('doctor') ? 'Provider Dashboard' : user && hasRole('admin', 'super_admin') ? 'Admin Dashboard' : 'Provider Login';
+  const handleNavigate = () => onClose();
 
   return (
     <>
       <button
         type="button"
         aria-label="Close menu"
-        className={`site-mobile-backdrop fixed inset-0 z-[105] md:hidden bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 ${
+        className={`site-mobile-backdrop fixed inset-0 z-[105] md:hidden bg-slate-900/50 backdrop-blur-[2px] transition-opacity duration-300 ${
           open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
       />
 
       <div
-        className={`site-mobile-drawer fixed top-0 right-0 z-[108] h-full w-[min(22rem,92vw)] bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] md:hidden ${
+        className={`site-mobile-drawer site-mobile-drawer--fullscreen fixed inset-0 z-[108] md:hidden flex flex-col bg-gradient-to-b from-slate-50 via-white to-primary-50/20 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
         aria-hidden={!open}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation menu"
       >
-        <div className="flex items-center justify-between gap-3 p-4 border-b border-slate-100 bg-gradient-to-r from-primary-50/80 to-white">
-          <div className="min-w-0">
-            <span className="font-bold text-slate-900 block">Menu</span>
-            {user && (
-              <p className="text-xs text-slate-500 truncate mt-0.5">
-                {user.first_name ? `Hi, ${user.first_name}` : user.email}
-              </p>
-            )}
-          </div>
-          <button type="button" className="site-header-menu-btn shrink-0" onClick={onClose} aria-label="Close">
-            <FaIcon icon="fa-xmark" />
+        {/* Top bar */}
+        <div className="shrink-0 flex items-center justify-between gap-3 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 border-b border-slate-200/60 bg-white/80 backdrop-blur-md">
+          <Link to="/" onClick={handleNavigate} className="shrink-0">
+            <Logo linkToHome={false} className="h-8 w-auto max-w-[110px] object-contain" showText={false} />
+          </Link>
+          <button
+            type="button"
+            className="site-header-menu-btn shrink-0 !w-10 !h-10"
+            onClick={onClose}
+            aria-label="Close navigation"
+          >
+            <FaIcon icon="fa-xmark" className="text-lg" />
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto p-3 sm:p-4">
-          {user ? (
-            accountLinks.length > 0 && (
-              <NavSection title={accountTitle}>
-                {accountLinks.map((link) => (
-                  <NavItem key={link.to + link.label} {...link} pathname={pathname} search={search} onNavigate={onClose} />
-                ))}
-              </NavSection>
-            )
-          ) : (
-            <NavSection title="My account">
-              <NavItem to="/patient/login" label="Patient login" icon="fa-right-to-bracket" pathname={pathname} search={search} onNavigate={onClose} />
-              <NavItem to="/patient/register" label="Patient register" icon="fa-user-plus" pathname={pathname} search={search} onNavigate={onClose} />
-            </NavSection>
-          )}
+        <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 space-y-5 nav-drawer-scroll">
+          <NavDrawerProfileCard
+            user={user}
+            hasRole={hasRole}
+            summary={summary}
+            loading={summaryLoading}
+            onNavigate={handleNavigate}
+          />
 
-          <NavSection title="Explore">
-            {EXPLORE_LINKS.map((link) => (
-              <NavItem key={link.to + link.label} {...link} pathname={pathname} search={search} onNavigate={onClose} />
-            ))}
-          </NavSection>
-
-          <NavSection title="Need help?">
-            {HELP_LINKS.map((link) => (
-              <NavItem key={link.to} {...link} pathname={pathname} search={search} onNavigate={onClose} />
-            ))}
-          </NavSection>
-
-          <NavSection title="For providers">
-            <NavItem
-              to={providerDashboardTo}
-              label={providerDashboardLabel}
-              icon="fa-gauge-high"
-              pathname={pathname}
-              search={search}
-              onNavigate={onClose}
-            />
-            {PROVIDER_LINKS.map((link) => (
-              <NavItem key={link.label} {...link} pathname={pathname} search={search} onNavigate={onClose} />
-            ))}
-          </NavSection>
-
-          {city ? (
+          {city && (
             <button
               type="button"
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-medium text-primary-700 hover:bg-primary-50 mt-1"
               onClick={() => {
                 onShowLocation();
                 onClose();
               }}
+              className="w-full flex items-center gap-3 rounded-2xl border border-primary-100 bg-primary-50/60 px-4 py-3 text-sm font-semibold text-primary-800 shadow-sm active:scale-[0.99] transition"
             >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-600 text-sm">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-primary-600 shadow-sm">
                 <FaIcon icon="fa-location-dot" />
               </span>
-              <span className="truncate text-left">{locationLabel || city.name}</span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-medium text-primary-700 hover:bg-primary-50 mt-1 border border-primary-100"
-              onClick={() => {
-                onShowLocation();
-                onClose();
-              }}
-            >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-600 text-sm">
-                <FaIcon icon="fa-map-location-dot" />
-              </span>
-              <span className="text-left">Select your location</span>
+              <span className="flex-1 text-left truncate">{locationLabel || city.name}</span>
+              <span className="text-xs text-primary-600 font-medium">Change</span>
             </button>
           )}
-        </nav>
 
-        <div className="p-4 border-t border-slate-100 space-y-2 shrink-0 bg-slate-50/80">
-          <div className="grid grid-cols-2 gap-2">
-            <Link
-              to="/clinics"
-              className="btn-primary w-full text-center text-sm !py-2.5 !bg-emerald-600 hover:!bg-emerald-700 inline-flex items-center justify-center gap-1.5"
-              onClick={onClose}
-            >
-              <FaIcon icon="fa-hospital" className="text-xs" />
-              Find Clinic
-            </Link>
-            <Link to="/book" className="btn-outline w-full text-center text-sm !py-2.5 block" onClick={onClose}>
-              Book
-            </Link>
-          </div>
-          <Link to="/doctors" className="btn-outline w-full text-center block text-sm !py-2.5" onClick={onClose}>
-            Find Physiotherapists
-          </Link>
-          {user ? (
-            <button type="button" className="btn-outline w-full text-sm text-red-700 border-red-200" onClick={onLogout}>
-              Logout
-            </button>
-          ) : (
-            <Link to="/patient/login" className="btn-outline w-full text-center block text-sm" onClick={onClose}>
-              Login
-            </Link>
-          )}
+          <NavCategoryCard title={speedDialTitle}>
+            <div className={`grid ${gridCols} gap-3`}>
+              {speedDial.map((item) => (
+                <SpeedDialTile
+                  key={item.to + item.label}
+                  item={item}
+                  onNavigate={handleNavigate}
+                  unreadCount={summary.unreadNotifications}
+                />
+              ))}
+            </div>
+          </NavCategoryCard>
+
+          <NavCategoryCard title="Explore">
+            <div className="divide-y divide-slate-100">
+              {EXPLORE_LINKS.map((link) => (
+                <NavListItem
+                  key={link.to + link.label}
+                  {...link}
+                  pathname={pathname}
+                  search={search}
+                  onNavigate={handleNavigate}
+                />
+              ))}
+            </div>
+          </NavCategoryCard>
+
+          <NavCategoryCard title="Providers">
+            <div className="divide-y divide-slate-100">
+              {PROVIDER_LINKS.map((link) => (
+                <NavListItem
+                  key={link.label}
+                  {...link}
+                  pathname={pathname}
+                  search={search}
+                  onNavigate={handleNavigate}
+                />
+              ))}
+            </div>
+          </NavCategoryCard>
+
+          <NavCategoryCard title="More">
+            <div className="divide-y divide-slate-100">
+              {MORE_LINKS.map((link) => (
+                <NavListItem
+                  key={link.label}
+                  {...link}
+                  pathname={pathname}
+                  search={search}
+                  onNavigate={handleNavigate}
+                />
+              ))}
+            </div>
+            {user && (
+              <button
+                type="button"
+                onClick={onLogout}
+                className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700 shadow-sm active:scale-[0.99] transition"
+              >
+                <FaIcon icon="fa-right-from-bracket" />
+                Logout
+              </button>
+            )}
+          </NavCategoryCard>
+
+          <div className="h-2" aria-hidden />
         </div>
       </div>
     </>

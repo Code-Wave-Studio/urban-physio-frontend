@@ -93,10 +93,15 @@ export default function DoctorAddClinic() {
       .then((res) => {
         const found = res.data ?? res;
         if (!found) return;
+        if (found.can_edit === false) {
+          toast.error('You have view-only access to this clinic');
+          navigate('/doctor/clinics');
+          return;
+        }
         setForm(clinicRecordToForm(found));
       })
       .catch(() => toast.error('Could not load clinic'));
-  }, [editId]);
+  }, [editId, navigate]);
 
   const submit = async (e) => {
     e.preventDefault();

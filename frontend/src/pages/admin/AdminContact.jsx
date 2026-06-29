@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import FaIcon from '../../components/FaIcon';
 import { admin } from '../../services/api';
@@ -28,7 +29,8 @@ function formatDt(d) {
 }
 
 export default function AdminContact() {
-  const [tab, setTab] = useState('settings');
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState(() => searchParams.get('tab') || 'settings');
   const [form, setForm] = useState(emptySettings);
   const [subjectsText, setSubjectsText] = useState('');
   const [loadingSettings, setLoadingSettings] = useState(true);
@@ -80,6 +82,17 @@ export default function AdminContact() {
   useEffect(() => {
     if (tab === 'messages') loadMessages();
   }, [tab, loadMessages]);
+
+  useEffect(() => {
+    const msgId = searchParams.get('msg');
+    if (!msgId || tab !== 'messages' || !messages.length) return;
+    const id = Number(msgId);
+    if (!messages.some((m) => m.id === id)) return;
+    setExpandedId(id);
+    requestAnimationFrame(() => {
+      document.getElementById(`contact-msg-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }, [searchParams, tab, messages]);
 
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }));
 
@@ -269,7 +282,10 @@ export default function AdminContact() {
               messages.map((m) => (
                 <div
                   key={m.id}
-                  className={`glass-card !p-5 ${m.is_read ? '' : 'ring-2 ring-primary-200/70'}`}
+                  id={`contact-msg-${m.id}`}
+                  className={`glass-card !p-5 ${m.is_read ? '' : 'ring-2 ring-primary-200/70'} ${
+                    expandedId === m.id ? 'ring-2 ring-primary-400' : ''
+                  }`}
                 >
                   <div className="flex flex-wrap justify-between gap-2">
                     <div>

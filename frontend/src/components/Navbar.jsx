@@ -253,8 +253,6 @@ export default function Navbar({ beforeLogo = null, headerSpacerClass = '' }) {
         onClose={() => setMobileOpen(false)}
         user={user}
         hasRole={hasRole}
-        dashboardPath={dashboardPath}
-        dashboardLabel={dashboardLabel}
         city={city}
         locationLabel={locationLabel}
         onShowLocation={() => setShowSelector(true)}

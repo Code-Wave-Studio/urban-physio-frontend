@@ -873,6 +873,18 @@
     will-change: opacity, transform;
   }
 
+  .site-mobile-drawer--fullscreen {
+    max-height: 100dvh;
+  }
+
+  .nav-drawer-scroll {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nav-drawer-profile-card {
+    backdrop-filter: blur(12px);
+  }
+
   /* Admin — sidebar only (public Navbar on top) */
   .admin-sidebar-backdrop {
     will-change: opacity;

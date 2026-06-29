@@ -4,6 +4,7 @@ import DashboardLayout from '../../layouts/DashboardLayout';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import FaIcon from '../FaIcon';
 import AppointmentListRow from './AppointmentListRow';
+import useAppointmentDeepLink from '../../hooks/useAppointmentDeepLink';
 import { appointments, location } from '../../services/api';
 import {
   computeStats,
@@ -52,6 +53,7 @@ export default function AppointmentsManager({
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [cityFilter, setCityFilter] = useState('');
   const [filterCities, setFilterCities] = useState([]);
+  const highlightId = useAppointmentDeepLink(list);
 
   useEffect(() => {
     if (view !== 'admin') return undefined;
@@ -99,6 +101,15 @@ export default function AppointmentsManager({
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (!highlightId) return;
+    setExpandedIds((prev) => new Set([...prev, highlightId]));
+    const match = list.find((a) => a.id === highlightId);
+    if (match && statusFilter && match.status !== statusFilter) {
+      setStatusFilter('');
+    }
+  }, [highlightId, list, statusFilter]);
 
   const stats = useMemo(() => computeStats(list), [list]);
 
@@ -189,6 +200,7 @@ export default function AppointmentsManager({
           key={a.id}
           appt={a}
           view={view}
+          highlighted={highlightId === a.id}
           expanded={expandedIds.has(a.id)}
           onToggle={() => toggleExpand(a.id)}
           onStatusChange={handleStatusChange}

@@ -12,6 +12,15 @@ function isClinicProfile(pathname) {
   return /^\/clinic(\/|$)/.test(pathname);
 }
 
+function isBookingPage(pathname) {
+  return (
+    pathname === '/book' ||
+    pathname.startsWith('/emergency/book') ||
+    pathname.startsWith('/packages/book/') ||
+    /^\/doctors\/[^/]+\/book$/.test(pathname)
+  );
+}
+
 const SCROLL_SHOW_AFTER = 320;
 
 function IconWhatsApp({ className = 'w-7 h-7' }) {
@@ -34,8 +43,9 @@ export default function FloatingActions() {
   const { pathname } = useLocation();
   const { whatsapp } = useContact();
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const hideWhatsApp = isStaffDashboard(pathname);
+  const hideWhatsApp = isStaffDashboard(pathname) || isBookingPage(pathname);
   const hideWhatsAppOnMobile = isClinicProfile(pathname);
+  const hideAll = isBookingPage(pathname);
 
   const waDigits = whatsappDigits(whatsapp);
   const waUrl = hideWhatsApp
@@ -52,6 +62,8 @@ export default function FloatingActions() {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  if (hideAll) return null;
 
   return (
     <div className="floating-actions" aria-label="Quick actions">

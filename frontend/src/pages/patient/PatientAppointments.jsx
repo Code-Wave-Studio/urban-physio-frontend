@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../../components/FaIcon';
 import InvoiceModal from '../../components/InvoiceModal';
+import useAppointmentDeepLink from '../../hooks/useAppointmentDeepLink';
 import { appointments } from '../../services/api';
 import { clinicLocationText, googleMapsUrl } from '../../utils/locationHelpers';
 import {
@@ -76,6 +77,16 @@ export default function PatientAppointments() {
         .sort((a, b) => `${b.appointment_date}${b.start_time}`.localeCompare(`${a.appointment_date}${a.start_time}`)),
     [list, filter]
   );
+
+  const highlightId = useAppointmentDeepLink(list);
+
+  useEffect(() => {
+    if (!highlightId || !list.length) return;
+    const match = list.find((a) => a.id === highlightId);
+    if (match && !matchesFilter(match, filter)) {
+      setFilter('all');
+    }
+  }, [highlightId, list, filter]);
 
   const counts = useMemo(
     () => ({
@@ -169,7 +180,13 @@ export default function PatientAppointments() {
             const typeIcon = TYPE_ICONS[a.consultation_type] || 'fa-calendar';
 
             return (
-              <article key={a.id} className="glass-card !p-4 md:!p-5 border border-white/80">
+              <article
+                key={a.id}
+                id={`appt-${a.id}`}
+                className={`glass-card !p-4 md:!p-5 border border-white/80 transition-shadow ${
+                  highlightId === a.id ? 'ring-2 ring-primary-400 shadow-lg shadow-primary-200/40' : ''
+                }`}
+              >
                 <div className="flex flex-col lg:flex-row lg:items-start gap-4">
                   <div className="flex gap-3 flex-1 min-w-0">
                     <div className="w-11 h-11 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-primary-500/15 to-orange-500/10 text-primary-600 flex items-center justify-center shrink-0 border border-primary-100">

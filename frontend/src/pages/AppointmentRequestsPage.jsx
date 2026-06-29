@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import DashboardLayout from '../layouts/DashboardLayout';
 import AdminDashboardLayout from '../layouts/AdminDashboardLayout';
@@ -20,11 +21,12 @@ const TYPE_LABEL = {
 
 export default function AppointmentRequestsPage({ navItems, title = 'Appointment Requests', scope }) {
   const { hasRole } = useAuth();
+  const [searchParams] = useSearchParams();
   const isAdmin = scope === 'admin' || (!scope && hasRole('admin', 'super_admin'));
   const isDoctor = scope === 'doctor' || (!scope && hasRole('doctor') && !isAdmin);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('pending');
+  const [filter, setFilter] = useState(() => searchParams.get('status') || 'pending');
   const [reviewing, setReviewing] = useState(null);
 
   const load = useCallback(async () => {

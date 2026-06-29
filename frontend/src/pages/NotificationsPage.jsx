@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import FaIcon from '../components/FaIcon';
 import { notifications } from '../services/api';
@@ -6,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { ADMIN_NAV } from '../constants/adminNav';
 import { DOCTOR_NAV } from '../constants/doctorNav';
 import { PATIENT_NAV } from '../constants/patientNav';
+import { getNotificationPath } from '../utils/notificationRoutes';
 import toast from 'react-hot-toast';
 
 function formatDateTime(d) {
@@ -39,12 +41,27 @@ const TYPE_LABELS = {
   user_registered: 'User',
   review_submitted: 'Review',
   contact_message: 'Contact',
+  appointment_request: 'Request',
+  emergency_requested: 'Emergency',
+  emergency_confirmed: 'Emergency',
+  emergency_assigned: 'Emergency',
+  emergency_status: 'Emergency',
 };
 
+function resolveRole(hasRole) {
+  if (hasRole('super_admin', 'admin')) return 'admin';
+  if (hasRole('doctor')) return 'doctor';
+  return 'patient';
+}
+
 export default function NotificationsPage() {
+  const navigate = useNavigate();
   const { user, hasRole } = useAuth();
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [openingId, setOpeningId] = useState(null);
+
+  const roleSlug = useMemo(() => resolveRole(hasRole), [hasRole]);
 
   const { links, variant, subtitle } = useMemo(() => {
     if (hasRole('super_admin', 'admin')) {
@@ -94,6 +111,28 @@ export default function NotificationsPage() {
     }
   };
 
+  const handleOpen = async (n) => {
+    const path = getNotificationPath(n, roleSlug);
+    if (!path) {
+      toast.error('No linked page for this notification');
+      return;
+    }
+
+    setOpeningId(n.id);
+    try {
+      if (!n.is_read) {
+        await notifications.markRead([n.id]);
+        setList((prev) => prev.map((item) => (item.id === n.id ? { ...item, is_read: 1 } : item)));
+        window.dispatchEvent(new Event('notifications-updated'));
+      }
+      navigate(path);
+    } catch (e) {
+      toast.error(e.message || 'Could not open notification');
+    } finally {
+      setOpeningId(null);
+    }
+  };
+
   return (
     <DashboardLayout links={links} variant={variant}>
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6">
@@ -120,29 +159,51 @@ export default function NotificationsPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {list.map((n) => (
-            <div key={n.id} className={`glass-card !p-4 md:!p-5 ${n.is_read ? '' : 'ring-2 ring-primary-200/60 bg-primary-50/30'}`}>
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <p className="font-semibold text-slate-900">{n.title}</p>
-                    {n.type && (
-                      <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-                        {TYPE_LABELS[n.type] || n.type}
-                      </span>
+          {list.map((n) => {
+            const path = getNotificationPath(n, roleSlug);
+            const clickable = Boolean(path);
+            return (
+              <button
+                key={n.id}
+                type="button"
+                disabled={!clickable || openingId === n.id}
+                onClick={() => handleOpen(n)}
+                className={`w-full text-left glass-card !p-4 md:!p-5 transition-all duration-200 ${
+                  n.is_read ? '' : 'ring-2 ring-primary-200/60 bg-primary-50/30'
+                } ${
+                  clickable
+                    ? 'cursor-pointer hover:shadow-md hover:border-primary-200/80 active:scale-[0.995]'
+                    : 'cursor-default opacity-90'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <p className="font-semibold text-slate-900">{n.title}</p>
+                      {n.type && (
+                        <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                          {TYPE_LABELS[n.type] || n.type}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-slate-600">{n.message}</p>
+                    <p className="text-xs text-slate-400 mt-2">{formatDateTime(n.created_at)}</p>
+                    {clickable && (
+                      <p className="text-xs text-primary-600 font-medium mt-2 inline-flex items-center gap-1">
+                        <FaIcon icon="fa-arrow-right" className="text-[10px]" />
+                        {openingId === n.id ? 'Opening…' : 'Tap to open'}
+                      </p>
                     )}
                   </div>
-                  <p className="text-sm text-slate-600">{n.message}</p>
-                  <p className="text-xs text-slate-400 mt-2">{formatDateTime(n.created_at)}</p>
+                  {!n.is_read && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-primary-100 text-primary-800 border border-primary-200 shrink-0">
+                      New
+                    </span>
+                  )}
                 </div>
-                {!n.is_read && (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-primary-100 text-primary-800 border border-primary-200 shrink-0">
-                    New
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
+              </button>
+            );
+          })}
         </div>
       )}
     </DashboardLayout>

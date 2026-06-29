@@ -21,6 +21,7 @@ function copyId(id) {
 export default function AppointmentListRow({
   appt,
   expanded,
+  highlighted = false,
   onToggle,
   view,
   onStatusChange,
@@ -37,7 +38,10 @@ export default function AppointmentListRow({
 
   return (
     <div
+      id={`appt-${appt.id}`}
       className={`rounded-2xl border overflow-hidden transition-shadow ${
+        highlighted ? 'ring-2 ring-primary-400 shadow-lg shadow-primary-200/40' : ''
+      } ${
         isPending
           ? 'border-amber-300/80 bg-amber-50/30 shadow-md shadow-amber-500/5'
           : 'border-white/80 bg-white/40'

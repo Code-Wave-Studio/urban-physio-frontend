@@ -6,6 +6,14 @@ export const PROFILE_TABS = [
   { id: 'profile-media', label: 'Photos & Videos' },
 ];
 
+export const CLINIC_PROFILE_TABS = [
+  { id: 'profile-overview', label: 'Overview' },
+  { id: 'profile-services', label: 'Services & Treatments' },
+  { id: 'profile-media', label: 'Photos & Videos' },
+  { id: 'profile-reviews', label: 'Reviews' },
+  { id: 'profile-doctors', label: 'Doctors' },
+];
+
 export function scrollToProfileSection(sectionId) {
   const el = document.getElementById(sectionId);
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
