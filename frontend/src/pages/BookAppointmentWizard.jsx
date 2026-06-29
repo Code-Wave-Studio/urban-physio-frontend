@@ -233,6 +233,10 @@ export default function BookAppointmentWizard() {
     if (form.consultation_type === 'online' && form.payment_option) {
       patch({ payment_option: '' });
     }
+    if (form.consultation_type !== 'home_visit') {
+      setMapOpen(false);
+      patch({ map_latitude: null, map_longitude: null });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.consultation_type]);
 
@@ -778,7 +782,7 @@ export default function BookAppointmentWizard() {
           return false;
         }
         if (!hasEmergencyAddress && (form.map_latitude == null || form.map_longitude == null)) {
-          toast.error('Capture GPS location for home visit');
+          toast.error('Set your home location on the map');
           return false;
         }
       }
@@ -800,20 +804,34 @@ export default function BookAppointmentWizard() {
 
   const back = () => setStep((s) => Math.max(s - 1, 0));
 
-  const openLocationMap = () => setMapOpen(true);
+  const openLocationMap = () => {
+    if (form.consultation_type !== 'home_visit') return;
+    if (form.map_latitude == null && coords?.lat != null && coords?.lng != null) {
+      patch({ map_latitude: coords.lat, map_longitude: coords.lng });
+    }
+    setMapOpen(true);
+  };
 
   const handleMapConfirm = ({ lat, lng }) => {
     patch({ map_latitude: lat, map_longitude: lng });
+    if (form.consultation_type !== 'home_visit') {
+      toast.success('Location saved');
+      return;
+    }
     location
       .detect(lat, lng)
       .then((res) => {
-        const city = res.data?.city?.name || res.data?.city_name || '';
-        if (city) patch({ city });
-        toast.success('Location saved on map');
+        const detectedCity = res.data?.city?.name || res.data?.city_name || '';
+        const pincode = res.data?.pincode || res.data?.postal_code || '';
+        const patchFields = {};
+        if (detectedCity && !form.city?.trim()) patchFields.city = detectedCity;
+        if (pincode && !form.pincode?.trim()) patchFields.pincode = String(pincode);
+        if (Object.keys(patchFields).length) patch(patchFields);
+        toast.success('Home location saved');
       })
-      .catch(() =>
-        toast.error('Map pin saved, but we could not detect your city. Please select it manually.')
-      );
+      .catch(() => {
+        toast.success('Home pin saved — confirm city & pincode if needed');
+      });
   };
 
   const slotStillAvailable = async () => {
@@ -1280,13 +1298,17 @@ export default function BookAppointmentWizard() {
         </div>
       </div>
 
-      <LocationMapModal
-        open={mapOpen}
-        onClose={() => setMapOpen(false)}
-        initialLat={form.map_latitude}
-        initialLng={form.map_longitude}
-        onConfirm={handleMapConfirm}
-      />
+      {form.consultation_type === 'home_visit' && (
+        <LocationMapModal
+          open={mapOpen}
+          onClose={() => setMapOpen(false)}
+          initialLat={form.map_latitude}
+          initialLng={form.map_longitude}
+          fallbackCoords={coords?.lat != null && coords?.lng != null ? { lat: coords.lat, lng: coords.lng } : null}
+          autoLocate={form.map_latitude == null}
+          onConfirm={handleMapConfirm}
+        />
+      )}
     </div>
   );
 }
