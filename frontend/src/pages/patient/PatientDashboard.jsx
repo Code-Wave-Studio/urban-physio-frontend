@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import PasswordSetupAlert from '../../components/PasswordSetupAlert';
 import FaIcon from '../../components/FaIcon';
-import { appointments, patientReports } from '../../services/api';
+import { appointments, patientReports, patients } from '../../services/api';
 import { PATIENT_NAV } from '../../constants/patientNav';
 import { useAuth } from '../../contexts/AuthContext';
 import { STATUS_STYLES, TYPE_ICONS, formatTime } from '../../utils/appointmentListUtils';
@@ -68,12 +68,14 @@ export default function PatientDashboard() {
   const [stats, setStats] = useState({ total: 0, upcoming: 0, completed: 0 });
   const [reportCount, setReportCount] = useState(0);
   const [recent, setRecent] = useState([]);
+  const [packageCredits, setPackageCredits] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([appointments.list(), patientReports.list()])
-      .then(([apptRes, repRes]) => {
+    Promise.all([appointments.list(), patientReports.list(), patients.visitCredits()])
+      .then(([apptRes, repRes, creditsRes]) => {
         const list = apptRes.data || [];
+        setPackageCredits(creditsRes.data || []);
         setStats({
           total: list.length,
           upcoming: list.filter((a) => ['pending', 'confirmed'].includes(a.status)).length,
@@ -150,6 +152,42 @@ export default function PatientDashboard() {
           </Link>
         ))}
       </div>
+
+      {packageCredits.length > 0 && (
+        <section className="glass-card !p-4 md:!p-5 mb-6 md:mb-8">
+          <div className="flex items-center justify-between gap-2 mb-4">
+            <h2 className="font-bold text-slate-900 flex items-center gap-2 text-sm md:text-base">
+              <FaIcon icon="fa-box-open" className="text-orange-600" />
+              Package visits remaining
+            </h2>
+            <Link to="/patient/appointments" className="text-xs text-primary-600 font-semibold hover:underline">
+              Schedule visits
+            </Link>
+          </div>
+          <div className="space-y-3">
+            {packageCredits.map((c) => (
+              <div
+                key={c.id}
+                className="rounded-xl border border-orange-100 bg-orange-50/50 p-3 flex flex-wrap items-center justify-between gap-3"
+              >
+                <div>
+                  <p className="font-semibold text-slate-900 text-sm">
+                    {c.booking_id || `Package #${c.appointment_id}`}
+                  </p>
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    Dr. {c.first_name} {c.last_name}
+                    {c.expires_at ? ` · Valid till ${c.expires_at}` : ''}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-orange-700">{c.remaining_visits}</p>
+                  <p className="text-[10px] uppercase font-bold text-slate-500">of {c.total_visits} left</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="grid lg:grid-cols-2 gap-4 md:gap-6">
         <section className="glass-card !p-4 md:!p-5">

@@ -200,6 +200,7 @@ export default function TreatmentPackagesBrowser({
   selectedKey,
   onSelect,
   defaultCategory = 'clinic',
+  lockCategory = false,
   bookLabel = 'Book Now',
   className = '',
 }) {
@@ -222,9 +223,11 @@ export default function TreatmentPackagesBrowser({
     return c;
   }, [packages]);
 
+  const activeCategory = lockCategory && defaultCategory ? defaultCategory : category;
+
   const filtered = useMemo(
-    () => packages.filter((pkg) => packageMatchesCategory(pkg, category)),
-    [packages, category]
+    () => packages.filter((pkg) => packageMatchesCategory(pkg, activeCategory)),
+    [packages, activeCategory]
   );
 
   const visible = expanded ? filtered : filtered.slice(0, INITIAL_VISIBLE);
@@ -232,23 +235,24 @@ export default function TreatmentPackagesBrowser({
 
   useEffect(() => {
     setExpanded(false);
-  }, [category]);
+  }, [activeCategory]);
 
   useEffect(() => {
+    if (lockCategory) return;
     if (counts[category] > 0) return;
     const firstWithPackages = PACKAGE_CATEGORIES.find((cat) => counts[cat.id] > 0);
     if (firstWithPackages) setCategory(firstWithPackages.id);
-  }, [counts, category]);
+  }, [counts, category, lockCategory]);
 
   if (!packages.length) return null;
 
   return (
     <div className={`space-y-5 sm:space-y-6 ${className}`}>
-      <CategoryTabs active={category} onChange={setCategory} counts={counts} />
+      {!lockCategory && <CategoryTabs active={category} onChange={setCategory} counts={counts} />}
 
       <AnimatePresence mode="wait">
         <motion.div
-          key={category}
+          key={activeCategory}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}

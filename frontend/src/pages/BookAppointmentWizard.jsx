@@ -38,6 +38,7 @@ import BookingPersonalDetailsStep from '../components/booking/BookingPersonalDet
 import { POLICY_LAST_UPDATED } from '../constants/policyPages';
 import { matchPainTypeLabel, matchHomeConditionLabel } from '../utils/bookUrl';
 import { applyPatientProfileToBooking } from '../utils/patientBookingPrefill';
+import { buildSchedulePayload, isStructuredPackageId } from '../utils/bookingScheduleUtils';
 import CouponInput from '../components/platform/CouponInput';
 
 const STEPS = [
@@ -293,7 +294,7 @@ export default function BookAppointmentWizard() {
       return;
     }
     booking
-      .doctorPackages(form.doctor_id)
+      .doctorPackages(form.doctor_id, { consultation_type: form.consultation_type || undefined })
       .then((res) => {
         const data = res?.data ?? res;
         setAdminPackages(data?.admin_packages || []);
@@ -303,7 +304,19 @@ export default function BookAppointmentWizard() {
         setAdminPackages([]);
         setDoctorPackages([]);
       });
-  }, [form.doctor_id]);
+  }, [form.doctor_id, form.consultation_type]);
+
+  useEffect(() => {
+    if (!selectedDoctorPackage || !form.consultation_type) return;
+    const pkgType = selectedDoctorPackage.consultation_type || 'any';
+    if (pkgType !== 'any' && pkgType !== form.consultation_type) {
+      setPackageId(SINGLE_PACKAGE_ID);
+      setSelectedDoctorPackage(null);
+      setScheduleSessions([{ date: '', time: '' }]);
+      patch({ number_of_sessions: 1, package_label: 'Single Visit', doctor_package_id: '', treatment_package_id: '' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.consultation_type]);
 
   useEffect(() => {
     if (prefillTreatmentPackageId && adminPackages.length) {
@@ -313,11 +326,9 @@ export default function BookAppointmentWizard() {
         setPackageId(key);
         setSelectedDoctorPackage({ ...pkg, package_source: 'admin' });
         const n = pkg.total_sessions || 1;
-        setScheduleSessions(
-          Array.from({ length: n }, (_, i) =>
-            i === 0 && prefillDate ? { date: prefillDate, time: prefillSlotTime || '' } : { date: '', time: '' }
-          )
-        );
+        setScheduleSessions([
+          { date: prefillDate || '', time: prefillSlotTime || '' },
+        ]);
         patch({
           number_of_sessions: n,
           package_label: pkg.name,
@@ -332,11 +343,9 @@ export default function BookAppointmentWizard() {
         setPackageId(key);
         setSelectedDoctorPackage(pkg);
         const n = pkg.total_sessions || 1;
-        setScheduleSessions(
-          Array.from({ length: n }, (_, i) =>
-            i === 0 && prefillDate ? { date: prefillDate, time: prefillSlotTime || '' } : { date: '', time: '' }
-          )
-        );
+        setScheduleSessions([
+          { date: prefillDate || '', time: prefillSlotTime || '' },
+        ]);
         patch({ number_of_sessions: n, package_label: pkg.name, doctor_package_id: pkg.id, treatment_package_id: '' });
       }
     } else if (prefillDate) {
@@ -694,7 +703,7 @@ export default function BookAppointmentWizard() {
     }
     const sessions = pkg?.total_sessions || pkg?.duration_days || 1;
     setSelectedDoctorPackage(pkg);
-    setScheduleSessions(Array.from({ length: sessions }, () => ({ date: '', time: '' })));
+    setScheduleSessions([{ date: '', time: '' }]);
     const parsed = parsePackageKey(id);
     if (parsed.source === 'admin') {
       patch({
@@ -739,13 +748,23 @@ export default function BookAppointmentWizard() {
       }
     }
     if (s === 2) {
+      const structured = isStructuredPackageId(packageId);
+      if (structured || packageId === SINGLE_PACKAGE_ID) {
+        const first = scheduleSessions[0];
+        if (!first?.date || !first?.time) {
+          toast.error(
+            structured
+              ? 'Select date and time for your first package session'
+              : 'Select date and time for your visit'
+          );
+          return false;
+        }
+        patch({ appointment_date: first.date, start_time: first.time });
+        return true;
+      }
       const incomplete = scheduleSessions.find((sess) => !sess.date || !sess.time);
       if (incomplete) {
         toast.error('Complete date and time for every session');
-        return false;
-      }
-      if (packageId !== CUSTOM_PACKAGE_ID && scheduleSessions.length < (form.number_of_sessions || 1)) {
-        toast.error('Select all required session dates');
         return false;
       }
       const first = scheduleSessions[0];
@@ -888,7 +907,7 @@ export default function BookAppointmentWizard() {
         policies_accepted: true,
         accepted_policies: Object.keys(policyAcceptance).filter((k) => policyAcceptance[k]),
         policies_version: POLICY_LAST_UPDATED,
-        schedule_sessions: scheduleSessions.map((s) => ({ date: s.date, start_time: s.time, time: s.time })),
+        schedule_sessions: buildSchedulePayload(packageId, scheduleSessions),
         ...(form.consultation_type === 'home_visit' && form.map_latitude != null
           ? {
               map_latitude: Number(form.map_latitude),
@@ -1153,6 +1172,12 @@ export default function BookAppointmentWizard() {
                 </p>
                 <p>
                   <span className="text-slate-500">Sessions:</span> {form.number_of_sessions}
+                  {isStructuredPackageId(packageId) && form.number_of_sessions > 1 && (
+                    <span className="text-slate-600">
+                      {' '}
+                      (first visit now — {form.number_of_sessions - 1} more from your dashboard)
+                    </span>
+                  )}
                 </p>
                 <p className="text-lg font-bold text-primary-700 pt-2">
                   Total: ₹{fee().toLocaleString('en-IN')}
@@ -1276,7 +1301,8 @@ export default function BookAppointmentWizard() {
             </div>
           )}
 
-          <div className="flex flex-col-reverse sm:flex-row gap-3 mt-8 pt-6 border-t border-slate-100">
+          <div className="sticky bottom-0 left-0 right-0 z-20 -mx-4 px-4 py-3 mt-8 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-[0_-8px_30px_rgba(15,23,42,0.08)] sm:static sm:shadow-none sm:bg-transparent sm:border-0 sm:mx-0 sm:px-0 sm:backdrop-blur-none">
+          <div className="flex flex-col-reverse sm:flex-row gap-3 max-w-3xl mx-auto">
             {step > 0 && (
               <button type="button" onClick={back} className="btn-outline w-full sm:w-auto sm:min-w-[120px]">
                 Back
@@ -1312,6 +1338,7 @@ export default function BookAppointmentWizard() {
                 )}
               </button>
             )}
+          </div>
           </div>
         </div>
       </div>

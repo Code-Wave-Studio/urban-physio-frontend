@@ -1,6 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import FaIcon from '../FaIcon';
 import TreatmentPackagesBrowser from '../packages/TreatmentPackagesBrowser';
+import HorizontalScrollRow, { scrollChipClass } from './HorizontalScrollRow';
+import { packageMatchesCategory } from '../../utils/packageHelpers';
+import {
+  formatDateChip,
+  formatDateHeading,
+  formatSlotLabel,
+  isStructuredPackageId,
+  todayIso,
+} from '../../utils/bookingScheduleUtils';
 
 export const CUSTOM_PACKAGE_ID = 'custom';
 export const SINGLE_PACKAGE_ID = 'single';
@@ -26,15 +36,6 @@ export function parsePackageKey(key) {
   return { source: 'doctor', id: parseInt(key, 10) };
 }
 
-function todayIso() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function formatDateChip(d) {
-  if (d === todayIso()) return 'Today';
-  return new Date(`${d}T12:00:00`).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
-}
-
 export default function BookingScheduleStep({
   form,
   patch,
@@ -51,6 +52,13 @@ export default function BookingScheduleStep({
   slotsLoadingDate,
 }) {
   const [activeSessionIndex, setActiveSessionIndex] = useState(0);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const sessionScrollRef = useRef(null);
+
+  const serviceType = form.consultation_type;
+  const isStructured = isStructuredPackageId(selectedPackageId);
+  const isCustom = selectedPackageId === CUSTOM_PACKAGE_ID;
+  const isSingle = selectedPackageId === SINGLE_PACKAGE_ID || !selectedPackageId;
 
   const structuredPackages = useMemo(
     () => [
@@ -60,17 +68,20 @@ export default function BookingScheduleStep({
     [adminPackages, doctorPackages]
   );
 
-  const allPackages = structuredPackages;
+  const packagesForService = useMemo(
+    () => (serviceType ? structuredPackages.filter((p) => packageMatchesCategory(p, serviceType)) : structuredPackages),
+    [structuredPackages, serviceType]
+  );
 
   const selectedPkg = useMemo(() => {
-    if (selectedPackageId === SINGLE_PACKAGE_ID || !selectedPackageId) {
+    if (isSingle) {
       return { id: SINGLE_PACKAGE_ID, label: 'Single visit', sessions: 1, days: 1 };
     }
-    if (selectedPackageId === CUSTOM_PACKAGE_ID) {
+    if (isCustom) {
       return { id: CUSTOM_PACKAGE_ID, label: 'Flexible consultation', sessions: scheduleSessions.length || 1, days: null };
     }
     const parsed = parsePackageKey(selectedPackageId);
-    const found = allPackages.find((p) => {
+    const found = structuredPackages.find((p) => {
       if (parsed.source === 'admin') return String(p.id) === String(parsed.id) && p.package_source === 'admin';
       if (parsed.source === 'doctor') return String(p.id) === String(parsed.id) && p.package_source === 'doctor';
       return String(p.id) === String(selectedPackageId);
@@ -86,35 +97,57 @@ export default function BookingScheduleStep({
       };
     }
     return { id: SINGLE_PACKAGE_ID, label: 'Single visit', sessions: 1, days: 1 };
-  }, [selectedPackageId, allPackages, scheduleSessions.length]);
+  }, [selectedPackageId, structuredPackages, scheduleSessions.length, isSingle, isCustom]);
 
-  const requiredSessions =
-    selectedPackageId === CUSTOM_PACKAGE_ID ? Math.max(1, scheduleSessions.length) : selectedPkg.sessions;
+  const packageTotalSessions = isStructured ? selectedPkg.sessions : isCustom ? scheduleSessions.length : 1;
+  const preferredTime = scheduleSessions[0]?.time || '';
 
   useEffect(() => {
-    if (scheduleSessions.length < requiredSessions) {
-      const next = [...scheduleSessions];
-      while (next.length < requiredSessions) next.push({ date: '', time: '' });
-      onScheduleChange(next);
-    } else if (selectedPackageId !== CUSTOM_PACKAGE_ID && scheduleSessions.length > requiredSessions) {
-      onScheduleChange(scheduleSessions.slice(0, requiredSessions));
+    if (isStructured || isSingle) {
+      if (scheduleSessions.length !== 1) {
+        onScheduleChange([scheduleSessions[0] || { date: '', time: '' }]);
+      }
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [requiredSessions, selectedPackageId]);
+    if (isCustom && scheduleSessions.length < 1) {
+      onScheduleChange([{ date: '', time: '' }]);
+    }
+  }, [isStructured, isSingle, isCustom, scheduleSessions, onScheduleChange]);
 
   useEffect(() => {
     const first = scheduleSessions[0];
     if (first?.date) patch({ appointment_date: first.date, start_time: first.time || '' });
-    patch({ number_of_sessions: requiredSessions, package_label: selectedPkg.label });
+    patch({
+      number_of_sessions: isStructured ? selectedPkg.sessions : isCustom ? scheduleSessions.length : 1,
+      package_label: selectedPkg.label,
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scheduleSessions, requiredSessions, selectedPkg.label]);
+  }, [scheduleSessions, selectedPkg.label, selectedPkg.sessions, isStructured, isCustom]);
 
   const updateSession = (index, fields) => {
-    onScheduleChange(scheduleSessions.map((s, i) => (i === index ? { ...s, ...fields } : s)));
+    const nextFields = { ...fields };
+    if (nextFields.date != null && index > 0 && !nextFields.time && preferredTime) {
+      nextFields.time = preferredTime;
+    }
+    onScheduleChange(scheduleSessions.map((s, i) => (i === index ? { ...s, ...nextFields } : s)));
+  };
+
+  const pickDate = (index, d) => {
+    const time =
+      index > 0 && preferredTime
+        ? preferredTime
+        : scheduleSessions[index]?.date === d
+          ? scheduleSessions[index]?.time || ''
+          : '';
+    updateSession(index, { date: d, time });
   };
 
   const addCustomSession = () => {
-    onScheduleChange([...scheduleSessions, { date: '', time: '' }]);
+    const last = scheduleSessions[scheduleSessions.length - 1];
+    onScheduleChange([
+      ...scheduleSessions,
+      { date: last?.date || '', time: preferredTime || last?.time || '' },
+    ]);
     setActiveSessionIndex(scheduleSessions.length);
   };
 
@@ -126,47 +159,61 @@ export default function BookingScheduleStep({
 
   const activeSession = scheduleSessions[activeSessionIndex] || { date: '', time: '' };
   const activeSlots = activeSession.date ? slotsCache[activeSession.date] || [] : [];
+  const scheduledCount = scheduleSessions.filter((s) => s.date && s.time).length;
+  const progressTotal = isStructured ? 1 : scheduleSessions.length;
+  const progressDone = isStructured
+    ? scheduleSessions[0]?.date && scheduleSessions[0]?.time
+      ? 1
+      : 0
+    : scheduledCount;
+  const progressPct = progressTotal > 0 ? Math.round((progressDone / progressTotal) * 100) : 0;
 
   useEffect(() => {
     if (activeSession.date && loadSlotsForDate) loadSlotsForDate(activeSession.date);
   }, [activeSession.date, loadSlotsForDate]);
 
-  const hasStructuredPackage =
-    selectedPackageId !== SINGLE_PACKAGE_ID && selectedPackageId !== CUSTOM_PACKAGE_ID;
+  useEffect(() => {
+    const sess = scheduleSessions[activeSessionIndex];
+    if (activeSessionIndex > 0 && sess?.date && !sess?.time && preferredTime) {
+      updateSession(activeSessionIndex, { time: preferredTime });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSessionIndex, preferredTime]);
 
-  const defaultCategory =
-    form.consultation_type && ['clinic', 'home_visit', 'online'].includes(form.consultation_type)
-      ? form.consultation_type
-      : 'clinic';
+  useEffect(() => {
+    if (!isCustom || scheduleSessions.length <= 1) return;
+    const el = sessionScrollRef.current?.querySelector(`[data-session-idx="${activeSessionIndex}"]`);
+    el?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }, [activeSessionIndex, isCustom, scheduleSessions.length]);
 
-  const handlePackageSelect = (key, pkg) => {
-    onPackageChange(key, { ...pkg, package_source: pkg.package_source || 'doctor' });
-  };
+  const serviceLabel =
+    serviceType === 'home_visit' ? 'Home visit' : serviceType === 'online' ? 'Online' : 'Clinic';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 pb-2">
       <div>
-        <h2 className="text-xl font-bold text-slate-800">Package & schedule</h2>
+        <h2 className="text-xl md:text-2xl font-bold text-slate-900">Package &amp; schedule</h2>
         <p className="text-sm text-slate-600 mt-1">
-          Choose a treatment package by service type, or book without a package.
+          {serviceLabel} — swipe sessions &amp; dates sideways on mobile.
         </p>
       </div>
 
-      {structuredPackages.length > 0 && (
-        <section className="space-y-3">
+      {packagesForService.length > 0 && (
+        <section className="space-y-2">
           <p className="text-xs font-bold uppercase tracking-wide text-orange-700 flex items-center gap-2">
             <FaIcon icon="fa-box-open" />
-            Treatment packages
+            {serviceLabel} packages
           </p>
           <TreatmentPackagesBrowser
-            packages={structuredPackages}
+            packages={packagesForService}
             interaction="select"
-            selectedKey={hasStructuredPackage ? selectedPackageId : null}
-            defaultCategory={defaultCategory}
+            selectedKey={isStructured ? selectedPackageId : null}
+            defaultCategory={serviceType || 'clinic'}
+            lockCategory
             getPackageKey={(pkg) =>
               pkg.package_source === 'admin' ? adminPackageKey(pkg.id) : doctorPackageKey(pkg.id)
             }
-            onSelect={handlePackageSelect}
+            onSelect={(key, pkg) => onPackageChange(key, { ...pkg, package_source: pkg.package_source || 'doctor' })}
             bookLabel="Select package"
           />
         </section>
@@ -177,157 +224,217 @@ export default function BookingScheduleStep({
           <FaIcon icon="fa-calendar-plus" />
           Without package
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <HorizontalScrollRow ariaLabel="Booking type">
           <button
             type="button"
             onClick={() => onPackageChange(CUSTOM_PACKAGE_ID)}
-            className={`rounded-2xl border-2 p-4 text-left transition ${
-              selectedPackageId === CUSTOM_PACKAGE_ID
-                ? 'border-violet-500 bg-violet-50 ring-2 ring-violet-200'
-                : 'border-slate-200 bg-white hover:border-violet-200 hover:shadow-md'
+            className={`${scrollChipClass(isCustom, 'session')} !min-w-[11rem] !text-left !py-3 ${
+              isCustom ? '!bg-violet-600 !border-violet-600 !text-white' : ''
             }`}
           >
-            <p className="text-xs font-bold text-violet-700 uppercase">Flexible</p>
-            <p className="font-bold text-slate-900 text-sm mt-1">No package / custom schedule</p>
-            <p className="text-[11px] text-slate-500 mt-1">Pick multiple dates & times freely</p>
+            <span className="block text-[10px] uppercase opacity-80">Flexible</span>
+            Multi-session
           </button>
-
           <button
             type="button"
             onClick={() => onPackageChange(SINGLE_PACKAGE_ID)}
-            className={`rounded-2xl border-2 p-4 text-left transition ${
-              selectedPackageId === SINGLE_PACKAGE_ID
-                ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-200'
-                : 'border-slate-200 bg-white hover:border-primary-200 hover:shadow-md'
+            className={`${scrollChipClass(isSingle, 'session')} !min-w-[11rem] !text-left !py-3 ${
+              isSingle ? '!bg-primary-600 !border-primary-600 !text-white' : ''
             }`}
           >
-            <p className="text-xs font-bold text-primary-600 uppercase">Single visit</p>
-            <p className="font-bold text-slate-900 text-sm mt-1">One appointment only</p>
-            <p className="text-[11px] text-slate-500 mt-1">Pay per session — no package</p>
+            <span className="block text-[10px] uppercase opacity-80">Single</span>
+            One visit
           </button>
-        </div>
+        </HorizontalScrollRow>
       </section>
 
-      {hasStructuredPackage && (
-        <div className="rounded-xl bg-sky-50 border border-sky-200/70 px-4 py-3 text-sm text-sky-900">
-          <FaIcon icon="fa-circle-info" className="mr-1.5" />
-          Select all <strong>{requiredSessions}</strong> session dates and preferred times below.
+      {isStructured && (
+        <div className="rounded-2xl bg-sky-50 border border-sky-200/80 px-3 py-2.5 text-sm text-sky-900">
+          <strong>{selectedPkg.label}</strong> — book session 1 now;{' '}
+          <strong>{Math.max(0, packageTotalSessions - 1)}</strong> later from dashboard.
         </div>
       )}
 
-      {selectedPackageId === CUSTOM_PACKAGE_ID && (
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-sm text-slate-600">Add as many sessions as you need.</p>
-          <button type="button" className="btn-outline text-sm" onClick={addCustomSession}>
-            <FaIcon icon="fa-plus" /> Add session
+      {isCustom && (
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs text-slate-600">Swipe sessions →</p>
+          <button type="button" className="btn-outline text-xs !py-2 !px-3 min-h-[40px]" onClick={addCustomSession}>
+            <FaIcon icon="fa-plus" /> Add
           </button>
         </div>
       )}
 
-      <div className="space-y-3">
-        <div className="flex flex-wrap gap-2">
-          {scheduleSessions.map((sess, i) => {
-            const complete = sess.date && sess.time;
-            return (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setActiveSessionIndex(i)}
-                className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold border transition ${
-                  activeSessionIndex === i
-                    ? 'bg-primary-600 text-white border-primary-600'
-                    : complete
-                      ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                      : 'bg-white text-slate-600 border-slate-200'
-                }`}
-              >
-                Session {i + 1}
-                {complete && <FaIcon icon="fa-check" className="text-[10px]" />}
-              </button>
-            );
-          })}
+      {/* Session picker — horizontal only, never wraps */}
+      {isCustom && scheduleSessions.length >= 1 && (
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-2 flex items-center justify-between">
+            <span>Sessions</span>
+            <span className="text-slate-400 font-normal normal-case">{scheduleSessions.length} total</span>
+          </p>
+          <div ref={sessionScrollRef}>
+            <HorizontalScrollRow ariaLabel="Sessions">
+              {scheduleSessions.map((sess, i) => {
+                const complete = sess.date && sess.time;
+                const selected = activeSessionIndex === i;
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    data-session-idx={i}
+                    onClick={() => setActiveSessionIndex(i)}
+                    className={`${scrollChipClass(selected, 'session')} inline-flex items-center gap-1.5 ${
+                      !selected && complete ? '!bg-emerald-50 !text-emerald-800 !border-emerald-200' : ''
+                    }`}
+                  >
+                    Session {i + 1}
+                    {complete && <FaIcon icon="fa-check" className="text-[10px]" />}
+                  </button>
+                );
+              })}
+            </HorizontalScrollRow>
+          </div>
         </div>
+      )}
 
-        <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 space-y-4">
-          <div className="flex items-center justify-between gap-2">
-            <p className="font-semibold text-slate-800">
-              Session {activeSessionIndex + 1} of {scheduleSessions.length}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={`${selectedPackageId}-${activeSessionIndex}`}
+          initial={{ opacity: 0, x: 8 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -8 }}
+          transition={{ duration: 0.18 }}
+          className="rounded-2xl border border-slate-200 bg-white shadow-md overflow-hidden"
+        >
+          <div className="px-3 py-2.5 border-b border-slate-100 flex items-center justify-between gap-2 bg-slate-50/80">
+            <p className="font-bold text-slate-900 text-sm">
+              {isStructured ? (
+                <>Session 1 <span className="text-slate-500 font-medium">/ {packageTotalSessions}</span></>
+              ) : isCustom ? (
+                <>Session {activeSessionIndex + 1} <span className="text-slate-500 font-medium">/ {scheduleSessions.length}</span></>
+              ) : (
+                'Your visit'
+              )}
             </p>
-            {selectedPackageId === CUSTOM_PACKAGE_ID && scheduleSessions.length > 1 && (
-              <button type="button" className="text-xs text-red-600 font-semibold" onClick={() => removeCustomSession(activeSessionIndex)}>
+            {isCustom && scheduleSessions.length > 1 && (
+              <button
+                type="button"
+                className="text-[11px] text-red-600 font-semibold px-2 min-h-[36px]"
+                onClick={() => removeCustomSession(activeSessionIndex)}
+              >
                 Remove
               </button>
             )}
           </div>
 
-          <div>
-            <p className="text-sm font-medium text-slate-700 mb-2">Date</p>
-            <input
-              type="date"
-              className="input-field"
-              min={todayIso()}
-              value={activeSession.date || ''}
-              onChange={(e) => updateSession(activeSessionIndex, { date: e.target.value, time: '' })}
-            />
-            {(availableDatesLoading || availableDates.length > 0) && (
-              <div className="mt-2 flex flex-wrap gap-2">
-                {availableDatesLoading ? (
-                  <span className="text-xs text-slate-500">Loading dates…</span>
-                ) : (
-                  availableDates.slice(0, 14).map((d) => (
-                    <button
-                      key={d}
-                      type="button"
-                      onClick={() => updateSession(activeSessionIndex, { date: d, time: '' })}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold border ${
-                        activeSession.date === d
-                          ? 'bg-primary-600 text-white border-primary-600'
-                          : 'bg-white border-slate-200 text-slate-700'
-                      }`}
-                    >
-                      {formatDateChip(d)}
-                    </button>
-                  ))
-                )}
+          <div className="p-3 sm:p-4 space-y-4">
+            {/* Dates — horizontal scroll */}
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Date</p>
+                <button
+                  type="button"
+                  className="text-[11px] text-primary-600 font-semibold"
+                  onClick={() => setShowDatePicker((v) => !v)}
+                >
+                  {showDatePicker ? 'Hide calendar' : 'Other date'}
+                </button>
               </div>
+              {showDatePicker && (
+                <input
+                  type="date"
+                  className="input-field mb-2 min-h-[44px] text-sm"
+                  min={todayIso()}
+                  value={activeSession.date || ''}
+                  onChange={(e) => pickDate(activeSessionIndex, e.target.value)}
+                />
+              )}
+              {availableDatesLoading ? (
+                <p className="text-xs text-slate-500 py-2">Loading dates…</p>
+              ) : availableDates.length > 0 ? (
+                <HorizontalScrollRow ariaLabel="Available dates">
+                  {availableDates.map((d) => {
+                    const selected = activeSession.date === d;
+                    return (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => pickDate(activeSessionIndex, d)}
+                        className={scrollChipClass(selected, 'date')}
+                      >
+                        <span className="flex items-center gap-2">
+                          <span
+                            className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                              selected ? 'bg-emerald-500 text-white' : 'bg-emerald-50 text-emerald-600'
+                            }`}
+                          >
+                            <FaIcon icon="fa-calendar-day" className="text-[10px]" />
+                          </span>
+                          <span className={`text-xs font-semibold leading-tight ${selected ? 'text-emerald-900' : 'text-slate-800'}`}>
+                            {formatDateChip(d)}
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </HorizontalScrollRow>
+              ) : null}
+            </div>
+
+            {/* Times — horizontal scroll */}
+            {activeSession.date && (
+              <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                  {formatDateHeading(activeSession.date)}
+                  {activeSlots.length > 0 && (
+                    <span className="text-emerald-600 normal-case"> · {activeSlots.length} slots</span>
+                  )}
+                </p>
+                {slotsLoadingDate === activeSession.date ? (
+                  <p className="text-slate-500 text-xs py-2">Loading times…</p>
+                ) : activeSlots.length === 0 ? (
+                  <p className="text-amber-800 text-xs bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                    No slots — swipe to another date.
+                  </p>
+                ) : (
+                  <HorizontalScrollRow ariaLabel="Time slots">
+                    {activeSlots.map((slot) => {
+                      const time = slot.time || slot.value;
+                      const label = slot.label || formatSlotLabel(time);
+                      const selected = activeSession.time === time;
+                      return (
+                        <button
+                          key={time}
+                          type="button"
+                          onClick={() => updateSession(activeSessionIndex, { time })}
+                          className={scrollChipClass(selected, 'time')}
+                        >
+                          <span className={`w-2 h-2 rounded-full shrink-0 ${selected ? 'bg-emerald-600' : 'bg-emerald-500'}`} />
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </HorizontalScrollRow>
+                )}
+              </motion.div>
             )}
           </div>
+        </motion.div>
+      </AnimatePresence>
 
-          {activeSession.date && (
-            <div>
-              <p className="text-sm font-medium text-slate-700 mb-2">Time</p>
-              {slotsLoadingDate === activeSession.date ? (
-                <p className="text-slate-500 text-sm">Loading slots…</p>
-              ) : activeSlots.length === 0 ? (
-                <p className="text-amber-700 text-sm">No slots — try another date.</p>
-              ) : (
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                  {activeSlots.map((slot) => (
-                    <button
-                      key={slot.value || slot.time}
-                      type="button"
-                      onClick={() => updateSession(activeSessionIndex, { time: slot.time })}
-                      className={`py-2 rounded-xl text-sm font-medium border transition ${
-                        activeSession.time === slot.time
-                          ? 'bg-primary-600 text-white border-primary-600'
-                          : 'bg-white border-slate-200 hover:border-primary-300'
-                      }`}
-                    >
-                      {slot.label || slot.time}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+      <div className="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5 space-y-2">
+        <div className="flex justify-between text-xs font-semibold text-slate-800">
+          <span>
+            {progressDone} / {progressTotal} scheduled
+          </span>
+          <span className="text-emerald-700">{progressPct}%</span>
         </div>
-      </div>
-
-      <div className="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-sm text-slate-700">
-        <span className="font-semibold">
-          {scheduleSessions.filter((s) => s.date && s.time).length} / {scheduleSessions.length}
-        </span>{' '}
-        sessions scheduled
+        <div className="h-2 rounded-full bg-slate-200 overflow-hidden">
+          <motion.div
+            className="h-full bg-gradient-to-r from-emerald-500 to-primary-500 rounded-full"
+            animate={{ width: `${progressPct}%` }}
+            transition={{ duration: 0.3 }}
+          />
+        </div>
       </div>
     </div>
   );

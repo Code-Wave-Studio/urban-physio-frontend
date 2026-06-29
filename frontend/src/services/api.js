@@ -528,6 +528,8 @@ export const appointmentProgress = {
   get: (appointmentId) => api.get(`/appointments/${appointmentId}/progress`),
   updateSession: (appointmentId, sessionNumber, data) =>
     api.put(`/appointments/${appointmentId}/progress/${sessionNumber}`, data),
+  scheduleSession: (appointmentId, sessionNumber, data) =>
+    api.post(`/appointments/${appointmentId}/progress/${sessionNumber}/schedule`, data),
   completeSession: (appointmentId, sessionNumber, data) =>
     api.post(`/appointments/${appointmentId}/progress/${sessionNumber}/complete`, data),
 };

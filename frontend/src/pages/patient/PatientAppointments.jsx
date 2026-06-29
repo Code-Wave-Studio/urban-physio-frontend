@@ -283,7 +283,7 @@ export default function PatientAppointments() {
                   </div>
                 </div>
                 <div className="mt-4 pt-4 border-t border-slate-100 space-y-4">
-                  <AppointmentProgressPanel appointmentId={a.id} />
+                  <AppointmentProgressPanel appointmentId={a.id} patientView />
                   <AppointmentRequestForm appointment={a} onSubmitted={load} />
                 </div>
               </article>
