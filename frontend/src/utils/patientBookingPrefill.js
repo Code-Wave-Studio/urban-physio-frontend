@@ -24,12 +24,7 @@ export function applyPatientProfileToBooking(form, profile) {
   if (!next.city?.trim()) {
     next.city = primary?.city || primary?.city_name || profile.city_name || '';
   }
-  if (next.map_latitude == null) {
-    next.map_latitude = primary?.latitude ?? profile.latitude ?? null;
-  }
-  if (next.map_longitude == null) {
-    next.map_longitude = primary?.longitude ?? profile.longitude ?? null;
-  }
+  // Map pin must be set manually on the home-visit map — never copy profile GPS.
   if (!next.medical_history?.trim() && profile.medical_notes) {
     next.medical_history = profile.medical_notes;
   }

@@ -3,7 +3,7 @@ import { API_BASE } from '../services/api';
 import AppointmentProgressPanel from './AppointmentProgressPanel';
 import AppointmentRequestForm from './AppointmentRequestForm';
 import { hasOfflinePaymentPending, isAwaitingOnlinePayment } from '../utils/razorpayCheckout';
-import { clinicLocationText, googleMapsUrl } from '../utils/locationHelpers';
+import { clinicLocationText, googleMapsUrl, homeVisitMapUrl } from '../utils/locationHelpers';
 import { STATUS_STYLES, formatTime, formatType } from '../utils/appointmentListUtils';
 
 const PAY_STYLES = {
@@ -52,7 +52,19 @@ export default function AppointmentDetailCard({
   embedded = false,
 }) {
   const isDoctor = view === 'doctor';
-  const meta = appt.booking_meta || {};
+  const meta =
+    appt.booking_meta && typeof appt.booking_meta === 'object'
+      ? appt.booking_meta
+      : typeof appt.booking_meta === 'string'
+        ? (() => {
+            try {
+              return JSON.parse(appt.booking_meta) || {};
+            } catch {
+              return {};
+            }
+          })()
+        : {};
+  const isHomeVisit = appt.consultation_type === 'home_visit';
   const patientName =
     appt.patient_full_name ||
     [appt.patient_first_name, appt.patient_last_name].filter(Boolean).join(' ') ||
@@ -63,10 +75,7 @@ export default function AppointmentDetailCard({
       ? googleMapsUrl(appt.clinic_latitude, appt.clinic_longitude) ||
         googleMapsUrl(appt.doctor_latitude, appt.doctor_longitude)
       : null;
-  const homeMap =
-    appt.consultation_type === 'home_visit' && meta.map_latitude != null
-      ? googleMapsUrl(meta.map_latitude, meta.map_longitude)
-      : null;
+  const homeMap = isHomeVisit ? homeVisitMapUrl(meta) : null;
 
   const reportUrl = appt.report_file?.startsWith('http')
     ? appt.report_file
@@ -285,7 +294,7 @@ export default function AppointmentDetailCard({
         </Section>
       )}
 
-      {appt.consultation_type === 'home_visit' && (
+      {isHomeVisit && (
         <Section title="Home visit — patient location" icon="fa-house-medical">
           <Detail label="Full address" value={meta.full_address} className="sm:col-span-2 lg:col-span-3" />
           <Detail label="Landmark" value={meta.landmark} />
@@ -293,19 +302,19 @@ export default function AppointmentDetailCard({
           <Detail label="Pincode" value={meta.pincode} />
           <Detail label="Patient condition" value={meta.patient_condition} />
           <Detail label="Special instructions" value={meta.special_instructions} className="sm:col-span-2" />
-          {meta.map_latitude != null && (
+          {meta.map_latitude != null && meta.map_longitude != null && (
             <Detail
-              label="Map coordinates"
-              value={`${Number(meta.map_latitude).toFixed(5)}, ${Number(meta.map_longitude).toFixed(5)}`}
+              label="GPS coordinates"
+              value={`${Number(meta.map_latitude).toFixed(6)}, ${Number(meta.map_longitude).toFixed(6)}`}
             />
           )}
           {homeMap && (
-            <Detail label="Map">
+            <Detail label="Navigate" className="sm:col-span-2">
               <a
                 href={homeMap}
                 target="_blank"
                 rel="noreferrer"
-                className="text-primary-600 font-medium hover:underline inline-flex items-center gap-1"
+                className="btn-primary text-sm py-2 px-4 inline-flex items-center gap-2"
               >
                 <FaIcon icon="fa-map-location-dot" />
                 Open on map

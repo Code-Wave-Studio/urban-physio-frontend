@@ -806,9 +806,6 @@ export default function BookAppointmentWizard() {
 
   const openLocationMap = () => {
     if (form.consultation_type !== 'home_visit') return;
-    if (form.map_latitude == null && coords?.lat != null && coords?.lng != null) {
-      patch({ map_latitude: coords.lat, map_longitude: coords.lng });
-    }
     setMapOpen(true);
   };
 
@@ -892,6 +889,12 @@ export default function BookAppointmentWizard() {
         accepted_policies: Object.keys(policyAcceptance).filter((k) => policyAcceptance[k]),
         policies_version: POLICY_LAST_UPDATED,
         schedule_sessions: scheduleSessions.map((s) => ({ date: s.date, start_time: s.time, time: s.time })),
+        ...(form.consultation_type === 'home_visit' && form.map_latitude != null
+          ? {
+              map_latitude: Number(form.map_latitude),
+              map_longitude: Number(form.map_longitude),
+            }
+          : {}),
         ...(selectedDoctorPackage?.package_source === 'admin' && form.treatment_package_id
           ? { treatment_package_id: Number(form.treatment_package_id) }
           : {}),
@@ -910,6 +913,14 @@ export default function BookAppointmentWizard() {
           : {}),
       };
       if (appliedCoupon?.code) payload.coupon_code = appliedCoupon.code;
+      if (payload.consultation_type !== 'home_visit') {
+        delete payload.map_latitude;
+        delete payload.map_longitude;
+        delete payload.full_address;
+        delete payload.landmark;
+        delete payload.pincode;
+        delete payload.patient_condition;
+      }
       const res = await appointments.book(payload);
       const appt = res.data;
 

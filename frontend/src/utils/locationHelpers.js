@@ -1,6 +1,18 @@
 export function googleMapsUrl(lat, lng) {
-  if (lat == null || lng == null) return null;
-  return `https://www.google.com/maps?q=${lat},${lng}`;
+  if (lat == null || lng == null || lat === '' || lng === '') return null;
+  const la = Number(lat);
+  const ln = Number(lng);
+  if (!Number.isFinite(la) || !Number.isFinite(ln)) return null;
+  if (la < -90 || la > 90 || ln < -180 || ln > 180) return null;
+  return `https://www.google.com/maps/search/?api=1&query=${la},${ln}`;
+}
+
+export function homeVisitMapUrl(meta) {
+  if (!meta || typeof meta !== 'object') return null;
+  const pin = googleMapsUrl(meta.map_latitude, meta.map_longitude);
+  if (pin) return pin;
+  const q = [meta.full_address, meta.landmark, meta.city, meta.pincode].filter(Boolean).join(', ');
+  return q ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}` : null;
 }
 
 export function geolocationErrorMessage(err) {
