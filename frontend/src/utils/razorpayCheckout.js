@@ -6,13 +6,32 @@ function bookingMeta(appt) {
   return typeof appt.booking_meta === 'object' ? appt.booking_meta : {};
 }
 
-/** True when booking is held until Razorpay (online) payment completes — not offline/clinic COD. */
+/** True when Razorpay checkout is still required (not clinic COD / not already paid). */
 export function isAwaitingOnlinePayment(appt) {
   if (!appt || appt.payment_status === 'paid') return false;
   if (appt.status !== 'pending') return false;
+
   const meta = bookingMeta(appt);
-  if (meta.awaiting_online_payment) return true;
-  return Number(meta.pay_now_amount) > 0;
+  const due = Number(meta.pay_now_amount ?? 0);
+
+  if (meta.awaiting_online_payment === true) {
+    return due > 0;
+  }
+
+  // Legacy rows before awaiting_online_payment flag
+  if (due > 0 && (meta.payment_option === 'full_online' || meta.payment_option === 'partial_50')) {
+    return true;
+  }
+
+  return false;
+}
+
+/** Amount due online now, or null if no online payment is pending. */
+export function getOnlinePaymentDue(appt) {
+  if (!isAwaitingOnlinePayment(appt)) return null;
+  const meta = bookingMeta(appt);
+  const due = Number(meta.pay_now_amount ?? 0);
+  return due > 0 ? due : null;
 }
 
 /** Cash / pay-at-clinic / home balance still waiting for doctor to confirm */
@@ -89,14 +108,21 @@ export async function completeAppointmentPayment(appointmentId) {
   return openRazorpayCheckout(orderRes);
 }
 
-export function handlePaymentError(err, { onPendingNavigate, appointmentId } = {}) {
+export function handlePaymentError(err, { cancelReservation = false, appointmentId } = {}) {
   if (err?.code === 'DISMISS' || err?.message === 'Payment cancelled') {
-    toast.error('Payment not completed. Your slot was not booked.');
+    toast.error(
+      cancelReservation
+        ? 'Payment not completed. Your slot was not booked.'
+        : 'Payment not completed. Tap Pay again when you are ready.'
+    );
+    if (cancelReservation && appointmentId) {
+      appointments.cancelAwaitingPayment(appointmentId).catch(() => {});
+    }
     return;
   }
   const msg = err?.message || 'Payment failed';
   toast.error(msg === 'A server error occurred' ? 'Payment could not be started. Please try again.' : msg);
-  if (appointmentId) {
+  if (cancelReservation && appointmentId) {
     appointments.cancelAwaitingPayment(appointmentId).catch(() => {});
   }
 }

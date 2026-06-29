@@ -7,6 +7,7 @@ import { appointments } from '../../services/api';
 import { clinicLocationText, googleMapsUrl } from '../../utils/locationHelpers';
 import {
   completeAppointmentPayment,
+  getOnlinePaymentDue,
   handlePaymentError,
   isAwaitingOnlinePayment,
   isInvoiceAvailable,
@@ -29,12 +30,6 @@ const FILTERS = [
   { id: 'completed', label: 'Completed' },
   { id: 'cancelled', label: 'Cancelled' },
 ];
-
-function payNowLabel(appt) {
-  const meta = appt.booking_meta && typeof appt.booking_meta === 'object' ? appt.booking_meta : {};
-  const n = Number(appt.pay_now_amount ?? meta.pay_now_amount ?? 0);
-  return n > 0 ? n : null;
-}
 
 function formatApptDate(d) {
   if (!d) return '—';
@@ -170,7 +165,7 @@ export default function PatientAppointments() {
                   googleMapsUrl(a.doctor_latitude, a.doctor_longitude)
                 : null;
             const awaitingPay = isAwaitingOnlinePayment(a);
-            const dueNow = payNowLabel(a);
+            const dueNow = getOnlinePaymentDue(a);
             const typeIcon = TYPE_ICONS[a.consultation_type] || 'fa-calendar';
 
             return (
@@ -247,14 +242,14 @@ export default function PatientAppointments() {
                   </div>
 
                   <div className="flex flex-wrap gap-2 lg:flex-col lg:items-stretch lg:w-40 shrink-0">
-                    {awaitingPay && dueNow != null && (
+                    {dueNow != null && (
                       <button
                         type="button"
                         disabled={payingId === a.id}
                         onClick={() => handleCompletePayment(a)}
                         className="btn-primary text-sm py-2 px-4 flex-1 lg:flex-none justify-center"
                       >
-                        {payingId === a.id ? 'Opening…' : `Pay ₹${dueNow}`}
+                        {payingId === a.id ? 'Opening…' : `Pay ₹${dueNow.toLocaleString('en-IN')}`}
                       </button>
                     )}
                     {a.consultation_type === 'online' && a.google_meet_link && a.status === 'confirmed' && (

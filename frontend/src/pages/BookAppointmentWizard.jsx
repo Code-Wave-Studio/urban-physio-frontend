@@ -931,7 +931,7 @@ export default function BookAppointmentWizard() {
         } catch (payErr) {
           await appointments.cancelAwaitingPayment(appt.id).catch(() => {});
           setCreatedAppt(null);
-          handlePaymentError(payErr, { appointmentId: appt.id });
+          handlePaymentError(payErr, { cancelReservation: true, appointmentId: appt.id });
         }
       } else {
         setCreatedAppt(appt);
