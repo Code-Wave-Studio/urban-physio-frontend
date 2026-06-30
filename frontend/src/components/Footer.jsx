@@ -145,11 +145,17 @@ export default function Footer() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-end gap-3 sm:gap-5 order-1 sm:order-2">
-            <FooterCookieSettings />
+            <div className="inline-flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+              <FooterCookieSettings />
+              <Link
+                to="/license"
+                className="text-sm text-primary-200/85 hover:text-white transition inline-flex items-center gap-1.5"
+              >
+                <FaIcon icon="fa-certificate" className="text-orange-300 text-xs" />
+                License
+              </Link>
+            </div>
             <CodeWaveAttribution variant="footer" />
-            <Link to="/license" className="text-[11px] text-primary-300/70 hover:text-white transition">
-              License
-            </Link>
           </div>
         </div>
       </div>
