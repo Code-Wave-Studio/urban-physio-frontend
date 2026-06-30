@@ -73,20 +73,12 @@ export default function ClinicReviewsSection({ clinicId, initialReviews = [], in
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-        <div className="rounded-2xl bg-amber-50 border border-amber-100 px-6 py-4 text-center min-w-[8.5rem] shrink-0">
+      <div className="rounded-2xl bg-amber-50 border border-amber-100 px-6 py-4 text-center w-fit max-w-full">
           <p className="text-3xl font-bold text-amber-900">
             {stats.avg > 0 ? stats.avg.toFixed(1) : stats.count > 0 ? '—' : 'New'}
           </p>
           <ReviewStars rating={stats.avg} count={stats.count} size="md" showValue={false} className="justify-center mt-1" />
         </div>
-        <div className="min-w-0">
-          <ReviewStars rating={stats.avg} count={stats.count} size="lg" />
-          <p className="text-sm text-slate-500 mt-2">
-            Ratings from verified visits at this clinic.
-          </p>
-        </div>
-      </div>
 
       {user && hasRole('patient') && (
         <ReviewForm clinicId={clinicId} onSubmitted={onSubmitted} />

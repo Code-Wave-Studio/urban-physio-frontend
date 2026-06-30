@@ -105,11 +105,37 @@ export function parseTagInput(text) {
 export function normalizeSocialLinks(raw) {
   const base = {};
   for (const { key } of SOCIAL_FIELDS) base[key] = '';
-  if (!raw || typeof raw !== 'object') return base;
+  const parsed = parseSocialLinksRaw(raw);
+  if (!parsed) return base;
   for (const { key } of SOCIAL_FIELDS) {
-    base[key] = raw[key] ? String(raw[key]).trim() : '';
+    base[key] = parsed[key] ? String(parsed[key]).trim() : '';
   }
   return base;
+}
+
+/** Parse social_links from API shapes: object, JSON string, or null. */
+export function parseSocialLinksRaw(raw) {
+  if (raw == null) return null;
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim();
+    if (!trimmed) return null;
+    try {
+      const parsed = JSON.parse(trimmed);
+      return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed) ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+  if (typeof raw === 'object' && !Array.isArray(raw)) return raw;
+  return null;
+}
+
+/** Single source of truth for clinic social links across profile and cards. */
+export function resolveClinicSocialLinks(clinic) {
+  if (!clinic || typeof clinic !== 'object') return normalizeSocialLinks(null);
+  const raw =
+    parseSocialLinksRaw(clinic.social_links_parsed) ?? parseSocialLinksRaw(clinic.social_links);
+  return normalizeSocialLinks(raw);
 }
 
 /** Up to 10 banner images: cover first, then gallery (deduped). */

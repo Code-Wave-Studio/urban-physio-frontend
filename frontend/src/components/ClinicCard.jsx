@@ -28,6 +28,9 @@ function locationLine(clinic) {
   return parts.join(' · ') || clinic.city_name || 'India';
 }
 
+const CARD_3D_SHADOW =
+  'shadow-[0_2px_4px_rgba(15,23,42,0.06),0_8px_20px_rgba(15,23,42,0.1),0_1px_0_rgba(255,255,255,0.8)_inset] hover:shadow-[0_4px_8px_rgba(15,23,42,0.08),0_14px_28px_rgba(15,23,42,0.14)]';
+
 /**
  * Premium clinic card — mobile-first listing with status, slots, and quick actions.
  * @param {{ clinic: object, compact?: boolean, variant?: 'default' | 'listing' }} props
@@ -54,7 +57,7 @@ export default function ClinicCard({ clinic, compact = false, variant = 'listing
           whileTap={{ scale: 0.99 }}
           onClick={openSheet}
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openSheet()}
-          className="rounded-2xl border border-white/80 bg-white/90 backdrop-blur-sm shadow-md shadow-slate-200/50 p-3 cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500"
+          className={`rounded-2xl border border-slate-200/80 bg-white p-3 cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500 transition-shadow duration-300 ${CARD_3D_SHADOW}`}
         >
           <div className="flex gap-3 items-center">
             <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-emerald-50">
@@ -84,7 +87,7 @@ export default function ClinicCard({ clinic, compact = false, variant = 'listing
         transition={{ duration: 0.22 }}
         onClick={openSheet}
         onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openSheet()}
-        className="group flex flex-col h-full rounded-[1.25rem] border border-slate-200/70 bg-white/95 backdrop-blur-sm shadow-lg shadow-slate-200/40 overflow-hidden cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500 hover:shadow-xl hover:shadow-emerald-900/5 transition-shadow duration-300"
+        className={`group flex flex-col h-full rounded-[1.25rem] border border-slate-200/80 bg-white overflow-hidden cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500 transition-shadow duration-300 ${CARD_3D_SHADOW}`}
       >
         <div className="relative h-32 sm:h-36 shrink-0 overflow-hidden">
           {photo ? (

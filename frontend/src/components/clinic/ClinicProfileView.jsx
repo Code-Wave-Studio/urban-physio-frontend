@@ -18,6 +18,8 @@ import { ClinicStatusDetail } from './ClinicStatusBadge';
 
 import ClinicSlotsPreview from './ClinicSlotsPreview';
 
+import ClinicSocialLinks from './ClinicSocialLinks';
+
 import ProfileSectionNav, { CLINIC_PROFILE_TABS } from '../profile/ProfileSectionNav';
 
 import ProfileServicesGrid from '../profile/ProfileServicesGrid';
@@ -26,7 +28,7 @@ import { showPartnerClinicBadge } from '../../utils/clinicBadges';
 
 import { resolveMediaUrl } from '../../utils/mediaUrl';
 
-import { formatOpeningHoursRows, resolveClinicHours, getTodayHoursText } from '../../utils/clinicProfileUtils';
+import { formatOpeningHoursRows, resolveClinicHours } from '../../utils/clinicProfileUtils';
 
 import { clinicBookUrl, clinicProfileUrl, doctorProfileUrl } from '../../utils/profileUrls';
 
@@ -383,19 +385,7 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
               <ClinicStatusDetail hours={hours} className="mt-3" />
 
-
-
-              {hoursRows.length > 0 && (
-
-                <p className="text-xs text-slate-500 mt-2 flex items-center gap-2">
-
-                  <FaIcon icon="fa-clock" className="text-emerald-600" />
-
-                  Today: {getTodayHoursText(hours)}
-
-                </p>
-
-              )}
+              <ClinicSocialLinks clinic={clinic} className="mt-3" />
 
             </div>
 
@@ -461,7 +451,7 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
           <div className="mt-5 max-w-full overflow-hidden">
 
-            <ClinicQuickActions clinic={{ ...clinic, website_url: websiteUrl }} variant="profile" />
+            <ClinicQuickActions clinic={{ ...clinic, website_url: websiteUrl }} />
 
           </div>
 

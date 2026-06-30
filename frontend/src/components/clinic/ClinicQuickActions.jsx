@@ -7,32 +7,27 @@ import { useRequireAuth } from '../../utils/requireAuth';
 import { patients } from '../../services/api';
 import { isClinicSaved, toggleSavedClinic } from '../../utils/savedClinics';
 import { bookClinicUrl } from '../../utils/bookUrl';
-import { clinicProfileUrl } from '../../utils/profileUrls';
 import { clinicMapsUrl } from '../../utils/locationHelpers';
+import { resolveClinicSocialLinks } from '../../utils/clinicProfileUtils';
 import { whatsappChatUrl, whatsappDigits } from '../../utils/whatsapp';
 
 function stopNav(e) {
   e.stopPropagation();
 }
 
-function CircleAction({ href, to, onClick, icon, label, accent = 'default', external }) {
+function CircleAction({ href, to, onClick, icon, label, saved = false, external }) {
   const base =
     'shrink-0 snap-start flex flex-col items-center gap-1 w-[3.25rem] group transition-transform active:scale-95';
-  const circle =
-    accent === 'primary'
-      ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25 group-hover:bg-emerald-700'
-      : accent === 'whatsapp'
-        ? 'bg-[#25D366] text-white shadow-md shadow-green-600/20'
-        : accent === 'saved'
-          ? 'bg-rose-50 text-rose-600 border border-rose-200 shadow-sm'
-          : 'bg-white text-slate-700 border border-slate-200/90 shadow-sm group-hover:border-emerald-200 group-hover:bg-emerald-50/50';
+  const circle = saved
+    ? 'bg-slate-50 text-rose-600 border border-slate-200 shadow-sm group-hover:bg-slate-100'
+    : 'bg-white text-slate-600 border border-slate-200 shadow-sm group-hover:bg-slate-50 group-hover:border-slate-300';
 
   const inner = (
     <>
       <span
         className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 ${circle}`}
       >
-        <FaIcon icon={icon} className="text-sm" brand={icon.includes('whatsapp')} />
+        <FaIcon icon={icon} className="text-sm" />
       </span>
       <span className="text-[9px] font-semibold text-slate-600 text-center leading-tight max-w-[3.5rem] truncate">
         {label}
@@ -100,28 +95,25 @@ function SaveCircleAction({ clinic, onNavigate }) {
     <CircleAction
       icon="fa-heart"
       label={saved ? 'Saved' : 'Save'}
-      accent={saved ? 'saved' : 'default'}
+      saved={saved}
       onClick={toggle}
     />
   );
 }
 
 /**
- * Circular quick actions: Profile → Book → Call → Directions → WhatsApp → Website → Save → Share
+ * Circular quick actions — order: Book → Directions → Call → WhatsApp → Website → Save → Share
  */
 export default function ClinicQuickActions({
   clinic,
   onNavigate,
   className = '',
-  bookAccent = true,
-  variant = 'card',
 }) {
   const mapUrl = clinicMapsUrl(clinic);
   const bookTo = bookClinicUrl(clinic.id);
-  const profileTo = clinicProfileUrl(clinic);
   const site = (clinic.website_url || clinic.website || '').trim();
   const websiteHref = site ? (site.startsWith('http') ? site : `https://${site}`) : null;
-  const social = clinic.social_links_parsed || clinic.social_links || {};
+  const social = resolveClinicSocialLinks(clinic);
   const waRaw = social.whatsapp || clinic.phone;
   const waUrl = whatsappDigits(waRaw) ? whatsappChatUrl(waRaw, `Hi, I would like to visit ${clinic.name}.`) : null;
 
@@ -147,75 +139,23 @@ export default function ClinicQuickActions({
     fn?.(e);
   };
 
-  const isProfile = variant === 'profile';
-
   const actions = (
     <>
-      {isProfile ? (
-        <>
-          <SaveCircleAction clinic={clinic} onNavigate={onNavigate} />
-          <CircleAction icon="fa-share-nodes" label="Share" onClick={share} />
-          {websiteHref && (
-            <CircleAction href={websiteHref} icon="fa-globe" label="Website" external onClick={stopNav} />
-          )}
-          <CircleAction
-            to={bookTo}
-            icon="fa-calendar-check"
-            label="Book"
-            accent={bookAccent ? 'primary' : 'default'}
-            onClick={wrapNav()}
-          />
-          {clinic.phone && (
-            <CircleAction
-              href={`tel:${clinic.phone}`}
-              icon="fa-phone"
-              label="Call"
-              onClick={stopNav}
-            />
-          )}
-          {mapUrl && (
-            <CircleAction href={mapUrl} icon="fa-diamond-turn-right" label="Directions" external onClick={stopNav} />
-          )}
-          {waUrl && (
-            <CircleAction href={waUrl} icon="fa-whatsapp" label="WhatsApp" accent="whatsapp" external onClick={stopNav} />
-          )}
-        </>
-      ) : (
-        <>
-          <CircleAction
-            to={profileTo}
-            icon="fa-hospital"
-            label="Profile"
-            onClick={wrapNav()}
-          />
-          <CircleAction
-            to={bookTo}
-            icon="fa-calendar-check"
-            label="Book"
-            accent={bookAccent ? 'primary' : 'default'}
-            onClick={wrapNav()}
-          />
-          {clinic.phone && (
-            <CircleAction
-              href={`tel:${clinic.phone}`}
-              icon="fa-phone"
-              label="Call"
-              onClick={stopNav}
-            />
-          )}
-          {mapUrl && (
-            <CircleAction href={mapUrl} icon="fa-diamond-turn-right" label="Directions" external onClick={stopNav} />
-          )}
-          {waUrl && (
-            <CircleAction href={waUrl} icon="fa-whatsapp" label="WhatsApp" accent="whatsapp" external onClick={stopNav} />
-          )}
-          {websiteHref && (
-            <CircleAction href={websiteHref} icon="fa-globe" label="Website" external onClick={stopNav} />
-          )}
-          <SaveCircleAction clinic={clinic} onNavigate={onNavigate} />
-          <CircleAction icon="fa-share-nodes" label="Share" onClick={share} />
-        </>
+      <CircleAction to={bookTo} icon="fa-calendar-check" label="Book" onClick={wrapNav()} />
+      {mapUrl && (
+        <CircleAction href={mapUrl} icon="fa-diamond-turn-right" label="Directions" external onClick={stopNav} />
       )}
+      {clinic.phone && (
+        <CircleAction href={`tel:${clinic.phone}`} icon="fa-phone" label="Call" onClick={stopNav} />
+      )}
+      {waUrl && (
+        <CircleAction href={waUrl} icon="fa-whatsapp" label="WhatsApp" external onClick={stopNav} />
+      )}
+      {websiteHref && (
+        <CircleAction href={websiteHref} icon="fa-globe" label="Website" external onClick={stopNav} />
+      )}
+      <SaveCircleAction clinic={clinic} onNavigate={onNavigate} />
+      <CircleAction icon="fa-share-nodes" label="Share" onClick={share} />
     </>
   );
 
