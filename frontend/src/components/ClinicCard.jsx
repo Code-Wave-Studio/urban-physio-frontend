@@ -9,6 +9,7 @@ import ClinicMiniStats from './clinic/ClinicMiniStats';
 import ClinicStatusBadge, { ClinicStatusDetail } from './clinic/ClinicStatusBadge';
 import ClinicTodaySlotsRow from './clinic/ClinicTodaySlotsRow';
 import { showPartnerClinicBadge } from '../utils/clinicBadges';
+import { resolveClinicHours } from '../utils/clinicProfileUtils';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 
 function stopNav(e) {
@@ -34,7 +35,7 @@ function locationLine(clinic) {
 export default function ClinicCard({ clinic, compact = false, variant = 'listing' }) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const photo = clinicPhotoUrl(clinic);
-  const hours = clinic.opening_hours_parsed || clinic.opening_hours;
+  const hours = resolveClinicHours(clinic);
   const useSmall = compact || variant === 'listing' || variant === 'default';
 
   const openSheet = () => setSheetOpen(true);

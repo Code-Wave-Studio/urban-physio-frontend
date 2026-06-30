@@ -26,7 +26,7 @@ import { showPartnerClinicBadge } from '../../utils/clinicBadges';
 
 import { resolveMediaUrl } from '../../utils/mediaUrl';
 
-import { formatOpeningHoursRows } from '../../utils/clinicProfileUtils';
+import { formatOpeningHoursRows, resolveClinicHours, getTodayHoursText } from '../../utils/clinicProfileUtils';
 
 import { clinicBookUrl, clinicProfileUrl, doctorProfileUrl } from '../../utils/profileUrls';
 
@@ -220,8 +220,7 @@ function FacilitiesContent({ insuranceItems, parkingItems, paymentItems, otherFa
 
 export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
-  const hours = clinic.opening_hours_parsed || clinic.opening_hours;
-
+  const hours = resolveClinicHours(clinic);
   const hoursRows = formatOpeningHoursRows(hours);
 
   const profileServices = clinic.profile_services?.length ? clinic.profile_services : [];
@@ -255,10 +254,6 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
   const gallery = clinic.gallery?.length ? clinic.gallery : [];
 
   const bannerFallback = resolveMediaUrl(clinic.cover_image || clinic.logo) || HEALTHCARE_IMAGES.clinicProfile;
-
-  const todayKey = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][new Date().getDay()];
-
-
 
   const insuranceItems = filterFacilities(facilities, /insurance/i);
 
@@ -396,7 +391,7 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
                   <FaIcon icon="fa-clock" className="text-emerald-600" />
 
-                  Today: {hoursRows.find((r) => r.key === todayKey)?.text || '—'}
+                  Today: {getTodayHoursText(hours)}
 
                 </p>
 

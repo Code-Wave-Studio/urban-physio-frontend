@@ -1,11 +1,13 @@
 import FaIcon from '../FaIcon';
-import { todayOpenStatus } from '../../utils/clinicProfileUtils';
+import { todayOpenStatus, resolveClinicHours } from '../../utils/clinicProfileUtils';
 
 /**
  * Real-time open / closed status from opening hours.
+ * @param {{ hours?: object, clinic?: object }} props — pass `clinic` or normalized `hours`
  */
-export default function ClinicStatusBadge({ hours, className = '', prominent = false }) {
-  const status = todayOpenStatus(hours);
+export default function ClinicStatusBadge({ hours, clinic, className = '', prominent = false }) {
+  const resolved = hours ?? resolveClinicHours(clinic);
+  const status = todayOpenStatus(resolved);
   const open = status.open;
 
   if (prominent) {
@@ -35,8 +37,9 @@ export default function ClinicStatusBadge({ hours, className = '', prominent = f
   );
 }
 
-export function ClinicStatusDetail({ hours, className = '' }) {
-  const status = todayOpenStatus(hours);
+export function ClinicStatusDetail({ hours, clinic, className = '' }) {
+  const resolved = hours ?? resolveClinicHours(clinic);
+  const status = todayOpenStatus(resolved);
   return (
     <p
       className={`text-xs sm:text-sm font-medium flex items-center gap-2 ${

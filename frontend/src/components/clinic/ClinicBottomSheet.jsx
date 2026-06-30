@@ -11,7 +11,7 @@ import ClinicStatusBadge, { ClinicStatusDetail } from './ClinicStatusBadge';
 import ClinicTodaySlotsRow from './ClinicTodaySlotsRow';
 import { useClinicPreview } from '../../hooks/useClinicPreview';
 import { showPartnerClinicBadge } from '../../utils/clinicBadges';
-import { formatOpeningHoursRows } from '../../utils/clinicProfileUtils';
+import { formatOpeningHoursRows, resolveClinicHours, getTodayDayKey } from '../../utils/clinicProfileUtils';
 import { clinicProfileUrl, doctorProfileUrl } from '../../utils/profileUrls';
 import { resolveMediaUrl } from '../../utils/mediaUrl';
 
@@ -55,9 +55,9 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
 
   if (!initialClinic) return null;
 
-  const hours = c.opening_hours_parsed || c.opening_hours;
+  const hours = resolveClinicHours(c);
   const hoursRows = formatOpeningHoursRows(hours).slice(0, 7);
-  const todayKey = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][new Date().getDay()];
+  const todayKey = getTodayDayKey();
   const doctors = c.doctors || [];
   const services = c.services_list?.length ? c.services_list : [];
   const facilities = c.facilities_list?.length ? c.facilities_list : [];

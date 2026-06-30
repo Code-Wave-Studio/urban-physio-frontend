@@ -29,11 +29,57 @@ export function emptyOpeningHours() {
   };
 }
 
+/** JS Date#getDay() index → weekday key used in opening_hours JSON. */
+export const JS_DAY_TO_KEY = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+
+export function getTodayDayKey(now = new Date()) {
+  return JS_DAY_TO_KEY[now.getDay()];
+}
+
+/**
+ * Parse opening hours from API shapes: object, JSON string, or null.
+ * Listing endpoints often return `opening_hours` as a string; profile endpoints add `opening_hours_parsed`.
+ */
+export function parseOpeningHoursRaw(raw) {
+  if (raw == null) return null;
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim();
+    if (!trimmed) return null;
+    try {
+      const parsed = JSON.parse(trimmed);
+      return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed) ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+  if (typeof raw === 'object' && !Array.isArray(raw)) return raw;
+  return null;
+}
+
+/**
+ * Single source of truth for clinic opening hours across cards, profile, and sheets.
+ * Accepts a clinic record or any raw hours value.
+ */
+export function resolveClinicHours(clinicOrHours) {
+  if (clinicOrHours && typeof clinicOrHours === 'object' && !Array.isArray(clinicOrHours)) {
+    const hasClinicFields =
+      'opening_hours' in clinicOrHours || 'opening_hours_parsed' in clinicOrHours;
+    if (hasClinicFields) {
+      const parsed =
+        parseOpeningHoursRaw(clinicOrHours.opening_hours_parsed) ??
+        parseOpeningHoursRaw(clinicOrHours.opening_hours);
+      return normalizeOpeningHours(parsed);
+    }
+  }
+  return normalizeOpeningHours(clinicOrHours);
+}
+
 export function normalizeOpeningHours(raw) {
-  if (!raw || typeof raw !== 'object') return emptyOpeningHours();
+  const parsed = parseOpeningHoursRaw(raw);
+  if (!parsed) return emptyOpeningHours();
   const out = emptyOpeningHours();
   for (const { key } of WEEKDAYS) {
-    const slots = raw[key];
+    const slots = parsed[key];
     if (Array.isArray(slots)) {
       out[key] = slots.map(String).filter(Boolean);
     } else if (typeof slots === 'string' && slots.trim()) {
@@ -128,7 +174,7 @@ export function clinicRecordToForm(c) {
     description: c.description || '',
     latitude: c.latitude != null ? parseFloat(c.latitude) : null,
     longitude: c.longitude != null ? parseFloat(c.longitude) : null,
-    opening_hours: normalizeOpeningHours(c.opening_hours_parsed || c.opening_hours),
+    opening_hours: resolveClinicHours(c),
     social_links: normalizeSocialLinks(c.social_links_parsed || c.social_links),
     services: tagsToInput(c.services_list || c.services),
     facilities: tagsToInput(c.facilities_list || c.facilities),
@@ -205,7 +251,12 @@ export function formatSlot12h(slot) {
   return `${formatMinutes(start)} - ${formatMinutes(end)}`;
 }
 
-const JS_DAY_TO_KEY = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+/** Formatted hours label for today (e.g. "8:00 AM - 9:00 PM" or "Closed"). */
+export function getTodayHoursText(hours, now = new Date()) {
+  const rows = formatOpeningHoursRows(hours);
+  const todayKey = getTodayDayKey(now);
+  return rows.find((r) => r.key === todayKey)?.text ?? '—';
+}
 
 function parseTimeToMinutes(hhmm) {
   const m = String(hhmm).trim().match(/^(\d{1,2}):(\d{2})$/);
@@ -232,8 +283,8 @@ function formatMinutes(mins) {
 
 /** Today's open/closed status from opening hours. */
 export function todayOpenStatus(hours, now = new Date()) {
-  const normalized = normalizeOpeningHours(hours);
-  const dayKey = JS_DAY_TO_KEY[now.getDay()];
+  const normalized = resolveClinicHours(hours);
+  const dayKey = getTodayDayKey(now);
   const slots = normalized[dayKey] || [];
   if (!slots.length) {
     return { open: false, text: 'Closed today' };
