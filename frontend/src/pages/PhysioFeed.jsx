@@ -37,7 +37,7 @@ export default function PhysioFeed() {
   }, [type, search]);
 
   return (
-    <div className="page-enter min-h-screen bg-gradient-to-b from-indigo-50/50 via-white to-slate-50">
+    <div className="page-enter min-h-screen overflow-x-hidden bg-gradient-to-b from-indigo-50/50 via-white to-slate-50">
       <Navbar />
       <section className="pt-8 sm:pt-10 pb-10 bg-gradient-to-br from-indigo-700 via-violet-700 to-slate-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
@@ -54,7 +54,7 @@ export default function PhysioFeed() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 -mt-6 pb-16 relative z-[1]">
         <div className="glass-strong rounded-2xl p-4 md:p-5 shadow-lg mb-8">
           <input className="input-field mb-4" placeholder="Search articles…" value={search} onChange={(e) => setSearch(e.target.value)} />
-          <div className="flex gap-2 overflow-x-auto pb-1">
+          <div className="scroll-x-hide flex flex-nowrap gap-2 pb-1 -mx-1 px-1">
             {TABS.map((t) => (
               <button
                 key={t.id}

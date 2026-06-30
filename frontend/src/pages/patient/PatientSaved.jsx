@@ -1,34 +1,44 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../../components/FaIcon';
 import DoctorAvatar from '../../components/DoctorAvatar';
 import ClinicLogo from '../../components/ClinicLogo';
+import ExerciseDetailModal from '../../components/exercise/ExerciseDetailModal';
+import SavedPodcastModal from '../../components/podcast/SavedPodcastModal';
 import { PATIENT_NAV } from '../../constants/patientNav';
-import { patients } from '../../services/api';
+import { patients, exercises } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { getSavedClinics } from '../../utils/savedClinics';
 import { getSavedExercises } from '../../utils/savedExercises';
+import { getFavoritePodcasts, removeFavoritePodcast } from '../../utils/favoritePodcasts';
 import { getLocalFavourites } from '../../utils/bookingFavourites';
 import { doctorProfileUrl, clinicProfileUrl } from '../../utils/profileUrls';
 import { bookDoctorUrl, bookClinicUrl } from '../../utils/bookUrl';
 import { clinicMapsUrl } from '../../utils/locationHelpers';
-import toast from 'react-hot-toast';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 
 const TABS = [
   { id: 'doctors', label: 'Doctors', icon: 'fa-user-doctor' },
   { id: 'clinics', label: 'Clinics', icon: 'fa-hospital' },
   { id: 'exercises', label: 'Exercises', icon: 'fa-dumbbell' },
+  { id: 'podcasts', label: 'PhysioFeed', icon: 'fa-podcast' },
 ];
 
 export default function PatientSaved() {
   const { hasRole } = useAuth();
   const [tab, setTab] = useState('doctors');
-  const [data, setData] = useState({ doctors: [], clinics: [], exercises: [] });
+  const [data, setData] = useState({ doctors: [], clinics: [], exercises: [], podcasts: [] });
   const [loading, setLoading] = useState(true);
+  const [exerciseModal, setExerciseModal] = useState(null);
+  const [podcastModal, setPodcastModal] = useState(null);
+  const [openingExercise, setOpeningExercise] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
+    const podcasts = getFavoritePodcasts();
+
     if (hasRole('patient')) {
       patients
         .saved()
@@ -38,9 +48,10 @@ export default function PatientSaved() {
             doctors: d.doctors || [],
             clinics: d.clinics || [],
             exercises: d.exercises || [],
+            podcasts,
           });
         })
-        .catch(() => setData({ doctors: [], clinics: [], exercises: [] }))
+        .catch(() => setData({ doctors: [], clinics: [], exercises: [], podcasts }))
         .finally(() => setLoading(false));
       return;
     }
@@ -50,6 +61,7 @@ export default function PatientSaved() {
       doctors: favIds.map((id) => ({ id: Number(id), first_name: 'Doctor', last_name: `#${id}` })),
       clinics: getSavedClinics(),
       exercises: getSavedExercises(),
+      podcasts,
     });
     setLoading(false);
   }, [hasRole]);
@@ -60,12 +72,31 @@ export default function PatientSaved() {
     window.addEventListener('saved-clinics-changed', refresh);
     window.addEventListener('saved-exercises-changed', refresh);
     window.addEventListener('saved-doctors-changed', refresh);
+    window.addEventListener('favorite-podcasts-changed', refresh);
     return () => {
       window.removeEventListener('saved-clinics-changed', refresh);
       window.removeEventListener('saved-exercises-changed', refresh);
       window.removeEventListener('saved-doctors-changed', refresh);
+      window.removeEventListener('favorite-podcasts-changed', refresh);
     };
   }, [load]);
+
+  const openExercise = async (ex) => {
+    if (ex.instructions) {
+      setExerciseModal(ex);
+      return;
+    }
+    setOpeningExercise(true);
+    try {
+      const key = ex.slug || ex.id;
+      const res = key ? await exercises.get(key) : null;
+      setExerciseModal(res?.data ?? res ?? ex);
+    } catch {
+      setExerciseModal(ex);
+    } finally {
+      setOpeningExercise(false);
+    }
+  };
 
   const removeDoctor = async (id) => {
     try {
@@ -97,16 +128,24 @@ export default function PatientSaved() {
     }
   };
 
+  const removePodcast = (slug) => {
+    removeFavoritePodcast(slug);
+    toast.success('Removed');
+    load();
+  };
+
   const list = data[tab] || [];
+  const browseLink =
+    tab === 'clinics' ? '/clinics' : tab === 'exercises' ? '/exercises' : tab === 'podcasts' ? '/physiofeed?type=podcast' : '/doctors';
 
   return (
     <DashboardLayout links={PATIENT_NAV} variant="patient">
       <div className="mb-6">
         <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Saved</h1>
-        <p className="text-sm text-slate-600 mt-1">Your saved doctors, clinics, and exercises in one place.</p>
+        <p className="text-sm text-slate-600 mt-1">Your saved doctors, clinics, exercises, and PhysioFeed podcasts.</p>
       </div>
 
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
+      <div className="scroll-x-hide flex flex-nowrap gap-2 mb-6 -mx-1 px-1 pb-1">
         {TABS.map((t) => (
           <button
             key={t.id}
@@ -135,9 +174,13 @@ export default function PatientSaved() {
         <div className="card text-center py-16">
           <FaIcon icon={TABS.find((t) => t.id === tab)?.icon || 'fa-heart'} className="text-4xl text-slate-300 mb-3" />
           <p className="text-slate-700 font-semibold">Nothing saved yet</p>
-          <p className="text-sm text-slate-500 mt-1">Tap Save on a {tab.slice(0, -1)} profile or listing to add it here.</p>
-          <Link to={tab === 'clinics' ? '/clinics' : tab === 'exercises' ? '/exercises' : '/doctors'} className="btn-primary mt-4 inline-flex text-sm">
-            Browse {tab}
+          <p className="text-sm text-slate-500 mt-1">
+            {tab === 'podcasts'
+              ? 'Tap the heart on a podcast to save it here.'
+              : `Tap Save on a ${tab.slice(0, -1)} profile or listing to add it here.`}
+          </p>
+          <Link to={browseLink} className="btn-primary mt-4 inline-flex text-sm">
+            Browse {tab === 'podcasts' ? 'PhysioFeed' : tab}
           </Link>
         </div>
       ) : (
@@ -196,25 +239,74 @@ export default function PatientSaved() {
 
           {tab === 'exercises' &&
             list.map((ex) => (
-              <article key={ex.id} className="card flex flex-col sm:flex-row sm:items-center gap-4">
+              <article
+                key={ex.id || ex.slug}
+                role="button"
+                tabIndex={0}
+                onClick={() => openExercise(ex)}
+                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openExercise(ex)}
+                className="card flex flex-col sm:flex-row sm:items-center gap-4 cursor-pointer hover:border-teal-200 transition-colors"
+              >
                 <div className="w-12 h-12 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0">
                   <FaIcon icon="fa-dumbbell" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-slate-900">{ex.name}</p>
                   <p className="text-xs text-slate-500 capitalize">{ex.body_area} · {ex.difficulty}</p>
-                  <p className="text-sm text-slate-600 mt-1 line-clamp-2">{ex.instructions}</p>
+                  <p className="text-sm text-slate-600 mt-1 line-clamp-2">{ex.instructions || 'Tap to view exercise details'}</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <Link to="/exercises" className="btn-outline text-sm">Library</Link>
+                <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()} role="presentation">
+                  <button type="button" className="btn-outline text-sm" onClick={() => openExercise(ex)}>
+                    Open
+                  </button>
                   <button type="button" className="btn-outline text-sm text-red-700 border-red-200" onClick={() => removeExercise(ex.id)}>
                     Remove
                   </button>
                 </div>
               </article>
             ))}
+
+          {tab === 'podcasts' &&
+            list.map((p) => {
+              const cover = resolveMediaUrl(p.featured_image);
+              return (
+                <article
+                  key={p.slug}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setPodcastModal(p)}
+                  onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setPodcastModal(p)}
+                  className="card flex flex-col sm:flex-row sm:items-center gap-4 cursor-pointer hover:border-rose-200 transition-colors"
+                >
+                  <div className="w-12 h-12 rounded-xl overflow-hidden bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                    {cover ? <img src={cover} alt="" className="w-full h-full object-cover" /> : <FaIcon icon="fa-podcast" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-slate-900 line-clamp-2">{p.title}</p>
+                    <p className="text-xs text-slate-500 mt-1">{p.author_name || 'The Urban Physio'} · Podcast</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()} role="presentation">
+                    <button type="button" className="btn-primary text-sm inline-flex items-center gap-1.5" onClick={() => setPodcastModal(p)}>
+                      <FaIcon icon="fa-play" /> Play
+                    </button>
+                    <button type="button" className="btn-outline text-sm text-red-700 border-red-200" onClick={() => removePodcast(p.slug)}>
+                      Remove
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
         </div>
       )}
+
+      {openingExercise && (
+        <p className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 text-xs bg-slate-900 text-white px-3 py-2 rounded-full shadow-lg">
+          Loading exercise…
+        </p>
+      )}
+
+      <ExerciseDetailModal exercise={exerciseModal} onClose={() => setExerciseModal(null)} />
+      <SavedPodcastModal podcast={podcastModal} onClose={() => setPodcastModal(null)} />
     </DashboardLayout>
   );
 }

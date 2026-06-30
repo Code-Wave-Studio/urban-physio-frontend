@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import GlassModal, { GlassModalBody } from '../components/GlassModal';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import FaIcon from '../components/FaIcon';
 import SaveExerciseButton from '../components/exercise/SaveExerciseButton';
+import ExerciseDetailModal from '../components/exercise/ExerciseDetailModal';
 import { exercises } from '../services/api';
-import { bookExerciseUrl } from '../utils/bookUrl';
 
 const BODY_AREAS = [
   { id: '', label: 'All', icon: 'fa-table-cells' },
@@ -49,63 +48,6 @@ const FALLBACK = [
   { id: 6, name: 'Heel Raises', slug: 'heel-raises', body_area: 'general', difficulty: 'beginner', instructions: 'Stand holding support. Rise onto toes, hold, lower slowly.', default_sets: 3, default_reps: '15', default_hold_seconds: 2, equipment: 'Wall support' },
 ];
 
-function ExerciseModal({ exercise, onClose }) {
-  return (
-    <GlassModal open={!!exercise} onClose={onClose} size="md" titleId="exercise-detail">
-      {exercise && (
-        <>
-          <div className={`shrink-0 p-5 md:p-6 bg-gradient-to-br ${AREA_GRADIENT[exercise.body_area] || AREA_GRADIENT.general}`}>
-            <div className="flex justify-between items-start gap-3">
-              <div className="min-w-0">
-                <span className="text-xs font-bold uppercase tracking-wider text-teal-700 capitalize">{exercise.body_area}</span>
-                <h2 id="exercise-detail" className="text-xl md:text-2xl font-bold text-slate-800 mt-1">{exercise.name}</h2>
-              </div>
-              <button type="button" onClick={onClose} className="glass-modal-close shrink-0" aria-label="Close">
-                <FaIcon icon="fa-xmark" />
-              </button>
-            </div>
-            <span className={`inline-block mt-3 text-xs font-bold px-2.5 py-1 rounded-full border capitalize ${DIFFICULTY_STYLES[exercise.difficulty]}`}>
-              {exercise.difficulty}
-            </span>
-          </div>
-          <GlassModalBody className="space-y-4">
-            <div className="grid grid-cols-3 gap-2">
-              <div className="text-center p-3 rounded-xl bg-slate-50 border border-slate-100">
-                <p className="text-lg font-bold text-slate-800">{exercise.default_sets}</p>
-                <p className="text-[10px] uppercase text-slate-500 font-semibold">Sets</p>
-              </div>
-              <div className="text-center p-3 rounded-xl bg-slate-50 border border-slate-100">
-                <p className="text-lg font-bold text-slate-800">{exercise.default_reps}</p>
-                <p className="text-[10px] uppercase text-slate-500 font-semibold">Reps</p>
-              </div>
-              <div className="text-center p-3 rounded-xl bg-slate-50 border border-slate-100">
-                <p className="text-lg font-bold text-slate-800">{exercise.default_hold_seconds || '—'}</p>
-                <p className="text-[10px] uppercase text-slate-500 font-semibold">Hold (s)</p>
-              </div>
-            </div>
-            {exercise.equipment && (
-              <p className="text-sm text-slate-600 flex items-center gap-2">
-                <FaIcon icon="fa-toolbox" className="text-teal-600" />
-                Equipment: <span className="font-semibold text-slate-800">{exercise.equipment}</span>
-              </p>
-            )}
-            <div>
-              <h3 className="text-sm font-bold text-slate-800 mb-2 flex items-center gap-2">
-                <FaIcon icon="fa-list-ol" className="text-teal-600" />
-                Instructions
-              </h3>
-              <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{exercise.instructions}</p>
-            </div>
-            <Link to={bookExerciseUrl(exercise)} className="btn-primary w-full block text-center">
-              Book a physiotherapist
-            </Link>
-          </GlassModalBody>
-        </>
-      )}
-    </GlassModal>
-  );
-}
-
 export default function ExerciseLibrary() {
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -131,11 +73,11 @@ export default function ExerciseLibrary() {
   }, [list, bodyArea, search]);
 
   return (
-    <div className="page-enter min-h-screen bg-gradient-to-b from-slate-50 via-white to-teal-50/30">
+    <div className="page-enter min-h-screen overflow-x-hidden bg-gradient-to-b from-slate-50 via-white to-teal-50/30">
       <Navbar />
 
       {/* Hero */}
-      <section className="relative pt-24 pb-10 md:pt-28 md:pb-14 overflow-hidden">
+      <section className="relative pt-8 pb-10 md:pt-12 md:pb-14 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-teal-700 via-emerald-700 to-slate-900" />
         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.4),transparent_50%)]" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-[1] text-center text-white">
@@ -188,7 +130,7 @@ export default function ExerciseLibrary() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
+          <div className="scroll-x-hide flex flex-nowrap gap-2 pb-1 -mx-1 px-1">
             {BODY_AREAS.map((a) => (
               <button
                 key={a.id}
@@ -279,7 +221,7 @@ export default function ExerciseLibrary() {
         </section>
       </main>
 
-      {selected && <ExerciseModal exercise={selected} onClose={() => setSelected(null)} />}
+      <ExerciseDetailModal exercise={selected} onClose={() => setSelected(null)} />
 
       <Footer />
     </div>

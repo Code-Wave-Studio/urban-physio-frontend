@@ -42,3 +42,11 @@ export function toggleFavoritePodcast(post) {
   window.dispatchEvent(new CustomEvent('favorite-podcasts-changed'));
   return { saved, list: getFavoritePodcasts() };
 }
+
+export function removeFavoritePodcast(slug) {
+  if (!slug) return getFavoritePodcasts();
+  const list = getFavoritePodcasts().filter((p) => p.slug !== slug);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  window.dispatchEvent(new CustomEvent('favorite-podcasts-changed'));
+  return list;
+}

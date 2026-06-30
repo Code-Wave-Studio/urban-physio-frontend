@@ -87,7 +87,7 @@ export default function Treatments() {
   }, [allList]);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col overflow-x-hidden">
       <Navbar />
 
       {/* Hero */}
@@ -143,13 +143,13 @@ export default function Treatments() {
         </div>
 
         {/* Category filters */}
-        <div className="flex flex-wrap gap-2 mb-8">
+        <div className="scroll-x-hide flex flex-nowrap gap-2 mb-8 -mx-1 px-1 pb-1">
           {TREATMENT_BODY_AREAS.map((c) => (
             <button
               key={c.id || 'all'}
               type="button"
               onClick={() => setBodyAreaFilter(c.id)}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition ${
+              className={`shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition ${
                 filter === c.id
                   ? 'bg-primary-600 text-white shadow-md'
                   : 'glass-card hover:bg-white/70 text-slate-700'
