@@ -451,7 +451,7 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
           <div className="mt-5 max-w-full overflow-hidden">
 
-            <ClinicQuickActions clinic={{ ...clinic, website_url: websiteUrl }} />
+            <ClinicQuickActions clinic={{ ...clinic, website_url: websiteUrl }} variant="profile" />
 
           </div>
 

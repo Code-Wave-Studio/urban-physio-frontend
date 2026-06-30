@@ -7,6 +7,7 @@ import { useRequireAuth } from '../../utils/requireAuth';
 import { patients } from '../../services/api';
 import { isClinicSaved, toggleSavedClinic } from '../../utils/savedClinics';
 import { bookClinicUrl } from '../../utils/bookUrl';
+import { clinicProfileUrl } from '../../utils/profileUrls';
 import { clinicMapsUrl } from '../../utils/locationHelpers';
 import { resolveClinicSocialLinks } from '../../utils/clinicProfileUtils';
 import { whatsappChatUrl, whatsappDigits } from '../../utils/whatsapp';
@@ -15,7 +16,7 @@ function stopNav(e) {
   e.stopPropagation();
 }
 
-function CircleAction({ href, to, onClick, icon, label, saved = false, external }) {
+function CircleAction({ href, to, onClick, icon, label, saved = false, brand = false, external }) {
   const base =
     'shrink-0 snap-start flex flex-col items-center gap-1 w-[3.25rem] group transition-transform active:scale-95';
   const circle = saved
@@ -27,7 +28,7 @@ function CircleAction({ href, to, onClick, icon, label, saved = false, external 
       <span
         className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 ${circle}`}
       >
-        <FaIcon icon={icon} className="text-sm" />
+        <FaIcon icon={icon} className="text-sm" brand={brand} />
       </span>
       <span className="text-[9px] font-semibold text-slate-600 text-center leading-tight max-w-[3.5rem] truncate">
         {label}
@@ -102,15 +103,17 @@ function SaveCircleAction({ clinic, onNavigate }) {
 }
 
 /**
- * Circular quick actions — order: Book → Directions → Call → WhatsApp → Website → Save → Share
+ * Circular quick actions — card: Profile first; then Book → Directions → Call → WhatsApp → Website → Save → Share
  */
 export default function ClinicQuickActions({
   clinic,
   onNavigate,
   className = '',
+  variant = 'card',
 }) {
   const mapUrl = clinicMapsUrl(clinic);
   const bookTo = bookClinicUrl(clinic.id);
+  const profileTo = clinicProfileUrl(clinic);
   const site = (clinic.website_url || clinic.website || '').trim();
   const websiteHref = site ? (site.startsWith('http') ? site : `https://${site}`) : null;
   const social = resolveClinicSocialLinks(clinic);
@@ -141,6 +144,9 @@ export default function ClinicQuickActions({
 
   const actions = (
     <>
+      {variant === 'card' && (
+        <CircleAction to={profileTo} icon="fa-hospital" label="Profile" onClick={wrapNav()} />
+      )}
       <CircleAction to={bookTo} icon="fa-calendar-check" label="Book" onClick={wrapNav()} />
       {mapUrl && (
         <CircleAction href={mapUrl} icon="fa-diamond-turn-right" label="Directions" external onClick={stopNav} />
@@ -149,7 +155,14 @@ export default function ClinicQuickActions({
         <CircleAction href={`tel:${clinic.phone}`} icon="fa-phone" label="Call" onClick={stopNav} />
       )}
       {waUrl && (
-        <CircleAction href={waUrl} icon="fa-whatsapp" label="WhatsApp" external onClick={stopNav} />
+        <CircleAction
+          href={waUrl}
+          icon="fa-whatsapp"
+          label="WhatsApp"
+          brand
+          external
+          onClick={stopNav}
+        />
       )}
       {websiteHref && (
         <CircleAction href={websiteHref} icon="fa-globe" label="Website" external onClick={stopNav} />
