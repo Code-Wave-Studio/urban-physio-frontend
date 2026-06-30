@@ -189,10 +189,20 @@ export function formatOpeningHoursRows(hours) {
     return {
       key,
       label,
-      text: slots?.length ? slots.join(', ') : 'Closed',
+      text: slots?.length ? slots.map(formatSlot12h).join(', ') : 'Closed',
       closed: !slots?.length,
     };
   });
+}
+
+/** Convert a single slot like "08:00-21:00" to "8:00 AM - 9:00 PM". */
+export function formatSlot12h(slot) {
+  const parts = String(slot).split('-').map((s) => s.trim());
+  if (parts.length !== 2) return String(slot);
+  const start = parseTimeToMinutes(parts[0]);
+  const end = parseTimeToMinutes(parts[1]);
+  if (start == null || end == null) return String(slot);
+  return `${formatMinutes(start)} - ${formatMinutes(end)}`;
 }
 
 const JS_DAY_TO_KEY = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];

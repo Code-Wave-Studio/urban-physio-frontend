@@ -73,7 +73,7 @@ export default function ClinicProfilePage() {
   const websiteUrl = clinic.website_url || clinic.website;
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col overflow-x-hidden max-w-[100vw]">
       <PageMeta
         title={clinic.seo?.title || clinic.name}
         description={clinic.seo?.description}
@@ -84,6 +84,6 @@ export default function ClinicProfilePage() {
       <Navbar />
       <ClinicProfileView clinic={clinic} mapUrl={mapUrl} websiteUrl={websiteUrl} />
       <Footer />
-    </>
+    </div>
   );
 }

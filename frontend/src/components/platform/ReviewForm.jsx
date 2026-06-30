@@ -15,7 +15,12 @@ export default function ReviewForm({ doctorId, clinicId, appointmentId, onSubmit
       if (doctorId) {
         await reviews.create({ doctor_id: doctorId, appointment_id: appointmentId, rating, comment });
       } else if (clinicId) {
-        await clinicReviews.create({ clinic_id: clinicId, appointment_id: appointmentId, rating, comment });
+        const res = await clinicReviews.create({ clinic_id: clinicId, appointment_id: appointmentId, rating, comment });
+        onSubmitted?.(res?.data ?? res);
+        toast.success('Thank you for your review!');
+        setComment('');
+        setSaving(false);
+        return;
       }
       toast.success('Thank you for your review!');
       setComment('');

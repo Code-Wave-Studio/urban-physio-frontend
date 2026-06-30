@@ -49,7 +49,7 @@ function GuestLoginCard({ onNavigate }) {
           <FaIcon icon="fa-user" className="text-xl" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-slate-900 text-lg leading-tight">Welcome to Urban Physio</p>
+          <p className="font-bold text-slate-900 text-lg leading-tight">Welcome to The Urban Physio</p>
           <p className="text-sm text-slate-600 mt-1">Sign in to book faster and manage your care.</p>
         </div>
       </div>

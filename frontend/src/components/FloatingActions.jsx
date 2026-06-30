@@ -3,13 +3,14 @@ import { useLocation } from 'react-router-dom';
 import { useContact } from '../contexts/ContactContext';
 import { whatsappChatUrl, whatsappDigits } from '../utils/whatsapp';
 
-/** No floating WhatsApp on staff dashboards (doctor / admin). */
-function isStaffDashboard(pathname) {
-  return /^\/(doctor|admin)(\/|$)/.test(pathname);
+/** Floating WhatsApp — home page only. */
+function isHomePage(pathname) {
+  return pathname === '/';
 }
 
-function isClinicProfile(pathname) {
-  return /^\/clinic(\/|$)/.test(pathname);
+/** No floating actions on staff dashboards (doctor / admin). */
+function isStaffDashboard(pathname) {
+  return /^\/(doctor|admin)(\/|$)/.test(pathname);
 }
 
 function isBookingPage(pathname) {
@@ -43,14 +44,13 @@ export default function FloatingActions() {
   const { pathname } = useLocation();
   const { whatsapp } = useContact();
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const hideWhatsApp = isStaffDashboard(pathname) || isBookingPage(pathname);
-  const hideWhatsAppOnMobile = isClinicProfile(pathname);
   const hideAll = isBookingPage(pathname);
+  const showFloating = isHomePage(pathname) && !isStaffDashboard(pathname) && !hideAll;
 
   const waDigits = whatsappDigits(whatsapp);
-  const waUrl = hideWhatsApp
-    ? null
-    : whatsappChatUrl(whatsapp, 'Hi, I would like to know more about The Urban Physio.');
+  const waUrl = showFloating
+    ? whatsappChatUrl(whatsapp, 'Hi, I would like to know more about The Urban Physio.')
+    : null;
 
   useEffect(() => {
     const onScroll = () => setShowScrollTop(window.scrollY > SCROLL_SHOW_AFTER);
@@ -63,7 +63,7 @@ export default function FloatingActions() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  if (hideAll) return null;
+  if (!showFloating) return null;
 
   return (
     <div className="floating-actions" aria-label="Quick actions">
@@ -72,7 +72,7 @@ export default function FloatingActions() {
           href={waUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className={`fab fab-whatsapp ${hideWhatsAppOnMobile ? 'max-md:hidden' : ''}`}
+          className="fab fab-whatsapp"
           aria-label={`Chat on WhatsApp${waDigits ? ` (${whatsapp})` : ''}`}
           title={whatsapp || 'WhatsApp'}
         >

@@ -83,7 +83,7 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
           <motion.button
             type="button"
             aria-label="Close clinic preview"
-            className="fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-[2px]"
+            className="fixed inset-0 z-[120] bg-slate-900/50 backdrop-blur-[2px]"
             style={{ opacity: backdropOpacity }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -96,7 +96,7 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
             role="dialog"
             aria-modal="true"
             aria-labelledby="clinic-sheet-title"
-            className="fixed inset-x-0 bottom-0 z-[61] flex flex-col max-h-[min(92dvh,820px)]"
+            className="fixed inset-x-0 bottom-0 z-[125] flex flex-col"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
@@ -105,14 +105,10 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
             dragControls={dragControls}
             dragConstraints={{ top: expanded ? -80 : 0, bottom: 0 }}
             dragElastic={0.12}
-            style={{ y }}
+            style={{ y, height: expanded ? 'min(92dvh, 820px)' : 'min(72dvh, 640px)' }}
             onDragEnd={handleDragEnd}
           >
-            <div
-              className={`flex flex-col bg-white rounded-t-[1.75rem] shadow-2xl shadow-slate-900/20 border border-slate-200/80 overflow-hidden min-h-0 ${
-                expanded ? 'max-h-[min(92dvh,820px)]' : 'max-h-[min(72dvh,640px)]'
-              }`}
-            >
+            <div className="flex flex-col flex-1 min-h-0 bg-white rounded-t-[1.75rem] shadow-2xl shadow-slate-900/20 border border-slate-200/80 overflow-hidden">
               <div
                 className="shrink-0 pt-2 pb-1 cursor-grab active:cursor-grabbing touch-none"
                 onPointerDown={(e) => dragControls.start(e)}
@@ -161,7 +157,7 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
                     </span>
                   )}
                 </div>
-                <ClinicMiniStats clinic={c} />
+                <ClinicMiniStats clinic={c} hideDoctorCount />
                 <ClinicStatusDetail hours={hours} />
               </div>
 
@@ -281,8 +277,8 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
                 </Link>
               </div>
 
-              {/* Fixed bottom actions */}
-              <div className="shrink-0 border-t border-slate-100 bg-white/95 backdrop-blur-md px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+              {/* Fixed bottom actions — pinned to sheet footer */}
+              <div className="shrink-0 z-20 border-t border-slate-100 bg-white/95 backdrop-blur-md px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(15,23,42,0.08)]">
                 <ClinicQuickActions clinic={c} onNavigate={onClose} />
               </div>
             </div>

@@ -17,6 +17,8 @@
 
   html {
     scrollbar-gutter: stable;
+    overflow-x: hidden;
+    max-width: 100%;
   }
 
   /* Modern scrollbars — Firefox */
@@ -72,10 +74,16 @@
   }
 
   body {
-    @apply text-slate-800 antialiased;
+    @apply text-slate-800 antialiased overflow-x-hidden;
     background: linear-gradient(135deg, #fff7ed 0%, #fafafa 25%, #f8fafc 50%, #fff7ed 75%, #ffedd5 100%);
     background-attachment: fixed;
     min-height: 100vh;
+    max-width: 100%;
+  }
+
+  #root {
+    overflow-x: hidden;
+    max-width: 100%;
   }
 }
 

@@ -12,6 +12,7 @@ export const CLINIC_PROFILE_TABS = [
   { id: 'profile-media', label: 'Photos & Videos' },
   { id: 'profile-reviews', label: 'Reviews' },
   { id: 'profile-doctors', label: 'Doctors' },
+  { id: 'profile-facilities', label: 'Facilities' },
 ];
 
 export function scrollToProfileSection(sectionId) {
@@ -46,10 +47,11 @@ export default function ProfileSectionNav({ tabs = PROFILE_TABS, accent = 'prima
 
   return (
     <nav
-      className="sticky top-14 sm:top-16 z-30 -mx-4 px-4 py-2.5 bg-white/90 backdrop-blur-md border-y border-slate-200/80 shadow-sm"
+      className="sticky top-14 sm:top-16 z-30 bg-white/90 backdrop-blur-md border-y border-slate-200/80 shadow-sm overflow-x-hidden"
       aria-label="Profile sections"
     >
-      <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-thin max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto px-4 py-2.5">
+        <div className="flex gap-2 overflow-x-auto pb-0.5 snap-x snap-mandatory scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -67,6 +69,7 @@ export default function ProfileSectionNav({ tabs = PROFILE_TABS, accent = 'prima
             {tab.label}
           </button>
         ))}
+        </div>
       </div>
     </nav>
   );

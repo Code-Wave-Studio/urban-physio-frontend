@@ -3,7 +3,7 @@ import FaIcon from '../FaIcon';
 /**
  * Compact stat chips — same height as badge buttons, horizontal scroll.
  */
-export default function ClinicMiniStats({ clinic, className = '' }) {
+export default function ClinicMiniStats({ clinic, className = '', hideDoctorCount = false }) {
   const rating = Number(clinic.rating_avg ?? clinic.statistics?.avg_rating) || 0;
   const reviews = Number(clinic.rating_count ?? clinic.statistics?.rating_count) || 0;
   const doctors = Number(clinic.doctor_count ?? clinic.statistics?.doctor_count) || 0;
@@ -22,7 +22,8 @@ export default function ClinicMiniStats({ clinic, className = '' }) {
       label: reviews > 0 ? reviews.toLocaleString('en-IN') : '0',
       tone: 'slate',
     },
-    doctors > 0 && {
+    !hideDoctorCount &&
+      doctors > 0 && {
       key: 'doctors',
       icon: 'fa-user-doctor',
       label: String(doctors),
