@@ -25,8 +25,8 @@ function publicAssetUrl(filename) {
 const PAIN_RUNNER_SOURCES = [publicAssetUrl('pain-runner.png'), publicAssetUrl('pain-runner.svg')];
 /** Square frame at each breakpoint — proportional scale keeps % hotspots aligned */
 const FIGURE_FRAME_CLASS =
-  'relative mx-auto w-[220px] sm:w-[280px] md:w-[340px] lg:w-[460px] max-w-[calc(100vw-2rem)] aspect-square shrink-0';
-const HOTSPOT_GLOW = 'h-3 w-3 sm:h-3.5 sm:w-3.5';
+  'relative mx-auto w-[268px] sm:w-[300px] md:w-[380px] lg:w-[500px] max-w-[calc(100vw-2rem)] aspect-square shrink-0';
+const HOTSPOT_GLOW = 'h-3.5 w-3.5 sm:h-4 sm:w-4';
 
 function ActiveBodyHighlight() {
   return (
