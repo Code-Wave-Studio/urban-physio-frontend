@@ -170,7 +170,7 @@ export default function Home() {
     [sectionImages],
   );
 
-  const showPromoBanner = promoBanner.enabled && promoBanner.slides.length >= 2;
+  const showPromoBanner = promoBanner.enabled && promoBanner.slides.length >= 1;
 
   return (
     <div className="relative overflow-x-hidden page-enter pb-[calc(var(--home-mobile-nav-height)+env(safe-area-inset-bottom,0px))] md:pb-0">
