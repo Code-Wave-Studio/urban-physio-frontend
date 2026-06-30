@@ -3,6 +3,12 @@ import FaIcon from '../FaIcon';
 import { resolveMediaUrl } from '../../utils/mediaUrl';
 import toast from 'react-hot-toast';
 
+const PREVIEW_CLASS = {
+  desktop: 'aspect-[4/1] max-h-40',
+  mobile: 'aspect-[828/420] max-h-52 max-w-[220px] mx-auto',
+  default: 'aspect-[21/9] max-h-36',
+};
+
 /**
  * Link OR file upload — modern media field for CMS.
  */
@@ -16,12 +22,15 @@ export default function MediaUrlOrUpload({
   accept,
   maxMb = 25,
   preview = 'none',
+  devicePreview = 'default',
   accent = 'violet',
+  onClear,
 }) {
   const [uploading, setUploading] = useState(false);
   const resolved = resolveMediaUrl(urlValue) || urlValue;
   const borderAccent = accent === 'rose' ? 'border-rose-200 bg-rose-50/40' : 'border-violet-200 bg-violet-50/40';
   const iconAccent = accent === 'rose' ? 'text-rose-600' : 'text-violet-600';
+  const previewClass = PREVIEW_CLASS[devicePreview] || PREVIEW_CLASS.default;
 
   const handleFile = async (e) => {
     const file = e.target.files?.[0];
@@ -44,12 +53,33 @@ export default function MediaUrlOrUpload({
     }
   };
 
+  const clearImage = () => {
+    if (onClear) {
+      onClear();
+      return;
+    }
+    onUrlChange('');
+  };
+
   return (
     <div className={`rounded-2xl border p-4 space-y-3 ${borderAccent}`}>
-      <p className="font-semibold text-slate-800 text-sm flex items-center gap-2">
-        <FaIcon icon={icon} className={iconAccent} />
-        {label}
-      </p>
+      <div className="flex items-start justify-between gap-2">
+        <p className="font-semibold text-slate-800 text-sm flex items-center gap-2">
+          <FaIcon icon={icon} className={iconAccent} />
+          {label}
+        </p>
+        {resolved && (
+          <button
+            type="button"
+            onClick={clearImage}
+            className="text-xs font-semibold text-red-600 hover:text-red-700 inline-flex items-center gap-1 shrink-0"
+            title="Remove this image only"
+          >
+            <FaIcon icon="fa-xmark" />
+            Remove image
+          </button>
+        )}
+      </div>
       {hint && <p className="text-xs text-slate-500 -mt-1">{hint}</p>}
 
       <div>
@@ -81,7 +111,7 @@ export default function MediaUrlOrUpload({
       </label>
 
       {resolved && preview === 'image' && (
-        <div className="rounded-xl overflow-hidden border border-slate-200 aspect-[21/9] max-h-36 bg-slate-200">
+        <div className={`rounded-xl overflow-hidden border border-slate-200 bg-slate-200 w-full ${previewClass}`}>
           <img src={resolved} alt="" className="w-full h-full object-cover" />
         </div>
       )}

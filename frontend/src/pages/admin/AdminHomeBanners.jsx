@@ -4,27 +4,34 @@ import FaIcon from '../../components/FaIcon';
 import MediaUrlOrUpload from '../../components/admin/MediaUrlOrUpload';
 import { admin, uploadCmsImage } from '../../services/api';
 import { unwrapApiData } from '../../utils/contactText';
-import { resolveMediaUrl } from '../../utils/mediaUrl';
 import toast from 'react-hot-toast';
 
-const DESKTOP_HINT = 'Desktop: 1920 × 480 px (4:1 wide) · JPG, PNG or WebP · max 4 MB';
-const MOBILE_HINT = 'Mobile: 828 × 420 px (~2:1) · JPG, PNG or WebP · max 4 MB';
+const MAX_SLIDES = 20;
+const MIN_SLIDES = 1;
 
-const emptyBanner = () => ({
-  id: 'home_banner_1',
-  desktop_image: '',
-  mobile_image: '',
-  alt_text: '',
-  link_url: '',
-  sort_order: 0,
-});
+const DESKTOP_HINT = '1920 × 480 px (4:1 wide) · JPG, PNG or WebP · max 4 MB';
+const MOBILE_HINT = '828 × 420 px (~2:1) · JPG, PNG or WebP · max 4 MB';
+
+function newSlide(order = 0) {
+  return {
+    id: `slide_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    desktop_image: '',
+    mobile_image: '',
+    alt_text: '',
+    link_url: '',
+    sort_order: order,
+  };
+}
+
+function isSlideComplete(slide) {
+  return Boolean(slide.desktop_image?.trim() && slide.mobile_image?.trim());
+}
 
 export default function AdminHomeBanners() {
   const [enabled, setEnabled] = useState(false);
-  const [banner, setBanner] = useState(emptyBanner);
+  const [slides, setSlides] = useState([newSlide(0)]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [removing, setRemoving] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -33,8 +40,8 @@ export default function AdminHomeBanners() {
       .then((res) => {
         const d = unwrapApiData(res);
         setEnabled(!!d.is_enabled);
-        const first = Array.isArray(d.slides) && d.slides.length ? d.slides[0] : emptyBanner();
-        setBanner({ ...emptyBanner(), ...first });
+        const list = Array.isArray(d.slides) && d.slides.length ? d.slides : [newSlide(0)];
+        setSlides(list);
       })
       .catch((e) => toast.error(e.message || 'Could not load banner settings'))
       .finally(() => setLoading(false));
@@ -44,23 +51,51 @@ export default function AdminHomeBanners() {
     load();
   }, [load]);
 
-  const setField = (key, value) => setBanner((b) => ({ ...b, [key]: value }));
+  const setSlide = (index, key, value) => {
+    setSlides((list) => list.map((s, i) => (i === index ? { ...s, [key]: value } : s)));
+  };
 
-  const isComplete = Boolean(banner.desktop_image?.trim() && banner.mobile_image?.trim());
+  const addSlide = () => {
+    if (slides.length >= MAX_SLIDES) {
+      toast.error(`Maximum ${MAX_SLIDES} banners`);
+      return;
+    }
+    setSlides((list) => [...list, newSlide(list.length)]);
+  };
+
+  const removeSlide = (index) => {
+    if (slides.length <= 1) {
+      setSlides([newSlide(0)]);
+      return;
+    }
+    setSlides((list) => list.filter((_, i) => i !== index).map((s, i) => ({ ...s, sort_order: i })));
+  };
+
+  const moveSlide = (index, dir) => {
+    setSlides((list) => {
+      const next = [...list];
+      const j = index + dir;
+      if (j < 0 || j >= next.length) return list;
+      [next[index], next[j]] = [next[j], next[index]];
+      return next.map((s, i) => ({ ...s, sort_order: i }));
+    });
+  };
+
+  const completeSlides = slides.filter(isSlideComplete);
 
   const save = async (e) => {
     e.preventDefault();
-    if (enabled && !isComplete) {
-      toast.error('Add both desktop and mobile images to show the banner');
+    if (enabled && completeSlides.length < MIN_SLIDES) {
+      toast.error(`When banner is ON, at least ${MIN_SLIDES} banner needs both desktop and mobile images`);
       return;
     }
     setSaving(true);
     try {
       await admin.updateHomeBannerSettings({
         is_enabled: enabled,
-        slides: isComplete ? [{ ...banner, sort_order: 0 }] : [],
+        slides: slides.map((s, i) => ({ ...s, sort_order: i })),
       });
-      toast.success(enabled && isComplete ? 'Homepage banner published' : 'Banner saved (hidden on homepage)');
+      toast.success(enabled ? 'Homepage banners published' : 'Saved (banner hidden on homepage)');
       load();
     } catch (err) {
       toast.error(err.message || 'Save failed');
@@ -69,34 +104,22 @@ export default function AdminHomeBanners() {
     }
   };
 
-  const removeBanner = async () => {
-    if (!window.confirm('Remove homepage banner? Emergency bookings section will show instead.')) return;
-    setRemoving(true);
-    try {
-      await admin.updateHomeBannerSettings({
-        is_enabled: false,
-        slides: [],
-      });
-      setEnabled(false);
-      setBanner(emptyBanner());
-      toast.success('Banner removed — emergency section will show on homepage');
-    } catch (err) {
-      toast.error(err.message || 'Could not remove banner');
-    } finally {
-      setRemoving(false);
-    }
+  const hideBanner = () => {
+    setEnabled(false);
+    toast.success('Banner will be hidden — save to apply. Emergency section will show.');
   };
 
   return (
     <AdminDashboardLayout>
-      <div className="max-w-3xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-            <FaIcon icon="fa-image" className="text-orange-600" />
-            Homepage banner
+            <FaIcon icon="fa-images" className="text-orange-600" />
+            Homepage banners
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            One banner in place of the emergency bookings section. When off or removed, emergency bookings show instead.
+            Up to {MAX_SLIDES} banners (min {MIN_SLIDES} when enabled). Desktop and mobile images are separate — add each
+            device image in its own card. Replaces emergency section when on.
           </p>
         </div>
 
@@ -107,13 +130,13 @@ export default function AdminHomeBanners() {
             <div className="rounded-2xl border border-sky-100 bg-sky-50/60 p-4 text-sm text-sky-900 space-y-1">
               <p className="font-bold flex items-center gap-2">
                 <FaIcon icon="fa-ruler-combined" />
-                Recommended image sizes
+                Recommended sizes
               </p>
               <p>
-                <strong>Desktop:</strong> {DESKTOP_HINT}
+                <strong>Desktop card:</strong> {DESKTOP_HINT}
               </p>
               <p>
-                <strong>Mobile:</strong> {MOBILE_HINT}
+                <strong>Mobile card:</strong> {MOBILE_HINT}
               </p>
             </div>
 
@@ -125,89 +148,128 @@ export default function AdminHomeBanners() {
                 onChange={(e) => setEnabled(e.target.checked)}
               />
               <span>
-                <span className="font-semibold text-slate-900 block">Show banner on homepage</span>
+                <span className="font-semibold text-slate-900 block">Show banners on homepage</span>
                 <span className="text-xs text-slate-500">
-                  When on, banner replaces emergency section. When off, emergency bookings section shows.
+                  When off, emergency bookings section shows instead. Images stay saved.
                 </span>
               </span>
             </label>
 
-            <div className="grid lg:grid-cols-2 gap-4">
-              <MediaUrlOrUpload
-                label="Desktop banner"
-                hint={DESKTOP_HINT}
-                icon="fa-desktop"
-                urlValue={banner.desktop_image}
-                onUrlChange={(v) => setField('desktop_image', v)}
-                onUpload={uploadCmsImage}
-                accept="image/jpeg,image/png,image/webp,image/gif"
-                preview="image"
-                accent="rose"
-              />
-              <MediaUrlOrUpload
-                label="Mobile banner"
-                hint={MOBILE_HINT}
-                icon="fa-mobile-screen"
-                urlValue={banner.mobile_image}
-                onUrlChange={(v) => setField('mobile_image', v)}
-                onUpload={uploadCmsImage}
-                accept="image/jpeg,image/png,image/webp,image/gif"
-                preview="image"
-                accent="violet"
-              />
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-sm font-bold text-slate-800">
+                Banners ({completeSlides.length}/{slides.length} ready for homepage)
+              </h2>
+              <button
+                type="button"
+                onClick={addSlide}
+                disabled={slides.length >= MAX_SLIDES}
+                className="text-xs font-semibold text-orange-600 hover:text-orange-700 disabled:opacity-40"
+              >
+                + Add banner ({slides.length}/{MAX_SLIDES})
+              </button>
             </div>
 
-            {(banner.desktop_image || banner.mobile_image) && (
-              <div className="grid sm:grid-cols-2 gap-3">
-                {banner.desktop_image && (
-                  <div className="rounded-xl overflow-hidden border border-slate-200 aspect-[4/1] bg-slate-100">
-                    <img
-                      src={resolveMediaUrl(banner.desktop_image) || banner.desktop_image}
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
+            <div className="space-y-5">
+              {slides.map((slide, index) => (
+                <div key={slide.id || index} className="rounded-2xl border border-slate-200 bg-white/80 p-4 space-y-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                      Banner {index + 1}
+                      {isSlideComplete(slide) ? (
+                        <span className="text-[10px] font-bold uppercase text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                          Ready
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold uppercase text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                          Add both images
+                        </span>
+                      )}
+                    </p>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => moveSlide(index, -1)}
+                        disabled={index === 0}
+                        className="p-2 text-slate-400 hover:text-slate-700 disabled:opacity-30"
+                        aria-label="Move up"
+                      >
+                        <FaIcon icon="fa-chevron-up" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveSlide(index, 1)}
+                        disabled={index === slides.length - 1}
+                        className="p-2 text-slate-400 hover:text-slate-700 disabled:opacity-30"
+                        aria-label="Move down"
+                      >
+                        <FaIcon icon="fa-chevron-down" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeSlide(index)}
+                        className="p-2 text-slate-400 hover:text-red-600"
+                        aria-label="Delete this banner slot"
+                        title="Delete entire banner slot"
+                      >
+                        <FaIcon icon="fa-trash" />
+                      </button>
+                    </div>
                   </div>
-                )}
-                {banner.mobile_image && (
-                  <div className="rounded-xl overflow-hidden border border-slate-200 aspect-[828/420] bg-slate-100 max-w-xs">
-                    <img
-                      src={resolveMediaUrl(banner.mobile_image) || banner.mobile_image}
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-              </div>
-            )}
 
-            <div className="grid sm:grid-cols-2 gap-3">
-              <input
-                className="input-field text-sm"
-                placeholder="Alt text (accessibility)"
-                value={banner.alt_text || ''}
-                onChange={(e) => setField('alt_text', e.target.value)}
-              />
-              <input
-                className="input-field text-sm"
-                placeholder="Optional link (https://… or /book)"
-                value={banner.link_url || ''}
-                onChange={(e) => setField('link_url', e.target.value)}
-              />
+                  <div className="grid lg:grid-cols-2 gap-4">
+                    <MediaUrlOrUpload
+                      label="Desktop banner"
+                      hint="Only for desktop — preview below is wide (4:1)"
+                      icon="fa-desktop"
+                      urlValue={slide.desktop_image}
+                      onUrlChange={(v) => setSlide(index, 'desktop_image', v)}
+                      onClear={() => setSlide(index, 'desktop_image', '')}
+                      onUpload={uploadCmsImage}
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      preview="image"
+                      devicePreview="desktop"
+                      accent="rose"
+                    />
+                    <MediaUrlOrUpload
+                      label="Mobile banner"
+                      hint="Only for mobile — preview below is phone ratio (~2:1)"
+                      icon="fa-mobile-screen"
+                      urlValue={slide.mobile_image}
+                      onUrlChange={(v) => setSlide(index, 'mobile_image', v)}
+                      onClear={() => setSlide(index, 'mobile_image', '')}
+                      onUpload={uploadCmsImage}
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      preview="image"
+                      devicePreview="mobile"
+                      accent="violet"
+                    />
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <input
+                      className="input-field text-sm"
+                      placeholder="Alt text (accessibility)"
+                      value={slide.alt_text || ''}
+                      onChange={(e) => setSlide(index, 'alt_text', e.target.value)}
+                    />
+                    <input
+                      className="input-field text-sm"
+                      placeholder="Optional link (https://… or /book)"
+                      value={slide.link_url || ''}
+                      onChange={(e) => setSlide(index, 'link_url', e.target.value)}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
 
             <div className="flex flex-wrap gap-3 pt-2">
-              <button type="submit" disabled={saving || removing} className="btn-primary">
-                {saving ? 'Saving…' : enabled && isComplete ? 'Publish banner' : 'Save settings'}
+              <button type="submit" disabled={saving} className="btn-primary">
+                {saving ? 'Saving…' : enabled ? 'Publish banners' : 'Save settings'}
               </button>
-              {(isComplete || enabled) && (
-                <button
-                  type="button"
-                  onClick={removeBanner}
-                  disabled={saving || removing}
-                  className="btn-outline text-red-700 border-red-200 hover:bg-red-50"
-                >
-                  <FaIcon icon="fa-trash" className="mr-1.5" />
-                  {removing ? 'Removing…' : 'Remove banner'}
+              {enabled && (
+                <button type="button" onClick={hideBanner} disabled={saving} className="btn-outline text-sm">
+                  Hide on homepage
                 </button>
               )}
             </div>
