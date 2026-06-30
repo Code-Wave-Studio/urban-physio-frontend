@@ -18,7 +18,7 @@ import GlobalSearch from '../components/GlobalSearch';
 import { useLocation } from '../contexts/LocationContext';
 import { treatments, conditions, home } from '../services/api';
 import { SITE_FAQS } from '../constants/supportPages';
-import { HEALTHCARE_IMAGES, SERVICE_CARD_IMAGES } from '../utils/healthcareImages';
+import { SERVICE_CARD_IMAGES } from '../utils/healthcareImages';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import { emptySectionImages } from '../constants/homeSectionImages';
 
@@ -67,8 +67,6 @@ const TESTIMONIALS = [
 
 const HOME_FAQS = SITE_FAQS.slice(0, 6);
 
-const HERO_IMG = HEALTHCARE_IMAGES.hero;
-const HERO_IMG_FALLBACK = `${import.meta.env.BASE_URL}hero-illustration.svg`;
 const HERO_PATTERN =
   "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4z'/%3E%3C/g%3E%3C/svg%3E\")";
 
@@ -86,8 +84,7 @@ export default function Home() {
   } = useLocation();
   const [treatmentList, setTreatmentList] = useState([]);
   const [conditionList, setConditionList] = useState([]);
-  const [heroImgOk, setHeroImgOk] = useState(true);
-  const [heroImgSrc, setHeroImgSrc] = useState(HERO_IMG);
+  const [heroImgSrc, setHeroImgSrc] = useState('');
   const [sectionImages, setSectionImages] = useState(emptySectionImages);
   const [hero, setHero] = useState(HERO_DEFAULTS);
   const [promoBanner, setPromoBanner] = useState({ enabled: false, slides: [] });
@@ -112,10 +109,7 @@ export default function Home() {
           const merged = { ...emptySectionImages(), ...d.section_images };
           setSectionImages(merged);
           const heroFromApi = resolveMediaUrl(merged.hero) || merged.hero;
-          if (heroFromApi) {
-            setHeroImgSrc(heroFromApi);
-            setHeroImgOk(true);
-          }
+          setHeroImgSrc(heroFromApi || '');
         }
       })
       .catch(() => {});
@@ -223,16 +217,13 @@ export default function Home() {
                 ))}
               </div>
 
-              {heroImgOk && (
+              {heroImgSrc && (
                 <div className="md:hidden mt-6 flex justify-center">
                   <img
                     src={heroImgSrc}
                     alt="Professional physiotherapy care"
                     className="max-h-44 w-full max-w-sm object-cover rounded-2xl shadow-2xl"
-                    onError={() => {
-                      if (heroImgSrc !== HERO_IMG_FALLBACK) setHeroImgSrc(HERO_IMG_FALLBACK);
-                      else setHeroImgOk(false);
-                    }}
+                    onError={() => setHeroImgSrc('')}
                   />
                 </div>
               )}
@@ -265,15 +256,12 @@ export default function Home() {
             <div className="hidden md:flex items-center justify-center animate-fade-in h-full" style={{ animationDelay: '0.2s' }}>
               <div className="relative w-full max-h-[520px] flex items-center justify-center">
                 <div className="absolute -inset-6 bg-white/10 rounded-full blur-3xl" />
-                {heroImgOk ? (
+                {heroImgSrc ? (
                   <img
                     src={heroImgSrc}
                     alt="Professional physiotherapy care"
                     className="relative w-full max-w-md lg:max-w-lg max-h-[500px] object-cover rounded-3xl shadow-2xl animate-float"
-                    onError={() => {
-                      if (heroImgSrc !== HERO_IMG_FALLBACK) setHeroImgSrc(HERO_IMG_FALLBACK);
-                      else setHeroImgOk(false);
-                    }}
+                    onError={() => setHeroImgSrc('')}
                   />
                 ) : (
                 <div className="glass-hero-panel p-8 relative w-full max-w-md">
