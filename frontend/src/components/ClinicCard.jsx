@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import FaIcon from './FaIcon';
 import BadgeList from './platform/BadgeList';
 import PartnerClinicBadge from './PartnerClinicBadge';
-import ClinicBottomSheet from './clinic/ClinicBottomSheet';
+import ClinicPreview from './clinic/ClinicPreview';
 import ClinicQuickActions from './clinic/ClinicQuickActions';
 import ClinicMiniStats from './clinic/ClinicMiniStats';
 import ClinicStatusBadge, { ClinicStatusDetail } from './clinic/ClinicStatusBadge';
@@ -69,7 +69,7 @@ export default function ClinicCard({ clinic, compact = false, variant = 'listing
             </div>
           </div>
         </motion.article>
-        <ClinicBottomSheet clinic={clinic} open={sheetOpen} onClose={() => setSheetOpen(false)} />
+        <ClinicPreview clinic={clinic} open={sheetOpen} onClose={() => setSheetOpen(false)} />
       </>
     );
   }
@@ -144,7 +144,7 @@ export default function ClinicCard({ clinic, compact = false, variant = 'listing
         </div>
       </motion.article>
 
-      <ClinicBottomSheet clinic={clinic} open={sheetOpen} onClose={() => setSheetOpen(false)} />
+      <ClinicPreview clinic={clinic} open={sheetOpen} onClose={() => setSheetOpen(false)} />
     </>
   );
 }
