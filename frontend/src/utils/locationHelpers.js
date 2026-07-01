@@ -15,6 +15,34 @@ export function homeVisitMapUrl(meta) {
   return q ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}` : null;
 }
 
+/** True on phones / small touch viewports where GPS needs a user tap for the browser prompt. */
+export function isMobileDevice() {
+  if (typeof window === 'undefined') return false;
+  if (window.matchMedia('(max-width: 767px)').matches) return true;
+  return /Android|iPhone|iPad|iPod|Mobile|webOS|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent || ''
+  );
+}
+
+/** @returns {'granted'|'prompt'|'denied'|'unknown'} */
+export async function queryGeolocationPermission() {
+  if (!navigator.permissions?.query) return 'unknown';
+  try {
+    const status = await navigator.permissions.query({ name: 'geolocation' });
+    return status.state;
+  } catch {
+    return 'unknown';
+  }
+}
+
+/** Desktop may auto-prompt; mobile browsers require a user gesture for the native permission dialog. */
+export async function canAutoRequestGeolocation() {
+  const permission = await queryGeolocationPermission();
+  if (permission === 'granted') return true;
+  if (permission === 'denied') return false;
+  return !isMobileDevice();
+}
+
 export function geolocationErrorMessage(err) {
   switch (err?.code) {
     case 1:

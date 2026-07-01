@@ -6,6 +6,13 @@ import { hasFunctionalConsent } from '../constants/cookieConsent';
 
 import toast from 'react-hot-toast';
 
+import {
+  fetchDevicePosition,
+  geolocationErrorMessage,
+  canAutoRequestGeolocation,
+  queryGeolocationPermission,
+} from '../utils/locationHelpers';
+
 const LocationContext = createContext(null);
 const STORAGE_KEY = 'selectedCity';
 
@@ -33,48 +40,6 @@ function formatLocationLabel(city, detectedLabel) {
 
 function resolveCityFromPayload(data, cityOverride = null) {
   return data?.city || data?.service_city || cityOverride || null;
-}
-
-function geolocationErrorMessage(err) {
-  switch (err?.code) {
-    case 1:
-      return 'Location permission denied. Allow location in browser settings, then tap "Use my current location" again.';
-    case 2:
-      return 'Location unavailable. Check GPS or Wi‑Fi and try again.';
-    case 3:
-      return 'Location timed out. Try again or pick your city manually.';
-    default:
-      return 'Could not get GPS location. Pick your city manually or try again.';
-  }
-}
-
-function readGeolocationPosition(options) {
-  return new Promise((resolve, reject) => {
-    navigator.geolocation.getCurrentPosition(resolve, reject, options);
-  });
-}
-
-/** High-accuracy first; fall back to coarse GPS if slow or timed out. */
-async function fetchDevicePosition() {
-  const accurate = {
-    enableHighAccuracy: true,
-    timeout: 15000,
-    maximumAge: 0,
-  };
-  const coarse = {
-    enableHighAccuracy: false,
-    timeout: 25000,
-    maximumAge: 120000,
-  };
-
-  try {
-    return await readGeolocationPosition(accurate);
-  } catch (err) {
-    if (err?.code === 3 || err?.code === 2) {
-      return await readGeolocationPosition(coarse);
-    }
-    throw err;
-  }
 }
 
 async function fetchProvidersForCity(cityId, coords = null) {
@@ -303,7 +268,6 @@ export function LocationProvider({ children }) {
 
       if (userInitiated) {
         localStorage.removeItem(STORAGE_KEY);
-        setShowSelector(true);
       }
 
       if (!navigator.geolocation) {
@@ -338,7 +302,24 @@ export function LocationProvider({ children }) {
         }
 
         setShowSelector(true);
-        toast.error(geolocationErrorMessage(err));
+        if (userInitiated) {
+          const permission = await queryGeolocationPermission();
+          if (err?.code === 1) {
+            if (permission === 'denied') {
+              toast.error(
+                'Location is blocked in your browser. Open site settings, allow Location, then tap "Use my current location" again.'
+              );
+            } else {
+              toast('Tap "Use my current location" again and choose Allow when your browser asks.', {
+                icon: '📍',
+              });
+            }
+          } else {
+            toast.error(geolocationErrorMessage(err));
+          }
+        } else if (err?.code !== 1) {
+          toast.error(geolocationErrorMessage(err));
+        }
       } finally {
         setDetectingGps(false);
         setLoading(false);
@@ -348,6 +329,27 @@ export function LocationProvider({ children }) {
       }
     },
     [detectLocation, loadCityProviders]
+  );
+
+  const promptForLocationAccess = useCallback(
+    async ({ saved = null } = {}) => {
+      if (saved?.id) {
+        locationEpoch.current += 1;
+        setLocationSource(saved.source === 'manual' ? 'city' : 'gps');
+        setCoords(null);
+        await loadCityProviders(saved.id, saved, {
+          userInitiated: false,
+          fromGps: saved.source !== 'manual',
+        });
+        return;
+      }
+
+      setShowSelector(true);
+      setLoading(false);
+      setDetectingGps(false);
+      setLocationResolved(false);
+    },
+    [loadCityProviders]
   );
 
   const refreshLocation = useCallback(() => {
@@ -372,11 +374,17 @@ export function LocationProvider({ children }) {
         return;
       }
 
+      const autoOk = await canAutoRequestGeolocation();
+      if (!autoOk) {
+        await promptForLocationAccess({ saved });
+        return;
+      }
+
       await requestGeolocation({ userInitiated: false, skipSavedFallback: false });
     };
 
     bootstrap();
-  }, [loadCityProviders, requestGeolocation]);
+  }, [loadCityProviders, promptForLocationAccess, requestGeolocation]);
 
   useEffect(() => {
     const onConsent = () => {
@@ -388,7 +396,13 @@ export function LocationProvider({ children }) {
           if (saved.source === 'manual') {
             loadCityProviders(saved.id, saved, { userInitiated: false });
           } else {
-            requestGeolocation({ userInitiated: false, skipSavedFallback: false });
+            canAutoRequestGeolocation().then((autoOk) => {
+              if (autoOk) {
+                requestGeolocation({ userInitiated: false, skipSavedFallback: false });
+              } else {
+                promptForLocationAccess({ saved });
+              }
+            });
           }
         }
       }
@@ -396,7 +410,7 @@ export function LocationProvider({ children }) {
 
     window.addEventListener('tup-cookie-consent-updated', onConsent);
     return () => window.removeEventListener('tup-cookie-consent-updated', onConsent);
-  }, [city, loadCityProviders, requestGeolocation]);
+  }, [city, loadCityProviders, promptForLocationAccess, requestGeolocation]);
 
   const selectCity = async (cityData) => {
     if (!cityData?.id) return;

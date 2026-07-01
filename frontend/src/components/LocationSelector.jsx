@@ -148,7 +148,7 @@ export default function LocationSelector() {
           {detectingGps ? 'Detecting your location…' : 'Use my current location'}
         </button>
         <p className="text-xs text-slate-500 text-center -mt-2">
-          Allow location access when your browser asks — needed for GPS detect.
+          Tap above — your browser will ask to allow location. Choose <strong className="font-semibold text-slate-600">Allow</strong> to detect automatically.
         </p>
 
         <div className="flex items-center gap-3">
