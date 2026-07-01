@@ -15,6 +15,7 @@ export default function PreviewModalShell({
   footer,
   children,
   panelClassName = '',
+  bodyClassName = '',
 }) {
   const accentRing = accent === 'emerald' ? 'ring-emerald-200/60' : 'ring-primary-200/60';
 
@@ -36,7 +37,7 @@ export default function PreviewModalShell({
             className="flex flex-col min-h-0 flex-1 max-h-[inherit]"
           >
             {header}
-            <GlassModalBody className="!px-0 !py-0">{children}</GlassModalBody>
+            <GlassModalBody className={`!px-0 !py-0 ${bodyClassName}`}>{children}</GlassModalBody>
             {footer && <GlassModalFooter>{footer}</GlassModalFooter>}
           </motion.div>
         </GlassModal>

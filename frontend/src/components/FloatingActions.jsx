@@ -3,6 +3,8 @@ import { useLocation } from 'react-router-dom';
 import { useContact } from '../contexts/ContactContext';
 import { whatsappChatUrl, whatsappDigits } from '../utils/whatsapp';
 
+import { FLOATING_ACTIONS_EVENT } from '../utils/floatingActionsBus';
+
 /** Floating WhatsApp — home page only. */
 function isHomePage(pathname) {
   return pathname === '/';
@@ -44,6 +46,7 @@ export default function FloatingActions() {
   const { pathname } = useLocation();
   const { whatsapp } = useContact();
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [hiddenByOverlay, setHiddenByOverlay] = useState(false);
   const hideAll = isBookingPage(pathname);
   const showFloating = isHomePage(pathname) && !isStaffDashboard(pathname) && !hideAll;
 
@@ -59,11 +62,17 @@ export default function FloatingActions() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  useEffect(() => {
+    const onOverlay = (e) => setHiddenByOverlay(Boolean(e.detail?.hidden));
+    window.addEventListener(FLOATING_ACTIONS_EVENT, onOverlay);
+    return () => window.removeEventListener(FLOATING_ACTIONS_EVENT, onOverlay);
+  }, []);
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  if (!showFloating) return null;
+  if (!showFloating || hiddenByOverlay) return null;
 
   return (
     <div className="floating-actions" aria-label="Quick actions">
