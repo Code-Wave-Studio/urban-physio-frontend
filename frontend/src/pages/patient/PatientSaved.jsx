@@ -220,26 +220,29 @@ export default function PatientSaved() {
         <div className="space-y-3">
           {tab === 'doctors' &&
             list.map((d) => (
-              <article key={d.id} className="card flex flex-col sm:flex-row sm:items-center gap-4">
+              <article key={d.id} className="card flex flex-col sm:flex-row sm:items-center gap-4 overflow-visible">
                 <DoctorAvatar doctor={d} size="lg" />
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-slate-900">Dr. {d.first_name} {d.last_name}</p>
                   <p className="text-sm text-primary-700">{d.specialization || 'Physiotherapist'}</p>
                   <p className="text-xs text-slate-500 mt-1">{d.city_name || 'India'}</p>
                 </div>
-                <SavedActionsMenu items={doctorActions(d)} />
+                <SavedActionsMenu
+                  items={doctorActions(d)}
+                  title={`Dr. ${d.first_name} ${d.last_name}`.trim()}
+                />
               </article>
             ))}
 
           {tab === 'clinics' &&
             list.map((c) => (
-              <article key={c.id} className="card flex flex-col sm:flex-row sm:items-center gap-4">
+              <article key={c.id} className="card flex flex-col sm:flex-row sm:items-center gap-4 overflow-visible">
                 <ClinicLogo clinic={c} size="lg" />
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-slate-900">{c.name}</p>
                   <p className="text-sm text-slate-600 line-clamp-2">{c.address || c.city_name}</p>
                 </div>
-                <SavedActionsMenu items={clinicActions(c)} />
+                <SavedActionsMenu items={clinicActions(c)} title={c.name} />
               </article>
             ))}
 
