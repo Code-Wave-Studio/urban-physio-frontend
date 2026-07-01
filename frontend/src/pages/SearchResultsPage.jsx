@@ -18,6 +18,7 @@ import {
   SEARCH_SUGGESTIONS,
   TRENDING_SEARCHES,
 } from '../utils/searchHistory';
+import { useTypingSearchPlaceholder } from '../hooks/useTypingSearchPlaceholder';
 
 const TYPE_MAP = {
   doctors: 'doctors',
@@ -77,6 +78,8 @@ export default function SearchResultsPage() {
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [recent, setRecent] = useState(() => getRecentSearches());
+
+  const searchPlaceholder = useTypingSearchPlaceholder(undefined, !input.trim(), input, 'try');
 
   useEffect(() => {
     setInput(q);
@@ -201,28 +204,21 @@ export default function SearchResultsPage() {
       <Navbar />
       <div className="flex-1 max-w-6xl mx-auto px-4 py-8 sm:py-10 w-full">
         <div className="glass-card p-4 sm:p-6 mb-6 border border-white/80 shadow-sm">
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-1 flex items-center gap-2">
-            <FaIcon icon="fa-magnifying-glass" className="text-orange-600" />
-            Smart Search
-          </h1>
-          <p className="text-sm text-slate-600 mb-4">
-            Find doctors, clinics, treatments &amp; conditions — instantly
-          </p>
           <form onSubmit={handleSubmit} className="relative flex gap-2" role="search">
             <div className="relative flex-1">
-              <FaIcon icon="fa-magnifying-glass" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
+              <FaIcon icon="fa-magnifying-glass" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none" />
               <input
                 type="search"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Try: back pain near me, female physio Noida, ACL rehab…"
+                placeholder={searchPlaceholder}
                 className="input-field w-full !pl-10 !py-3"
                 autoFocus
                 aria-label="Search query"
                 autoComplete="off"
               />
               {suggestions.length > 0 && input.length >= 2 && !loading && (
-                <ul className="absolute z-20 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+                <ul className="absolute z-20 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden max-h-60 overflow-y-auto">
                   {suggestions.map((s) => (
                     <li key={s}>
                       <button
@@ -245,6 +241,23 @@ export default function SearchResultsPage() {
               Search
             </button>
           </form>
+
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <Link
+              to="/doctors"
+              className="btn-outline w-full text-center !py-2.5 inline-flex items-center justify-center gap-2 text-sm font-semibold"
+            >
+              <FaIcon icon="fa-user-doctor" className="text-primary-600" />
+              Find Physiotherapists
+            </Link>
+            <Link
+              to="/clinics"
+              className="btn-outline w-full text-center !py-2.5 inline-flex items-center justify-center gap-2 text-sm font-semibold"
+            >
+              <FaIcon icon="fa-hospital" className="text-emerald-600" />
+              Find Clinic
+            </Link>
+          </div>
         </div>
 
         {showLanding ? (
