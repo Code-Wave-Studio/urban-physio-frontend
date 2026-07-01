@@ -196,15 +196,6 @@ export default function Home() {
                 <GlobalSearch variant="hero" popularTags={hero.popular_tags} />
               </div>
 
-              {city && (
-                <p className="mt-4 flex justify-center md:justify-start">
-                  <span className="glass-dark px-3.5 py-1.5 rounded-full inline-flex items-center gap-1.5 text-xs md:text-sm font-medium text-primary-50">
-                    <FaIcon icon="fa-location-dot" className="text-orange-300 text-xs" />
-                    Near {areaName}
-                  </span>
-                </p>
-              )}
-
               <div className="mt-5 flex flex-wrap justify-center md:justify-start gap-2 md:gap-3">
                 {hero.feature_pills.map((t) => (
                   <span

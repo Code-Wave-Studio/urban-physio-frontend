@@ -53,7 +53,15 @@ export default function GlobalSearch({
 }) {
   const navigate = useNavigate();
   const quickTags = popularTags?.length ? popularTags : QUICK_TAGS;
-  const { city, coords } = useLocation();
+  const {
+    city,
+    coords,
+    locationLabel,
+    locationSource,
+    setShowSelector,
+    detectingGps,
+    requestGeolocation,
+  } = useLocation();
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -386,7 +394,7 @@ export default function GlobalSearch({
   const heroPlaceholder = typedPlaceholder ? `Search ${typedPlaceholder}` : 'Search physiotherapy…';
 
   const inputClass = isHero
-    ? 'w-full bg-white border border-orange-100/80 rounded-full py-3.5 sm:py-4 pl-[3.75rem] sm:pl-[4.25rem] pr-28 sm:pr-32 text-sm sm:text-base text-slate-800 placeholder:text-slate-400 shadow-sm focus:ring-2 focus:ring-orange-400/60 focus:border-orange-300 outline-none'
+    ? 'w-full bg-transparent border-0 py-3 sm:py-3.5 pl-2 pr-24 sm:pr-28 text-sm sm:text-base text-slate-800 placeholder:text-slate-400 outline-none focus:ring-0'
     : isMobile
       ? 'w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-10 text-base text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-orange-400/70 focus:border-orange-300 outline-none'
       : isHeader
@@ -553,13 +561,84 @@ export default function GlobalSearch({
         <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Search</p>
       )}
 
-      <div className={isMobile ? 'flex items-stretch gap-2' : 'relative'}>
+      <div className={isMobile ? 'flex items-stretch gap-2' : isHero ? 'relative' : 'relative'}>
+        {isHero ? (
+          <div className="hero-search-bar flex items-center gap-1 sm:gap-1.5 w-full">
+            <button
+              type="button"
+              onClick={() => setShowSelector(true)}
+              className="hero-search-loc shrink-0"
+              title="Change location"
+              aria-label={`Location: ${locationLabel || city?.name || 'Select city'}`}
+            >
+              <FaIcon icon="fa-location-dot" className="text-orange-500 text-xs shrink-0" />
+              <span className="truncate max-w-[4.25rem] sm:max-w-[7.5rem] text-left">
+                {locationLabel || city?.name || 'Location'}
+              </span>
+              <FaIcon icon="fa-chevron-down" className="text-[8px] text-slate-400 shrink-0" />
+            </button>
+            <button
+              type="button"
+              onClick={() => requestGeolocation()}
+              disabled={detectingGps}
+              className={`hero-search-gps shrink-0 ${locationSource === 'gps' || coords ? 'hero-search-gps--active' : ''}`}
+              title={detectingGps ? 'Detecting location…' : 'Use my current location'}
+              aria-label="Use current location"
+            >
+              <FaIcon
+                icon={detectingGps ? 'fa-spinner' : 'fa-location-crosshairs'}
+                className={`text-xs ${detectingGps ? 'fa-spin' : ''}`}
+              />
+              {(locationSource === 'gps' || coords) && !detectingGps && (
+                <span className="hero-search-gps-dot" aria-hidden />
+              )}
+            </button>
+            <span className="hero-search-divider shrink-0" aria-hidden />
+            <div className="relative min-w-0 flex-1">
+              <input
+                ref={inputRef}
+                type="text"
+                inputMode="search"
+                enterKeyHint="search"
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setOpen(true);
+                  setActiveIndex(-1);
+                }}
+                onFocus={() => {
+                  if (query.trim()) setOpen(true);
+                }}
+                onKeyDown={onKeyDown}
+                placeholder={heroPlaceholder}
+                aria-label="Universal search"
+                aria-expanded={showDropdown}
+                aria-autocomplete="list"
+                className={inputClass}
+                autoComplete="off"
+              />
+              {trimmedQuery && (
+                <button
+                  type="button"
+                  onClick={clearQuery}
+                  className="absolute top-1/2 -translate-y-1/2 right-[6.5rem] sm:right-[7.5rem] text-slate-400 hover:text-slate-600 active:text-slate-800 touch-manipulation"
+                  aria-label="Clear search"
+                >
+                  <FaIcon icon="fa-circle-xmark" className="text-sm" />
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={submitSearch}
+                className="absolute right-1 top-1/2 -translate-y-1/2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-semibold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-full shadow-md shadow-orange-600/25 transition"
+              >
+                Search
+              </button>
+            </div>
+          </div>
+        ) : (
         <div className={`relative ${isMobile ? 'min-w-0 flex-1' : ''}`}>
-          {isHero ? (
-            <span className="hero-search-icon" aria-hidden="true">
-              <FaIcon icon="fa-magnifying-glass" className="text-sm sm:text-base" />
-            </span>
-          ) : (
+          {!isHero && (
             <FaIcon
               icon="fa-magnifying-glass"
               className={`absolute top-1/2 -translate-y-1/2 pointer-events-none left-3 text-sm text-slate-600`}
@@ -587,28 +666,20 @@ export default function GlobalSearch({
             className={inputClass}
             autoComplete="off"
           />
-          {trimmedQuery && (
+          {trimmedQuery && !isHero && (
             <button
               type="button"
               onClick={clearQuery}
               className={`absolute top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 active:text-slate-800 touch-manipulation ${
-                isHero ? 'right-[6.5rem] sm:right-[7.5rem]' : isMobile ? 'right-3 p-1' : 'right-2.5'
+                isMobile ? 'right-3 p-1' : 'right-2.5'
               }`}
               aria-label="Clear search"
             >
               <FaIcon icon="fa-circle-xmark" className="text-sm" />
             </button>
           )}
-          {isHero && (
-            <button
-              type="button"
-              onClick={submitSearch}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-semibold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-full shadow-md shadow-orange-600/25 transition"
-            >
-              Search
-            </button>
-          )}
         </div>
+        )}
 
         {isMobile && (
           <button
