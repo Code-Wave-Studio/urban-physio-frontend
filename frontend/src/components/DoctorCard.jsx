@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import FaIcon from './FaIcon';
 import DoctorAvatar from './DoctorAvatar';
 import DoctorPreviewModal from './preview/DoctorPreviewModal';
-import SaveDoctorButton from './SaveDoctorButton';
 import { bookDoctorUrl } from '../utils/bookUrl';
 import { doctorProfileUrl } from '../utils/profileUrls';
 
@@ -121,9 +120,6 @@ export default function DoctorCard({ doctor, compact = false, variant = 'default
             </div>
 
             <div className="mt-auto pt-5 flex flex-wrap gap-2">
-              <div onClick={stopNav} onKeyDown={stopNav} role="presentation">
-                <SaveDoctorButton doctor={doctor} compact className="shrink-0" />
-              </div>
               <Link
                 to={doctorProfileUrl(doctor)}
                 onClick={stopNav}

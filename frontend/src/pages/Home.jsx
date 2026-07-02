@@ -59,10 +59,16 @@ const WHY_US = [
 ];
 
 const TESTIMONIALS = [
-  { name: 'Rahul M.', city: 'Mumbai', text: 'Recovered from back pain in 4 weeks. Online sessions were super convenient!', rating: 5 },
-  { name: 'Priya S.', city: 'Pune', text: 'Best physiotherapy app in India. Home visit feature is a game changer.', rating: 5 },
-  { name: 'Amit K.', city: 'Delhi', text: 'Professional doctors, transparent pricing. Highly recommend Urban Physio.', rating: 5 },
+  { id: 'd1', type: 'text', name: 'Rahul M.', city: 'Mumbai', text: 'Recovered from back pain in 4 weeks. Online sessions were super convenient!', rating: 5 },
+  { id: 'd2', type: 'text', name: 'Priya S.', city: 'Pune', text: 'Best physiotherapy app in India. Home visit feature is a game changer.', rating: 5 },
+  { id: 'd3', type: 'text', name: 'Amit K.', city: 'Delhi', text: 'Professional doctors, transparent pricing. Highly recommend Urban Physio.', rating: 5 },
 ];
+
+/** Convert a YouTube watch/share URL to an embeddable URL, else return null. */
+function toYoutubeEmbed(url = '') {
+  const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/);
+  return m ? `https://www.youtube.com/embed/${m[1]}` : null;
+}
 
 const HOME_FAQS = SITE_FAQS.slice(0, 6);
 
@@ -87,6 +93,8 @@ export default function Home() {
   const [sectionImages, setSectionImages] = useState(emptySectionImages);
   const [hero, setHero] = useState(HERO_DEFAULTS);
   const [promoBanner, setPromoBanner] = useState({ enabled: false, slides: [] });
+  const [testimonials, setTestimonials] = useState(TESTIMONIALS);
+  const [showTestimonials, setShowTestimonials] = useState(true);
   const areaName = locationLabel || city?.name;
 
   useEffect(() => {
@@ -129,29 +137,49 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    treatments.list().then((res) => setTreatmentList((res.data || []).slice(0, 3))).catch(() => {});
-    conditions.list().then((res) => setConditionList((res.data || []).slice(0, 3))).catch(() => {});
+    home
+      .testimonials()
+      .then((res) => {
+        const d = res?.data ?? res;
+        if (!d) return;
+        setShowTestimonials(!!d.enabled);
+        if (Array.isArray(d.items) && d.items.length) setTestimonials(d.items);
+        else setTestimonials([]);
+      })
+      .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    treatments.list().then((res) => setTreatmentList((res.data || []).slice(0, 6))).catch(() => {});
+    conditions.list().then((res) => setConditionList((res.data || []).slice(0, 6))).catch(() => {});
+  }, []);
+
+  const treatmentIcons = ['fa-bone', 'fa-head-side-virus', 'fa-person-walking', 'fa-hand', 'fa-person-running', 'fa-wheelchair'];
   const defaultTreatments = [
     { id: 1, title: 'Back Pain', slug: 'back-pain', short_description: 'Lower & upper back rehabilitation', icon: 'fa-bone' },
     { id: 2, title: 'Neck Pain', slug: 'neck-pain', short_description: 'Cervical pain & tech neck relief', icon: 'fa-head-side-virus' },
     { id: 3, title: 'Knee Pain', slug: 'knee-pain', short_description: 'ACL, meniscus & arthritis rehab', icon: 'fa-person-walking' },
+    { id: 4, title: 'Shoulder Pain', slug: 'shoulder-pain', short_description: 'Frozen shoulder & rotator cuff care', icon: 'fa-hand' },
+    { id: 5, title: 'Sports Injury', slug: 'sports-injury', short_description: 'Return-to-sport rehab programs', icon: 'fa-person-running' },
+    { id: 6, title: 'Post-Surgery Rehab', slug: 'post-surgery-rehab', short_description: 'Guided recovery after surgery', icon: 'fa-wheelchair' },
   ];
 
   const displayTreatments = treatmentList.length
-    ? treatmentList.map((t, i) => ({ ...t, icon: defaultTreatments[i % 3].icon }))
+    ? treatmentList.map((t, i) => ({ ...t, icon: treatmentIcons[i % treatmentIcons.length] }))
     : defaultTreatments;
 
   const defaultConditions = [
     { id: 1, title: 'ACL Injury Rehabilitation', slug: 'acl-injury', description: 'Post-surgical ACL rehab program', category: 'injury', icon: 'fa-person-running' },
     { id: 2, title: 'Rotator Cuff Injury', slug: 'rotator-cuff', description: 'Shoulder rehab for tears & impingement', category: 'injury', icon: 'fa-hand' },
     { id: 3, title: 'Post-Stroke Rehabilitation', slug: 'post-stroke', description: 'Neurological physiotherapy for recovery', category: 'rehab', icon: 'fa-brain' },
+    { id: 4, title: 'Sciatica', slug: 'sciatica', description: 'Nerve pain relief & core strengthening', category: 'pain', icon: 'fa-bolt' },
+    { id: 5, title: 'Frozen Shoulder', slug: 'frozen-shoulder', description: 'Mobility restoration program', category: 'rehab', icon: 'fa-arrows-rotate' },
+    { id: 6, title: 'Arthritis', slug: 'arthritis', description: 'Joint pain & stiffness management', category: 'chronic', icon: 'fa-bone' },
   ];
 
-  const conditionIcons = ['fa-person-running', 'fa-hand', 'fa-brain'];
+  const conditionIcons = ['fa-person-running', 'fa-hand', 'fa-brain', 'fa-bolt', 'fa-arrows-rotate', 'fa-bone'];
   const displayConditions = conditionList.length
-    ? conditionList.map((c, i) => ({ ...c, icon: conditionIcons[i % 3] }))
+    ? conditionList.map((c, i) => ({ ...c, icon: conditionIcons[i % conditionIcons.length] }))
     : defaultConditions;
 
   const services = useMemo(
@@ -517,7 +545,7 @@ export default function Home() {
               View all <FaIcon icon="fa-arrow-right" className="text-xs" />
             </Link>
           </div>
-          <div className="mobile-scroll-x md:grid md:grid-cols-3 md:gap-6 stagger-children">
+          <div className="mobile-scroll-x md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-5 stagger-children">
             {displayTreatments.map((t) => (
               <Link key={t.id} to={`/treatments/${t.slug}`} className="mobile-scroll-item glass-card group block p-4">
                 <FaIcon icon={t.icon} className="text-xl text-primary-600 mb-2" />
@@ -544,7 +572,7 @@ export default function Home() {
               View all <FaIcon icon="fa-arrow-right" className="text-xs" />
             </Link>
           </div>
-          <div className="mobile-scroll-x md:grid md:grid-cols-3 md:gap-6 stagger-children">
+          <div className="mobile-scroll-x md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-5 stagger-children">
             {displayConditions.map((c) => (
               <Link key={c.id} to={`/conditions/${c.slug}`} className="mobile-scroll-item glass-card group block p-4">
                 <FaIcon icon={c.icon} className="text-xl text-violet-600 mb-2" />
@@ -582,24 +610,71 @@ export default function Home() {
       </section>
 
       {/* TESTIMONIALS — horizontal scroll on mobile */}
-      <section className="max-w-7xl mx-auto px-4 section-pad">
-        <div className="text-center mb-5 md:mb-12">
-          <h2 className="section-title">What Patients Say</h2>
-        </div>
-        <div className="mobile-scroll-x md:grid md:grid-cols-3 md:gap-6 stagger-children">
-          {TESTIMONIALS.map((t) => (
-            <div key={t.name} className="mobile-scroll-item glass-card p-4">
-              <div className="flex gap-0.5 text-amber-500 mb-2 text-sm">
-                {Array.from({ length: t.rating }).map((_, i) => (
-                  <FaIcon key={i} icon="fa-star" />
-                ))}
-              </div>
-              <p className="text-slate-700 text-sm italic line-clamp-3">&ldquo;{t.text}&rdquo;</p>
-              <p className="font-semibold text-slate-800 text-sm mt-3">{t.name} · {t.city}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      {showTestimonials && testimonials.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 section-pad">
+          <div className="text-center mb-5 md:mb-12">
+            <h2 className="section-title">What Patients Say</h2>
+          </div>
+          <div className="mobile-scroll-x md:grid md:grid-cols-3 md:gap-6 stagger-children">
+            {testimonials.map((t, idx) => {
+              if (t.type === 'video') {
+                const embed = toYoutubeEmbed(t.video_url || '');
+                const videoSrc = resolveMediaUrl(t.video_url) || t.video_url;
+                const poster = resolveMediaUrl(t.poster) || t.poster || '';
+                return (
+                  <div key={t.id || idx} className="mobile-scroll-item glass-card p-4">
+                    <div className="rounded-xl overflow-hidden bg-black aspect-video mb-3">
+                      {embed ? (
+                        <iframe
+                          src={embed}
+                          title={`Review by ${t.name || 'patient'}`}
+                          className="w-full h-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      ) : (
+                        <video controls className="w-full h-full object-cover" src={videoSrc} poster={poster || undefined}>
+                          <track kind="captions" />
+                        </video>
+                      )}
+                    </div>
+                    {t.rating > 0 && (
+                      <div className="flex gap-0.5 text-amber-500 mb-1.5 text-sm">
+                        {Array.from({ length: t.rating }).map((_, i) => (
+                          <FaIcon key={i} icon="fa-star" />
+                        ))}
+                      </div>
+                    )}
+                    {t.text && <p className="text-slate-700 text-sm italic line-clamp-2">&ldquo;{t.text}&rdquo;</p>}
+                    {(t.name || t.city) && (
+                      <p className="font-semibold text-slate-800 text-sm mt-2">
+                        {t.name}
+                        {t.name && t.city ? ' · ' : ''}
+                        {t.city}
+                      </p>
+                    )}
+                  </div>
+                );
+              }
+              return (
+                <div key={t.id || idx} className="mobile-scroll-item glass-card p-4">
+                  <div className="flex gap-0.5 text-amber-500 mb-2 text-sm">
+                    {Array.from({ length: t.rating }).map((_, i) => (
+                      <FaIcon key={i} icon="fa-star" />
+                    ))}
+                  </div>
+                  <p className="text-slate-700 text-sm italic line-clamp-3">&ldquo;{t.text}&rdquo;</p>
+                  <p className="font-semibold text-slate-800 text-sm mt-3">
+                    {t.name}
+                    {t.name && t.city ? ' · ' : ''}
+                    {t.city}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       <FaqSection items={HOME_FAQS} />
 

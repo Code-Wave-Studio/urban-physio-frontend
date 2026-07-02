@@ -394,6 +394,8 @@ export const admin = {
   updateHeroSettings: (data) => api.put('/admin/hero-settings', data),
   homeBannerSettings: () => api.get('/admin/home-banner-settings'),
   updateHomeBannerSettings: (data) => api.put('/admin/home-banner-settings', data),
+  testimonialsSettings: () => api.get('/admin/testimonials-settings'),
+  updateTestimonialsSettings: (data) => api.put('/admin/testimonials-settings', data),
   contactMessages: (params) => api.get('/admin/contact-messages', { params }),
   markContactMessageRead: (id) => api.post(`/admin/contact-messages/${id}/read`),
   deleteContactMessage: (id) => api.delete(`/admin/contact-messages/${id}`),
@@ -486,6 +488,7 @@ export const about = {
 export const home = {
   heroSettings: () => api.get('/home/hero-settings'),
   bannerSettings: () => api.get('/home/banner-settings'),
+  testimonials: () => api.get('/home/testimonials'),
 };
 
 export const reviews = {

@@ -24,6 +24,7 @@ export const ADMIN_NAV = [
   { to: '/admin/home-hero', label: 'Homepage hero', icon: 'fa-house-medical-circle-check' },
   { to: '/admin/home-images', label: 'Homepage images', icon: 'fa-image' },
   { to: '/admin/home-banners', label: 'Homepage banner', icon: 'fa-images' },
+  { to: '/admin/testimonials', label: 'Homepage reviews', icon: 'fa-comment-dots' },
   { to: '/admin/invoice-settings', label: 'Invoice', icon: 'fa-file-invoice' },
   { to: '/admin/logs', label: 'Audit Logs', icon: 'fa-clipboard-list' },
   { to: '/admin/profile', label: 'Profile', icon: 'fa-user-gear' },

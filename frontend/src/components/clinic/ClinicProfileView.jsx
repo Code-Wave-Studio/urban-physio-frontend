@@ -391,24 +391,6 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
 
 
-            <div className="hidden lg:block shrink-0 w-full max-w-xs">
-
-              <div className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-lg">
-
-                <p className="text-sm font-bold text-slate-900 mb-3">Book your visit</p>
-
-                <ClinicSlotsPreview clinicId={clinic.id} />
-
-                <Link to={clinicBookUrl(clinic)} className="btn-primary w-full text-center mt-3 !bg-emerald-600 hover:!bg-emerald-700">
-
-                  Book now
-
-                </Link>
-
-              </div>
-
-            </div>
-
           </div>
 
 
@@ -574,6 +556,22 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
                 </ul>
 
               </div>
+
+            </div>
+
+
+
+            <div className="hidden lg:block rounded-2xl border border-emerald-100 bg-white p-4 shadow-lg">
+
+              <p className="text-sm font-bold text-slate-900 mb-3">Book your visit</p>
+
+              <ClinicSlotsPreview clinicId={clinic.id} />
+
+              <Link to={clinicBookUrl(clinic)} className="btn-primary w-full text-center mt-3 !bg-emerald-600 hover:!bg-emerald-700">
+
+                Book now
+
+              </Link>
 
             </div>
 

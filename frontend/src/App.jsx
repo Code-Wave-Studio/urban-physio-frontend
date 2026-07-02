@@ -75,6 +75,7 @@ import AdminAbout from './pages/admin/AdminAbout';
 import AdminHomeHero from './pages/admin/AdminHomeHero';
 import AdminHomeImages from './pages/admin/AdminHomeImages';
 import AdminHomeBanners from './pages/admin/AdminHomeBanners';
+import AdminTestimonials from './pages/admin/AdminTestimonials';
 import AdminBadges from './pages/admin/AdminBadges';
 import AdminCoupons from './pages/admin/AdminCoupons';
 import AdminReviews from './pages/admin/AdminReviews';
@@ -214,6 +215,7 @@ export default function App() {
       <Route path="/admin/home-hero" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminHomeHero /></ProtectedRoute>} />
       <Route path="/admin/home-images" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminHomeImages /></ProtectedRoute>} />
       <Route path="/admin/home-banners" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminHomeBanners /></ProtectedRoute>} />
+      <Route path="/admin/testimonials" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminTestimonials /></ProtectedRoute>} />
       <Route path="/admin/badges" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminBadges /></ProtectedRoute>} />
       <Route path="/admin/coupons" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminCoupons /></ProtectedRoute>} />
       <Route path="/admin/reviews" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminReviews /></ProtectedRoute>} />
