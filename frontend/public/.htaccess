@@ -29,6 +29,11 @@ DirectoryIndex index.html
   # PHP backend — do not route to React
   RewriteRule ^backend/ - [L]
 
+  # Missing build assets must 404 (never SPA-fallback to index.html), otherwise a
+  # stale/edge cache stores HTML under a .js URL -> "Unexpected token '<'".
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^static/ - [R=404,L]
+
   # React SPA fallback
   RewriteRule ^ index.html [L]
 </IfModule>

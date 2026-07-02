@@ -1,5 +1,18 @@
 # Cloudflare Pages — extension-only MIME (NEVER use /static/* or /assets/* blanket rules)
 
+# Entry HTML must never be cached, so clients always fetch the current asset hashes.
+# This prevents a stale index.html from requesting a missing /static/*.js, which the
+# SPA fallback would answer with index.html (HTML) at status 200 — the browser then
+# throws "Unexpected token '<'" and Cloudflare caches the HTML under the .js URL.
+/
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+
+# Content-hashed build assets never change for a given filename — cache them forever.
+/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
 /static/*.css
   Content-Type: text/css; charset=utf-8
 
