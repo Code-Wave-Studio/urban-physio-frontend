@@ -5,26 +5,25 @@ import { useLocation as useLocationContext } from '../contexts/LocationContext';
 import FaIcon from './FaIcon';
 import Logo from './Logo';
 import MobileNavDrawer from './MobileNavDrawer';
+import NotificationBell from './NotificationBell';
 
 const PRIMARY_NAV_LINKS = [
   { to: '/', label: 'Home' },
   { to: '/doctors', label: 'Find Doctor' },
   { to: '/clinics', label: 'Find Clinic' },
+  { to: '/exercises', label: 'Exercise Library' },
+  { to: '/physiofeed', label: 'PhysioFeed' },
+  { to: '/about', label: 'About Us' },
 ];
 
 const MORE_NAV_LINKS = [
-  { to: '/patient/saved', label: 'Saved', icon: 'fa-heart', patientOnly: true },
-  { to: '/about', label: 'About Us', icon: 'fa-building' },
-  { to: '/book?type=home_visit', label: 'Home Physiotherapy', icon: 'fa-house-medical' },
   { to: '/treatments', label: 'Treatments', icon: 'fa-kit-medical' },
-  { to: '/packages', label: 'Packages', icon: 'fa-box-open' },
   { to: '/conditions', label: 'Conditions', icon: 'fa-notes-medical' },
-  { to: '/exercises', label: 'Exercise Library', icon: 'fa-dumbbell' },
-  { to: '/physiofeed', label: 'PhysioFeed', icon: 'fa-newspaper' },
+  { to: '/packages', label: 'Packages', icon: 'fa-box-open' },
+  { to: '/book?type=home_visit', label: 'Home Physiotherapy', icon: 'fa-house-medical' },
+  { to: '/contact', label: 'Careers', icon: 'fa-briefcase' },
   { to: '/faq', label: 'FAQ', icon: 'fa-circle-question' },
   { to: '/contact', label: 'Contact Us', icon: 'fa-envelope' },
-  { to: '/cancellation-help', label: 'Cancellation Help', icon: 'fa-calendar-xmark' },
-  { to: '/doctor/register', label: 'Join as Physiotherapist', icon: 'fa-user-doctor' },
 ];
 
 /**
@@ -40,6 +39,16 @@ export default function Navbar({ beforeLogo = null, headerSpacerClass = '' }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const moreRef = useRef(null);
+  const moreCloseTimer = useRef(null);
+
+  const openMore = () => {
+    if (moreCloseTimer.current) clearTimeout(moreCloseTimer.current);
+    setMoreOpen(true);
+  };
+  const scheduleCloseMore = () => {
+    if (moreCloseTimer.current) clearTimeout(moreCloseTimer.current);
+    moreCloseTimer.current = setTimeout(() => setMoreOpen(false), 160);
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -149,7 +158,12 @@ export default function Navbar({ beforeLogo = null, headerSpacerClass = '' }) {
                   {link.label}
                 </Link>
               ))}
-              <div className="relative" ref={moreRef}>
+              <div
+                className="relative"
+                ref={moreRef}
+                onMouseEnter={openMore}
+                onMouseLeave={scheduleCloseMore}
+              >
                 <button
                   type="button"
                   className={`site-header-link inline-flex items-center gap-1.5 ${moreMenuActive ? 'site-header-link--active' : ''}`}
@@ -157,14 +171,18 @@ export default function Navbar({ beforeLogo = null, headerSpacerClass = '' }) {
                   aria-haspopup="true"
                   onClick={() => setMoreOpen((open) => !open)}
                 >
-                  More
+                  Explore
                   <FaIcon icon="fa-chevron-down" className={`text-[10px] transition-transform ${moreOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {moreOpen && (
-                  <div className="site-nav-mega-menu absolute left-0 top-full z-[120] mt-2 animate-fade-in">
+                  <div
+                    className="site-nav-mega-menu absolute left-0 top-full z-[120] pt-2 animate-fade-in"
+                    onMouseEnter={openMore}
+                    onMouseLeave={scheduleCloseMore}
+                  >
                     <div className="site-nav-mega-menu__header">
-                      <p className="text-[11px] font-bold uppercase tracking-widest text-orange-600">Quick links</p>
-                      <p className="text-xs text-slate-500 mt-0.5">Book care, explore content &amp; get help</p>
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-orange-600">Explore</p>
+                      <p className="text-xs text-slate-500 mt-0.5">Treatments, care options &amp; help</p>
                     </div>
                     <div className="site-nav-mega-menu__grid">
                       {MORE_NAV_LINKS.filter((link) => !link.patientOnly || (user && hasRole('patient'))).map((link) => (
@@ -189,24 +207,7 @@ export default function Navbar({ beforeLogo = null, headerSpacerClass = '' }) {
             </nav>
 
             <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto">
-              <Link
-                to="/search"
-                className="inline-flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-slate-200 bg-white/80 text-slate-700 hover:text-primary-600 hover:border-primary-300 hover:bg-primary-50/50 transition shrink-0"
-                aria-label="Open search"
-                title="Search"
-              >
-                <FaIcon icon="fa-magnifying-glass" className="text-sm sm:text-base" />
-              </Link>
-              {city && (
-                <button
-                  type="button"
-                  onClick={() => setShowSelector(true)}
-                  className="hidden md:inline-flex text-xs text-primary-700 glass px-2.5 py-1.5 rounded-full font-medium items-center gap-1 max-w-[140px]"
-                >
-                  <FaIcon icon="fa-location-dot" className="shrink-0" />
-                  <span className="truncate">{locationLabel || city.name}</span>
-                </button>
-              )}
+              {user && <NotificationBell />}
               <Link to="/book" className="hidden sm:inline-flex btn-primary text-sm !py-2 !px-4">
                 Book Appointment
               </Link>

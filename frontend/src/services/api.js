@@ -434,6 +434,8 @@ export const admin = {
   doctorPackagesList: (params) => api.get('/admin/doctor-packages', { params }),
   approveDoctorPackage: (id) => api.put(`/admin/doctor-packages/${id}/approve`),
   rejectDoctorPackage: (id, reason) => api.put(`/admin/doctor-packages/${id}/reject`, { reason }),
+  updateDoctorPackage: (id, data) => api.put(`/admin/doctor-packages/${id}`, data),
+  deleteDoctorPackage: (id) => api.delete(`/admin/doctor-packages/${id}`),
   treatmentPackageGet: (id) => api.get(`/admin/treatment-packages/${id}`),
   treatmentPackageCreate: (data) => api.post('/admin/treatment-packages', data),
   treatmentPackageUpdate: (id, data) => api.put(`/admin/treatment-packages/${id}`, data),
@@ -507,7 +509,7 @@ export const physioFeed = {
 
 export const sessionTypes = () => api.get('/session-types');
 
-const SEARCH_TIMEOUT_MS = 60000;
+const SEARCH_TIMEOUT_MS = 20000;
 
 export const search = {
   universal: (params, config = {}) =>

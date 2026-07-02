@@ -370,6 +370,9 @@ export default function GlobalSearch({
   const showQuickTags = isHero;
   const trimmedQuery = query.trim();
 
+  const cityShort =
+    city?.name || (locationLabel ? locationLabel.split(',')[0].trim() : '') || 'Location';
+
   const inputClass = isHero
     ? 'w-full bg-transparent border-0 py-3 sm:py-3.5 pl-2 pr-24 sm:pr-28 text-sm sm:text-base text-slate-800 placeholder:text-slate-400 outline-none focus:ring-0'
     : isMobile
@@ -545,12 +548,12 @@ export default function GlobalSearch({
               type="button"
               onClick={() => setShowSelector(true)}
               className="hero-search-loc shrink-0"
-              title="Change location"
-              aria-label={`Location: ${locationLabel || city?.name || 'Select city'}`}
+              title={locationLabel || city?.name ? `Location: ${locationLabel || city?.name}` : 'Change location'}
+              aria-label={`Location: ${cityShort}`}
             >
               <FaIcon icon="fa-location-dot" className="text-orange-500 text-xs shrink-0" />
-              <span className="truncate max-w-[4.25rem] sm:max-w-[7.5rem] text-left">
-                {locationLabel || city?.name || 'Location'}
+              <span className="truncate max-w-[3.75rem] sm:max-w-[6rem] text-left">
+                {cityShort}
               </span>
               <FaIcon icon="fa-chevron-down" className="text-[8px] text-slate-400 shrink-0" />
             </button>
