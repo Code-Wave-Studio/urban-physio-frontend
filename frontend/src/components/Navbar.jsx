@@ -176,7 +176,7 @@ export default function Navbar({ beforeLogo = null, headerSpacerClass = '' }) {
                 </button>
                 {moreOpen && (
                   <div
-                    className="site-nav-mega-menu absolute left-0 top-full z-[120] pt-2 animate-fade-in"
+                    className="site-nav-mega-menu absolute right-0 top-full z-[120] pt-2 animate-fade-in"
                     onMouseEnter={openMore}
                     onMouseLeave={scheduleCloseMore}
                   >
