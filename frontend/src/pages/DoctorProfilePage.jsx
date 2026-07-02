@@ -209,12 +209,12 @@ export default function DoctorProfilePage() {
       <Navbar />
 
       <div className="relative bg-white">
-        <div className="relative pt-14 sm:pt-16 md:pt-[4.5rem]">
+        <div className="relative">
           <DoctorProfileBanner
             className="h-28 sm:h-32 md:h-36 w-full"
             specialization={doctor.specialization}
           />
-          <div className="absolute top-16 sm:top-[4.5rem] md:top-20 left-0 right-0 z-20 max-w-6xl mx-auto px-4">
+          <div className="absolute top-3 sm:top-4 left-0 right-0 z-20 max-w-6xl mx-auto px-4">
             <Link
               to="/doctors"
               className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-white bg-black/40 backdrop-blur-sm border border-white/20 shadow-sm px-3 py-1.5 rounded-full hover:bg-black/55 transition"
