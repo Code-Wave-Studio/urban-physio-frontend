@@ -245,7 +245,10 @@ export default function SearchResultsPage() {
     (data?.exercises?.length || 0) +
     (data?.articles?.length || 0) +
     (data?.packages?.length || 0) +
+    (data?.faqs?.length || 0) +
     (data?.locations?.length || 0);
+
+  const isFallback = Boolean(data?.is_fallback);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -403,6 +406,13 @@ export default function SearchResultsPage() {
               </div>
             )}
 
+            {isFallback && displayedTotal > 0 && (
+              <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                <FaIcon icon="fa-wand-magic-sparkles" className="mr-2 text-amber-500" />
+                No exact matches for &ldquo;{q}&rdquo; — showing the closest relevant physiotherapists, clinics and treatments.
+              </div>
+            )}
+
             <SearchAIOverview text={data?.ai_overview} parsed={data?.parsed} />
 
             <SearchFilterChips
@@ -499,6 +509,20 @@ export default function SearchResultsPage() {
                     <HighlightText text={p.name} query={q} />
                   </p>
                   <p className="text-sm text-slate-600">{p.total_sessions} sessions · {p.duration_days} days</p>
+                </Link>
+              )}
+            />
+
+            <EduSection
+              title="Helpful answers"
+              icon="fa-circle-question"
+              items={data?.faqs}
+              render={(f) => (
+                <Link key={f.id || f.slug} to={f.slug ? `/faq#${f.slug}` : '/faq'} className="glass-card p-4 hover:shadow-md block h-full">
+                  <p className="font-semibold text-slate-900 line-clamp-2">
+                    <HighlightText text={f.title} query={q} />
+                  </p>
+                  {f.category && <p className="text-xs text-slate-500 capitalize mt-1">{f.category}</p>}
                 </Link>
               )}
             />

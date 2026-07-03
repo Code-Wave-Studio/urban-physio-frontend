@@ -264,6 +264,7 @@ export function mergeSearchResults(apiData, localData) {
     recovery: data.recovery ?? [],
     did_you_mean: data.did_you_mean ?? null,
     total: data.total ?? 0,
+    is_fallback: data.is_fallback ?? false,
   };
 }
 
