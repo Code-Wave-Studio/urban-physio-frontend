@@ -35,10 +35,8 @@ const TYPE_MAP = {
   faqs: 'faqs',
 };
 
-function EntityGrid({ title, icon, items, children, treatmentIntent, type }) {
+function EntityGrid({ title, icon, items, children, type }) {
   if (!items?.length) return null;
-  const eduTypes = ['articles', 'conditions', 'treatments', 'exercises', 'faqs'];
-  if (treatmentIntent && eduTypes.includes(type)) return null;
 
   return (
     <section className="mb-10" aria-labelledby={`section-${type}`}>
@@ -52,9 +50,8 @@ function EntityGrid({ title, icon, items, children, treatmentIntent, type }) {
   );
 }
 
-function EduSection({ title, icon, items, render, treatmentIntent, type, forceShow }) {
+function EduSection({ title, icon, items, render }) {
   if (!items?.length) return null;
-  if (treatmentIntent && !forceShow) return null;
   return (
     <section className="mb-10">
       <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
@@ -172,7 +169,6 @@ export default function SearchResultsPage() {
     runSearch(input);
   };
 
-  const treatmentIntent = results?.parsed?.treatment_intent ?? true;
   const chipClass =
     'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border border-slate-200 bg-white text-slate-700 hover:border-orange-300 hover:bg-orange-50 transition';
 
@@ -198,6 +194,20 @@ export default function SearchResultsPage() {
   }, [results, typeParam]);
 
   const data = filtered || results;
+
+  // Real count of everything we can render (incl. local/merged fallback), not just the
+  // backend "total" — so the empty-state never shows while result cards are visible.
+  const displayedTotal =
+    (data?.doctors?.length || 0) +
+    (data?.clinics?.length || 0) +
+    (data?.services?.length || 0) +
+    (data?.treatments?.length || 0) +
+    (data?.conditions?.length || 0) +
+    (data?.symptoms?.length || 0) +
+    (data?.exercises?.length || 0) +
+    (data?.articles?.length || 0) +
+    (data?.packages?.length || 0) +
+    (data?.locations?.length || 0);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -334,15 +344,15 @@ export default function SearchResultsPage() {
               query={q}
             />
 
-            <EntityGrid title="Top Physiotherapists" icon="fa-user-doctor" items={data?.doctors} type="doctors" treatmentIntent={false}>
+            <EntityGrid title="Top Physiotherapists" icon="fa-user-doctor" items={data?.doctors} type="doctors">
               {(d) => <SearchDoctorCard key={d.id} doctor={d} onTrack={trackClick} />}
             </EntityGrid>
 
-            <EntityGrid title="Top Clinics" icon="fa-hospital" items={data?.clinics} type="clinics" treatmentIntent={false}>
+            <EntityGrid title="Top Clinics" icon="fa-hospital" items={data?.clinics} type="clinics">
               {(c) => <SearchClinicCard key={c.id} clinic={c} onTrack={trackClick} />}
             </EntityGrid>
 
-            <EntityGrid title="Related Services" icon="fa-hand-holding-medical" items={data?.services} type="services" treatmentIntent={treatmentIntent}>
+            <EntityGrid title="Related Services" icon="fa-hand-holding-medical" items={data?.services} type="services">
               {(s, i) => (
                 <Link key={`${s.id}-${i}`} to="/treatments" className="glass-card p-4 hover:shadow-md block">
                   <p className="font-semibold text-slate-900">{s.name || s.title}</p>
@@ -352,7 +362,7 @@ export default function SearchResultsPage() {
               )}
             </EntityGrid>
 
-            <EntityGrid title="Related Treatments" icon="fa-spa" items={data?.treatments} type="treatments" treatmentIntent={treatmentIntent}>
+            <EntityGrid title="Related Treatments" icon="fa-spa" items={data?.treatments} type="treatments">
               {(t, i) => (
                 <Link key={`${t.id ?? t.slug}-${i}`} to={t.slug ? `/treatments/${t.slug}` : '/treatments'} className="glass-card p-4 hover:shadow-md block">
                   <p className="font-semibold text-slate-900">{t.title}</p>
@@ -361,7 +371,7 @@ export default function SearchResultsPage() {
               )}
             </EntityGrid>
 
-            <EntityGrid title="Related Conditions" icon="fa-notes-medical" items={data?.conditions} type="conditions" treatmentIntent={treatmentIntent}>
+            <EntityGrid title="Related Conditions" icon="fa-notes-medical" items={data?.conditions} type="conditions">
               {(c) => (
                 <Link key={c.id} to={`/conditions/${c.slug}`} className="glass-card p-4 hover:shadow-md block">
                   <p className="font-semibold text-slate-900">{c.title}</p>
@@ -370,7 +380,7 @@ export default function SearchResultsPage() {
               )}
             </EntityGrid>
 
-            <EntityGrid title="Symptoms" icon="fa-heart-pulse" items={data?.symptoms} type="symptoms" treatmentIntent={treatmentIntent}>
+            <EntityGrid title="Symptoms" icon="fa-heart-pulse" items={data?.symptoms} type="symptoms">
               {(s, i) => (
                 <Link key={`${s.id}-${i}`} to={`/book?pain_type=${encodeURIComponent(s.title || '')}`} className="glass-card p-4 hover:shadow-md block">
                   <p className="font-semibold text-slate-900">{s.title || s.chip_label}</p>
@@ -378,7 +388,7 @@ export default function SearchResultsPage() {
               )}
             </EntityGrid>
 
-            <EntityGrid title="Exercises" icon="fa-person-running" items={data?.exercises} type="exercises" treatmentIntent={treatmentIntent}>
+            <EntityGrid title="Exercises" icon="fa-person-running" items={data?.exercises} type="exercises">
               {(e) => (
                 <Link key={e.id} to={`/exercises/${e.slug}`} className="glass-card p-4 hover:shadow-md block">
                   <p className="font-semibold text-slate-900">{e.name}</p>
@@ -391,9 +401,6 @@ export default function SearchResultsPage() {
               title="Blogs & articles"
               icon="fa-newspaper"
               items={data?.articles}
-              type="articles"
-              treatmentIntent={treatmentIntent}
-              forceShow={!!typeParam}
               render={(a) => (
                 <Link key={a.id} to={`/physiofeed/${a.slug}`} className="glass-card p-4 hover:shadow-md block h-full">
                   <p className="font-semibold text-slate-900 line-clamp-2">{a.title}</p>
@@ -406,9 +413,6 @@ export default function SearchResultsPage() {
               title="Treatment packages"
               icon="fa-box-open"
               items={data?.packages}
-              type="packages"
-              treatmentIntent={treatmentIntent}
-              forceShow={!!typeParam}
               render={(p) => (
                 <Link key={p.id} to={`/packages/book/${p.slug}`} className="glass-card p-4 hover:shadow-md block">
                   <p className="font-semibold text-slate-900">{p.name}</p>
@@ -437,7 +441,7 @@ export default function SearchResultsPage() {
               </section>
             )}
 
-            {!data?.total && (
+            {displayedTotal === 0 && (
               <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center">
                 <FaIcon icon="fa-compass" className="text-3xl text-slate-300 mb-3" />
                 <p className="font-semibold text-slate-800">No exact matches for &ldquo;{q}&rdquo;</p>

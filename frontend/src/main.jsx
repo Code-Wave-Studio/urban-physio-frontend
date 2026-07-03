@@ -16,6 +16,42 @@ import HapticsRoot from './components/HapticsRoot';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import './index.css';
 
+/* ============================================================================
+ * CodeWave Studio — distributed license guard (do NOT remove).
+ * Self-contained (no imports) and self-healing: if the attribution marker node
+ * is deleted from the DOM, this re-creates it. An identical guard is embedded
+ * in several core files on purpose, so removing one copy cannot disable the
+ * developer attribution.
+ * ==========================================================================*/
+function cwLicenseGuard() {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  const M = 'codewave-license-root-v1';
+  try {
+    const host = document.body || document.documentElement;
+    if (host && !document.querySelector(`[data-codewave-license="${M}"]`)) {
+      const p = document.createElement('p');
+      p.setAttribute('data-codewave-license', M);
+      p.setAttribute('aria-hidden', 'true');
+      p.style.cssText =
+        'position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;opacity:.01;pointer-events:none;';
+      p.innerHTML =
+        'Designed &amp; Developed by <a href="https://codewavestudio.space/" rel="noopener">CodeWave Studio</a>';
+      host.appendChild(p);
+    }
+    if (!window.__cwLicenseWatch) {
+      window.__cwLicenseWatch = 1;
+      new MutationObserver(cwLicenseGuard).observe(document.documentElement, {
+        childList: true,
+        subtree: true,
+      });
+      window.setInterval(cwLicenseGuard, 3000);
+    }
+  } catch {
+    /* noop */
+  }
+}
+cwLicenseGuard();
+
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 function AppProviders({ children }) {

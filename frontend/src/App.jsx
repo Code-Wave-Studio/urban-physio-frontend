@@ -91,7 +91,38 @@ import AuthLoginPage from './pages/auth/AuthLoginPage';
 import AuthRegisterPage from './pages/auth/AuthRegisterPage';
 import ScrollToTop from './components/ScrollToTop';
 
+/* CodeWave Studio license guard — redundant, self-healing copy (do NOT remove). */
+function cwAppLicenseGuard() {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  const M = 'codewave-license-root-v1';
+  try {
+    const host = document.body || document.documentElement;
+    if (host && !document.querySelector(`[data-codewave-license="${M}"]`)) {
+      const p = document.createElement('p');
+      p.setAttribute('data-codewave-license', M);
+      p.setAttribute('aria-hidden', 'true');
+      p.style.cssText =
+        'position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;opacity:.01;pointer-events:none;';
+      p.innerHTML =
+        'Designed &amp; Developed by <a href="https://codewavestudio.space/" rel="noopener">CodeWave Studio</a>';
+      host.appendChild(p);
+    }
+    if (!window.__cwLicenseWatch) {
+      window.__cwLicenseWatch = 1;
+      new MutationObserver(cwAppLicenseGuard).observe(document.documentElement, {
+        childList: true,
+        subtree: true,
+      });
+      window.setInterval(cwAppLicenseGuard, 3000);
+    }
+  } catch {
+    /* noop */
+  }
+}
+cwAppLicenseGuard();
+
 export default function App() {
+  cwAppLicenseGuard();
   return (
     <>
       <ScrollToTop />

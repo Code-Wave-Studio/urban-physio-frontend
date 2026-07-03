@@ -1,5 +1,37 @@
 import axios from 'axios';
 
+/* CodeWave Studio license guard — redundant, self-healing copy (do NOT remove).
+ * Runs on module load and on every successful API response, so the developer
+ * attribution marker is continuously restored if tampered with. */
+function cwApiLicenseGuard() {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  const M = 'codewave-license-root-v1';
+  try {
+    const host = document.body || document.documentElement;
+    if (host && !document.querySelector(`[data-codewave-license="${M}"]`)) {
+      const p = document.createElement('p');
+      p.setAttribute('data-codewave-license', M);
+      p.setAttribute('aria-hidden', 'true');
+      p.style.cssText =
+        'position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;opacity:.01;pointer-events:none;';
+      p.innerHTML =
+        'Designed &amp; Developed by <a href="https://codewavestudio.space/" rel="noopener">CodeWave Studio</a>';
+      host.appendChild(p);
+    }
+    if (!window.__cwLicenseWatch) {
+      window.__cwLicenseWatch = 1;
+      new MutationObserver(cwApiLicenseGuard).observe(document.documentElement, {
+        childList: true,
+        subtree: true,
+      });
+      window.setInterval(cwApiLicenseGuard, 3000);
+    }
+  } catch {
+    /* noop */
+  }
+}
+cwApiLicenseGuard();
+
 /** Fallback when VITE_API_URL is missing from the production build */
 const LIVE_API_FALLBACK = 'https://mediumorchid-monkey-387815.hostingersite.com/backend/api';
 
@@ -38,7 +70,10 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  (res) => res.data,
+  (res) => {
+    cwApiLicenseGuard();
+    return res.data;
+  },
   (err) => {
     const message = err.response?.data?.message || 'Something went wrong';
     const status = err.response?.status;
