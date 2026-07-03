@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import FaIcon from '../FaIcon';
+import ExerciseDetailModal from '../exercise/ExerciseDetailModal';
 import { exercises } from '../../services/api';
 
 const FALLBACK = [
@@ -30,6 +31,7 @@ const AREA_ICON = {
 export default function ExercisesSection() {
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState(null);
 
   useEffect(() => {
     exercises
@@ -79,11 +81,15 @@ export default function ExercisesSection() {
             {display.map((ex, idx) => (
               <motion.article
                 key={ex.id || ex.slug}
+                role="button"
+                tabIndex={0}
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.35, delay: idx * 0.05 }}
-                className="mobile-scroll-item group glass-card p-4 md:p-5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 border border-white/60"
+                onClick={() => setSelected(ex)}
+                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setSelected(ex)}
+                className="mobile-scroll-item group glass-card p-4 md:p-5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 border border-white/60 cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-500"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-500/15 to-emerald-500/15 flex items-center justify-center text-teal-700 shrink-0">
@@ -118,6 +124,8 @@ export default function ExercisesSection() {
           </Link>
         </div>
       </div>
+
+      <ExerciseDetailModal exercise={selected} onClose={() => setSelected(null)} />
     </section>
   );
 }

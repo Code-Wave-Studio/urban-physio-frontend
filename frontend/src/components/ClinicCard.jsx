@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import FaIcon from './FaIcon';
 import BadgeList from './platform/BadgeList';
 import PartnerClinicBadge from './PartnerClinicBadge';
+import ClinicPreview from './clinic/ClinicPreview';
 import ClinicCoverImage from './clinic/ClinicCoverImage';
 import ClinicQuickActions from './clinic/ClinicQuickActions';
 import ClinicMiniStats from './clinic/ClinicMiniStats';

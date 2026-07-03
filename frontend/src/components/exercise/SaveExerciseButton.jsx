@@ -41,18 +41,21 @@ export default function SaveExerciseButton({ exercise, className = '', compact =
     <button
       type="button"
       onClick={toggle}
-      className={`inline-flex items-center justify-center gap-1.5 font-semibold border transition ${
-        compact ? 'text-xs !px-2.5 !py-1.5 rounded-lg' : 'text-sm !px-4 !py-2.5 rounded-xl'
+      className={`inline-flex shrink-0 items-center justify-center font-semibold border transition ${
+        compact
+          ? 'w-[22px] h-[22px] !p-0 rounded-full text-[10px]'
+          : 'text-sm gap-1.5 !px-4 !py-2.5 rounded-xl'
       } ${
         saved
           ? 'bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100'
           : 'bg-white/90 border-slate-200 text-slate-700 hover:bg-slate-50'
       } ${className}`}
       aria-pressed={saved}
+      aria-label={saved ? 'Remove from saved exercises' : 'Save exercise'}
       title={saved ? 'Remove from saved' : 'Save exercise'}
     >
       <FaIcon icon="fa-heart" className={saved ? 'text-rose-500' : 'text-slate-400'} />
-      {compact ? (saved ? 'Saved' : 'Save') : saved ? 'Saved' : 'Save exercise'}
+      {!compact && (saved ? 'Saved' : 'Save exercise')}
     </button>
   );
 }

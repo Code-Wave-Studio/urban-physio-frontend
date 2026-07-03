@@ -180,7 +180,7 @@ export default function ExerciseLibrary() {
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 capitalize">{ex.body_area}</span>
                     <div className="flex items-center gap-2">
                       <SaveExerciseButton exercise={ex} stopPropagation />
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border capitalize ${DIFFICULTY_STYLES[ex.difficulty]}`}>
+                      <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full border capitalize min-h-[22px] ${DIFFICULTY_STYLES[ex.difficulty]}`}>
                         {ex.difficulty}
                       </span>
                     </div>

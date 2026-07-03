@@ -306,20 +306,20 @@ export default function SearchResultsPage() {
             </button>
           </form>
 
-          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="mt-3 grid grid-cols-2 gap-1.5 sm:gap-2">
             <Link
               to="/doctors"
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold border-2 border-primary-500/50 bg-white text-primary-700 shadow-sm hover:bg-orange-50 hover:border-primary-500 hover:shadow-md active:scale-[0.98] transition"
+              className="inline-flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-4 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-semibold border-2 border-primary-500/50 bg-white text-primary-700 shadow-sm hover:bg-orange-50 hover:border-primary-500 hover:shadow-md active:scale-[0.98] transition min-w-0"
             >
-              <FaIcon icon="fa-user-doctor" className="text-primary-600 shrink-0" />
-              Find Physiotherapist
+              <FaIcon icon="fa-user-doctor" className="text-primary-600 shrink-0 text-xs sm:text-sm" />
+              <span className="leading-tight truncate">Find Physiotherapist</span>
             </Link>
             <Link
               to="/clinics"
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold border-2 border-emerald-500/50 bg-white text-emerald-800 shadow-sm hover:bg-emerald-50 hover:border-emerald-500 hover:shadow-md active:scale-[0.98] transition"
+              className="inline-flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-4 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-semibold border-2 border-emerald-500/50 bg-white text-emerald-800 shadow-sm hover:bg-emerald-50 hover:border-emerald-500 hover:shadow-md active:scale-[0.98] transition min-w-0"
             >
-              <FaIcon icon="fa-hospital" className="text-emerald-600 shrink-0" />
-              Find Clinic
+              <FaIcon icon="fa-hospital" className="text-emerald-600 shrink-0 text-xs sm:text-sm" />
+              <span className="leading-tight truncate">Find Clinic</span>
             </Link>
           </div>
         </div>
