@@ -8,6 +8,7 @@ import SearchAIOverview from '../components/search/SearchAIOverview';
 import SearchFilterChips from '../components/search/SearchFilterChips';
 import SearchDoctorCard from '../components/search/SearchDoctorCard';
 import SearchClinicCard from '../components/search/SearchClinicCard';
+import HighlightText from '../components/search/HighlightText';
 import { search } from '../services/api';
 import { useLocation } from '../contexts/LocationContext';
 import { localSearchMatches, mergeSearchResults, QUICK_SEARCH_TAGS } from '../utils/searchCatalog';
@@ -71,6 +72,8 @@ export default function SearchResultsPage() {
   const typeParam = params.get('type') || '';
   const [input, setInput] = useState(q);
   const [suggestions, setSuggestions] = useState([]);
+  const [sugIndex, setSugIndex] = useState(-1);
+  const [sugOpen, setSugOpen] = useState(false);
   const { city, coords } = useLocation();
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -102,11 +105,16 @@ export default function SearchResultsPage() {
   };
 
   useEffect(() => {
+    setSugIndex(-1);
     if (input.length >= 2) {
       const t = setTimeout(() => {
-        search.suggest({ q: input, limit: 6 }).then((res) => {
-          setSuggestions(res?.data?.suggestions || res?.suggestions || []);
-        }).catch(() => setSuggestions([]));
+        search
+          .suggest({ q: input, limit: 8 })
+          .then((res) => {
+            setSuggestions(res?.data?.suggestions || res?.suggestions || []);
+            setSugOpen(true);
+          })
+          .catch(() => setSuggestions([]));
       }, 150);
       return () => clearTimeout(t);
     }
@@ -125,6 +133,7 @@ export default function SearchResultsPage() {
     const local = localSearchMatches(q);
     setResults(mergeSearchResults({}, local));
     setLoading(true);
+    setSugOpen(false);
 
     const apiParams = { q, search: q, limit: 20 };
     if (typeParam) apiParams.type = TYPE_MAP[typeParam] || typeParam;
@@ -164,9 +173,38 @@ export default function SearchResultsPage() {
     [q]
   );
 
+  const pickSuggestion = (s) => {
+    setSugOpen(false);
+    setSugIndex(-1);
+    setInput(s);
+    runSearch(s);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (sugOpen && sugIndex >= 0 && suggestions[sugIndex]) {
+      pickSuggestion(suggestions[sugIndex]);
+      return;
+    }
+    setSugOpen(false);
     runSearch(input);
+  };
+
+  // Keyboard navigation for the autocomplete dropdown: Arrow Up/Down, Enter, Escape.
+  const onInputKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      setSugOpen(false);
+      setSugIndex(-1);
+      return;
+    }
+    if (!sugOpen || suggestions.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSugIndex((i) => (i + 1) % suggestions.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSugIndex((i) => (i <= 0 ? suggestions.length - 1 : i - 1));
+    }
   };
 
   const chipClass =
@@ -220,27 +258,40 @@ export default function SearchResultsPage() {
               <input
                 type="search"
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  setSugOpen(true);
+                }}
+                onKeyDown={onInputKeyDown}
+                onFocus={() => suggestions.length > 0 && setSugOpen(true)}
                 placeholder={searchPlaceholder}
                 className="input-field w-full !pl-10 !py-3"
                 autoFocus
                 aria-label="Search query"
+                aria-autocomplete="list"
+                aria-expanded={sugOpen && suggestions.length > 0}
+                role="combobox"
                 autoComplete="off"
               />
-              {suggestions.length > 0 && input.length >= 2 && !loading && (
-                <ul className="absolute z-20 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden max-h-60 overflow-y-auto">
-                  {suggestions.map((s) => (
+              {sugOpen && suggestions.length > 0 && input.length >= 2 && !loading && (
+                <ul
+                  className="absolute z-20 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden max-h-60 overflow-y-auto"
+                  role="listbox"
+                >
+                  {suggestions.map((s, i) => (
                     <li key={s}>
                       <button
                         type="button"
-                        className="w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50 text-slate-700"
-                        onClick={() => {
-                          setInput(s);
-                          runSearch(s);
-                        }}
+                        role="option"
+                        aria-selected={sugIndex === i}
+                        className={`w-full text-left px-4 py-2.5 text-sm text-slate-700 transition ${
+                          sugIndex === i ? 'bg-orange-50' : 'hover:bg-orange-50'
+                        }`}
+                        onMouseEnter={() => setSugIndex(i)}
+                        onClick={() => pickSuggestion(s)}
                       >
                         <FaIcon icon="fa-magnifying-glass" className="text-orange-400 mr-2 text-xs" />
-                        {s}
+                        <HighlightText text={s} query={input} />
                       </button>
                     </li>
                   ))}
@@ -335,6 +386,23 @@ export default function SearchResultsPage() {
           </div>
         ) : (
           <>
+            {data?.did_you_mean && data.did_you_mean.toLowerCase() !== q.toLowerCase() && (
+              <div className="mb-5 text-sm text-slate-700">
+                Did you mean{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setInput(data.did_you_mean);
+                    runSearch(data.did_you_mean);
+                  }}
+                  className="font-semibold text-orange-600 hover:text-orange-700 underline underline-offset-2"
+                >
+                  {data.did_you_mean}
+                </button>
+                ?
+              </div>
+            )}
+
             <SearchAIOverview text={data?.ai_overview} parsed={data?.parsed} />
 
             <SearchFilterChips
@@ -355,7 +423,9 @@ export default function SearchResultsPage() {
             <EntityGrid title="Related Services" icon="fa-hand-holding-medical" items={data?.services} type="services">
               {(s, i) => (
                 <Link key={`${s.id}-${i}`} to="/treatments" className="glass-card p-4 hover:shadow-md block">
-                  <p className="font-semibold text-slate-900">{s.name || s.title}</p>
+                  <p className="font-semibold text-slate-900">
+                    <HighlightText text={s.name || s.title} query={q} />
+                  </p>
                   <p className="text-sm text-slate-600 line-clamp-2 mt-1">{s.short_description}</p>
                   {s.price > 0 && <p className="text-sm font-bold text-orange-700 mt-2">₹{Number(s.price).toLocaleString('en-IN')}</p>}
                 </Link>
@@ -365,7 +435,9 @@ export default function SearchResultsPage() {
             <EntityGrid title="Related Treatments" icon="fa-spa" items={data?.treatments} type="treatments">
               {(t, i) => (
                 <Link key={`${t.id ?? t.slug}-${i}`} to={t.slug ? `/treatments/${t.slug}` : '/treatments'} className="glass-card p-4 hover:shadow-md block">
-                  <p className="font-semibold text-slate-900">{t.title}</p>
+                  <p className="font-semibold text-slate-900">
+                    <HighlightText text={t.title} query={q} />
+                  </p>
                   <p className="text-sm text-slate-600 line-clamp-2">{t.short_description}</p>
                 </Link>
               )}
@@ -374,7 +446,9 @@ export default function SearchResultsPage() {
             <EntityGrid title="Related Conditions" icon="fa-notes-medical" items={data?.conditions} type="conditions">
               {(c) => (
                 <Link key={c.id} to={`/conditions/${c.slug}`} className="glass-card p-4 hover:shadow-md block">
-                  <p className="font-semibold text-slate-900">{c.title}</p>
+                  <p className="font-semibold text-slate-900">
+                    <HighlightText text={c.title} query={q} />
+                  </p>
                   <p className="text-xs text-slate-500 capitalize mt-1">{c.category}</p>
                 </Link>
               )}
@@ -383,7 +457,9 @@ export default function SearchResultsPage() {
             <EntityGrid title="Symptoms" icon="fa-heart-pulse" items={data?.symptoms} type="symptoms">
               {(s, i) => (
                 <Link key={`${s.id}-${i}`} to={`/book?pain_type=${encodeURIComponent(s.title || '')}`} className="glass-card p-4 hover:shadow-md block">
-                  <p className="font-semibold text-slate-900">{s.title || s.chip_label}</p>
+                  <p className="font-semibold text-slate-900">
+                    <HighlightText text={s.title || s.chip_label} query={q} />
+                  </p>
                 </Link>
               )}
             </EntityGrid>
@@ -391,7 +467,9 @@ export default function SearchResultsPage() {
             <EntityGrid title="Exercises" icon="fa-person-running" items={data?.exercises} type="exercises">
               {(e) => (
                 <Link key={e.id} to={`/exercises/${e.slug}`} className="glass-card p-4 hover:shadow-md block">
-                  <p className="font-semibold text-slate-900">{e.name}</p>
+                  <p className="font-semibold text-slate-900">
+                    <HighlightText text={e.name} query={q} />
+                  </p>
                   <p className="text-xs text-slate-500 capitalize">{e.body_area}</p>
                 </Link>
               )}
@@ -403,7 +481,9 @@ export default function SearchResultsPage() {
               items={data?.articles}
               render={(a) => (
                 <Link key={a.id} to={`/physiofeed/${a.slug}`} className="glass-card p-4 hover:shadow-md block h-full">
-                  <p className="font-semibold text-slate-900 line-clamp-2">{a.title}</p>
+                  <p className="font-semibold text-slate-900 line-clamp-2">
+                    <HighlightText text={a.title} query={q} />
+                  </p>
                   <p className="text-sm text-slate-600 line-clamp-2 mt-1">{a.excerpt}</p>
                 </Link>
               )}
@@ -415,7 +495,9 @@ export default function SearchResultsPage() {
               items={data?.packages}
               render={(p) => (
                 <Link key={p.id} to={`/packages/book/${p.slug}`} className="glass-card p-4 hover:shadow-md block">
-                  <p className="font-semibold text-slate-900">{p.name}</p>
+                  <p className="font-semibold text-slate-900">
+                    <HighlightText text={p.name} query={q} />
+                  </p>
                   <p className="text-sm text-slate-600">{p.total_sessions} sessions · {p.duration_days} days</p>
                 </Link>
               )}

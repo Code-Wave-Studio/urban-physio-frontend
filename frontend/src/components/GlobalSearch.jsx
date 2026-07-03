@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import FaIcon from './FaIcon';
 import DoctorAvatar from './DoctorAvatar';
 import ClinicLogo from './ClinicLogo';
+import HighlightText from './search/HighlightText';
 import { search } from '../services/api';
 import { useLocation } from '../contexts/LocationContext';
 import { localSearchMatches, mergeSearchResults, QUICK_SEARCH_TAGS } from '../utils/searchCatalog';
@@ -407,7 +408,9 @@ export default function GlobalSearch({
     if (item.type === 'doctor') {
       return (
         <span className="min-w-0 flex-1">
-          <span className="block text-sm font-semibold text-slate-900 truncate leading-snug">{item.label}</span>
+          <span className="block text-sm font-semibold text-slate-900 truncate leading-snug">
+            <HighlightText text={item.label} query={trimmedQuery} />
+          </span>
           <span className="block text-xs font-medium text-primary-600 truncate mt-0.5">{item.sub}</span>
           {item.meta && <span className="block text-[11px] text-slate-500 truncate mt-0.5">{item.meta}</span>}
         </span>
@@ -416,7 +419,9 @@ export default function GlobalSearch({
     if (item.type === 'clinic') {
       return (
         <span className="min-w-0 flex-1">
-          <span className="block text-sm font-semibold text-slate-900 truncate leading-snug">{item.label}</span>
+          <span className="block text-sm font-semibold text-slate-900 truncate leading-snug">
+            <HighlightText text={item.label} query={trimmedQuery} />
+          </span>
           <span className="block text-xs font-medium text-emerald-700 truncate mt-0.5">{item.sub}</span>
           {item.meta && <span className="block text-[11px] text-slate-500 truncate mt-0.5">{item.meta}</span>}
         </span>
@@ -424,7 +429,9 @@ export default function GlobalSearch({
     }
     return (
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-semibold text-slate-900 truncate">{item.label}</span>
+        <span className="block text-sm font-semibold text-slate-900 truncate">
+          <HighlightText text={item.label} query={trimmedQuery} />
+        </span>
         <span className="block text-xs text-slate-500 truncate capitalize mt-0.5">{item.type} · {item.sub}</span>
       </span>
     );

@@ -262,6 +262,7 @@ export function mergeSearchResults(apiData, localData) {
     filters: data.filters ?? [],
     counts: data.counts ?? {},
     recovery: data.recovery ?? [],
+    did_you_mean: data.did_you_mean ?? null,
     total: data.total ?? 0,
   };
 }
