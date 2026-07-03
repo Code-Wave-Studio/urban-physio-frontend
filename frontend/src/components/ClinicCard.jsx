@@ -89,12 +89,11 @@ export default function ClinicCard({ clinic, compact = false, variant = 'listing
         tabIndex={0}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        whileHover={{ y: -2 }}
         whileTap={{ scale: 0.995 }}
         transition={{ duration: 0.22 }}
         onClick={openSheet}
         onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openSheet()}
-        className={`group flex flex-col rounded-[1.25rem] border border-slate-200/80 bg-white cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500 transition-shadow duration-300 ${CARD_3D_SHADOW}`}
+        className={`group flex flex-col w-full min-w-0 overflow-visible rounded-[1.25rem] border border-slate-200/80 bg-white cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500 transition-shadow duration-300 ${CARD_3D_SHADOW}`}
       >
         <div className="relative h-36 sm:h-40 shrink-0 overflow-hidden rounded-t-[1.25rem]">
           {photo ? (
@@ -149,8 +148,8 @@ export default function ClinicCard({ clinic, compact = false, variant = 'listing
 
           <ClinicTodaySlotsRow clinicId={clinic.id} />
 
-          <div className="pt-1" onClick={stopNav} onKeyDown={stopNav} role="presentation">
-            <ClinicQuickActions clinic={clinic} className="-mx-0.5 px-0.5" />
+          <div className="pt-1 -mx-3.5 px-3.5 sm:-mx-4 sm:px-4 min-w-0" onClick={stopNav} onKeyDown={stopNav} role="presentation">
+            <ClinicQuickActions clinic={clinic} />
           </div>
         </div>
       </motion.article>

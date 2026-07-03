@@ -16,9 +16,10 @@ function stopNav(e) {
   e.stopPropagation();
 }
 
-function CircleAction({ href, to, onClick, icon, label, saved = false, brand = false, external }) {
-  const base =
-    'shrink-0 snap-start flex flex-col items-center gap-1 w-[3.25rem] group transition-transform active:scale-95';
+function CircleAction({ href, to, onClick, icon, label, saved = false, brand = false, external, compact = false }) {
+  const base = compact
+    ? 'shrink-0 snap-start flex flex-col items-center gap-0.5 w-[3rem] group transition-transform active:scale-95'
+    : 'shrink-0 snap-start flex flex-col items-center gap-1 w-[3.25rem] group transition-transform active:scale-95';
   const circle = saved
     ? 'bg-slate-50 text-rose-600 border border-slate-200 shadow-sm group-hover:bg-slate-100'
     : 'bg-white text-slate-600 border border-slate-200 shadow-sm group-hover:bg-slate-50 group-hover:border-slate-300';
@@ -26,11 +27,17 @@ function CircleAction({ href, to, onClick, icon, label, saved = false, brand = f
   const inner = (
     <>
       <span
-        className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 ${circle}`}
+        className={`rounded-full flex items-center justify-center transition-all duration-200 ${
+          compact ? 'w-10 h-10' : 'w-11 h-11'
+        } ${circle}`}
       >
-        <FaIcon icon={icon} className="text-sm" brand={brand} />
+        <FaIcon icon={icon} className={compact ? 'text-xs' : 'text-sm'} brand={brand} />
       </span>
-      <span className="text-[9px] font-semibold text-slate-600 text-center leading-tight max-w-[3.5rem] truncate">
+      <span
+        className={`font-semibold text-slate-600 text-center leading-tight truncate ${
+          compact ? 'text-[8px] max-w-[3rem]' : 'text-[9px] max-w-[3.5rem]'
+        }`}
+      >
         {label}
       </span>
     </>
@@ -64,7 +71,7 @@ function CircleAction({ href, to, onClick, icon, label, saved = false, brand = f
   );
 }
 
-function SaveCircleAction({ clinic, onNavigate }) {
+function SaveCircleAction({ clinic, onNavigate, compact = false }) {
   const { user, hasRole } = useAuth();
   const { requireAuth } = useRequireAuth();
   const [saved, setSaved] = useState(() => isClinicSaved(clinic?.id));
@@ -98,6 +105,7 @@ function SaveCircleAction({ clinic, onNavigate }) {
       label={saved ? 'Saved' : 'Save'}
       saved={saved}
       onClick={toggle}
+      compact={compact}
     />
   );
 }
@@ -142,17 +150,20 @@ export default function ClinicQuickActions({
     fn?.(e);
   };
 
+  const compact = variant === 'card' || variant === 'sheet';
+  const showProfile = variant === 'card';
+
   const actions = (
     <>
-      {variant === 'card' && (
-        <CircleAction to={profileTo} icon="fa-hospital" label="Profile" onClick={wrapNav()} />
+      {showProfile && (
+        <CircleAction to={profileTo} icon="fa-hospital" label="Profile" onClick={wrapNav()} compact={compact} />
       )}
-      <CircleAction to={bookTo} icon="fa-calendar-check" label="Book" onClick={wrapNav()} />
+      <CircleAction to={bookTo} icon="fa-calendar-check" label="Book" onClick={wrapNav()} compact={compact} />
       {mapUrl && (
-        <CircleAction href={mapUrl} icon="fa-diamond-turn-right" label="Directions" external onClick={stopNav} />
+        <CircleAction href={mapUrl} icon="fa-diamond-turn-right" label="Directions" external onClick={stopNav} compact={compact} />
       )}
       {clinic.phone && (
-        <CircleAction href={`tel:${clinic.phone}`} icon="fa-phone" label="Call" onClick={stopNav} />
+        <CircleAction href={`tel:${clinic.phone}`} icon="fa-phone" label="Call" onClick={stopNav} compact={compact} />
       )}
       {waUrl && (
         <CircleAction
@@ -162,19 +173,22 @@ export default function ClinicQuickActions({
           brand
           external
           onClick={stopNav}
+          compact={compact}
         />
       )}
       {websiteHref && (
-        <CircleAction href={websiteHref} icon="fa-globe" label="Website" external onClick={stopNav} />
+        <CircleAction href={websiteHref} icon="fa-globe" label="Website" external onClick={stopNav} compact={compact} />
       )}
-      <SaveCircleAction clinic={clinic} onNavigate={onNavigate} />
-      <CircleAction icon="fa-share-nodes" label="Share" onClick={share} />
+      <SaveCircleAction clinic={clinic} onNavigate={onNavigate} compact={compact} />
+      <CircleAction icon="fa-share-nodes" label="Share" onClick={share} compact={compact} />
     </>
   );
 
+  const gapClass = compact ? 'gap-2 sm:gap-3' : 'gap-3';
+
   return (
     <div
-      className={`flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory scroll-smooth touch-pan-x max-w-full [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${className}`}
+      className={`flex ${gapClass} overflow-x-auto pb-1 snap-x snap-mandatory scroll-smooth touch-pan-x w-full min-w-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${className}`}
       role="list"
       aria-label="Quick actions"
     >

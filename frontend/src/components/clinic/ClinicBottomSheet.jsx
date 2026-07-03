@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, motion, useDragControls, useMotionValue, useTransform } from 'framer-motion';
 import FaIcon from '../FaIcon';
@@ -10,11 +11,13 @@ import ClinicMiniStats from './ClinicMiniStats';
 import ClinicSocialLinks from './ClinicSocialLinks';
 import ClinicStatusBadge, { ClinicStatusDetail } from './ClinicStatusBadge';
 import ClinicTodaySlotsRow from './ClinicTodaySlotsRow';
+import useBodyScrollLock from '../../hooks/useBodyScrollLock';
 import { useClinicPreview } from '../../hooks/useClinicPreview';
 import { showPartnerClinicBadge } from '../../utils/clinicBadges';
 import { formatOpeningHoursRows, resolveClinicHours, getTodayDayKey } from '../../utils/clinicProfileUtils';
 import { clinicProfileUrl, doctorProfileUrl } from '../../utils/profileUrls';
 import { resolveMediaUrl } from '../../utils/mediaUrl';
+import { setFloatingActionsHidden } from '../../utils/floatingActionsBus';
 
 function stopNav(e) {
   e.stopPropagation();
@@ -39,20 +42,22 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
   const sheetRef = useRef(null);
   const [expanded, setExpanded] = useState(false);
   const y = useMotionValue(0);
-  const backdropOpacity = useTransform(y, [0, 300], [1, 0.3]);
+  const backdropOpacity = useTransform(y, [0, 280], [1, 0.35]);
+
+  useBodyScrollLock(open);
 
   useEffect(() => {
     if (open) {
       setExpanded(false);
       y.set(0);
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
     }
-    return () => {
-      document.body.style.overflow = '';
-    };
   }, [open, y]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    setFloatingActionsHidden(true);
+    return () => setFloatingActionsHidden(false);
+  }, [open]);
 
   if (!initialClinic) return null;
 
@@ -67,24 +72,19 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
   const doctorCount = c.statistics?.doctor_count ?? c.doctor_count ?? doctors.length;
 
   const handleDragEnd = (_, info) => {
-    if (info.offset.y > 120 || info.velocity.y > 500) {
+    if (info.offset.y > 110 || info.velocity.y > 450) {
       onClose();
       return;
     }
-    if (info.offset.y < -60 || info.velocity.y < -400) {
+    if (!expanded && (info.offset.y < -48 || info.velocity.y < -380)) {
       setExpanded(true);
     }
     y.set(0);
   };
 
-  const sheetMaxClass = expanded
-    ? 'max-h-[min(92dvh,820px)]'
-    : 'max-h-[min(72dvh,640px)]';
-  const scrollMaxClass = expanded
-    ? 'max-h-[calc(92dvh-20rem)] sm:max-h-[calc(820px-20rem)]'
-    : 'max-h-[calc(72dvh-20rem)] sm:max-h-[calc(640px-20rem)]';
+  const sheetHeightClass = expanded ? 'h-[92dvh]' : 'h-[min(75dvh,680px)]';
 
-  return (
+  const sheet = (
     <AnimatePresence>
       {open && (
         <>
@@ -104,19 +104,20 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
             role="dialog"
             aria-modal="true"
             aria-labelledby="clinic-sheet-title"
-            className={`fixed inset-x-0 bottom-0 z-[125] flex flex-col ${sheetMaxClass}`}
+            className={`fixed inset-x-0 bottom-0 z-[125] flex flex-col ${sheetHeightClass}`}
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', stiffness: 380, damping: 36 }}
             drag="y"
             dragControls={dragControls}
-            dragConstraints={{ top: expanded ? -80 : 0, bottom: 0 }}
-            dragElastic={0.12}
+            dragListener={false}
+            dragConstraints={{ top: 0, bottom: 320 }}
+            dragElastic={{ top: 0, bottom: 0.12 }}
             style={{ y }}
             onDragEnd={handleDragEnd}
           >
-            <div className={`flex flex-col bg-white rounded-t-[1.75rem] shadow-2xl shadow-slate-900/20 border border-slate-200/80 overflow-hidden ${sheetMaxClass}`}>
+            <div className="flex flex-col h-full bg-white rounded-t-[1.75rem] shadow-2xl shadow-slate-900/20 border border-slate-200/80 border-b-0 overflow-hidden pb-[env(safe-area-inset-bottom)]">
               <div
                 className="shrink-0 pt-2 pb-1 cursor-grab active:cursor-grabbing touch-none"
                 onPointerDown={(e) => dragControls.start(e)}
@@ -124,8 +125,7 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
                 <div className="w-10 h-1 rounded-full bg-slate-300 mx-auto" />
               </div>
 
-              {/* Header — cover image */}
-              <div className="relative h-36 sm:h-40 shrink-0">
+              <div className="relative h-32 sm:h-36 shrink-0">
                 {cover ? (
                   <img src={cover} alt="" className="absolute inset-0 w-full h-full object-cover" />
                 ) : (
@@ -170,8 +170,7 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
                 <ClinicSocialLinks clinic={c} />
               </div>
 
-              {/* Scrollable body — grows with content, scrolls only when needed */}
-              <div className={`overflow-y-auto overscroll-contain px-4 py-4 space-y-5 grow-0 ${scrollMaxClass}`}>
+              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 space-y-5">
                 {loading && (
                   <p className="text-xs text-slate-500 flex items-center gap-2">
                     <FaIcon icon="fa-spinner" className="fa-spin text-emerald-500" />
@@ -286,9 +285,8 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
                 </Link>
               </div>
 
-              {/* Fixed bottom actions — pinned to sheet footer */}
-              <div className="shrink-0 z-20 border-t border-slate-100 bg-white px-4 pt-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(15,23,42,0.08)]">
-                <ClinicQuickActions clinic={c} onNavigate={onClose} className="!pb-0" />
+              <div className="shrink-0 z-20 border-t border-slate-100 bg-white px-3 sm:px-4 pt-3 pb-2 shadow-[0_-8px_30px_rgba(15,23,42,0.08)]">
+                <ClinicQuickActions clinic={c} onNavigate={onClose} variant="sheet" className="!pb-0" />
               </div>
             </div>
           </motion.div>
@@ -296,4 +294,7 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
       )}
     </AnimatePresence>
   );
+
+  if (typeof document === 'undefined') return sheet;
+  return createPortal(sheet, document.body);
 }

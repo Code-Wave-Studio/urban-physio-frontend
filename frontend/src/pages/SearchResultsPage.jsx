@@ -46,7 +46,7 @@ function EntityGrid({ title, icon, items, children, type }) {
         {title}
         <span className="text-sm font-normal text-slate-500">({items.length})</span>
       </h2>
-      <div className="grid sm:grid-cols-2 gap-4 items-start">{items.map(children)}</div>
+      <div className="grid sm:grid-cols-2 gap-4 items-start min-w-0 [&>*]:min-w-0">{items.map(children)}</div>
     </section>
   );
 }
