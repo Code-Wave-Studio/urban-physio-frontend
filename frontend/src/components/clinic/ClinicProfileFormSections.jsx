@@ -1,4 +1,5 @@
 import FaIcon from '../FaIcon';
+import ClinicCoverUpload from './ClinicCoverUpload';
 import { WEEKDAYS, SOCIAL_FIELDS, tagsToInput } from '../../utils/clinicProfileUtils';
 
 function FieldLabel({ children, hint }) {
@@ -11,9 +12,9 @@ function FieldLabel({ children, hint }) {
 }
 
 /**
- * @param {{ form: object, set: (k: string, v: unknown) => void, setHours: (key: string, value: string) => void }} props
+ * @param {{ form: object, set: (k: string, v: unknown) => void, setHours: (key: string, value: string) => void, clinicId?: number | string | null }} props
  */
-export function ClinicProfileDetailsFields({ form, set, setHours }) {
+export function ClinicProfileDetailsFields({ form, set, setHours, clinicId = null }) {
   return (
     <>
       <div>
@@ -27,27 +28,22 @@ export function ClinicProfileDetailsFields({ form, set, setHours }) {
         />
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div>
-          <FieldLabel>Website</FieldLabel>
-          <input
-            className="input-field"
-            type="url"
-            value={form.website}
-            onChange={(e) => set('website', e.target.value)}
-            placeholder="https://yourclinic.com"
-          />
-        </div>
-        <div>
-          <FieldLabel>Cover image URL</FieldLabel>
-          <input
-            className="input-field"
-            value={form.cover_image}
-            onChange={(e) => set('cover_image', e.target.value)}
-            placeholder="https://… (banner photo)"
-          />
-        </div>
+      <div>
+        <FieldLabel>Website</FieldLabel>
+        <input
+          className="input-field"
+          type="url"
+          value={form.website}
+          onChange={(e) => set('website', e.target.value)}
+          placeholder="https://yourclinic.com"
+        />
       </div>
+
+      <ClinicCoverUpload
+        coverImage={form.cover_image}
+        clinicId={clinicId}
+        onChange={(url) => set('cover_image', url)}
+      />
     </>
   );
 }

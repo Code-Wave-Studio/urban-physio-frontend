@@ -2,6 +2,7 @@ import { useState } from 'react';
 import FaIcon from './FaIcon';
 import ClinicLogo from './ClinicLogo';
 import { uploadClinicLogo } from '../services/api';
+import { CLINIC_LOGO_MAX_MB, CLINIC_LOGO_SIZE_HINT } from '../utils/clinicProfileUtils';
 import toast from 'react-hot-toast';
 
 /**
@@ -17,8 +18,8 @@ export default function ClinicLogoUpload({ logo, name, clinicId, onUploaded }) {
       toast.error('Please choose a JPG, PNG or WebP image');
       return;
     }
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Image must be 2MB or smaller');
+    if (file.size > CLINIC_LOGO_MAX_MB * 1024 * 1024) {
+      toast.error(`Image must be ${CLINIC_LOGO_MAX_MB}MB or smaller`);
       return;
     }
     setUploading(true);
@@ -41,7 +42,7 @@ export default function ClinicLogoUpload({ logo, name, clinicId, onUploaded }) {
       <div className="flex-1 text-center sm:text-left space-y-2">
         <p className="font-medium text-slate-800">Clinic logo</p>
         <p className="text-xs text-slate-500">
-          Shown on clinic listings and booking. JPG, PNG or WebP · max 2MB.
+          Shown on clinic listings and booking. Recommended {CLINIC_LOGO_SIZE_HINT} · JPG, PNG or WebP · max {CLINIC_LOGO_MAX_MB}MB.
         </p>
         <label className="inline-flex">
           <input

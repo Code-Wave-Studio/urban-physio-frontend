@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import FaIcon from './FaIcon';
 import BadgeList from './platform/BadgeList';
 import PartnerClinicBadge from './PartnerClinicBadge';
-import ClinicPreview from './clinic/ClinicPreview';
+import ClinicCoverImage from './clinic/ClinicCoverImage';
 import ClinicQuickActions from './clinic/ClinicQuickActions';
 import ClinicMiniStats from './clinic/ClinicMiniStats';
 import ClinicStatusBadge, { ClinicStatusDetail } from './clinic/ClinicStatusBadge';
@@ -97,15 +97,24 @@ export default function ClinicCard({ clinic, compact = false, variant = 'listing
       >
         <div className="relative h-36 sm:h-40 shrink-0 overflow-hidden rounded-t-[1.25rem]">
           {photo ? (
-            <img
-              src={photo}
-              alt={clinic.name}
-              className={`absolute inset-0 w-full h-full object-contain object-center transition-transform duration-500 group-hover:scale-[1.03] ${
-                logoOnly
-                  ? 'p-4 bg-gradient-to-br from-emerald-50 via-white to-slate-50'
-                  : 'p-1.5 sm:p-2 bg-gradient-to-br from-slate-100 via-slate-50 to-emerald-50/80'
-              }`}
-            />
+            logoOnly ? (
+              <div className="absolute inset-0 p-4 bg-gradient-to-br from-emerald-50 via-white to-slate-50">
+                <ClinicCoverImage
+                  src={photo}
+                  alt={clinic.name}
+                  variant="logo"
+                  className="transition-transform duration-500 group-hover:scale-[1.03]"
+                />
+              </div>
+            ) : (
+              <ClinicCoverImage
+                src={photo}
+                alt={clinic.name}
+                variant="card"
+                className="absolute inset-0 transition-transform duration-500 group-hover:scale-[1.03]"
+                eager
+              />
+            )
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-100 via-teal-50 to-slate-100 flex items-center justify-center text-emerald-300/90">
               <FaIcon icon="fa-hospital" className="text-4xl" />

@@ -194,7 +194,7 @@ export default function DoctorAddClinic() {
         </FormSection>
 
         <FormSection title="About & website" icon="fa-circle-info">
-          <ClinicProfileDetailsFields form={form} set={set} setHours={setHours} />
+          <ClinicProfileDetailsFields form={form} set={set} setHours={setHours} clinicId={editId || null} />
         </FormSection>
 
         <FormSection title="Opening hours" icon="fa-clock">

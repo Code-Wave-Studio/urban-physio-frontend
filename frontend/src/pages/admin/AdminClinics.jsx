@@ -265,7 +265,7 @@ function ClinicFormModal({ open, onClose, initial, onSave }) {
               </AdminFormSection>
 
               <AdminFormSection title="About, cover & website" icon="fa-circle-info">
-                <ClinicProfileDetailsFields form={form} set={set} setHours={setHours} />
+                <ClinicProfileDetailsFields form={form} set={set} setHours={setHours} clinicId={initial?.id || null} />
               </AdminFormSection>
 
               <AdminFormSection title="Opening hours" icon="fa-clock">
@@ -292,7 +292,7 @@ function ClinicFormModal({ open, onClose, initial, onSave }) {
 
               <AdminFormSection title="Banner photos (max 10)" icon="fa-images">
                 <p className="text-xs text-slate-500 -mt-1 mb-2">
-                  These photos auto-scroll on the clinic profile banner. Cover image shows first.
+                  Extra photos for the profile carousel (after cover). Recommended 1600 × 1000 px (16:10) · max 3MB each.
                 </p>
                 <ClinicGalleryUpload
                   images={form.image_urls}

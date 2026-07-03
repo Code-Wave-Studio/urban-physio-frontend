@@ -138,6 +138,17 @@ export function resolveClinicSocialLinks(clinic) {
   return normalizeSocialLinks(raw);
 }
 
+/** Recommended image specs — keep in sync with admin upload hints. */
+export const CLINIC_LOGO_SIZE_HINT = '512 × 512 px (1:1 square)';
+export const CLINIC_LOGO_MAX_MB = 2;
+
+export const CLINIC_COVER_SIZE_HINT = '1920 × 1080 px (16:9 landscape)';
+export const CLINIC_COVER_SIZE_HINT_MOBILE = '828 × 480 px — crops nicely on phones';
+export const CLINIC_COVER_MAX_MB = 4;
+
+export const CLINIC_GALLERY_SIZE_HINT = '1600 × 1000 px (16:10 landscape)';
+export const CLINIC_GALLERY_MAX_MB = 3;
+
 /** Up to 10 banner images: cover first, then gallery (deduped). */
 export function getBannerImages(clinic, max = 10) {
   if (!clinic) return [];

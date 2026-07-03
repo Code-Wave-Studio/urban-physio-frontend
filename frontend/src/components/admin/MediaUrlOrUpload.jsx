@@ -28,8 +28,14 @@ export default function MediaUrlOrUpload({
 }) {
   const [uploading, setUploading] = useState(false);
   const resolved = resolveMediaUrl(urlValue) || urlValue;
-  const borderAccent = accent === 'rose' ? 'border-rose-200 bg-rose-50/40' : 'border-violet-200 bg-violet-50/40';
-  const iconAccent = accent === 'rose' ? 'text-rose-600' : 'text-violet-600';
+  const borderAccent =
+    accent === 'rose'
+      ? 'border-rose-200 bg-rose-50/40'
+      : accent === 'emerald'
+        ? 'border-emerald-200 bg-emerald-50/40'
+        : 'border-violet-200 bg-violet-50/40';
+  const iconAccent =
+    accent === 'rose' ? 'text-rose-600' : accent === 'emerald' ? 'text-emerald-600' : 'text-violet-600';
   const previewClass = PREVIEW_CLASS[devicePreview] || PREVIEW_CLASS.default;
 
   const handleFile = async (e) => {

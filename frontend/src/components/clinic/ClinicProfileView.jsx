@@ -28,7 +28,11 @@ import { showPartnerClinicBadge } from '../../utils/clinicBadges';
 
 import { resolveMediaUrl } from '../../utils/mediaUrl';
 
-import { formatOpeningHoursRows, resolveClinicHours } from '../../utils/clinicProfileUtils';
+import { formatOpeningHoursRows, resolveClinicHours, getBannerImages } from '../../utils/clinicProfileUtils';
+
+import ClinicBannerCarousel from './ClinicBannerCarousel';
+
+import ClinicCoverImage from './ClinicCoverImage';
 
 import { clinicBookUrl, clinicProfileUrl, doctorProfileUrl } from '../../utils/profileUrls';
 
@@ -257,6 +261,12 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
   const bannerFallback = resolveMediaUrl(clinic.cover_image || clinic.logo) || HEALTHCARE_IMAGES.clinicProfile;
 
+  const bannerUrls = getBannerImages(clinic);
+
+  const bannerSlides = bannerUrls.length
+    ? bannerUrls.map((url, i) => ({ id: `banner-${i}`, image_url: url }))
+    : [{ id: 'fallback', image_url: bannerFallback }];
+
   const insuranceItems = filterFacilities(facilities, /insurance/i);
 
   const parkingItems = filterFacilities(facilities, /parking/i);
@@ -331,6 +341,28 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
 
 
+          {bannerUrls.length > 0 && (
+
+            <div className="relative -mx-4 sm:mx-0 mb-4 sm:mb-5 rounded-none sm:rounded-2xl overflow-hidden aspect-[16/9] sm:aspect-[21/9] max-h-[min(56vw,300px)] sm:max-h-[360px] md:max-h-[420px] shadow-md">
+
+              <ClinicBannerCarousel
+
+                images={bannerUrls}
+
+                className="absolute inset-0 w-full h-full"
+
+                showOverlay
+
+                alt={`${clinic.name} banner`}
+
+              />
+
+            </div>
+
+          )}
+
+
+
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
 
             <div className="min-w-0 flex-1 text-left">
@@ -399,7 +431,7 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
             <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth touch-pan-x [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
 
-              {(gallery.length ? gallery : [{ id: 'cover', image_url: bannerFallback }]).map((img, i) => (
+              {(bannerSlides).map((img, i) => (
 
                 <div
 
@@ -409,15 +441,13 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
                 >
 
-                  <img
+                  <ClinicCoverImage
 
-                    src={resolveMediaUrl(img.image_url) || img.image_url || bannerFallback}
+                    src={img.image_url || bannerFallback}
 
                     alt={`${clinic.name} photo`}
 
-                    loading="lazy"
-
-                    className="w-full h-full object-cover"
+                    variant="profile"
 
                   />
 
@@ -697,21 +727,11 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
           <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth touch-pan-x max-w-full [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
 
-            {(gallery.length ? gallery : [{ id: 1, image_url: bannerFallback }]).map((img) => (
+            {(bannerSlides).map((img) => (
 
               <div key={img.id} className="shrink-0 w-[85%] sm:w-80 max-w-full aspect-video snap-center rounded-2xl overflow-hidden border border-slate-100 shadow-sm">
 
-                <img
-
-                  src={resolveMediaUrl(img.image_url) || img.image_url}
-
-                  alt={clinic.name}
-
-                  loading="lazy"
-
-                  className="w-full h-full object-cover"
-
-                />
+                <ClinicCoverImage src={img.image_url} alt={clinic.name} variant="profile" />
 
               </div>
 

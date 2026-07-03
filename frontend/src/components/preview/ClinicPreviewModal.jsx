@@ -14,6 +14,7 @@ import { showPartnerClinicBadge } from '../../utils/clinicBadges';
 import { formatOpeningHoursRows, resolveClinicHours, getTodayDayKey } from '../../utils/clinicProfileUtils';
 import { clinicProfileUrl, doctorProfileUrl } from '../../utils/profileUrls';
 import { clinicMapsUrl } from '../../utils/locationHelpers';
+import ClinicCoverImage from '../clinic/ClinicCoverImage';
 import { resolveMediaUrl } from '../../utils/mediaUrl';
 import { bookClinicUrl } from '../../utils/bookUrl';
 
@@ -51,9 +52,9 @@ export default function ClinicPreviewModal({ clinic: initialClinic, open, onClos
 
   const header = (
     <div className="relative shrink-0 overflow-hidden bg-white">
-      <div className="relative h-28 sm:h-32">
+      <div className="relative h-28 sm:h-32 md:h-36">
         {cover ? (
-          <img src={cover} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <ClinicCoverImage src={cover} alt={c.name} variant="sheet" eager />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-100 via-teal-50 to-slate-100 flex items-center justify-center text-emerald-300">
             <FaIcon icon="fa-hospital" className="text-4xl" />

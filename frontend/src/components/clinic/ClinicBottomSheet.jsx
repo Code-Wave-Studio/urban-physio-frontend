@@ -16,6 +16,7 @@ import { useClinicPreview } from '../../hooks/useClinicPreview';
 import { showPartnerClinicBadge } from '../../utils/clinicBadges';
 import { formatOpeningHoursRows, resolveClinicHours, getTodayDayKey } from '../../utils/clinicProfileUtils';
 import { clinicProfileUrl, doctorProfileUrl } from '../../utils/profileUrls';
+import ClinicCoverImage from './ClinicCoverImage';
 import { resolveMediaUrl } from '../../utils/mediaUrl';
 import { setFloatingActionsHidden } from '../../utils/floatingActionsBus';
 
@@ -125,9 +126,9 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
                 <div className="w-10 h-1 rounded-full bg-slate-300 mx-auto" />
               </div>
 
-              <div className="relative h-32 sm:h-36 shrink-0">
+              <div className="relative h-36 sm:h-40 md:h-44 shrink-0">
                 {cover ? (
-                  <img src={cover} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                  <ClinicCoverImage src={cover} alt={c.name} variant="sheet" eager />
                 ) : (
                   <div className="absolute inset-0 bg-gradient-to-br from-emerald-100 to-teal-50 flex items-center justify-center text-emerald-300">
                     <FaIcon icon="fa-hospital" className="text-5xl" />

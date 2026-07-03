@@ -56,7 +56,7 @@ export default function ClinicBannerCarousel({
             i === idx ? 'opacity-100 z-[1]' : 'opacity-0 z-0'
           }`}
         >
-          <img src={src} alt="" className="w-full h-full object-cover" loading={i === 0 ? 'eager' : 'lazy'} />
+          <img src={src} alt="" className="w-full h-full object-cover object-center" loading={i === 0 ? 'eager' : 'lazy'} decoding="async" sizes="100vw" />
         </div>
       ))}
       {showOverlay && (

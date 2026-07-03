@@ -306,32 +306,20 @@ export default function SearchResultsPage() {
             </button>
           </form>
 
-          <div
-            className="mt-3 flex p-1 rounded-full bg-slate-100/90 border border-slate-200/80"
-            role="group"
-            aria-label="Browse directory"
-          >
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
             <Link
               to="/doctors"
-              className={`flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-full text-sm font-semibold transition ${
-                typeParam === 'doctors'
-                  ? 'bg-white text-primary-600 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold border-2 border-primary-500/50 bg-white text-primary-700 shadow-sm hover:bg-orange-50 hover:border-primary-500 hover:shadow-md active:scale-[0.98] transition"
             >
-              <FaIcon icon="fa-user-doctor" />
-              Physiotherapist
+              <FaIcon icon="fa-user-doctor" className="text-primary-600 shrink-0" />
+              Find Physiotherapist
             </Link>
             <Link
               to="/clinics"
-              className={`flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-full text-sm font-semibold transition ${
-                typeParam === 'clinics'
-                  ? 'bg-white text-slate-700 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold border-2 border-emerald-500/50 bg-white text-emerald-800 shadow-sm hover:bg-emerald-50 hover:border-emerald-500 hover:shadow-md active:scale-[0.98] transition"
             >
-              <FaIcon icon="fa-hospital" />
-              Clinic
+              <FaIcon icon="fa-hospital" className="text-emerald-600 shrink-0" />
+              Find Clinic
             </Link>
           </div>
         </div>

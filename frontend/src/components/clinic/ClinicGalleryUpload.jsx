@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import FaIcon from '../FaIcon';
 import { uploadClinicGallery } from '../../services/api';
+import { CLINIC_GALLERY_MAX_MB, CLINIC_GALLERY_SIZE_HINT } from '../../utils/clinicProfileUtils';
 import { resolveMediaUrl } from '../../utils/mediaUrl';
 import toast from 'react-hot-toast';
 
@@ -71,7 +72,9 @@ export default function ClinicGalleryUpload({ images = [], clinicId, onChange, m
           </label>
         )}
       </div>
-      <p className="text-xs text-slate-500">Swipe on mobile · JPG, PNG or WebP · max 3MB each · up to {max} photos</p>
+      <p className="text-xs text-slate-500">
+        Swipe on mobile · Recommended {CLINIC_GALLERY_SIZE_HINT} · JPG, PNG or WebP · max {CLINIC_GALLERY_MAX_MB}MB each · up to {max} photos
+      </p>
     </div>
   );
 }
