@@ -20,6 +20,10 @@ function clinicPhotoUrl(clinic) {
   return resolveMediaUrl(clinic.cover_image) || resolveMediaUrl(clinic.logo) || null;
 }
 
+function clinicPhotoIsLogoOnly(clinic) {
+  return !resolveMediaUrl(clinic.cover_image) && Boolean(resolveMediaUrl(clinic.logo));
+}
+
 function locationLine(clinic) {
   const parts = [];
   if (clinic.address) parts.push(clinic.address);
@@ -35,13 +39,17 @@ const CARD_3D_SHADOW =
  * Premium clinic card — mobile-first listing with status, slots, and quick actions.
  * @param {{ clinic: object, compact?: boolean, variant?: 'default' | 'listing' }} props
  */
-export default function ClinicCard({ clinic, compact = false, variant = 'listing' }) {
+export default function ClinicCard({ clinic, compact = false, variant = 'listing', onOpen }) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const photo = clinicPhotoUrl(clinic);
+  const logoOnly = clinicPhotoIsLogoOnly(clinic);
   const hours = resolveClinicHours(clinic);
   const useSmall = compact || variant === 'listing' || variant === 'default';
 
-  const openSheet = () => setSheetOpen(true);
+  const openSheet = () => {
+    onOpen?.();
+    setSheetOpen(true);
+  };
 
   if (!useSmall && variant !== 'listing') {
     return null;
@@ -79,7 +87,6 @@ export default function ClinicCard({ clinic, compact = false, variant = 'listing
       <motion.article
         role="button"
         tabIndex={0}
-        layout
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         whileHover={{ y: -2 }}
@@ -87,14 +94,18 @@ export default function ClinicCard({ clinic, compact = false, variant = 'listing
         transition={{ duration: 0.22 }}
         onClick={openSheet}
         onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openSheet()}
-        className={`group flex flex-col h-full rounded-[1.25rem] border border-slate-200/80 bg-white overflow-hidden cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500 transition-shadow duration-300 ${CARD_3D_SHADOW}`}
+        className={`group flex flex-col rounded-[1.25rem] border border-slate-200/80 bg-white cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500 transition-shadow duration-300 ${CARD_3D_SHADOW}`}
       >
-        <div className="relative h-32 sm:h-36 shrink-0 overflow-hidden">
+        <div className="relative h-36 sm:h-40 shrink-0 overflow-hidden rounded-t-[1.25rem]">
           {photo ? (
             <img
               src={photo}
               alt={clinic.name}
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+              className={`absolute inset-0 w-full h-full object-contain object-center transition-transform duration-500 group-hover:scale-[1.03] ${
+                logoOnly
+                  ? 'p-4 bg-gradient-to-br from-emerald-50 via-white to-slate-50'
+                  : 'p-1.5 sm:p-2 bg-gradient-to-br from-slate-100 via-slate-50 to-emerald-50/80'
+              }`}
             />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-100 via-teal-50 to-slate-100 flex items-center justify-center text-emerald-300/90">
@@ -116,7 +127,7 @@ export default function ClinicCard({ clinic, compact = false, variant = 'listing
           </div>
         </div>
 
-        <div className="p-3.5 sm:p-4 flex-1 flex flex-col gap-3">
+        <div className="p-3.5 sm:p-4 flex flex-col gap-3 min-h-0">
           <div className="flex flex-wrap items-center gap-1.5">
             {showPartnerClinicBadge(clinic) && <PartnerClinicBadge />}
             <BadgeList badges={clinic.badges} compact className="!mt-0" />
@@ -138,8 +149,8 @@ export default function ClinicCard({ clinic, compact = false, variant = 'listing
 
           <ClinicTodaySlotsRow clinicId={clinic.id} />
 
-          <div className="mt-auto pt-1" onClick={stopNav} onKeyDown={stopNav} role="presentation">
-            <ClinicQuickActions clinic={clinic} />
+          <div className="pt-1" onClick={stopNav} onKeyDown={stopNav} role="presentation">
+            <ClinicQuickActions clinic={clinic} className="-mx-0.5 px-0.5" />
           </div>
         </div>
       </motion.article>

@@ -46,7 +46,7 @@ function EntityGrid({ title, icon, items, children, type }) {
         {title}
         <span className="text-sm font-normal text-slate-500">({items.length})</span>
       </h2>
-      <div className="grid sm:grid-cols-2 gap-4">{items.map(children)}</div>
+      <div className="grid sm:grid-cols-2 gap-4 items-start">{items.map(children)}</div>
     </section>
   );
 }
@@ -268,7 +268,7 @@ export default function SearchResultsPage() {
                 onKeyDown={onInputKeyDown}
                 onFocus={() => suggestions.length > 0 && setSugOpen(true)}
                 placeholder={searchPlaceholder}
-                className="input-field w-full !pl-10 !py-3"
+                className="input-field w-full !pl-10 !py-3 !rounded-full"
                 autoFocus
                 aria-label="Search query"
                 aria-autocomplete="list"
@@ -301,25 +301,37 @@ export default function SearchResultsPage() {
                 </ul>
               )}
             </div>
-            <button type="submit" className="btn-primary shrink-0 !px-5">
+            <button type="submit" className="btn-primary shrink-0 !px-5 !rounded-full">
               Search
             </button>
           </form>
 
-          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div
+            className="mt-3 flex p-1 rounded-full bg-slate-100/90 border border-slate-200/80"
+            role="group"
+            aria-label="Browse directory"
+          >
             <Link
               to="/doctors"
-              className="btn-outline w-full text-center !py-2.5 inline-flex items-center justify-center gap-2 text-sm font-semibold"
+              className={`flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-full text-sm font-semibold transition ${
+                typeParam === 'doctors'
+                  ? 'bg-white text-primary-600 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
             >
-              <FaIcon icon="fa-user-doctor" className="text-primary-600" />
-              Find Physiotherapists
+              <FaIcon icon="fa-user-doctor" />
+              Physiotherapist
             </Link>
             <Link
               to="/clinics"
-              className="btn-outline w-full text-center !py-2.5 inline-flex items-center justify-center gap-2 text-sm font-semibold"
+              className={`flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-full text-sm font-semibold transition ${
+                typeParam === 'clinics'
+                  ? 'bg-white text-slate-700 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
             >
-              <FaIcon icon="fa-hospital" className="text-emerald-600" />
-              Find Clinic
+              <FaIcon icon="fa-hospital" />
+              Clinic
             </Link>
           </div>
         </div>

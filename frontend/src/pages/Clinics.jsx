@@ -163,7 +163,7 @@ export default function Clinics() {
           </div>
         ) : (
           <>
-            <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
+            <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5 items-start">
               {sorted.map((c) => (
                 <ClinicCard key={c.id} clinic={c} variant="listing" />
               ))}
