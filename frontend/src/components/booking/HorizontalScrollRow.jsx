@@ -4,7 +4,7 @@
 export default function HorizontalScrollRow({ children, className = '', ariaLabel }) {
   return (
     <div
-      className={`flex gap-2.5 overflow-x-auto pb-1.5 -mx-1 px-1 snap-x snap-mandatory scroll-smooth touch-pan-x [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${className}`}
+      className={`scroll-x-touch flex gap-2.5 pb-1.5 -mx-1 px-1 snap-x snap-mandatory scroll-smooth ${className}`}
       role={ariaLabel ? 'list' : undefined}
       aria-label={ariaLabel}
     >

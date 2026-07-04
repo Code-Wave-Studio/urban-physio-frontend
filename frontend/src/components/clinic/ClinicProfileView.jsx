@@ -30,8 +30,6 @@ import { resolveMediaUrl } from '../../utils/mediaUrl';
 
 import { formatOpeningHoursRows, resolveClinicHours, getBannerImages } from '../../utils/clinicProfileUtils';
 
-import ClinicBannerCarousel from './ClinicBannerCarousel';
-
 import ClinicCoverImage from './ClinicCoverImage';
 
 import { clinicBookUrl, clinicProfileUrl, doctorProfileUrl } from '../../utils/profileUrls';
@@ -257,15 +255,11 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
   const locationLine = [clinic.address, clinic.city_name, clinic.state_name].filter(Boolean).join(', ');
 
-  const gallery = clinic.gallery?.length ? clinic.gallery : [];
-
   const bannerFallback = resolveMediaUrl(clinic.cover_image || clinic.logo) || HEALTHCARE_IMAGES.clinicProfile;
 
-  const bannerUrls = getBannerImages(clinic);
-
-  const bannerSlides = bannerUrls.length
-    ? bannerUrls.map((url, i) => ({ id: `banner-${i}`, image_url: url }))
-    : [{ id: 'fallback', image_url: bannerFallback }];
+  const bannerSlides = getBannerImages(clinic).map((url, i) => ({ id: `banner-${i}`, image_url: url }));
+  const photoSlides =
+    bannerSlides.length > 0 ? bannerSlides : [{ id: 'fallback', image_url: bannerFallback }];
 
   const insuranceItems = filterFacilities(facilities, /insurance/i);
 
@@ -341,28 +335,6 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
 
 
-          {bannerUrls.length > 0 && (
-
-            <div className="relative -mx-4 sm:mx-0 mb-4 sm:mb-5 rounded-none sm:rounded-2xl overflow-hidden aspect-[16/9] sm:aspect-[21/9] max-h-[min(56vw,300px)] sm:max-h-[360px] md:max-h-[420px] shadow-md">
-
-              <ClinicBannerCarousel
-
-                images={bannerUrls}
-
-                className="absolute inset-0 w-full h-full"
-
-                showOverlay
-
-                alt={`${clinic.name} banner`}
-
-              />
-
-            </div>
-
-          )}
-
-
-
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
 
             <div className="min-w-0 flex-1 text-left">
@@ -427,41 +399,7 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
 
 
-          <div className="mt-5 max-w-full overflow-hidden">
-
-            <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth touch-pan-x [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-
-              {(bannerSlides).map((img, i) => (
-
-                <div
-
-                  key={img.id || i}
-
-                  className="relative shrink-0 w-[78%] sm:w-64 md:w-72 max-w-full aspect-[16/10] snap-center rounded-2xl overflow-hidden border border-slate-200/80 shadow-md"
-
-                >
-
-                  <ClinicCoverImage
-
-                    src={img.image_url || bannerFallback}
-
-                    alt={`${clinic.name} photo`}
-
-                    variant="profile"
-
-                  />
-
-                </div>
-
-              ))}
-
-            </div>
-
-          </div>
-
-
-
-          <div className="mt-5 max-w-full overflow-hidden">
+          <div className="mt-5 max-w-full min-w-0">
 
             <ClinicQuickActions clinic={{ ...clinic, website_url: websiteUrl }} variant="profile" />
 
@@ -469,9 +407,9 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
 
 
-          <div className="mt-5 max-w-full overflow-hidden">
+          <div className="mt-5 max-w-full min-w-0">
 
-            <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory scroll-smooth touch-pan-x [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="scroll-x-touch flex gap-3 pb-1 snap-x snap-mandatory scroll-smooth">
 
               {statCards.map((s) => (
 
@@ -725,9 +663,9 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
         <Section title="Photos & videos" icon="fa-images" id="profile-media">
 
-          <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth touch-pan-x max-w-full [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="scroll-x-touch flex gap-3 pb-2 snap-x snap-mandatory scroll-smooth max-w-full min-w-0">
 
-            {(bannerSlides).map((img) => (
+            {(photoSlides).map((img) => (
 
               <div key={img.id} className="shrink-0 w-[85%] sm:w-80 max-w-full aspect-video snap-center rounded-2xl overflow-hidden border border-slate-100 shadow-sm">
 
@@ -837,7 +775,7 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
           <Section title="Related clinics nearby" icon="fa-hospital">
 
-            <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 max-w-full touch-pan-x [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="scroll-x-touch flex gap-3 snap-x snap-mandatory pb-1 max-w-full min-w-0">
 
               {clinic.related_clinics.map((c) => (
 

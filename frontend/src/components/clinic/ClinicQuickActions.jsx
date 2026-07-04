@@ -188,7 +188,7 @@ export default function ClinicQuickActions({
 
   return (
     <div
-      className={`flex ${gapClass} overflow-x-auto pb-1 snap-x snap-mandatory scroll-smooth touch-pan-x w-full min-w-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${className}`}
+      className={`scroll-x-touch flex ${gapClass} pb-1 snap-x snap-mandatory scroll-smooth w-full min-w-0 ${className}`}
       role="list"
       aria-label="Quick actions"
     >

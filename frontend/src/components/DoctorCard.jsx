@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import FaIcon from './FaIcon';
 import DoctorAvatar from './DoctorAvatar';
-import DoctorPreviewModal from './preview/DoctorPreviewModal';
+import DoctorPreview from './doctor/DoctorPreview';
 import { bookDoctorUrl } from '../utils/bookUrl';
 import { doctorProfileUrl } from '../utils/profileUrls';
 
@@ -45,7 +45,7 @@ export default function DoctorCard({ doctor, compact = false, variant = 'default
             </Link>
           </div>
         </div>
-        <DoctorPreviewModal doctor={doctor} open={previewOpen} onClose={() => setPreviewOpen(false)} />
+        <DoctorPreview doctor={doctor} open={previewOpen} onClose={() => setPreviewOpen(false)} />
       </>
     );
   }
@@ -140,7 +140,7 @@ export default function DoctorCard({ doctor, compact = false, variant = 'default
             </div>
           </div>
         </article>
-        <DoctorPreviewModal doctor={doctor} open={previewOpen} onClose={() => setPreviewOpen(false)} />
+        <DoctorPreview doctor={doctor} open={previewOpen} onClose={() => setPreviewOpen(false)} />
       </>
     );
   }
@@ -178,7 +178,7 @@ export default function DoctorCard({ doctor, compact = false, variant = 'default
           </Link>
         </div>
       </div>
-      <DoctorPreviewModal doctor={doctor} open={previewOpen} onClose={() => setPreviewOpen(false)} />
+      <DoctorPreview doctor={doctor} open={previewOpen} onClose={() => setPreviewOpen(false)} />
     </>
   );
 }

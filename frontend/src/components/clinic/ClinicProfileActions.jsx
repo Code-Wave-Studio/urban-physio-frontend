@@ -26,7 +26,7 @@ export default function ClinicProfileActions({ clinic, mapUrl, websiteUrl, class
 
     <div
 
-      className={`flex flex-nowrap gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory ${className}`}
+      className={`scroll-x-touch flex flex-nowrap gap-2 pb-1 snap-x snap-mandatory ${className}`}
 
     >
 

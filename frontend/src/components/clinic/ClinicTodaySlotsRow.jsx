@@ -91,7 +91,7 @@ export default function ClinicTodaySlotsRow({ clinicId, className = '', variant 
 
   const listClass = isModal
     ? 'flex flex-wrap gap-2'
-    : 'flex gap-2 overflow-x-auto pb-0.5 snap-x snap-mandatory scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden';
+    : 'scroll-x-touch flex gap-2 pb-0.5 snap-x snap-mandatory scroll-smooth';
 
   return (
     <div className={className}>

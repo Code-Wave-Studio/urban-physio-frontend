@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, motion, useDragControls, useMotionValue, useTransform } from 'framer-motion';
@@ -41,17 +41,13 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
   const c = clinic || initialClinic;
   const dragControls = useDragControls();
   const sheetRef = useRef(null);
-  const [expanded, setExpanded] = useState(false);
   const y = useMotionValue(0);
   const backdropOpacity = useTransform(y, [0, 280], [1, 0.35]);
 
   useBodyScrollLock(open);
 
   useEffect(() => {
-    if (open) {
-      setExpanded(false);
-      y.set(0);
-    }
+    if (open) y.set(0);
   }, [open, y]);
 
   useEffect(() => {
@@ -77,13 +73,8 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
       onClose();
       return;
     }
-    if (!expanded && (info.offset.y < -48 || info.velocity.y < -380)) {
-      setExpanded(true);
-    }
     y.set(0);
   };
-
-  const sheetHeightClass = expanded ? 'h-[92dvh]' : 'h-[min(75dvh,680px)]';
 
   const sheet = (
     <AnimatePresence>
@@ -105,7 +96,7 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
             role="dialog"
             aria-modal="true"
             aria-labelledby="clinic-sheet-title"
-            className={`fixed inset-x-0 bottom-0 z-[125] flex flex-col ${sheetHeightClass}`}
+            className="fixed inset-x-0 bottom-0 z-[125] flex flex-col h-[min(96dvh,calc(100dvh-env(safe-area-inset-top,0px)-0.5rem))]"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}

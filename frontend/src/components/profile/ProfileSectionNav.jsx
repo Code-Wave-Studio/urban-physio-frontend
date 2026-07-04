@@ -51,7 +51,7 @@ export default function ProfileSectionNav({ tabs = PROFILE_TABS, accent = 'prima
       aria-label="Profile sections"
     >
       <div className="max-w-6xl mx-auto px-4 py-2.5">
-        <div className="flex gap-2 overflow-x-auto pb-0.5 snap-x snap-mandatory scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="scroll-x-touch flex gap-2 pb-0.5 snap-x snap-mandatory scroll-smooth">
         {tabs.map((tab) => (
           <button
             key={tab.id}

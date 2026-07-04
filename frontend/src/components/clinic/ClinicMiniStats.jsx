@@ -47,7 +47,7 @@ export default function ClinicMiniStats({ clinic, className = '', hideDoctorCoun
   const listClass =
     variant === 'modal'
       ? 'flex flex-wrap gap-2'
-      : 'flex gap-1.5 overflow-x-auto pb-0.5 snap-x snap-mandatory scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden';
+      : 'scroll-x-touch flex gap-1.5 pb-0.5 snap-x snap-mandatory scroll-smooth';
 
   return (
     <div className={`${listClass} ${className}`}>
