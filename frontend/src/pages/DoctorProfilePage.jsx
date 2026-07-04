@@ -321,14 +321,6 @@ export default function DoctorProfilePage() {
               </div>
             )}
 
-            <div className="mt-5 max-w-full min-w-0">
-              <ProfilePhotoScroll slides={photoSlides} alt={fullName} />
-            </div>
-
-            <div className="mt-4 flex sm:hidden justify-center">
-              <ShareProfileButton title={fullName} className="!py-2.5 !text-sm w-full max-w-xs justify-center" />
-            </div>
-
             <div className="mt-4 sm:mt-5 max-w-full min-w-0">
               <DoctorQuickActions doctor={doctor} variant="profile" />
             </div>
