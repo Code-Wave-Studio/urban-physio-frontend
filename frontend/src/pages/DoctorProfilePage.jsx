@@ -10,9 +10,7 @@ import DoctorCredentialsSection from '../components/doctor/DoctorCredentialsSect
 import BadgeList from '../components/platform/BadgeList';
 import ReviewStars from '../components/platform/ReviewStars';
 import PageMeta, { doctorSchema } from '../components/seo/PageMeta';
-import ShareProfileButton from '../components/profile/ShareProfileButton';
 import DoctorQuickActions from '../components/doctor/DoctorQuickActions';
-import SaveDoctorButton from '../components/SaveDoctorButton';
 import ProfileSlotsPreview from '../components/profile/ProfileSlotsPreview';
 import { doctors, booking } from '../services/api';
 import { googleMapsUrl } from '../utils/locationHelpers';
@@ -286,21 +284,6 @@ export default function DoctorProfilePage() {
 
             <div className="mt-2 sm:mt-3 flex justify-center md:justify-start">
               <BadgeList badges={doctor.badges} />
-            </div>
-
-            <div className="mt-4 sm:mt-6 hidden sm:flex flex-wrap gap-2 sm:gap-3 justify-center md:justify-start">
-              <Link to={bookDoctorUrl(doctor.id)} className="btn-primary text-sm !px-5 !py-3">
-                <FaIcon icon="fa-calendar-check" />
-                Book appointment
-              </Link>
-              {doctor.phone && (
-                <a href={`tel:${doctor.phone}`} className="btn-outline text-sm !px-5 !py-3">
-                  <FaIcon icon="fa-phone" />
-                  Call
-                </a>
-              )}
-              <SaveDoctorButton doctor={doctor} compact />
-              <ShareProfileButton title={fullName} />
             </div>
 
             {activeSocials.length > 0 && (

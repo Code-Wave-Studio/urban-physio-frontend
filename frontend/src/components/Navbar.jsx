@@ -6,6 +6,7 @@ import FaIcon from './FaIcon';
 import Logo from './Logo';
 import MobileNavDrawer from './MobileNavDrawer';
 import NotificationBell from './NotificationBell';
+import { setFloatingActionsHidden } from '../utils/floatingActionsBus';
 
 const PRIMARY_NAV_LINKS = [
   { to: '/', label: 'Home' },
@@ -84,6 +85,11 @@ export default function Navbar({ beforeLogo = null, headerSpacerClass = '' }) {
     return () => {
       document.body.style.overflow = '';
     };
+  }, [mobileOpen]);
+
+  useEffect(() => {
+    setFloatingActionsHidden(mobileOpen, 'menu');
+    return () => setFloatingActionsHidden(false, 'menu');
   }, [mobileOpen]);
 
   const dashboardPath = () => {

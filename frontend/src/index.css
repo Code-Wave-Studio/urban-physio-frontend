@@ -1082,18 +1082,6 @@
       0 4px 12px -4px rgb(15 23 42 / 0.2);
   }
 
-  /* Mobile: sit below sticky header (and podcast bar when active), not over nav icons */
-  @media (max-width: 767px) {
-    .fab-whatsapp {
-      top: calc(
-        env(safe-area-inset-top, 0px) + var(--site-header-height, 3.5rem) +
-          var(--podcast-player-height, 0px) + var(--fab-below-header-gap, 0.75rem)
-      );
-      bottom: auto;
-      left: max(1rem, env(safe-area-inset-left, 0px));
-    }
-  }
-
   @media (hover: hover) {
     .fab-whatsapp:hover {
       transform: translateY(-3px) scale(1.06);

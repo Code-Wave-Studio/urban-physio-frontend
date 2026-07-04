@@ -44,8 +44,8 @@ export default function DoctorBottomSheet({ doctor: initialDoctor, open, onClose
 
   useEffect(() => {
     if (!open) return undefined;
-    setFloatingActionsHidden(true);
-    return () => setFloatingActionsHidden(false);
+    setFloatingActionsHidden(true, 'sheet');
+    return () => setFloatingActionsHidden(false, 'sheet');
   }, [open]);
 
   if (!initialDoctor) return null;

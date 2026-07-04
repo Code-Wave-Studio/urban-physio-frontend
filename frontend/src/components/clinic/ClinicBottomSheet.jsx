@@ -52,8 +52,8 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
 
   useEffect(() => {
     if (!open) return undefined;
-    setFloatingActionsHidden(true);
-    return () => setFloatingActionsHidden(false);
+    setFloatingActionsHidden(true, 'sheet');
+    return () => setFloatingActionsHidden(false, 'sheet');
   }, [open]);
 
   if (!initialClinic) return null;
