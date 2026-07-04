@@ -5,6 +5,8 @@ import { AnimatePresence, motion, useDragControls, useMotionValue, useTransform 
 import FaIcon from '../FaIcon';
 import DoctorAvatar from '../DoctorAvatar';
 import DoctorProfileBanner from './DoctorProfileBanner';
+import DoctorCredentialsSection from './DoctorCredentialsSection';
+import DoctorAvailabilitySection from './DoctorAvailabilitySection';
 import DoctorQuickActions from './DoctorQuickActions';
 import { PreviewChip } from '../preview/PreviewModalShell';
 import useBodyScrollLock from '../../hooks/useBodyScrollLock';
@@ -165,9 +167,6 @@ export default function DoctorBottomSheet({ doctor: initialDoctor, open, onClose
                   )}
                   {availableToday === false && !loading && <PreviewChip tone="slate">No slots today</PreviewChip>}
                 </div>
-                {d.qualifications && (
-                  <p className="text-xs text-slate-600 line-clamp-2">{d.qualifications}</p>
-                )}
               </div>
 
               <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 space-y-5">
@@ -244,6 +243,10 @@ export default function DoctorBottomSheet({ doctor: initialDoctor, open, onClose
                     <p className="text-sm text-slate-600 leading-relaxed line-clamp-5">{bio}</p>
                   </section>
                 )}
+
+                <DoctorCredentialsSection doctor={d} variant="compact" />
+
+                <DoctorAvailabilitySection doctor={d} onNavigate={onClose} variant="compact" />
 
                 <section>
                   <h3 className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2 flex items-center gap-2">

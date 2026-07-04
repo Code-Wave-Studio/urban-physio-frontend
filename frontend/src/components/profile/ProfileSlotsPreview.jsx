@@ -24,14 +24,22 @@ function formatTimeLabel(slot) {
   return label;
 }
 
-export default function ProfileSlotsPreview({ doctorId, clinicId = null, showTimes = true }) {
+export default function ProfileSlotsPreview({
+  doctorId,
+  clinicId = null,
+  showTimes = true,
+  compact = false,
+  hideWhenEmpty = false,
+  onNavigate,
+  onDatesLoaded,
+}) {
   const [dates, setDates] = useState([]);
   const [slotsByDate, setSlotsByDate] = useState({});
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState('');
 
   useEffect(() => {
-    if (!doctorId) return;
+    if (!doctorId) return undefined;
     setLoading(true);
     const params = { doctor_id: doctorId };
     if (clinicId) params.clinic_id = clinicId;
@@ -42,10 +50,11 @@ export default function ProfileSlotsPreview({ doctorId, clinicId = null, showTim
         const list = (res?.data ?? res ?? []).slice(0, 5);
         setDates(list);
         setSelectedDate(list[0] || '');
+        onDatesLoaded?.(list.length);
 
         if (!showTimes || !list.length) {
           setSlotsByDate({});
-          return;
+          return undefined;
         }
 
         return Promise.all(
@@ -66,14 +75,25 @@ export default function ProfileSlotsPreview({ doctorId, clinicId = null, showTim
         setDates([]);
         setSlotsByDate({});
         setSelectedDate('');
+        onDatesLoaded?.(0);
       })
       .finally(() => setLoading(false));
   }, [doctorId, clinicId, showTimes]);
 
+  const wrapNav = () => onNavigate?.();
+
   if (loading) {
+    if (hideWhenEmpty) {
+      return (
+        <p className={`text-slate-500 inline-flex items-center gap-2 ${compact ? 'text-xs' : 'text-sm'}`}>
+          <FaIcon icon="fa-spinner" className="fa-spin text-primary-500" />
+          Loading slots…
+        </p>
+      );
+    }
     return (
       <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 px-4 py-3">
-        <p className="text-sm text-slate-500 inline-flex items-center gap-2">
+        <p className={`text-slate-500 inline-flex items-center gap-2 ${compact ? 'text-xs' : 'text-sm'}`}>
           <FaIcon icon="fa-spinner" className="fa-spin text-primary-500" />
           Loading available slots…
         </p>
@@ -82,10 +102,11 @@ export default function ProfileSlotsPreview({ doctorId, clinicId = null, showTim
   }
 
   if (!dates.length) {
+    if (hideWhenEmpty) return null;
     return (
       <div className="rounded-xl border border-amber-200/70 bg-amber-50/50 px-4 py-3 text-sm text-amber-900">
         No open slots in the next few days.{' '}
-        <Link to={bookDoctorUrl(doctorId)} className="text-primary-700 font-semibold hover:underline">
+        <Link to={bookDoctorUrl(doctorId)} onClick={wrapNav} className="text-primary-700 font-semibold hover:underline">
           Request appointment
         </Link>
       </div>
@@ -93,29 +114,39 @@ export default function ProfileSlotsPreview({ doctorId, clinicId = null, showTim
   }
 
   const activeDate = selectedDate || dates[0];
+  const dateBtnClass = compact
+    ? 'inline-flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-xs font-semibold transition'
+    : 'inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-semibold transition';
+  const timeBtnClass = compact
+    ? 'text-[11px] font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:border-primary-400 hover:bg-primary-50 hover:text-primary-800 transition'
+    : 'text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:border-primary-400 hover:bg-primary-50 hover:text-primary-800 transition';
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-xl border border-primary-100 bg-gradient-to-br from-primary-50/90 to-white px-4 py-3">
+    <div className={compact ? 'space-y-3' : 'space-y-4'}>
+      <div className={`rounded-xl border border-primary-100 bg-gradient-to-br from-primary-50/90 to-white ${compact ? 'px-3 py-2.5' : 'px-4 py-3'}`}>
         <p className="text-[10px] font-bold uppercase tracking-wider text-primary-600">Next available</p>
-        <p className="text-lg font-bold text-slate-900 mt-1 flex items-center gap-2">
+        <p className={`font-bold text-slate-900 mt-1 flex flex-wrap items-center gap-2 ${compact ? 'text-sm' : 'text-lg'}`}>
           <FaIcon icon="fa-calendar-day" className="text-primary-600 text-sm" />
           {formatDateLabel(activeDate)}
-          {activeDate !== todayIso() && (
+          {!compact && activeDate !== todayIso() && (
             <span className="text-sm font-medium text-slate-500">
-              {new Date(`${activeDate}T12:00:00`).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}
+              {new Date(`${activeDate}T12:00:00`).toLocaleDateString('en-IN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
             </span>
           )}
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="scroll-x-touch flex flex-wrap gap-2 pb-0.5">
         {dates.map((d) => (
           <button
             key={d}
             type="button"
             onClick={() => setSelectedDate(d)}
-            className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+            className={`${dateBtnClass} shrink-0 snap-start ${
               activeDate === d
                 ? 'border-primary-500 bg-primary-600 text-white shadow-sm'
                 : 'border-slate-200 bg-white text-slate-700 hover:border-primary-300'
@@ -128,9 +159,11 @@ export default function ProfileSlotsPreview({ doctorId, clinicId = null, showTim
 
       {showTimes && (
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Times on {formatDateLabel(activeDate)}</p>
+          <p className={`font-semibold uppercase tracking-wide text-slate-500 mb-2 ${compact ? 'text-[10px]' : 'text-xs'}`}>
+            Times on {formatDateLabel(activeDate)}
+          </p>
           {slotsByDate[activeDate]?.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
+            <div className="scroll-x-touch flex flex-wrap gap-2 pb-0.5">
               {slotsByDate[activeDate].map((slot) => (
                 <Link
                   key={`${activeDate}-${slot.time}`}
@@ -138,7 +171,8 @@ export default function ProfileSlotsPreview({ doctorId, clinicId = null, showTim
                     date: activeDate,
                     time: slot.value || slot.time,
                   })}
-                  className="text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:border-primary-400 hover:bg-primary-50 hover:text-primary-800 transition"
+                  onClick={wrapNav}
+                  className={`${timeBtnClass} shrink-0 snap-start`}
                 >
                   {formatTimeLabel(slot)}
                 </Link>
@@ -147,7 +181,8 @@ export default function ProfileSlotsPreview({ doctorId, clinicId = null, showTim
           ) : (
             <Link
               to={bookDoctorUrl(doctorId, { date: activeDate })}
-              className="inline-flex items-center gap-2 text-sm font-semibold text-primary-700 hover:underline"
+              onClick={wrapNav}
+              className={`inline-flex items-center gap-2 font-semibold text-primary-700 hover:underline ${compact ? 'text-xs' : 'text-sm'}`}
             >
               <FaIcon icon="fa-calendar-check" />
               Book on {formatDateLabel(activeDate)}
@@ -156,13 +191,16 @@ export default function ProfileSlotsPreview({ doctorId, clinicId = null, showTim
         </div>
       )}
 
-      <Link
-        to={bookDoctorUrl(doctorId)}
-        className="inline-flex items-center gap-2 text-sm font-bold text-primary-700 hover:text-primary-800"
-      >
-        View full booking calendar
-        <FaIcon icon="fa-arrow-right" className="text-xs" />
-      </Link>
+      {!compact && (
+        <Link
+          to={bookDoctorUrl(doctorId)}
+          onClick={wrapNav}
+          className="inline-flex items-center gap-2 text-sm font-bold text-primary-700 hover:text-primary-800"
+        >
+          View full booking calendar
+          <FaIcon icon="fa-arrow-right" className="text-xs" />
+        </Link>
+      )}
     </div>
   );
 }

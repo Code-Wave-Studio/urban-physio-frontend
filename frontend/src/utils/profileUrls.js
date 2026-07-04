@@ -26,6 +26,40 @@ export function clinicBookUrl(clinic) {
 }
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const FULL_DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+function formatTime12h(time) {
+  const [h, m] = String(time || '').slice(0, 5).split(':').map(Number);
+  if (Number.isNaN(h)) return String(time || '');
+  const period = h >= 12 ? 'PM' : 'AM';
+  const hour = h % 12 || 12;
+  return `${hour}:${String(m || 0).padStart(2, '0')} ${period}`;
+}
+
+/** Weekly schedule rows for doctor availability slots. */
+export function formatDoctorAvailabilityRows(slots = []) {
+  if (!Array.isArray(slots) || !slots.length) return [];
+  const byDay = {};
+  for (const s of slots) {
+    const d = Number(s.day_of_week);
+    if (Number.isNaN(d) || d < 0 || d > 6) continue;
+    const start = String(s.start_time || '').slice(0, 5);
+    const end = String(s.end_time || '').slice(0, 5);
+    if (!start || !end) continue;
+    const range = `${formatTime12h(start)} – ${formatTime12h(end)}`;
+    if (!byDay[d]) {
+      byDay[d] = { dayIndex: d, label: FULL_DAY_NAMES[d] ?? DAY_NAMES[d], ranges: [] };
+    }
+    byDay[d].ranges.push(range);
+  }
+  return Object.values(byDay)
+    .sort((a, b) => a.dayIndex - b.dayIndex)
+    .map(({ dayIndex, label, ranges }) => ({
+      dayIndex,
+      label,
+      text: ranges.join(', '),
+    }));
+}
 
 export function formatAvailabilitySummary(slots = []) {
   if (!slots.length) return 'Contact for availability';

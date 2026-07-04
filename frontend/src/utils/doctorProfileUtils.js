@@ -1,5 +1,43 @@
 import { resolveMediaUrl } from './mediaUrl';
 
+/** Parse degree text into title + institution (e.g. "BPT — Delhi University, 2018"). */
+export function parseDegreeField(text, defaultTitle) {
+  const raw = (text || '').trim();
+  if (!raw) return null;
+  const dash = raw.split(/\s*[—–-]\s+/);
+  if (dash.length >= 2) {
+    return {
+      title: dash[0].trim() || defaultTitle,
+      institution: dash.slice(1).join(' – ').trim(),
+    };
+  }
+  return { title: defaultTitle, institution: raw };
+}
+
+/** Structured qualifications for profile / popup display. */
+export function buildDoctorQualifications(doctor) {
+  if (!doctor) return [];
+  const items = [];
+  const bpt = parseDegreeField(doctor.degree_bpt, 'BPT');
+  const mpt = parseDegreeField(doctor.degree_mpt, 'MPT');
+  if (bpt) items.push(bpt);
+  if (mpt) items.push(mpt);
+
+  const legacy = (doctor.qualifications || '').trim();
+  if (!items.length && legacy) {
+    legacy
+      .split(/[\n;]+/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .forEach((line) => {
+        const parsed = parseDegreeField(line, line);
+        if (parsed) items.push(parsed);
+      });
+  }
+
+  return items;
+}
+
 /** Banner slides: cover, gallery, then avatar (up to max). */
 export function getDoctorBannerImages(doctor, max = 10) {
   if (!doctor) return [];

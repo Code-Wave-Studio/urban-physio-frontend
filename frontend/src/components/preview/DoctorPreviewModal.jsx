@@ -3,6 +3,8 @@ import FaIcon from '../FaIcon';
 import DoctorAvatar from '../DoctorAvatar';
 import PreviewModalShell, { PreviewChip, PreviewSection } from './PreviewModalShell';
 import SaveDoctorButton from '../SaveDoctorButton';
+import DoctorCredentialsSection from '../doctor/DoctorCredentialsSection';
+import DoctorAvailabilitySection from '../doctor/DoctorAvailabilitySection';
 import { useDoctorPreview } from '../../hooks/useDoctorPreview';
 import { bookDoctorUrl } from '../../utils/bookUrl';
 import { doctorProfileUrl } from '../../utils/profileUrls';
@@ -62,9 +64,6 @@ export default function DoctorPreviewModal({ doctor: initialDoctor, open, onClos
               Dr. {d.first_name} {d.last_name}
             </h2>
             <p className="text-primary-700 font-semibold text-sm mt-1">{d.specialization || 'Physiotherapist'}</p>
-            {d.qualifications && (
-              <p className="text-slate-600 text-xs sm:text-sm mt-1 line-clamp-2">{d.qualifications}</p>
-            )}
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-3">
               {rating > 0 ? (
                 <PreviewChip tone="amber">
@@ -213,6 +212,15 @@ export default function DoctorPreviewModal({ doctor: initialDoctor, open, onClos
           <p className="text-sm text-slate-600 leading-relaxed line-clamp-4">{bio}</p>
         </PreviewSection>
       )}
+
+      <DoctorCredentialsSection doctor={d} className="px-5 sm:px-6 py-4 border-t border-slate-100/90" />
+
+      <DoctorAvailabilitySection
+        doctor={d}
+        onNavigate={onClose}
+        variant="default"
+        className="px-5 sm:px-6 py-4 border-t border-slate-100/90"
+      />
 
       <PreviewSection title="Languages" icon="fa-language">
         <div className="flex flex-wrap gap-2">
