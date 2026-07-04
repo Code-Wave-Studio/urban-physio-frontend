@@ -7,7 +7,6 @@ import { useRequireAuth } from '../../utils/requireAuth';
 import { patients } from '../../services/api';
 import { isDoctorSaved, toggleSavedDoctor } from '../../utils/savedDoctors';
 import { bookDoctorUrl } from '../../utils/bookUrl';
-import { doctorProfileUrl } from '../../utils/profileUrls';
 import { doctorMapsUrl } from '../../utils/locationHelpers';
 import { parseSocialLinksRaw } from '../../utils/clinicProfileUtils';
 import { whatsappChatUrl, whatsappDigits } from '../../utils/whatsapp';
@@ -122,7 +121,6 @@ export default function DoctorQuickActions({ doctor, onNavigate, variant = 'shee
 
   const mapUrl = doctorMapsUrl(doctor);
   const bookTo = bookDoctorUrl(doctor.id);
-  const profileTo = doctorProfileUrl(doctor);
   const site = (doctor.website_url || doctor.website || '').trim();
   const websiteHref = site ? (site.startsWith('http') ? site : `https://${site}`) : null;
   const social = parseSocialLinksRaw(doctor.social_links_parsed) ?? parseSocialLinksRaw(doctor.social_links) ?? {};
@@ -154,13 +152,9 @@ export default function DoctorQuickActions({ doctor, onNavigate, variant = 'shee
   };
 
   const compact = variant === 'card' || variant === 'sheet';
-  const showProfile = variant === 'card';
 
   const actions = (
     <>
-      {showProfile && (
-        <CircleAction to={profileTo} icon="fa-user-doctor" label="Profile" onClick={wrapNav()} compact={compact} />
-      )}
       <CircleAction to={bookTo} icon="fa-calendar-check" label="Book" onClick={wrapNav()} compact={compact} />
       {mapUrl && (
         <CircleAction href={mapUrl} icon="fa-diamond-turn-right" label="Directions" external onClick={stopNav} compact={compact} />

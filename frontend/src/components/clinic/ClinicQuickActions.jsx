@@ -7,7 +7,6 @@ import { useRequireAuth } from '../../utils/requireAuth';
 import { patients } from '../../services/api';
 import { isClinicSaved, toggleSavedClinic } from '../../utils/savedClinics';
 import { bookClinicUrl } from '../../utils/bookUrl';
-import { clinicProfileUrl } from '../../utils/profileUrls';
 import { clinicMapsUrl } from '../../utils/locationHelpers';
 import { resolveClinicSocialLinks } from '../../utils/clinicProfileUtils';
 import { whatsappChatUrl, whatsappDigits } from '../../utils/whatsapp';
@@ -121,7 +120,6 @@ export default function ClinicQuickActions({
 }) {
   const mapUrl = clinicMapsUrl(clinic);
   const bookTo = bookClinicUrl(clinic.id);
-  const profileTo = clinicProfileUrl(clinic);
   const site = (clinic.website_url || clinic.website || '').trim();
   const websiteHref = site ? (site.startsWith('http') ? site : `https://${site}`) : null;
   const social = resolveClinicSocialLinks(clinic);
@@ -151,13 +149,9 @@ export default function ClinicQuickActions({
   };
 
   const compact = variant === 'card' || variant === 'sheet';
-  const showProfile = variant === 'card';
 
   const actions = (
     <>
-      {showProfile && (
-        <CircleAction to={profileTo} icon="fa-hospital" label="Profile" onClick={wrapNav()} compact={compact} />
-      )}
       <CircleAction to={bookTo} icon="fa-calendar-check" label="Book" onClick={wrapNav()} compact={compact} />
       {mapUrl && (
         <CircleAction href={mapUrl} icon="fa-diamond-turn-right" label="Directions" external onClick={stopNav} compact={compact} />

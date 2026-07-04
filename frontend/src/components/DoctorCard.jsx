@@ -4,7 +4,6 @@ import FaIcon from './FaIcon';
 import DoctorAvatar from './DoctorAvatar';
 import DoctorPreview from './doctor/DoctorPreview';
 import { bookDoctorUrl } from '../utils/bookUrl';
-import { doctorProfileUrl } from '../utils/profileUrls';
 
 function stopNav(e) {
   e.stopPropagation();
@@ -119,20 +118,11 @@ export default function DoctorCard({ doctor, compact = false, variant = 'default
               </div>
             </div>
 
-            <div className="mt-auto pt-5 flex flex-wrap gap-2">
-              <Link
-                to={doctorProfileUrl(doctor)}
-                onClick={stopNav}
-                className="btn-outline flex-1 min-w-[6rem] text-center text-sm !py-2.5 inline-flex items-center justify-center gap-2"
-              >
-                <FaIcon icon="fa-user" className="text-xs btn-icon" />
-                Profile
-              </Link>
-
+            <div className="mt-auto pt-5">
               <Link
                 to={bookDoctorUrl(doctor.id)}
                 onClick={stopNav}
-                className="btn-primary flex-1 min-w-[6rem] text-center text-sm !py-2.5 inline-flex items-center justify-center gap-2"
+                className="btn-primary w-full text-center text-sm !py-2.5 inline-flex items-center justify-center gap-2"
               >
                 <FaIcon icon="fa-calendar-check" className="text-xs btn-icon" />
                 Book
