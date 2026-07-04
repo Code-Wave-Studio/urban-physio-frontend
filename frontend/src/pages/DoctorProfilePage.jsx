@@ -11,11 +11,12 @@ import BadgeList from '../components/platform/BadgeList';
 import ReviewStars from '../components/platform/ReviewStars';
 import PageMeta, { doctorSchema } from '../components/seo/PageMeta';
 import ShareProfileButton from '../components/profile/ShareProfileButton';
+import DoctorQuickActions from '../components/doctor/DoctorQuickActions';
 import SaveDoctorButton from '../components/SaveDoctorButton';
 import ProfileSlotsPreview from '../components/profile/ProfileSlotsPreview';
 import { doctors, booking } from '../services/api';
 import { googleMapsUrl } from '../utils/locationHelpers';
-import { doctorMinFee, formatReviewCount } from '../utils/doctorProfileUtils';
+import { doctorMinFee, formatReviewCount, getDoctorBannerImages } from '../utils/doctorProfileUtils';
 import { bookDoctorUrl } from '../utils/bookUrl';
 import {
   clinicProfileUrl,
@@ -23,6 +24,7 @@ import {
   formatAvailabilitySummary,
 } from '../utils/profileUrls';
 import { isValidHttpUrl, SOCIAL_FIELDS } from '../utils/clinicProfileUtils';
+import ProfilePhotoScroll from '../components/profile/ProfilePhotoScroll';
 import ProfileSectionNav from '../components/profile/ProfileSectionNav';
 import ProfileServicesGrid from '../components/profile/ProfileServicesGrid';
 import TreatmentPackagesBrowser from '../components/packages/TreatmentPackagesBrowser';
@@ -196,6 +198,11 @@ export default function DoctorProfilePage() {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationLine || fullName)}`;
   })();
 
+  const bannerFallback = resolveMediaUrl(doctor.cover_image || doctor.avatar) || HEALTHCARE_IMAGES.doctorProfile;
+  const bannerSlides = getDoctorBannerImages(doctor).map((url, i) => ({ id: `banner-${i}`, image_url: url }));
+  const photoSlides =
+    bannerSlides.length > 0 ? bannerSlides : [{ id: 'fallback', image_url: bannerFallback }];
+
   return (
     <>
       <PageMeta
@@ -314,13 +321,21 @@ export default function DoctorProfilePage() {
               </div>
             )}
 
+            <div className="mt-5 max-w-full min-w-0">
+              <ProfilePhotoScroll slides={photoSlides} alt={fullName} />
+            </div>
+
             <div className="mt-4 flex sm:hidden justify-center">
               <ShareProfileButton title={fullName} className="!py-2.5 !text-sm w-full max-w-xs justify-center" />
+            </div>
+
+            <div className="mt-4 sm:mt-5 max-w-full min-w-0">
+              <DoctorQuickActions doctor={doctor} variant="profile" />
             </div>
           </div>
 
           <div className="mt-6 sm:mt-8">
-            <div className="flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory md:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex gap-2 scroll-x-touch pb-1 snap-x snap-mandatory md:hidden">
               <StatPill
                 label="Rating"
                 value={rating > 0 ? `${rating.toFixed(1)} / 5` : 'New'}
@@ -507,24 +522,7 @@ export default function DoctorProfilePage() {
             )}
 
             <Section title="Photos & videos" icon="fa-images" id="profile-media">
-              <div className="grid sm:grid-cols-2 gap-3">
-                <div className="rounded-2xl overflow-hidden border border-slate-100 aspect-[4/3]">
-                  <img
-                    src={resolveMediaUrl(doctor.avatar) || HEALTHCARE_IMAGES.doctorProfile}
-                    alt={fullName}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
-                <div className="rounded-2xl overflow-hidden border border-slate-100 aspect-[4/3]">
-                  <img
-                    src={HEALTHCARE_IMAGES.rehab}
-                    alt="Physiotherapy session"
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
-              </div>
+              <ProfilePhotoScroll slides={photoSlides} alt={fullName} className="pb-1" />
             </Section>
           </div>
 

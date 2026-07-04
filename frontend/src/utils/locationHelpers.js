@@ -97,6 +97,14 @@ export function clinicMapsUrl(clinic) {
   return q ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}` : null;
 }
 
+export function doctorMapsUrl(doctor) {
+  if (!doctor) return null;
+  if (doctor.google_maps_url?.trim()) return doctor.google_maps_url.trim();
+  if (doctor.latitude && doctor.longitude) return googleMapsUrl(doctor.latitude, doctor.longitude);
+  const q = [doctor.address, doctor.city_name, doctor.state_name].filter(Boolean).join(', ');
+  return q ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}` : null;
+}
+
 export function clinicLocationText(appt) {
   if (!appt || appt.consultation_type !== 'clinic') return null;
   const parts = [appt.clinic_name, appt.clinic_address].filter(Boolean);

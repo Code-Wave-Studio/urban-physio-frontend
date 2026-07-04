@@ -8,12 +8,15 @@ import { patients } from '../../services/api';
 import { isDoctorSaved, toggleSavedDoctor } from '../../utils/savedDoctors';
 import { bookDoctorUrl } from '../../utils/bookUrl';
 import { doctorProfileUrl } from '../../utils/profileUrls';
+import { doctorMapsUrl } from '../../utils/locationHelpers';
+import { parseSocialLinksRaw } from '../../utils/clinicProfileUtils';
+import { whatsappChatUrl, whatsappDigits } from '../../utils/whatsapp';
 
 function stopNav(e) {
   e.stopPropagation();
 }
 
-function CircleAction({ href, to, onClick, icon, label, saved = false, external, compact = false }) {
+function CircleAction({ href, to, onClick, icon, label, saved = false, brand = false, external, compact = false }) {
   const base = compact
     ? 'shrink-0 snap-start flex flex-col items-center gap-0.5 w-[3rem] group transition-transform active:scale-95'
     : 'shrink-0 snap-start flex flex-col items-center gap-1 w-[3.25rem] group transition-transform active:scale-95';
@@ -28,7 +31,7 @@ function CircleAction({ href, to, onClick, icon, label, saved = false, external,
           compact ? 'w-10 h-10' : 'w-11 h-11'
         } ${circle}`}
       >
-        <FaIcon icon={icon} className={compact ? 'text-xs' : 'text-sm'} />
+        <FaIcon icon={icon} className={compact ? 'text-xs' : 'text-sm'} brand={brand} />
       </span>
       <span
         className={`font-semibold text-slate-600 text-center leading-tight truncate ${
@@ -111,12 +114,23 @@ function SaveCircleAction({ doctor, onNavigate, compact = false }) {
   );
 }
 
+/**
+ * Circular quick actions — profile: Book → Directions → Call → WhatsApp → Website → Save → Share
+ */
 export default function DoctorQuickActions({ doctor, onNavigate, variant = 'sheet', className = '' }) {
   if (!doctor) return null;
 
+  const mapUrl = doctorMapsUrl(doctor);
   const bookTo = bookDoctorUrl(doctor.id);
   const profileTo = doctorProfileUrl(doctor);
-  const compact = variant === 'card' || variant === 'sheet';
+  const site = (doctor.website_url || doctor.website || '').trim();
+  const websiteHref = site ? (site.startsWith('http') ? site : `https://${site}`) : null;
+  const social = parseSocialLinksRaw(doctor.social_links_parsed) ?? parseSocialLinksRaw(doctor.social_links) ?? {};
+  const waRaw = social.whatsapp || doctor.phone;
+  const waUrl = whatsappDigits(waRaw)
+    ? whatsappChatUrl(waRaw, `Hi Dr. ${doctor.first_name}, I would like to book an appointment.`)
+    : null;
+  const fullName = `Dr. ${doctor.first_name} ${doctor.last_name}`;
 
   const share = async (e) => {
     stopNav(e);
@@ -124,7 +138,7 @@ export default function DoctorQuickActions({ doctor, onNavigate, variant = 'shee
     const url = typeof window !== 'undefined' ? window.location.href : '';
     try {
       if (navigator.share) {
-        await navigator.share({ title: `Dr. ${doctor.first_name} ${doctor.last_name}`, url });
+        await navigator.share({ title: fullName, url });
         return;
       }
       await navigator.clipboard.writeText(url);
@@ -139,19 +153,49 @@ export default function DoctorQuickActions({ doctor, onNavigate, variant = 'shee
     onNavigate?.();
   };
 
-  return (
-    <div
-      className={`scroll-x-touch flex gap-2 sm:gap-3 pb-1 snap-x snap-mandatory scroll-smooth w-full min-w-0 ${className}`}
-      role="list"
-      aria-label="Quick actions"
-    >
+  const compact = variant === 'card' || variant === 'sheet';
+  const showProfile = variant === 'card';
+
+  const actions = (
+    <>
+      {showProfile && (
+        <CircleAction to={profileTo} icon="fa-user-doctor" label="Profile" onClick={wrapNav()} compact={compact} />
+      )}
       <CircleAction to={bookTo} icon="fa-calendar-check" label="Book" onClick={wrapNav()} compact={compact} />
-      <CircleAction to={profileTo} icon="fa-user" label="Profile" onClick={wrapNav()} compact={compact} />
+      {mapUrl && (
+        <CircleAction href={mapUrl} icon="fa-diamond-turn-right" label="Directions" external onClick={stopNav} compact={compact} />
+      )}
       {doctor.phone && (
         <CircleAction href={`tel:${doctor.phone}`} icon="fa-phone" label="Call" onClick={stopNav} compact={compact} />
       )}
+      {waUrl && (
+        <CircleAction
+          href={waUrl}
+          icon="fa-whatsapp"
+          label="WhatsApp"
+          brand
+          external
+          onClick={stopNav}
+          compact={compact}
+        />
+      )}
+      {websiteHref && (
+        <CircleAction href={websiteHref} icon="fa-globe" label="Website" external onClick={stopNav} compact={compact} />
+      )}
       <SaveCircleAction doctor={doctor} onNavigate={onNavigate} compact={compact} />
       <CircleAction icon="fa-share-nodes" label="Share" onClick={share} compact={compact} />
+    </>
+  );
+
+  const gapClass = compact ? 'gap-2 sm:gap-3' : 'gap-3';
+
+  return (
+    <div
+      className={`scroll-x-touch flex ${gapClass} pb-1 snap-x snap-mandatory scroll-smooth w-full min-w-0 ${className}`}
+      role="list"
+      aria-label="Quick actions"
+    >
+      {actions}
     </div>
   );
 }

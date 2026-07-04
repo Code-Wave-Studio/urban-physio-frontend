@@ -30,7 +30,7 @@ import { resolveMediaUrl } from '../../utils/mediaUrl';
 
 import { formatOpeningHoursRows, resolveClinicHours, getBannerImages } from '../../utils/clinicProfileUtils';
 
-import ClinicCoverImage from './ClinicCoverImage';
+import ProfilePhotoScroll from '../profile/ProfilePhotoScroll';
 
 import { clinicBookUrl, clinicProfileUrl, doctorProfileUrl } from '../../utils/profileUrls';
 
@@ -401,6 +401,14 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
           <div className="mt-5 max-w-full min-w-0">
 
+            <ProfilePhotoScroll slides={photoSlides} alt={clinic.name} />
+
+          </div>
+
+
+
+          <div className="mt-5 max-w-full min-w-0">
+
             <ClinicQuickActions clinic={{ ...clinic, website_url: websiteUrl }} variant="profile" />
 
           </div>
@@ -663,19 +671,7 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
         <Section title="Photos & videos" icon="fa-images" id="profile-media">
 
-          <div className="scroll-x-touch flex gap-3 pb-2 snap-x snap-mandatory scroll-smooth max-w-full min-w-0">
-
-            {(photoSlides).map((img) => (
-
-              <div key={img.id} className="shrink-0 w-[85%] sm:w-80 max-w-full aspect-video snap-center rounded-2xl overflow-hidden border border-slate-100 shadow-sm">
-
-                <ClinicCoverImage src={img.image_url} alt={clinic.name} variant="profile" />
-
-              </div>
-
-            ))}
-
-          </div>
+          <ProfilePhotoScroll slides={photoSlides} alt={clinic.name} className="pb-1" />
 
         </Section>
 
