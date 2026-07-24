@@ -104,6 +104,21 @@ export default function CitySeoListingPage({ type }) {
   const seo = city?.seo?.[type] || {};
   const canonical = city?.canonical?.[type] || '';
   const canonicalUrl = typeof window !== 'undefined' && canonical ? `${window.location.origin}${canonical}` : canonical;
+  const introText = (seo.intro_content || seo.description || '').trim();
+
+  const faqItems = useMemo(() => {
+    try {
+      const raw = seo.faq_json;
+      if (typeof raw === 'string' && raw.trim()) {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      }
+      if (Array.isArray(raw)) return raw;
+    } catch {
+      /* ignore */
+    }
+    return [];
+  }, [seo.faq_json]);
 
   const breadcrumbItems = useMemo(
     () => [
@@ -119,8 +134,21 @@ export default function CitySeoListingPage({ type }) {
     const listing = cityListingSchema({ city, type, items: sorted, canonicalUrl });
     const crumbs = breadcrumbSchema(breadcrumbItems, canonicalUrl);
     const graph = [...(listing['@graph'] || []), crumbs].filter(Boolean);
+    if (faqItems.length) {
+      graph.push({
+        '@type': 'FAQPage',
+        mainEntity: faqItems.map((item) => ({
+          '@type': 'Question',
+          name: item.q || item.question || '',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: item.a || item.answer || '',
+          },
+        })),
+      });
+    }
     return { '@context': 'https://schema.org', '@graph': graph };
-  }, [city, type, sorted, canonicalUrl, breadcrumbItems]);
+  }, [city, type, sorted, canonicalUrl, breadcrumbItems, faqItems]);
 
   if (loading) {
     return (
@@ -181,7 +209,7 @@ export default function CitySeoListingPage({ type }) {
                 {seo.h1 || seo.title}
               </h1>
               <p className="text-white/90 mt-4 text-base md:text-lg leading-relaxed max-w-2xl">
-                {seo.description}
+                {introText || seo.description}
               </p>
             </div>
 
@@ -207,6 +235,12 @@ export default function CitySeoListingPage({ type }) {
         </section>
 
         <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 w-full">
+          {seo.intro_content && seo.intro_content !== seo.description && (
+            <div className="prose prose-slate max-w-3xl mb-8 text-slate-700 whitespace-pre-line">
+              {seo.intro_content}
+            </div>
+          )}
+
           {count > 0 ? (
             <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5 md:gap-6">
               {sorted.map((item) => config.renderCard(item))}
@@ -227,6 +261,22 @@ export default function CitySeoListingPage({ type }) {
                 </Link>
               </div>
             </div>
+          )}
+
+          {faqItems.length > 0 && (
+            <section className="mt-12 max-w-3xl">
+              <h2 className="text-xl font-bold text-slate-900 mb-4">Frequently asked questions</h2>
+              <div className="space-y-3">
+                {faqItems.map((item, idx) => (
+                  <details key={idx} className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                    <summary className="font-semibold text-slate-900 cursor-pointer">
+                      {item.q || item.question}
+                    </summary>
+                    <p className="text-sm text-slate-600 mt-2 whitespace-pre-line">{item.a || item.answer}</p>
+                  </details>
+                ))}
+              </div>
+            </section>
           )}
 
           {count > 0 && (

@@ -7,6 +7,7 @@ import DirectoryListingHeader from '../components/listing/DirectoryListingHeader
 import FaIcon from '../components/FaIcon';
 import { clinics } from '../services/api';
 import { useLocation } from '../contexts/LocationContext';
+import ManagedPageSeo from '../components/seo/ManagedPageSeo';
 
 const SORT_OPTIONS = [
   { id: 'recommended', label: 'Recommended' },
@@ -127,6 +128,10 @@ export default function Clinics() {
 
   return (
     <div className="relative min-h-screen flex flex-col">
+      <ManagedPageSeo
+        fallbackTitle="Physiotherapy Clinics Near You"
+        fallbackDescription="Discover approved physiotherapy clinics across India. View doctors, ratings, and book appointments."
+      />
       <Navbar />
 
       <DirectoryListingHeader

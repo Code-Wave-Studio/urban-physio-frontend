@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import FaIcon from '../../components/FaIcon';
 import MediaUrlOrUpload from '../../components/admin/MediaUrlOrUpload';
+import AdminSeoEntityPanel from './AdminSeoEntityPanel';
 import { admin, uploadCmsImage } from '../../services/api';
 import { SITE_LOGO_FILE } from '../../constants/siteBrand';
 import toast from 'react-hot-toast';
@@ -15,6 +16,9 @@ function absoluteSiteLogoUrl(canonicalBase = '') {
 const TABS = [
   { id: 'dashboard', label: 'Dashboard', icon: 'fa-gauge-high' },
   { id: 'pages', label: 'Pages', icon: 'fa-file-lines' },
+  { id: 'doctors', label: 'Doctors', icon: 'fa-user-doctor' },
+  { id: 'clinics', label: 'Clinics', icon: 'fa-hospital' },
+  { id: 'cities', label: 'Cities', icon: 'fa-city' },
   { id: 'settings', label: 'Global', icon: 'fa-sliders' },
   { id: 'social', label: 'Social & Schema', icon: 'fa-share-nodes' },
   { id: 'robots', label: 'Sitemap & Robots', icon: 'fa-robot' },
@@ -161,6 +165,7 @@ export default function AdminSeo() {
   const [checklist, setChecklist] = useState(null);
   const [sitemapStatus, setSitemapStatus] = useState(null);
   const [sameAsText, setSameAsText] = useState('');
+  const [citySubType, setCitySubType] = useState('city_clinics');
 
   const selectedScore = pageForm?.seo_score || (selectedId && pages.find((p) => p.id === selectedId)?.seo_score);
 
@@ -605,6 +610,61 @@ export default function AdminSeo() {
                     </div>
                   )}
                 </form>
+              </div>
+            )}
+
+            {tab === 'doctors' && (
+              <AdminSeoEntityPanel
+                entityType="doctor"
+                title="Doctor profile SEO"
+                defaultOg={settings.default_og_image}
+              />
+            )}
+
+            {tab === 'clinics' && (
+              <AdminSeoEntityPanel
+                entityType="clinic"
+                title="Clinic profile SEO"
+                defaultOg={settings.default_og_image}
+              />
+            )}
+
+            {tab === 'cities' && (
+              <div className="space-y-4">
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    className={`px-4 py-2 rounded-full text-sm font-medium ${
+                      citySubType === 'city_clinics'
+                        ? 'bg-primary-600 text-white'
+                        : 'bg-white border border-slate-200 text-slate-600'
+                    }`}
+                    onClick={() => setCitySubType('city_clinics')}
+                  >
+                    Clinic landings
+                  </button>
+                  <button
+                    type="button"
+                    className={`px-4 py-2 rounded-full text-sm font-medium ${
+                      citySubType === 'city_doctors'
+                        ? 'bg-primary-600 text-white'
+                        : 'bg-white border border-slate-200 text-slate-600'
+                    }`}
+                    onClick={() => setCitySubType('city_doctors')}
+                  >
+                    Doctor landings
+                  </button>
+                </div>
+                <AdminSeoEntityPanel
+                  key={citySubType}
+                  entityType={citySubType}
+                  title={
+                    citySubType === 'city_clinics'
+                      ? 'City clinic landings (Best physiotherapy clinic in …)'
+                      : 'City doctor landings (Best physiotherapist in …)'
+                  }
+                  defaultOg={settings.default_og_image}
+                />
               </div>
             )}
 

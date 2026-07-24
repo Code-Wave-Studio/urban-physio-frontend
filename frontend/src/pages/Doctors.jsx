@@ -7,6 +7,7 @@ import DirectoryListingHeader from '../components/listing/DirectoryListingHeader
 import FaIcon from '../components/FaIcon';
 import { doctors } from '../services/api';
 import { useLocation } from '../contexts/LocationContext';
+import ManagedPageSeo from '../components/seo/ManagedPageSeo';
 
 const SORT_OPTIONS = [
   { id: 'recommended', label: 'Recommended' },
@@ -120,6 +121,10 @@ export default function Doctors() {
 
   return (
     <div className="relative min-h-screen flex flex-col">
+      <ManagedPageSeo
+        fallbackTitle="Find Physiotherapists Near You"
+        fallbackDescription="Browse verified physiotherapists. Book online, clinic, or home sessions across India."
+      />
       <Navbar />
 
       <DirectoryListingHeader
