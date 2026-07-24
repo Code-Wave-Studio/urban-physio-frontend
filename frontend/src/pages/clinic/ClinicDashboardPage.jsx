@@ -61,7 +61,7 @@ export default function ClinicDashboardPage() {
         const list = res.data || [];
         setClinics(list);
         if (!clinicId && list.length) {
-          navigate(`/clinic/${list[0].id}`, { replace: true });
+          navigate(`/clinic-manage/${list[0].id}`, { replace: true });
         }
       })
       .catch((e) => toast.error(e.message || 'Could not load clinics'))
@@ -112,7 +112,7 @@ export default function ClinicDashboardPage() {
           {clinics.length > 0 && (
             <select
               value={clinicId || ''}
-              onChange={(e) => navigate(`/clinic/${e.target.value}`)}
+              onChange={(e) => navigate(`/clinic-manage/${e.target.value}`)}
               className="doc-input !w-auto"
             >
               {clinics.map((c) => (

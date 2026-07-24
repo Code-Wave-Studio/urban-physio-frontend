@@ -37,15 +37,18 @@ export default function DashboardLayout({ children, links = [], variant }) {
   const { user } = useAuth();
   const isPatient = variant === 'patient';
   const isDoctor = variant === 'doctor';
-  const usePortalSidebar = isPatient || isDoctor;
+  const isClinic = variant === 'clinic';
+  const usePortalSidebar = isPatient || isDoctor || isClinic;
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   const portalMeta = isDoctor
     ? { title: 'Doctor Portal', subtitle: `Dr. ${user?.first_name || ''} ${user?.last_name || ''}`.trim(), accent: 'teal' }
-    : isPatient
-      ? { title: 'Patient Portal', subtitle: `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 'My Health', accent: 'primary' }
-      : null;
+    : isClinic
+      ? { title: 'Clinic Portal', subtitle: `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 'Clinic', accent: 'emerald' }
+      : isPatient
+        ? { title: 'Patient Portal', subtitle: `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 'My Health', accent: 'primary' }
+        : null;
 
   const refreshUnread = () => {
     if (!hasStoredToken()) return;

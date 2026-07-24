@@ -3,6 +3,7 @@ export function dashboardPath(roleSlug) {
     super_admin: '/admin',
     admin: '/admin',
     doctor: '/doctor',
+    clinic: '/clinic-portal',
     patient: '/patient',
   };
   return paths[roleSlug] || '/';
@@ -11,7 +12,7 @@ export function dashboardPath(roleSlug) {
 export function navigateAfterAuth(navigate, user, redirectTo) {
   const canUseRedirect =
     redirectTo &&
-    ['patient', 'doctor', 'admin', 'super_admin'].includes(user.role_slug);
+    ['patient', 'doctor', 'clinic', 'admin', 'super_admin'].includes(user.role_slug);
   if (canUseRedirect) {
     navigate(redirectTo, { replace: true });
   } else {

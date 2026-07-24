@@ -152,6 +152,14 @@ export const doctors = {
   updateClinic: (id, data) => api.put(`/doctors/clinics/${id}`, data),
   clinicAvailability: (clinicId) => api.get(`/doctors/clinics/${clinicId}/availability`),
   setClinicAvailability: (clinicId, slots) => api.post(`/doctors/clinics/${clinicId}/availability`, { slots }),
+  clinicNetworkSearch: (params) => api.get('/doctors/clinic-network/search', { params }),
+  clinicJoinRequests: () => api.get('/doctors/clinic-network/join-requests'),
+  clinicRequestJoin: (data) => api.post('/doctors/clinic-network/join-requests', data),
+  clinicCancelJoinRequest: (id) => api.post(`/doctors/clinic-network/join-requests/${id}/cancel`),
+  clinicInvites: () => api.get('/doctors/clinic-network/invites'),
+  clinicRespondInvite: (token, accept) =>
+    api.post(`/doctors/clinic-network/invites/${encodeURIComponent(token)}/respond`, { accept }),
+  clinicLeave: (clinicId) => api.post('/doctors/clinic-network/leave', { clinic_id: clinicId }),
   emergencyAvailability: () => api.get('/doctors/emergency/availability'),
   setEmergencyAvailability: (data) => api.put('/doctors/emergency/availability', data),
   emergencyQueue: () => api.get('/doctors/emergency/queue'),
@@ -611,8 +619,15 @@ export const careers = {
 };
 
 export const clinicPortal = {
+  me: () => api.get('/clinic-portal/me'),
+  updateProfile: (data) => api.put('/clinic-portal/profile', data),
   myClinics: () => api.get('/clinic-portal/clinics'),
   overview: (clinicId) => api.get(`/clinic-portal/${clinicId}/overview`),
+  doctors: (clinicId) => api.get(`/clinic-portal/${clinicId}/doctors`),
+  inviteDoctor: (clinicId, data) => api.post(`/clinic-portal/${clinicId}/invites`, data),
+  joinRequests: (clinicId) => api.get(`/clinic-portal/${clinicId}/join-requests`),
+  decideJoinRequest: (clinicId, requestId, data) =>
+    api.post(`/clinic-portal/${clinicId}/join-requests/${requestId}/decide`, data),
 };
 
 export const about = {

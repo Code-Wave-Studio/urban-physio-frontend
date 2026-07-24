@@ -21,6 +21,10 @@ import PatientAppointments from './pages/patient/PatientAppointments';
 import PatientReports from './pages/patient/PatientReports';
 import DocumentsPage from './pages/DocumentsPage';
 import ClinicDashboardPage from './pages/clinic/ClinicDashboardPage';
+import ClinicPortalHome from './pages/clinic/ClinicPortalHome';
+import ClinicPortalDoctors from './pages/clinic/ClinicPortalDoctors';
+import ClinicPortalProfile from './pages/clinic/ClinicPortalProfile';
+import ClinicPortalAppointments from './pages/clinic/ClinicPortalAppointments';
 import PatientProfile from './pages/patient/PatientProfile';
 import AdminInvoiceSettings from './pages/admin/AdminInvoiceSettings';
 import AdminSeo from './pages/admin/AdminSeo';
@@ -137,6 +141,8 @@ export default function App() {
       <Route path="/patient/register" element={<AuthRegisterPage portalId="patient" />} />
       <Route path="/doctor/login" element={<AuthLoginPage portalId="doctor" />} />
       <Route path="/doctor/register" element={<AuthRegisterPage portalId="doctor" />} />
+      <Route path="/clinic/login" element={<AuthLoginPage portalId="clinic" />} />
+      <Route path="/clinic/register" element={<AuthRegisterPage portalId="clinic" />} />
       <Route path="/provider/login" element={<Navigate to="/doctor/login" replace />} />
       <Route path="/provider/register" element={<Navigate to="/doctor/register" replace />} />
       <Route path="/verify-otp" element={<VerifyOtp />} />
@@ -227,8 +233,14 @@ export default function App() {
       <Route path="/doctor/earnings" element={<ProtectedRoute roles={['doctor']}><DoctorEarnings /></ProtectedRoute>} />
       <Route path="/doctor/patients" element={<ProtectedRoute roles={['doctor']}><DoctorPatients /></ProtectedRoute>} />
       <Route path="/doctor/documents" element={<ProtectedRoute roles={['doctor']}><DocumentsPage /></ProtectedRoute>} />
-      <Route path="/clinic" element={<ProtectedRoute roles={['doctor', 'admin', 'super_admin']}><ClinicDashboardPage /></ProtectedRoute>} />
-      <Route path="/clinic/:clinicId" element={<ProtectedRoute roles={['doctor', 'admin', 'super_admin']}><ClinicDashboardPage /></ProtectedRoute>} />
+      <Route path="/clinic-portal" element={<ProtectedRoute roles={['clinic']}><ClinicPortalHome /></ProtectedRoute>} />
+      <Route path="/clinic-portal/doctors" element={<ProtectedRoute roles={['clinic']}><ClinicPortalDoctors /></ProtectedRoute>} />
+      <Route path="/clinic-portal/appointments" element={<ProtectedRoute roles={['clinic']}><ClinicPortalAppointments /></ProtectedRoute>} />
+      <Route path="/clinic-portal/profile" element={<ProtectedRoute roles={['clinic']}><ClinicPortalProfile /></ProtectedRoute>} />
+      <Route path="/clinic-portal/notifications" element={<ProtectedRoute roles={['clinic']}><NotificationsPage /></ProtectedRoute>} />
+      {/* Doctor/admin clinic analytics (does not collide with public /clinic/:slug profiles) */}
+      <Route path="/clinic-manage" element={<ProtectedRoute roles={['doctor', 'admin', 'super_admin']}><ClinicDashboardPage /></ProtectedRoute>} />
+      <Route path="/clinic-manage/:clinicId" element={<ProtectedRoute roles={['doctor', 'admin', 'super_admin']}><ClinicDashboardPage /></ProtectedRoute>} />
       <Route path="/doctor/clinics" element={<ProtectedRoute roles={['doctor']}><DoctorClinics /></ProtectedRoute>} />
       <Route path="/doctor/clinics/new" element={<ProtectedRoute roles={['doctor']}><DoctorAddClinic /></ProtectedRoute>} />
       <Route path="/doctor/clinic-availability" element={<ProtectedRoute roles={['doctor']}><DoctorClinicAvailability /></ProtectedRoute>} />

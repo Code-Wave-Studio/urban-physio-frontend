@@ -11,7 +11,7 @@ import { getAuthPortal } from '../../constants/authPortals';
 import { navigateAfterAuth } from '../../utils/authRedirect';
 
 /**
- * @param {{ portalId: 'patient' | 'doctor' }} props
+ * @param {{ portalId: 'patient' | 'doctor' | 'clinic' }} props
  */
 export default function AuthRegisterPage({ portalId }) {
   const portal = getAuthPortal(portalId);
@@ -32,6 +32,16 @@ export default function AuthRegisterPage({ portalId }) {
     password: '',
     specialization: '',
     clinic_name: '',
+    owner_name: '',
+    manager_name: '',
+    address: '',
+    pincode: '',
+    gstin: '',
+    pan: '',
+    registration_number: '',
+    clinic_type: 'Physiotherapy Clinic',
+    website: '',
+    emergency_contact: '',
   });
 
   if (!portal) return null;
@@ -44,6 +54,22 @@ export default function AuthRegisterPage({ portalId }) {
     accepted_terms: true,
     registration_intent: portal.registrationIntent || portal.id,
     clinic_name: portal.showClinicName ? form.clinic_name.trim() : undefined,
+    owner_name: portal.showClinicOrgFields
+      ? form.owner_name.trim() || `${form.first_name} ${form.last_name}`.trim()
+      : undefined,
+    manager_name: portal.showClinicOrgFields ? form.manager_name.trim() || undefined : undefined,
+    address: portal.showClinicOrgFields ? form.address.trim() || undefined : undefined,
+    pincode: portal.showClinicOrgFields ? form.pincode.trim() || undefined : undefined,
+    gstin: portal.showClinicOrgFields ? form.gstin.trim() || undefined : undefined,
+    pan: portal.showClinicOrgFields ? form.pan.trim() || undefined : undefined,
+    registration_number: portal.showClinicOrgFields
+      ? form.registration_number.trim() || undefined
+      : undefined,
+    clinic_type: portal.showClinicOrgFields ? form.clinic_type.trim() || undefined : undefined,
+    website: portal.showClinicOrgFields ? form.website.trim() || undefined : undefined,
+    emergency_contact: portal.showClinicOrgFields
+      ? form.emergency_contact.trim() || form.phone
+      : undefined,
   });
 
   const handleSubmit = async (e) => {
@@ -100,6 +126,20 @@ export default function AuthRegisterPage({ portalId }) {
           <span>
             <strong>Patients only.</strong> Doctors must use the{' '}
             <Link to="/doctor/register" className="font-semibold underline">doctor registration</Link> page.
+          </span>
+        </div>
+      )}
+
+      {portal.id === 'clinic' && (
+        <div className="mb-5 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-900 flex gap-2 items-start">
+          <FaIcon icon="fa-hospital" className="mt-0.5 shrink-0 text-teal-600" />
+          <span>
+            <strong>Clinic / centre accounts only.</strong> After registration, admin approval is required
+            before your clinic goes live. Individual physiotherapists should{' '}
+            <Link to="/doctor/register" className="font-semibold underline">
+              register as doctors
+            </Link>
+            .
           </span>
         </div>
       )}
@@ -179,7 +219,11 @@ export default function AuthRegisterPage({ portalId }) {
           {portal.showSpecialization && (
             <input
               className="input-field"
-              placeholder="Specialization (e.g. Sports Physiotherapy)"
+              placeholder={
+                portal.id === 'clinic'
+                  ? 'Clinic focus (e.g. Sports rehab, Orthopedic physio)'
+                  : 'Specialization (e.g. Sports Physiotherapy)'
+              }
               value={form.specialization}
               onChange={(e) => setForm({ ...form, specialization: e.target.value })}
             />
@@ -187,11 +231,83 @@ export default function AuthRegisterPage({ portalId }) {
           {portal.showClinicName && (
             <input
               className="input-field"
-              placeholder="Clinic name"
+              placeholder="Clinic name *"
               value={form.clinic_name}
               onChange={(e) => setForm({ ...form, clinic_name: e.target.value })}
               required
             />
+          )}
+          {portal.showClinicOrgFields && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <input
+                  className="input-field"
+                  placeholder="Owner name"
+                  value={form.owner_name}
+                  onChange={(e) => setForm({ ...form, owner_name: e.target.value })}
+                />
+                <input
+                  className="input-field"
+                  placeholder="Manager name"
+                  value={form.manager_name}
+                  onChange={(e) => setForm({ ...form, manager_name: e.target.value })}
+                />
+              </div>
+              <input
+                className="input-field"
+                placeholder="Clinic address"
+                value={form.address}
+                onChange={(e) => setForm({ ...form, address: e.target.value })}
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <input
+                  className="input-field"
+                  placeholder="PIN code"
+                  value={form.pincode}
+                  onChange={(e) => setForm({ ...form, pincode: e.target.value })}
+                />
+                <input
+                  className="input-field"
+                  placeholder="Clinic type"
+                  value={form.clinic_type}
+                  onChange={(e) => setForm({ ...form, clinic_type: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <input
+                  className="input-field"
+                  placeholder="GSTIN (optional)"
+                  value={form.gstin}
+                  onChange={(e) => setForm({ ...form, gstin: e.target.value })}
+                />
+                <input
+                  className="input-field"
+                  placeholder="PAN (optional)"
+                  value={form.pan}
+                  onChange={(e) => setForm({ ...form, pan: e.target.value })}
+                />
+              </div>
+              <input
+                className="input-field"
+                placeholder="Registration / license number"
+                value={form.registration_number}
+                onChange={(e) => setForm({ ...form, registration_number: e.target.value })}
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <input
+                  className="input-field"
+                  placeholder="Website (optional)"
+                  value={form.website}
+                  onChange={(e) => setForm({ ...form, website: e.target.value })}
+                />
+                <input
+                  className="input-field"
+                  placeholder="Emergency contact"
+                  value={form.emergency_contact}
+                  onChange={(e) => setForm({ ...form, emergency_contact: e.target.value })}
+                />
+              </div>
+            </>
           )}
           <PasswordInput
             placeholder="Password (min 8 characters)"

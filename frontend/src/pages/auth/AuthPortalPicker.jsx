@@ -25,12 +25,12 @@ export default function AuthPortalPicker({ mode }) {
           </h1>
           <p className="text-sm text-slate-500 mt-2 max-w-lg mx-auto">
             {isLogin
-              ? 'Patients and doctors use separate sign-in pages.'
-              : 'Doctors must not register as patients. Pick the account that matches you.'}
+              ? 'Patients, doctors, and clinics each have a dedicated sign-in page.'
+              : 'Pick the account that matches you — patient, physiotherapist, or clinic organisation.'}
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-4 md:gap-5 max-w-2xl mx-auto">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 max-w-4xl mx-auto">
           {(isLogin ? AUTH_LOGIN_PORTAL_LIST : AUTH_PORTAL_LIST).map((portalId) => {
             const portal = AUTH_PORTALS[portalId];
             const target = isLogin ? portal.loginPath : portal.registerPath;

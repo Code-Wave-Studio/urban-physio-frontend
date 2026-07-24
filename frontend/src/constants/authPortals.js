@@ -1,4 +1,4 @@
-/** Separate authentication portals — patient and doctor only. */
+/** Separate authentication portals — patient, doctor, clinic. */
 
 export const AUTH_PORTALS = {
   patient: {
@@ -13,7 +13,7 @@ export const AUTH_PORTALS = {
     loginTitle: 'Patient sign in',
     loginSubtitle: 'Book appointments, view reports, and manage your care',
     registerTitle: 'Create patient account',
-    registerSubtitle: 'For people booking physiotherapy — not for doctors',
+    registerSubtitle: 'For people booking physiotherapy — not for doctors or clinics',
     registerCta: 'Register as patient',
     loginCta: 'Sign in as patient',
     pickerTitle: 'Patient',
@@ -26,6 +26,7 @@ export const AUTH_PORTALS = {
     requireMedicoLegal: false,
     alternatePortals: [
       { portalId: 'doctor', label: 'Physiotherapist?', linkLabel: 'Doctor sign in' },
+      { portalId: 'clinic', label: 'Clinic / centre?', linkLabel: 'Clinic sign in' },
     ],
   },
   doctor: {
@@ -54,6 +55,37 @@ export const AUTH_PORTALS = {
     requireMedicoLegal: true,
     alternatePortals: [
       { portalId: 'patient', label: 'Looking to book care?', linkLabel: 'Patient sign in' },
+      { portalId: 'clinic', label: 'Register a clinic?', linkLabel: 'Clinic sign in' },
+    ],
+  },
+  clinic: {
+    id: 'clinic',
+    role: 'clinic',
+    registrationIntent: 'clinic_organization',
+    loginPath: '/clinic/login',
+    registerPath: '/clinic/register',
+    forgotPasswordRole: 'clinic',
+    icon: 'fa-hospital',
+    accent: 'from-teal-600 to-emerald-700',
+    softAccent: 'bg-teal-50 text-teal-900 border-teal-200',
+    loginTitle: 'Clinic sign in',
+    loginSubtitle: 'Manage doctors, appointments, patients & clinic operations',
+    registerTitle: 'Clinic registration',
+    registerSubtitle: 'Register your physiotherapy clinic or centre as an independent organization',
+    registerCta: 'Register clinic',
+    loginCta: 'Sign in as clinic',
+    pickerTitle: 'Clinic',
+    pickerDescription: 'Independent clinic account with its own portal, doctors, and operations.',
+    showSpecialization: true,
+    showClinicName: true,
+    showClinicOrgFields: true,
+    termsKey: 'clinicRegistration',
+    termsPath: '/clinic-registration-terms',
+    termsLabel: 'Clinic Registration Terms',
+    requireMedicoLegal: false,
+    alternatePortals: [
+      { portalId: 'doctor', label: 'Individual physiotherapist?', linkLabel: 'Doctor sign in' },
+      { portalId: 'patient', label: 'Looking to book care?', linkLabel: 'Patient sign in' },
     ],
   },
 };
@@ -62,6 +94,6 @@ export function getAuthPortal(portalId) {
   return AUTH_PORTALS[portalId] || null;
 }
 
-export const AUTH_PORTAL_LIST = ['patient', 'doctor'];
+export const AUTH_PORTAL_LIST = ['patient', 'doctor', 'clinic'];
 
 export const AUTH_LOGIN_PORTAL_LIST = AUTH_PORTAL_LIST;

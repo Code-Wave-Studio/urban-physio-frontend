@@ -8,7 +8,7 @@ export const DOCTOR_NAV = [
   { to: '/doctor/admin-package-prices', label: 'Platform prices', icon: 'fa-tags' },
   { to: '/doctor/prescriptions', label: 'Prescriptions', icon: 'fa-file-prescription' },
   { to: '/doctor/documents', label: 'Documents', icon: 'fa-folder-tree' },
-  { to: '/clinic', label: 'Clinic Portal', icon: 'fa-hospital-user' },
+  { to: '/clinic-manage', label: 'Clinic Analytics', icon: 'fa-hospital-user' },
   { to: '/doctor/clinics', label: 'My Clinics', icon: 'fa-hospital' },
   { to: '/doctor/clinics/new', label: 'Add Clinic', icon: 'fa-plus' },
   { to: '/doctor/clinic-availability', label: 'Availability', icon: 'fa-calendar-days' },
