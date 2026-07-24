@@ -1,8 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import FaIcon from '../../components/FaIcon';
-import { admin } from '../../services/api';
+import MediaUrlOrUpload from '../../components/admin/MediaUrlOrUpload';
+import { admin, uploadCmsImage } from '../../services/api';
+import { SITE_LOGO_FILE } from '../../constants/siteBrand';
 import toast from 'react-hot-toast';
+
+/** Absolute site logo URL — frontend/public/logo.png */
+function absoluteSiteLogoUrl(canonicalBase = '') {
+  const base = (canonicalBase || (typeof window !== 'undefined' ? window.location.origin : '')).replace(/\/$/, '');
+  return base ? `${base}/${SITE_LOGO_FILE}` : `/${SITE_LOGO_FILE}`;
+}
 
 const TABS = [
   { id: 'dashboard', label: 'Dashboard', icon: 'fa-gauge-high' },
@@ -165,7 +173,14 @@ export default function AdminSeo() {
         admin.seoPages(),
       ]);
       setDashboard(dash.data || dash);
-      const s = { ...emptySettings(), ...(sett.data || sett) };
+      const raw = sett.data || sett;
+      const logoUrl = absoluteSiteLogoUrl(raw.canonical_base_url);
+      const s = {
+        ...emptySettings(),
+        ...raw,
+        organization_logo: raw.organization_logo || logoUrl,
+        default_og_image: raw.default_og_image || logoUrl,
+      };
       setSettings(s);
       setSameAsText(Array.isArray(s.organization_same_as) ? s.organization_same_as.join('\n') : '');
       const list = pageList.data || pageList || [];
@@ -512,7 +527,31 @@ export default function AdminSeo() {
                     <div className="grid sm:grid-cols-2 gap-3">
                       <input className="input-field sm:col-span-2" placeholder="OG title" value={pageForm.og_title || ''} onChange={(e) => setPageField('og_title', e.target.value)} />
                       <textarea className="input-field sm:col-span-2 min-h-[60px]" placeholder="OG description" value={pageForm.og_description || ''} onChange={(e) => setPageField('og_description', e.target.value)} />
-                      <input className="input-field sm:col-span-2" placeholder="OG image URL" value={pageForm.og_image || ''} onChange={(e) => setPageField('og_image', e.target.value)} />
+                      <div className="sm:col-span-2 space-y-2">
+                        <MediaUrlOrUpload
+                          label="OG image for this page"
+                          hint="Leave empty to use default OG / site logo. Upload or paste URL."
+                          icon="fa-image"
+                          urlValue={pageForm.og_image || ''}
+                          onUrlChange={(v) => setPageField('og_image', v)}
+                          onUpload={uploadCmsImage}
+                          accept="image/jpeg,image/png,image/webp"
+                          maxMb={4}
+                          preview="image"
+                          accent="emerald"
+                        />
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            className="btn-outline !py-1.5 text-xs"
+                            onClick={() =>
+                              setPageField('og_image', settings.default_og_image || absoluteSiteLogoUrl(settings.canonical_base_url))
+                            }
+                          >
+                            Use default / site logo
+                          </button>
+                        </div>
+                      </div>
                       <input className="input-field" placeholder="Twitter title" value={pageForm.twitter_title || ''} onChange={(e) => setPageField('twitter_title', e.target.value)} />
                       <input className="input-field" placeholder="Twitter image URL" value={pageForm.twitter_image || ''} onChange={(e) => setPageField('twitter_image', e.target.value)} />
                       <textarea className="input-field sm:col-span-2 min-h-[60px]" placeholder="Twitter description" value={pageForm.twitter_description || ''} onChange={(e) => setPageField('twitter_description', e.target.value)} />
@@ -608,8 +647,30 @@ export default function AdminSeo() {
                   <>
                     <div className="glass-card !p-5 space-y-3">
                       <h2 className="font-bold text-slate-900">Open Graph & Twitter defaults</h2>
+                      <MediaUrlOrUpload
+                        label="Default OG / social share image"
+                        hint="Recommended 1200×630. Empty = site logo (logo.png). Upload or paste URL."
+                        icon="fa-share-nodes"
+                        urlValue={settings.default_og_image || ''}
+                        onUrlChange={(v) => setSetting('default_og_image', v)}
+                        onUpload={uploadCmsImage}
+                        accept="image/jpeg,image/png,image/webp"
+                        maxMb={4}
+                        preview="image"
+                        devicePreview="default"
+                        accent="emerald"
+                      />
+                      <button
+                        type="button"
+                        className="btn-outline !py-1.5 text-xs"
+                        onClick={() =>
+                          setSetting('default_og_image', absoluteSiteLogoUrl(settings.canonical_base_url))
+                        }
+                      >
+                        <FaIcon icon="fa-image" className="mr-1" />
+                        Use site logo (/{SITE_LOGO_FILE})
+                      </button>
                       <div className="grid sm:grid-cols-2 gap-3">
-                        <input className="input-field sm:col-span-2" placeholder="Default OG image URL" value={settings.default_og_image || ''} onChange={(e) => setSetting('default_og_image', e.target.value)} />
                         <input className="input-field" placeholder="Twitter @handle" value={settings.twitter_handle || ''} onChange={(e) => setSetting('twitter_handle', e.target.value)} />
                         <select className="input-field" value={settings.twitter_card_type} onChange={(e) => setSetting('twitter_card_type', e.target.value)}>
                           <option value="summary_large_image">summary_large_image</option>
@@ -623,8 +684,32 @@ export default function AdminSeo() {
                     <div className="glass-card !p-5 space-y-3">
                       <h2 className="font-bold text-slate-900">Organization / Local Business schema</h2>
                       <div className="grid sm:grid-cols-2 gap-3">
-                        <input className="input-field" placeholder="Organization name" value={settings.organization_name || ''} onChange={(e) => setSetting('organization_name', e.target.value)} />
-                        <input className="input-field" placeholder="Logo URL" value={settings.organization_logo || ''} onChange={(e) => setSetting('organization_logo', e.target.value)} />
+                        <input className="input-field sm:col-span-2" placeholder="Organization name" value={settings.organization_name || ''} onChange={(e) => setSetting('organization_name', e.target.value)} />
+                      </div>
+                      <MediaUrlOrUpload
+                        label="Organization logo"
+                        hint={`Auto-filled from site logo (public/${SITE_LOGO_FILE}). Change via upload or URL if needed.`}
+                        icon="fa-building"
+                        urlValue={settings.organization_logo || ''}
+                        onUrlChange={(v) => setSetting('organization_logo', v)}
+                        onUpload={uploadCmsImage}
+                        accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                        maxMb={2}
+                        preview="image"
+                        devicePreview="default"
+                        accent="violet"
+                      />
+                      <button
+                        type="button"
+                        className="btn-outline !py-1.5 text-xs"
+                        onClick={() =>
+                          setSetting('organization_logo', absoluteSiteLogoUrl(settings.canonical_base_url))
+                        }
+                      >
+                        <FaIcon icon="fa-rotate" className="mr-1" />
+                        Reset to site logo
+                      </button>
+                      <div className="grid sm:grid-cols-2 gap-3">
                         <input className="input-field" placeholder="Phone" value={settings.organization_phone || ''} onChange={(e) => setSetting('organization_phone', e.target.value)} />
                         <input className="input-field" placeholder="Email" value={settings.organization_email || ''} onChange={(e) => setSetting('organization_email', e.target.value)} />
                         <textarea className="input-field sm:col-span-2" rows={2} placeholder="Address" value={settings.organization_address || ''} onChange={(e) => setSetting('organization_address', e.target.value)} />
