@@ -20,6 +20,7 @@ import { SITE_FAQS } from '../constants/supportPages';
 import { SERVICE_CARD_IMAGES } from '../utils/healthcareImages';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import { emptySectionImages } from '../constants/homeSectionImages';
+import ManagedPageSeo from '../components/seo/ManagedPageSeo';
 
 const SERVICE_DEFS = [
   { title: 'Online Consultation', imageKey: 'online_consult', fallback: SERVICE_CARD_IMAGES['Online Consultation'], desc: 'HD video sessions via Jitsi Meet from your home', icon: 'fa-video', color: 'from-orange-400/20 to-amber-400/20', iconColor: 'text-orange-600', link: '/book?type=online', linkLabel: 'Book' },
@@ -195,6 +196,10 @@ export default function Home() {
 
   return (
     <div className="relative overflow-x-hidden page-enter">
+      <ManagedPageSeo
+        fallbackTitle="The Urban Physio | Book Verified Physiotherapists"
+        fallbackDescription="Book verified physiotherapists for online, clinic & home visits across India."
+      />
       <Navbar />
 
       <div className="mesh-blob w-96 h-96 bg-orange-400 -top-48 -right-48 animate-pulse-soft hidden md:block opacity-20" />

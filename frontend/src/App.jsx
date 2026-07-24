@@ -23,6 +23,8 @@ import DocumentsPage from './pages/DocumentsPage';
 import ClinicDashboardPage from './pages/clinic/ClinicDashboardPage';
 import PatientProfile from './pages/patient/PatientProfile';
 import AdminInvoiceSettings from './pages/admin/AdminInvoiceSettings';
+import AdminSeo from './pages/admin/AdminSeo';
+import NotFoundPage from './pages/NotFoundPage';
 import AdminPainSelection from './pages/admin/AdminPainSelection';
 import AdminBookingSettings from './pages/admin/booking/AdminBookingSettings';
 import AdminContact from './pages/admin/AdminContact';
@@ -90,6 +92,7 @@ import CitySeoListingPage from './pages/CitySeoListingPage';
 import AuthLoginPage from './pages/auth/AuthLoginPage';
 import AuthRegisterPage from './pages/auth/AuthRegisterPage';
 import ScrollToTop from './components/ScrollToTop';
+import { SeoProvider } from './contexts/SeoContext';
 
 /* CodeWave Studio license guard — redundant, self-healing copy (do NOT remove). */
 function cwAppLicenseGuard() {
@@ -124,7 +127,7 @@ cwAppLicenseGuard();
 export default function App() {
   cwAppLicenseGuard();
   return (
-    <>
+    <SeoProvider>
       <ScrollToTop />
       <Routes>
       <Route path="/" element={<Home />} />
@@ -265,12 +268,14 @@ export default function App() {
       <Route path="/admin/appointment-requests" element={<ProtectedRoute roles={['admin', 'super_admin']}><AppointmentRequestsPage navItems={ADMIN_NAV} title="Doctor change requests" scope="admin" /></ProtectedRoute>} />
       <Route path="/admin/contact" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminContact /></ProtectedRoute>} />
       <Route path="/admin/invoice-settings" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminInvoiceSettings /></ProtectedRoute>} />
+      <Route path="/admin/seo" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminSeo /></ProtectedRoute>} />
       <Route path="/admin/booking-settings" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminBookingSettings /></ProtectedRoute>} />
       <Route path="/admin/documents" element={<ProtectedRoute roles={['admin', 'super_admin']}><DocumentsPage /></ProtectedRoute>} />
       <Route path="/admin/logs" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminLogs /></ProtectedRoute>} />
       <Route path="/admin/profile" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminProfile /></ProtectedRoute>} />
       <Route path="/admin/notifications" element={<ProtectedRoute roles={['admin', 'super_admin']}><NotificationsPage /></ProtectedRoute>} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
-    </>
+    </SeoProvider>
   );
 }

@@ -483,6 +483,26 @@ export const admin = {
   invoiceSettings: () => api.get('/admin/invoice-settings'),
   repairHtmlEntities: () => api.post('/admin/maintenance/fix-html-entities', {}),
   updateInvoiceSettings: (data) => api.put('/admin/invoice-settings', data),
+  seoDashboard: () => api.get('/admin/seo/dashboard'),
+  seoSettings: () => api.get('/admin/seo/settings'),
+  updateSeoSettings: (data) => api.put('/admin/seo/settings', data),
+  seoPages: () => api.get('/admin/seo/pages'),
+  seoPageGet: (id) => api.get(`/admin/seo/pages/${id}`),
+  seoPageCreate: (data) => api.post('/admin/seo/pages', data),
+  seoPageUpdate: (id, data) => api.put(`/admin/seo/pages/${id}`, data),
+  seoPageDelete: (id) => api.delete(`/admin/seo/pages/${id}`),
+  seoPageAutoGenerate: (id) => api.post(`/admin/seo/pages/${id}/auto-generate`),
+  seoRedirects: () => api.get('/admin/seo/redirects'),
+  seoRedirectCreate: (data) => api.post('/admin/seo/redirects', data),
+  seoRedirectUpdate: (id, data) => api.put(`/admin/seo/redirects/${id}`, data),
+  seoRedirectDelete: (id) => api.delete(`/admin/seo/redirects/${id}`),
+  seo404Logs: (params) => api.get('/admin/seo/404-logs', { params }),
+  seoClear404: (data) => api.post('/admin/seo/404-logs', data || {}),
+  seoBrokenLinks: (params) => api.get('/admin/seo/broken-links', { params }),
+  seoScanBrokenLinks: () => api.post('/admin/seo/broken-links/scan'),
+  seoResolveBrokenLink: (id) => api.post(`/admin/seo/broken-links/${id}/resolve`),
+  seoChecklist: () => api.get('/admin/seo/checklist'),
+  seoSitemapStatus: () => api.get('/admin/seo/sitemap-status'),
   contactSettings: () => api.get('/admin/contact-settings'),
   updateContactSettings: (data) => api.put('/admin/contact-settings', data),
   aboutSettings: () => api.get('/admin/about-settings'),
@@ -576,6 +596,13 @@ export const admin = {
 export const contact = {
   settings: () => api.get('/contact/settings'),
   sendMessage: (data) => api.post('/contact/message', data),
+};
+
+export const seo = {
+  config: () => api.get('/seo/config'),
+  pageMeta: (path) => api.get('/seo/page-meta', { params: { path } }),
+  resolveRedirect: (path) => api.get('/seo/resolve-redirect', { params: { path } }),
+  log404: (data) => api.post('/seo/log-404', data),
 };
 
 export const careers = {

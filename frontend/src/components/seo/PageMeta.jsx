@@ -6,7 +6,7 @@ const SITE = 'The Urban Physio';
 const DEFAULT_OG = `/${SITE_LOGO_FILE}`;
 
 function upsertMeta(attr, key, content) {
-  if (!content) return;
+  if (content == null || content === '') return;
   let el = document.querySelector(`meta[${attr}="${key}"]`);
   if (!el) {
     el = document.createElement('meta');
@@ -41,11 +41,21 @@ function upsertJsonLd(id, data) {
 export function usePageMeta({
   title,
   description,
+  keywords,
   canonical,
   image,
   ogType = 'website',
+  ogTitle,
+  ogDescription,
+  twitterTitle,
+  twitterDescription,
+  twitterImage,
+  twitterCard = 'summary_large_image',
+  twitterSite,
   jsonLd = null,
   noindex = false,
+  nofollow = false,
+  robots,
 }) {
   useEffect(() => {
     const fullTitle = title ? (title.includes(SITE) ? title : `${title} | ${SITE}`) : SITE;
@@ -53,16 +63,20 @@ export function usePageMeta({
 
     const desc = description || 'Book verified physiotherapists for online, clinic & home visits across India.';
     upsertMeta('name', 'description', desc);
-    upsertMeta('property', 'og:title', fullTitle);
-    upsertMeta('property', 'og:description', desc);
+    if (keywords) upsertMeta('name', 'keywords', keywords);
+
+    upsertMeta('property', 'og:title', ogTitle || fullTitle);
+    upsertMeta('property', 'og:description', ogDescription || desc);
     upsertMeta('property', 'og:type', ogType);
     upsertMeta('property', 'og:site_name', SITE);
 
     const img = image || `${window.location.origin}${DEFAULT_OG}`;
     upsertMeta('property', 'og:image', img);
-    upsertMeta('name', 'twitter:card', 'summary_large_image');
-    upsertMeta('name', 'twitter:title', fullTitle);
-    upsertMeta('name', 'twitter:description', desc);
+    upsertMeta('name', 'twitter:card', twitterCard || 'summary_large_image');
+    upsertMeta('name', 'twitter:title', twitterTitle || fullTitle);
+    upsertMeta('name', 'twitter:description', twitterDescription || desc);
+    upsertMeta('name', 'twitter:image', twitterImage || img);
+    if (twitterSite) upsertMeta('name', 'twitter:site', twitterSite);
 
     if (canonical) {
       const url = canonical.startsWith('http') ? canonical : `${window.location.origin}${canonical}`;
@@ -70,7 +84,10 @@ export function usePageMeta({
       upsertMeta('property', 'og:url', url);
     }
 
-    upsertMeta('name', 'robots', noindex ? 'noindex, nofollow' : 'index, follow');
+    const robotsContent =
+      robots ||
+      `${noindex ? 'noindex' : 'index'}, ${nofollow ? 'nofollow' : 'follow'}`;
+    upsertMeta('name', 'robots', robotsContent);
 
     if (jsonLd) {
       upsertJsonLd('page-json-ld', jsonLd);
@@ -80,7 +97,25 @@ export function usePageMeta({
       const ld = document.getElementById('page-json-ld');
       if (ld) ld.remove();
     };
-  }, [title, description, canonical, image, ogType, jsonLd, noindex]);
+  }, [
+    title,
+    description,
+    keywords,
+    canonical,
+    image,
+    ogType,
+    ogTitle,
+    ogDescription,
+    twitterTitle,
+    twitterDescription,
+    twitterImage,
+    twitterCard,
+    twitterSite,
+    jsonLd,
+    noindex,
+    nofollow,
+    robots,
+  ]);
 }
 
 export default function PageMeta(props) {
@@ -151,7 +186,11 @@ export function breadcrumbSchema(items, canonicalUrl) {
       '@type': 'ListItem',
       position: index + 1,
       name: item.label,
-      item: item.href ? (item.href.startsWith('http') ? item.href : `${window.location.origin}${item.href}`) : undefined,
+      item: item.href
+        ? item.href.startsWith('http')
+          ? item.href
+          : `${window.location.origin}${item.href}`
+        : undefined,
     })),
   };
 }

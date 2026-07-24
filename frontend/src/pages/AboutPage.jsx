@@ -6,6 +6,7 @@ import { about } from '../services/api';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import { cmsContentToHtml } from '../utils/htmlContent';
 import { HEALTHCARE_IMAGES } from '../utils/healthcareImages';
+import ManagedPageSeo from '../components/seo/ManagedPageSeo';
 
 export default function AboutPage() {
   const [data, setData] = useState(null);
@@ -17,7 +18,6 @@ export default function AboutPage() {
       .then((res) => {
         const d = res.data ?? res;
         setData(d);
-        if (d.seo_title) document.title = d.seo_title;
       })
       .catch(() => setData(null))
       .finally(() => setLoading(false));
@@ -35,6 +35,11 @@ export default function AboutPage() {
   const heroImage = resolveMediaUrl(data?.hero_image) || data?.hero_image || HEALTHCARE_IMAGES.about;
 
   return (
+    <>
+    <ManagedPageSeo
+      fallbackTitle={data?.seo_title || data?.hero_title || 'About The Urban Physio'}
+      fallbackDescription={data?.seo_description || data?.hero_subtitle || 'Trusted physiotherapy — online, clinic & home care across India.'}
+    />
     <InfoPageLayout
       title={data?.hero_title || 'About The Urban Physio'}
       subtitle={data?.hero_subtitle || 'Trusted physiotherapy — online, clinic & home care across India.'}
@@ -135,5 +140,6 @@ export default function AboutPage() {
         </div>
       </section>
     </InfoPageLayout>
+    </>
   );
 }

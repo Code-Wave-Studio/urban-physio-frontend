@@ -13,7 +13,7 @@ https://www.theurbanphysio.com/*  https://theurbanphysio.com/:splat  301
   200
 
 /robots.txt
-  /robots.txt
+  /backend/api/seo/robots.txt
   200
 
 /faqs.svg

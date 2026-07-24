@@ -10,6 +10,7 @@ export const ADMIN_NAV = [
   { to: '/admin/exercises', label: 'Exercises', icon: 'fa-dumbbell' },
   { to: '/admin/physiofeed', label: 'PhysioFeed', icon: 'fa-rss' },
   { to: '/admin/about', label: 'About Us', icon: 'fa-building' },
+  { to: '/admin/seo', label: 'SEO', icon: 'fa-magnifying-glass-chart' },
   { to: '/admin/badges', label: 'Badges', icon: 'fa-award' },
   { to: '/admin/coupons', label: 'Coupons', icon: 'fa-tag' },
   { to: '/admin/reviews', label: 'Reviews', icon: 'fa-star' },

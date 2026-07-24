@@ -5,6 +5,7 @@ import InfoPageLayout from '../components/InfoPageLayout';
 import FaIcon from '../components/FaIcon';
 import { useContact } from '../contexts/ContactContext';
 import { contact as contactApi } from '../services/api';
+import ManagedPageSeo from '../components/seo/ManagedPageSeo';
 
 export default function ContactPage() {
   const { email, phone, hours, form_subjects, loading: contactLoading } = useContact();
@@ -47,6 +48,11 @@ export default function ContactPage() {
   };
 
   return (
+    <>
+    <ManagedPageSeo
+      fallbackTitle="Contact Us"
+      fallbackDescription="Questions about booking, refunds, or your care? We’re here to help across India."
+    />
     <InfoPageLayout
       title="Contact Us"
       subtitle="Questions about booking, refunds, or your care? We’re here to help across India."
@@ -189,5 +195,6 @@ export default function ContactPage() {
         </div>
       </div>
     </InfoPageLayout>
+    </>
   );
 }
