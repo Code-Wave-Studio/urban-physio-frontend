@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { ADMIN_NAV } from '../constants/adminNav';
 import { DOCTOR_NAV } from '../constants/doctorNav';
 import { PATIENT_NAV } from '../constants/patientNav';
+import { CLINIC_NAV } from '../constants/clinicNav';
 import { getNotificationPath } from '../utils/notificationRoutes';
 import toast from 'react-hot-toast';
 
@@ -33,6 +34,8 @@ const TYPE_LABELS = {
   clinic_pending: 'Clinic',
   clinic_approved: 'Clinic',
   clinic_rejected: 'Clinic',
+  clinic_join_request: 'Join request',
+  clinic_invite: 'Invite',
   doctor_service_pending: 'Services',
   doctor_service_approved: 'Services',
   doctor_service_rejected: 'Services',
@@ -53,6 +56,7 @@ const TYPE_LABELS = {
 
 function resolveRole(hasRole) {
   if (hasRole('super_admin', 'admin')) return 'admin';
+  if (hasRole('clinic')) return 'clinic';
   if (hasRole('doctor')) return 'doctor';
   return 'patient';
 }
@@ -79,6 +83,13 @@ export default function NotificationsPage() {
         links: DOCTOR_NAV,
         variant: 'doctor',
         subtitle: 'Appointments, clinics, payments, reviews, and patient reports.',
+      };
+    }
+    if (hasRole('clinic')) {
+      return {
+        links: CLINIC_NAV,
+        variant: 'clinic',
+        subtitle: 'Clinic bookings, doctor joins, payments, and portal alerts.',
       };
     }
     return {

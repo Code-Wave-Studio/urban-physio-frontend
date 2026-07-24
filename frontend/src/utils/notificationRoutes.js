@@ -42,6 +42,7 @@ export function getNotificationPath(notification, roleSlug) {
     }
     if (role === 'patient') return `/patient/appointments${q}`;
     if (role === 'doctor') return `/doctor/appointments${q}`;
+    if (role === 'clinic') return `/clinic-portal/appointments${q}`;
     return `/admin/appointments${q}`;
   }
 
@@ -62,6 +63,13 @@ export function getNotificationPath(notification, roleSlug) {
   }
 
   if (type === 'clinic_pending' || type === 'clinic_approved' || type === 'clinic_rejected') {
+    if (role === 'clinic') return '/clinic-portal/profile';
+    if (role === 'doctor') return '/doctor/clinics';
+    return '/admin/clinics';
+  }
+
+  if (type === 'clinic_join_request' || type === 'clinic_invite') {
+    if (role === 'clinic') return '/clinic-portal/doctors';
     if (role === 'doctor') return '/doctor/clinics';
     return '/admin/clinics';
   }
