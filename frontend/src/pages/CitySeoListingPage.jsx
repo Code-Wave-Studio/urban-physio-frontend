@@ -209,7 +209,7 @@ export default function CitySeoListingPage({ type }) {
                 {seo.h1 || seo.title}
               </h1>
               <p className="text-white/90 mt-4 text-base md:text-lg leading-relaxed max-w-2xl">
-                {introText || seo.description}
+                {seo.description}
               </p>
             </div>
 
@@ -235,7 +235,7 @@ export default function CitySeoListingPage({ type }) {
         </section>
 
         <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 w-full">
-          {seo.intro_content && seo.intro_content !== seo.description && (
+          {seo.intro_content && (
             <div className="prose prose-slate max-w-3xl mb-8 text-slate-700 whitespace-pre-line">
               {seo.intro_content}
             </div>
