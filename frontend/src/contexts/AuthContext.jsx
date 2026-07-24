@@ -141,10 +141,11 @@ export function AuthProvider({ children }) {
 
   const resendOtp = async (email) => auth.resendOtp({ email });
 
-  const googleLogin = async (idToken, role) => {
+  const googleLogin = async (idToken, role, extra = {}) => {
     const res = await auth.googleLogin({
       id_token: idToken,
       ...(role ? { role } : {}),
+      ...extra,
     });
     return applyAuthResponse(res);
   };

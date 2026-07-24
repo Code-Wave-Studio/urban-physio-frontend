@@ -101,13 +101,51 @@ export default function AuthRegisterPage({ portalId }) {
       toast.error('Please accept all required terms before continuing with Google');
       return;
     }
+    if (portal.showClinicName && !form.clinic_name.trim()) {
+      toast.error('Please enter your clinic name before continuing with Google');
+      return;
+    }
+    if (portal.id === 'doctor' && !form.phone.trim()) {
+      // phone optional for Google but helpful — don't block
+    }
     setGoogleLoading(true);
     try {
-      const user = await googleLogin(credential, portal.role);
-      toast.success('Account created! Check your email for your sign-in password.');
+      const extra = {
+        accepted_terms: true,
+        specialization: form.specialization.trim() || undefined,
+        phone: form.phone.trim() || undefined,
+      };
+      if (portal.showClinicName || portal.showClinicOrgFields) {
+        Object.assign(extra, {
+          clinic_name: form.clinic_name.trim() || undefined,
+          owner_name:
+            form.owner_name.trim() ||
+            `${form.first_name} ${form.last_name}`.trim() ||
+            undefined,
+          manager_name: form.manager_name.trim() || undefined,
+          address: form.address.trim() || undefined,
+          pincode: form.pincode.trim() || undefined,
+          gstin: form.gstin.trim() || undefined,
+          pan: form.pan.trim() || undefined,
+          registration_number: form.registration_number.trim() || undefined,
+          clinic_type: form.clinic_type.trim() || undefined,
+          website: form.website.trim() || undefined,
+          emergency_contact: form.emergency_contact.trim() || form.phone.trim() || undefined,
+        });
+      }
+      const user = await googleLogin(credential, portal.role, extra);
+      toast.success('Signed in with Google');
       navigateAfterAuth(navigate, user, redirectTo);
     } catch (err) {
-      toast.error(err.message);
+      const hint = err?.errors?.login_hint || err?.errors?.role_slug;
+      if (hint && typeof hint === 'string') {
+        const portalPath =
+          hint === 'doctor' ? '/doctor/login' : hint === 'clinic' ? '/clinic/login' : '/patient/login';
+        toast.error(err.message || 'Account already exists');
+        navigate(portalPath, { state: { from: redirectTo } });
+      } else {
+        toast.error(err.message || 'Google registration failed');
+      }
     } finally {
       setGoogleLoading(false);
     }
@@ -163,13 +201,41 @@ export default function AuthRegisterPage({ portalId }) {
           onMedicoChange={portal.requireMedicoLegal ? setAcceptedMedicoLegal : undefined}
         />
 
-        {hasGoogleAuth() && (
-          <div className={`mt-5 ${!termsOk ? 'opacity-50 pointer-events-none' : ''}`}>
-            <GoogleSignInButton
-              onSuccess={handleGoogle}
-              onError={(err) => toast.error(err.message)}
-              text="signup_with"
+        {portal.showClinicName && (
+          <div className="mt-4">
+            <input
+              className="input-field"
+              placeholder="Clinic name *"
+              value={form.clinic_name}
+              onChange={(e) => setForm({ ...form, clinic_name: e.target.value })}
+              required
             />
+            <p className="text-xs text-slate-500 mt-1.5">
+              Required for Google and email registration.
+            </p>
+          </div>
+        )}
+
+        {hasGoogleAuth() && (
+          <div className="mt-5">
+            {!termsOk && (
+              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3">
+                Accept the legal agreement above to enable Google registration.
+              </p>
+            )}
+            <div className={!termsOk ? 'opacity-50' : ''}>
+              <GoogleSignInButton
+                onSuccess={(credential) => {
+                  if (!termsOk) {
+                    toast.error('Please accept all required terms before continuing with Google');
+                    return;
+                  }
+                  handleGoogle(credential);
+                }}
+                onError={(err) => toast.error(err?.message || 'Google sign-in failed')}
+                text="signup_with"
+              />
+            </div>
             {googleLoading && (
               <p className="text-center text-sm text-slate-500 mt-2">Creating account with Google...</p>
             )}
@@ -228,7 +294,7 @@ export default function AuthRegisterPage({ portalId }) {
               onChange={(e) => setForm({ ...form, specialization: e.target.value })}
             />
           )}
-          {portal.showClinicName && (
+          {portal.showClinicName && !hasGoogleAuth() && (
             <input
               className="input-field"
               placeholder="Clinic name *"
@@ -236,6 +302,9 @@ export default function AuthRegisterPage({ portalId }) {
               onChange={(e) => setForm({ ...form, clinic_name: e.target.value })}
               required
             />
+          )}
+          {portal.showClinicName && hasGoogleAuth() && (
+            <input type="hidden" value={form.clinic_name} readOnly />
           )}
           {portal.showClinicOrgFields && (
             <>

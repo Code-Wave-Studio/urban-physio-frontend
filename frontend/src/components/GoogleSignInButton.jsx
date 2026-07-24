@@ -1,28 +1,28 @@
 import { useEffect, useRef, useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 
-const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const clientId = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim();
 
-const MIN_WIDTH = 200;
+const MIN_WIDTH = 240;
 const MAX_WIDTH = 400;
 
 export default function GoogleSignInButton({ onSuccess, onError, text = 'continue_with' }) {
   const containerRef = useRef(null);
   const [btnWidth, setBtnWidth] = useState(320);
+  const [scriptError, setScriptError] = useState(false);
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return undefined;
 
     const updateWidth = () => {
-      const available = el.getBoundingClientRect().width;
+      const available = Math.floor(el.getBoundingClientRect().width);
       if (available <= 0) return;
-      const next = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, Math.floor(available)));
-      setBtnWidth((prev) => (prev === next ? prev : next));
+      const next = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, available));
+      setBtnWidth((prev) => (Math.abs(prev - next) < 8 ? prev : next));
     };
 
     updateWidth();
-
     const observer = new ResizeObserver(updateWidth);
     observer.observe(el);
     window.addEventListener('resize', updateWidth);
@@ -34,7 +34,22 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'continu
   }, []);
 
   if (!clientId) {
+    if (import.meta.env.DEV) {
+      return (
+        <p className="text-center text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+          Google Sign-In unavailable: set <code>VITE_GOOGLE_CLIENT_ID</code> in frontend env.
+        </p>
+      );
+    }
     return null;
+  }
+
+  if (scriptError) {
+    return (
+      <p className="text-center text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
+        Google Sign-In failed to load. Disable ad-blockers and refresh, or use email registration.
+      </p>
+    );
   }
 
   return (
@@ -42,19 +57,24 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'continu
       <div className="google-signin-inner flex justify-center w-full">
         <GoogleLogin
           onSuccess={(res) => {
-            if (res.credential) {
+            if (res?.credential) {
               onSuccess(res.credential);
             } else {
-              onError?.({ message: 'Google sign-in failed' });
+              onError?.({ message: 'Google did not return a sign-in credential' });
             }
           }}
-          onError={() => onError?.({ message: 'Google sign-in was cancelled' })}
+          onError={() => {
+            setScriptError(false);
+            onError?.({ message: 'Google sign-in was cancelled or blocked by the browser' });
+          }}
           useOneTap={false}
           theme="outline"
           size="large"
-          width={btnWidth}
+          width={String(btnWidth)}
           text={text}
           shape="rectangular"
+          locale="en"
+          context={text === 'signup_with' ? 'signup' : 'signin'}
         />
       </div>
     </div>
