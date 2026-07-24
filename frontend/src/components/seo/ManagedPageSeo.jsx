@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import PageMeta from './PageMeta';
-import { seo as seoApi } from '../services/api';
+import { seo as seoApi } from '../../services/api';
 
 /**
  * Applies CMS-managed SEO meta for the current path when a seo_pages row exists.
