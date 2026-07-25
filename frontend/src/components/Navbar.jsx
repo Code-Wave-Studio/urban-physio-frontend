@@ -95,12 +95,14 @@ export default function Navbar({ beforeLogo = null, headerSpacerClass = '' }) {
   const dashboardPath = () => {
     if (!user) return '/login';
     if (hasRole('super_admin', 'admin')) return '/admin';
+    if (hasRole('clinic')) return '/clinic-portal';
     if (hasRole('doctor')) return '/doctor';
     return '/patient';
   };
 
   const dashboardLabel = () => {
     if (hasRole('super_admin', 'admin')) return 'Admin';
+    if (hasRole('clinic')) return 'Clinic portal';
     if (hasRole('doctor')) return 'Dashboard';
     if (hasRole('patient')) return 'My account';
     return 'Dashboard';

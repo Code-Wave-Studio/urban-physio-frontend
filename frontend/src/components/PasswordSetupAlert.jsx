@@ -22,8 +22,8 @@ export default function PasswordSetupAlert({ profilePath }) {
         <div>
           <p className="font-semibold text-sm">Set your password</p>
           <p className="text-sm text-amber-900/90 mt-0.5">
-            Your account was created with Google. Please set a secure password in profile settings before
-            continuing. Check your email for the temporary sign-in password if you have not changed it yet.
+            Please set a secure password in your account settings. If you received a temporary password by
+            email, replace it now so you can always sign in with email and password.
           </p>
         </div>
       </div>

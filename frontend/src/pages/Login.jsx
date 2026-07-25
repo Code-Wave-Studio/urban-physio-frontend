@@ -14,6 +14,9 @@ export default function Login() {
   if (role === 'doctor') {
     return <Navigate to="/doctor/login" replace state={redirectState} />;
   }
+  if (role === 'clinic') {
+    return <Navigate to="/clinic/login" replace state={redirectState} />;
+  }
   if (role === 'provider') {
     return <Navigate to="/doctor/login" replace state={redirectState} />;
   }

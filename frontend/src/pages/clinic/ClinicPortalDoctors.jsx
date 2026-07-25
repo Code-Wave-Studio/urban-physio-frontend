@@ -12,6 +12,8 @@ export default function ClinicPortalDoctors() {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [inviting, setInviting] = useState(false);
+  const [removingId, setRemovingId] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -44,13 +46,22 @@ export default function ClinicPortalDoctors() {
   const invite = async (e) => {
     e.preventDefault();
     if (!clinicId) return;
+    setInviting(true);
     try {
-      await clinicPortal.inviteDoctor(clinicId, { email, message });
-      toast.success('Invitation sent');
+      const res = await clinicPortal.inviteDoctor(clinicId, { email, message });
+      const data = res.data ?? res;
+      if (data?.email_sent === false) {
+        toast.success('Invitation saved — email delivery failed, ask the doctor to check their portal');
+      } else {
+        toast.success('Invitation sent');
+      }
       setEmail('');
       setMessage('');
+      load();
     } catch (err) {
       toast.error(err.message || 'Invite failed');
+    } finally {
+      setInviting(false);
     }
   };
 
@@ -64,12 +75,26 @@ export default function ClinicPortalDoctors() {
     }
   };
 
+  const remove = async (doctorId, name) => {
+    if (!window.confirm(`Remove ${name} from this clinic?`)) return;
+    setRemovingId(doctorId);
+    try {
+      await clinicPortal.removeDoctor(clinicId, doctorId);
+      toast.success('Doctor removed');
+      load();
+    } catch (err) {
+      toast.error(err.message || 'Could not remove doctor');
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
   return (
     <DashboardLayout links={CLINIC_NAV} variant="clinic">
       <div className="space-y-6 max-w-4xl">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Doctors</h1>
-          <p className="text-sm text-slate-500 mt-1">Invite doctors or approve join requests</p>
+          <p className="text-sm text-slate-500 mt-1">Invite doctors, approve join requests, or remove linked doctors</p>
         </div>
 
         <form onSubmit={invite} className="glass-card !p-5 grid sm:grid-cols-2 gap-3">
@@ -91,9 +116,12 @@ export default function ClinicPortalDoctors() {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
           />
-          <button type="submit" className="btn-primary sm:col-span-2">
-            Send invitation
+          <button type="submit" className="btn-primary sm:col-span-2" disabled={inviting}>
+            {inviting ? 'Sending…' : 'Send invitation'}
           </button>
+          <p className="sm:col-span-2 text-xs text-slate-500">
+            An email is sent to the doctor. If they already have an account, they also get an in-app notification.
+          </p>
         </form>
 
         {loading ? (
@@ -103,23 +131,37 @@ export default function ClinicPortalDoctors() {
             <div className="glass-card !p-5">
               <h2 className="font-bold mb-3">Linked doctors</h2>
               <ul className="space-y-2 text-sm">
-                {doctors.map((d) => (
-                  <li key={d.doctor_id} className="flex flex-wrap justify-between gap-2 border-b border-slate-100 pb-2">
-                    <div>
-                      <p className="font-semibold text-slate-900">
-                        Dr. {d.first_name} {d.last_name}
-                        {Number(d.is_clinic_manager) === 1 && (
-                          <span className="ml-2 text-[10px] uppercase bg-teal-100 text-teal-800 px-1.5 py-0.5 rounded">
-                            Manager
-                          </span>
-                        )}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {d.specialization || 'Physiotherapy'} · {d.email} · {d.status}
-                      </p>
-                    </div>
-                  </li>
-                ))}
+                {doctors.map((d) => {
+                  const name = `Dr. ${d.first_name || ''} ${d.last_name || ''}`.trim();
+                  return (
+                    <li
+                      key={d.doctor_id}
+                      className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2"
+                    >
+                      <div className="min-w-0">
+                        <p className="font-semibold text-slate-900">
+                          {name}
+                          {Number(d.is_clinic_manager) === 1 && (
+                            <span className="ml-2 text-[10px] uppercase bg-teal-100 text-teal-800 px-1.5 py-0.5 rounded">
+                              Manager
+                            </span>
+                          )}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {d.specialization || 'Physiotherapy'} · {d.email} · {d.status}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn-outline text-xs border-red-200 text-red-700 hover:bg-red-50"
+                        disabled={removingId === d.doctor_id}
+                        onClick={() => remove(d.doctor_id, name)}
+                      >
+                        {removingId === d.doctor_id ? 'Removing…' : 'Remove'}
+                      </button>
+                    </li>
+                  );
+                })}
                 {!doctors.length && <li className="text-slate-500">No doctors linked yet</li>}
               </ul>
             </div>

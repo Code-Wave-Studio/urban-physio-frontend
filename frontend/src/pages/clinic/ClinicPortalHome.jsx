@@ -16,6 +16,7 @@ import { Line, Doughnut } from 'react-chartjs-2';
 import toast from 'react-hot-toast';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../../components/FaIcon';
+import PasswordSetupAlert from '../../components/PasswordSetupAlert';
 import { CLINIC_NAV } from '../../constants/clinicNav';
 import { clinicPortal } from '../../services/api';
 import { STATUS_STYLES, TYPE_ICONS, formatTime, formatType } from '../../utils/appointmentListUtils';
@@ -163,6 +164,8 @@ export default function ClinicPortalHome() {
   return (
     <DashboardLayout links={CLINIC_NAV} variant="clinic">
       <div className="space-y-6">
+        <PasswordSetupAlert profilePath="/clinic-portal/profile" />
+
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-slate-900">{clinic?.name || 'Clinic Portal'}</h1>

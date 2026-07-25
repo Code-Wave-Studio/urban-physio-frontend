@@ -12,6 +12,9 @@ export default function Register() {
   if (role === 'doctor') {
     return <Navigate to="/doctor/register" replace />;
   }
+  if (role === 'clinic') {
+    return <Navigate to="/clinic/register" replace />;
+  }
   if (role === 'provider') {
     return <Navigate to="/doctor/register" replace />;
   }

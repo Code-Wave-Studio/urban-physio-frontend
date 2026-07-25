@@ -7,9 +7,27 @@ import Navbar from '../components/Navbar';
 import PasswordInput from '../components/PasswordInput';
 import FaIcon from '../components/FaIcon';
 
+function loginPathForRole(role) {
+  switch (role) {
+    case 'clinic':
+      return '/clinic/login';
+    case 'doctor':
+      return '/doctor/login';
+    case 'admin':
+    case 'super_admin':
+      return '/login';
+    case 'patient':
+      return '/patient/login';
+    default:
+      return '/login';
+  }
+}
+
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token') || '';
+  const role = (searchParams.get('role') || '').toLowerCase();
+  const loginBack = loginPathForRole(role);
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
@@ -59,7 +77,8 @@ export default function ResetPassword() {
     setLoading(true);
     try {
       await resetPassword(token, password);
-      navigate('/login', { replace: true, state: { passwordReset: true } });
+      toast.success('Password updated — you can sign in now');
+      navigate(loginBack, { replace: true, state: { passwordReset: true } });
     } catch (err) {
       toast.error(err.message || 'Could not reset password');
     } finally {
@@ -78,7 +97,11 @@ export default function ResetPassword() {
             <p className="text-slate-600 text-sm mb-5">
               This password reset link is no longer valid. Request a new one to continue.
             </p>
-            <Link to="/forgot-password" className="btn-primary inline-block">
+            <Link
+              to="/forgot-password"
+              state={role ? { loginRole: role, loginPath: loginBack } : undefined}
+              className="btn-primary inline-block"
+            >
               Request a new link
             </Link>
           </div>
@@ -132,7 +155,7 @@ export default function ResetPassword() {
             </button>
           </form>
           <p className="mt-4 text-center text-sm">
-            <Link to="/login" className="text-primary-600 font-medium">
+            <Link to={loginBack} className="text-primary-600 font-medium">
               Back to sign in
             </Link>
           </p>

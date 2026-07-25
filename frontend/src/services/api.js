@@ -635,6 +635,7 @@ export const clinicPortal = {
   earnings: (clinicId) => api.get(`/clinic-portal/${clinicId}/earnings`),
   doctors: (clinicId) => api.get(`/clinic-portal/${clinicId}/doctors`),
   inviteDoctor: (clinicId, data) => api.post(`/clinic-portal/${clinicId}/invites`, data),
+  removeDoctor: (clinicId, doctorId) => api.delete(`/clinic-portal/${clinicId}/doctors/${doctorId}`),
   joinRequests: (clinicId) => api.get(`/clinic-portal/${clinicId}/join-requests`),
   decideJoinRequest: (clinicId, requestId, data) =>
     api.post(`/clinic-portal/${clinicId}/join-requests/${requestId}/decide`, data),

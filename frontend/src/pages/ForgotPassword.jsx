@@ -8,7 +8,17 @@ export default function ForgotPassword() {
   const location = useLocation();
   const loginRole = location.state?.loginRole;
   const loginPath = location.state?.loginPath;
-  const loginBack = loginPath || (loginRole ? `/login?role=${loginRole}` : '/login');
+  const loginBack =
+    loginPath ||
+    (loginRole === 'clinic'
+      ? '/clinic/login'
+      : loginRole === 'doctor'
+        ? '/doctor/login'
+        : loginRole === 'patient'
+          ? '/patient/login'
+          : loginRole
+            ? `/login?role=${loginRole}`
+            : '/login');
 
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
