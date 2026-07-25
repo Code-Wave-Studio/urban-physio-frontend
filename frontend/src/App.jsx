@@ -75,6 +75,8 @@ import AdminDoctorPackages from './pages/admin/AdminDoctorPackages';
 import AdminExercises from './pages/admin/AdminExercises';
 import PatientPackages from './pages/patient/PatientPackages';
 import PatientSaved from './pages/patient/PatientSaved';
+import PatientTreatmentJourney from './pages/patient/PatientTreatmentJourney';
+import DoctorTreatmentJourney from './pages/doctor/DoctorTreatmentJourney';
 import DoctorPackages from './pages/doctor/DoctorPackages';
 import DoctorTreatmentServices from './pages/doctor/DoctorTreatmentServices';
 import DoctorServicePackages from './pages/doctor/DoctorServicePackages';
@@ -226,6 +228,7 @@ export default function App() {
       <Route path="/patient/packages" element={<ProtectedRoute roles={['patient']}><PatientPackages /></ProtectedRoute>} />
       <Route path="/patient/saved" element={<ProtectedRoute roles={['patient']}><PatientSaved /></ProtectedRoute>} />
       <Route path="/patient/reports" element={<ProtectedRoute roles={['patient']}><PatientReports /></ProtectedRoute>} />
+      <Route path="/patient/treatment-journey" element={<ProtectedRoute roles={['patient']}><PatientTreatmentJourney /></ProtectedRoute>} />
       <Route path="/patient/documents" element={<ProtectedRoute roles={['patient']}><DocumentsPage /></ProtectedRoute>} />
       <Route path="/patient/profile" element={<ProtectedRoute roles={['patient']}><PatientProfile /></ProtectedRoute>} />
       <Route path="/patient/notifications" element={<ProtectedRoute roles={['patient']}><NotificationsPage /></ProtectedRoute>} />
@@ -236,6 +239,7 @@ export default function App() {
       <Route path="/doctor/availability" element={<ProtectedRoute roles={['doctor']}><Navigate to="/doctor/clinic-availability" replace /></ProtectedRoute>} />
       <Route path="/doctor/earnings" element={<ProtectedRoute roles={['doctor']}><DoctorEarnings /></ProtectedRoute>} />
       <Route path="/doctor/patients" element={<ProtectedRoute roles={['doctor']}><DoctorPatients /></ProtectedRoute>} />
+      <Route path="/doctor/treatment-journey" element={<ProtectedRoute roles={['doctor']}><DoctorTreatmentJourney /></ProtectedRoute>} />
       <Route path="/doctor/documents" element={<ProtectedRoute roles={['doctor']}><DocumentsPage /></ProtectedRoute>} />
       <Route path="/clinic-portal" element={<ProtectedRoute roles={['clinic']}><ClinicPortalHome /></ProtectedRoute>} />
       <Route path="/clinic-portal/doctors" element={<ProtectedRoute roles={['clinic']}><ClinicPortalDoctors /></ProtectedRoute>} />

@@ -729,6 +729,14 @@ export const packageBookings = {
   verify: (data) => api.post('/package-bookings/verify', data),
 };
 
+export const treatmentJourney = {
+  list: (params) => api.get('/treatment-journey', { params }),
+  get: (id) => api.get(`/treatment-journey/${id}`),
+  create: (data) => api.post('/treatment-journey', data),
+  update: (id, data) => api.put(`/treatment-journey/${id}`, data),
+  remove: (id) => api.delete(`/treatment-journey/${id}`),
+};
+
 export const patientPackages = {
   list: (params) => api.get('/patient-packages', { params }),
   get: (id) => api.get(`/patient-packages/${id}`),

@@ -2,6 +2,7 @@ export const DOCTOR_NAV = [
   { to: '/doctor', label: 'Overview', icon: 'fa-chart-line' },
   { to: '/doctor/appointments', label: 'Appointments', icon: 'fa-calendar-check' },
   { to: '/doctor/patients', label: 'Patients', icon: 'fa-users' },
+  { to: '/doctor/treatment-journey', label: 'Treatment Journey', icon: 'fa-notes-medical' },
   { to: '/doctor/packages', label: 'Enrollments', icon: 'fa-user-plus' },
   { to: '/doctor/treatment-services', label: 'Services & treatments', icon: 'fa-hand-holding-medical' },
   { to: '/doctor/service-packages', label: 'My packages', icon: 'fa-box-open' },
