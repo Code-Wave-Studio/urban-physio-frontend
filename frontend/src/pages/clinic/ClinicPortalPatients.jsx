@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../../components/FaIcon';
+import BulkInvitePanel from '../../components/clinic/BulkInvitePanel';
 import { CLINIC_NAV } from '../../constants/clinicNav';
 import { clinicPortal } from '../../services/api';
 import useClinicPortal from '../../hooks/useClinicPortal';
@@ -53,7 +54,9 @@ export default function ClinicPortalPatients() {
       <div className="space-y-5">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Patients</h1>
-          <p className="text-sm text-slate-500 mt-1">People who booked appointments at your clinic</p>
+          <p className="text-sm text-slate-500 mt-1">
+            People who booked at your clinic — invite new patients by email and SMS
+          </p>
         </div>
 
         <div className="grid sm:grid-cols-3 gap-3">
@@ -70,6 +73,14 @@ export default function ClinicPortalPatients() {
             <p className="text-2xl font-bold text-emerald-700 mt-1">{money(totalSpent)}</p>
           </div>
         </div>
+
+        <BulkInvitePanel
+          title="Bulk invite patients"
+          description="Paste up to 50 contacts. New patients get an account + temporary password by email and SMS; existing patients get a sign-in reminder."
+          roleLabel="patient"
+          disabled={!clinicId || bootLoading}
+          onSubmit={(contacts) => clinicPortal.bulkInvitePatients(clinicId, { contacts })}
+        />
 
         <div className="glass-card !p-4 flex flex-col sm:flex-row gap-3">
           <input

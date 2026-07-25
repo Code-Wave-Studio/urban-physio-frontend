@@ -639,6 +639,16 @@ export const clinicPortal = {
   joinRequests: (clinicId) => api.get(`/clinic-portal/${clinicId}/join-requests`),
   decideJoinRequest: (clinicId, requestId, data) =>
     api.post(`/clinic-portal/${clinicId}/join-requests/${requestId}/decide`, data),
+  profileServices: (clinicId) => api.get(`/clinic-portal/${clinicId}/profile-services`),
+  createProfileService: (clinicId, data) => api.post(`/clinic-portal/${clinicId}/profile-services`, data),
+  updateProfileService: (clinicId, serviceId, data) =>
+    api.put(`/clinic-portal/${clinicId}/profile-services/${serviceId}`, data),
+  deleteProfileService: (clinicId, serviceId) =>
+    api.delete(`/clinic-portal/${clinicId}/profile-services/${serviceId}`),
+  bulkInvitePatients: (clinicId, data) =>
+    api.post(`/clinic-portal/${clinicId}/bulk-invite-patients`, data),
+  bulkInviteDoctors: (clinicId, data) =>
+    api.post(`/clinic-portal/${clinicId}/bulk-invite-doctors`, data),
 };
 
 export const about = {

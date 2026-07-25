@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../../components/FaIcon';
+import BulkInvitePanel from '../../components/clinic/BulkInvitePanel';
 import { CLINIC_NAV } from '../../constants/clinicNav';
 import { clinicPortal } from '../../services/api';
 
@@ -116,13 +117,25 @@ export default function ClinicPortalDoctors() {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
           />
-          <button type="submit" className="btn-primary sm:col-span-2" disabled={inviting}>
+          <button type="submit" className="btn-primary sm:col-span-2" disabled={inviting || !clinicId}>
             {inviting ? 'Sending…' : 'Send invitation'}
           </button>
           <p className="sm:col-span-2 text-xs text-slate-500">
             An email is sent to the doctor. If they already have an account, they also get an in-app notification.
           </p>
         </form>
+
+        <BulkInvitePanel
+          title="Bulk invite doctors"
+          description="Paste up to 50 doctors. New accounts get login credentials by email and SMS; existing doctors get a portal invite / reminder."
+          roleLabel="doctor"
+          disabled={!clinicId || loading}
+          onSubmit={async (contacts) => {
+            const res = await clinicPortal.bulkInviteDoctors(clinicId, { contacts });
+            load();
+            return res;
+          }}
+        />
 
         {loading ? (
           <div className="glass-card h-40 animate-pulse" />

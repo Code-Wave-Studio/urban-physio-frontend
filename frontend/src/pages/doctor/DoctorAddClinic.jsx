@@ -18,7 +18,6 @@ import { doctors, location } from '../../services/api';
 import { DOCTOR_NAV } from '../../constants/doctorNav';
 import {
   buildClinicPayload,
-  clinicRecordToForm,
   emptyClinicForm,
 } from '../../utils/clinicProfileUtils';
 import toast from 'react-hot-toast';
@@ -88,23 +87,16 @@ export default function DoctorAddClinic() {
 
   useEffect(() => {
     if (!editId) return;
-    doctors
-      .getClinic(editId)
-      .then((res) => {
-        const found = res.data ?? res;
-        if (!found) return;
-        if (found.can_edit === false) {
-          toast.error('You have view-only access to this clinic');
-          navigate('/doctor/clinics');
-          return;
-        }
-        setForm(clinicRecordToForm(found));
-      })
-      .catch(() => toast.error('Could not load clinic'));
+    toast.error('Clinic profile editing has moved to the Clinic Portal. Doctors can no longer edit clinic profiles.');
+    navigate('/doctor/clinics', { replace: true });
   }, [editId, navigate]);
 
   const submit = async (e) => {
     e.preventDefault();
+    if (editId) {
+      toast.error('Clinic profile editing is only available in the Clinic Portal');
+      return;
+    }
     if (!form.name.trim() || !form.address.trim() || !form.city_id || !form.phone.trim()) {
       toast.error('Please fill clinic name, address, city and phone');
       return;
@@ -112,17 +104,8 @@ export default function DoctorAddClinic() {
     setSaving(true);
     try {
       const payload = buildPayload(form);
-      if (editId) {
-        await doctors.updateClinic(editId, payload);
-        toast.success('Clinic profile updated');
-      } else {
-        const res = await doctors.createClinic(payload);
-        const newId = res.data?.id;
-        toast.success('Clinic submitted for approval');
-        if (newId) navigate(`/doctor/clinics/new?edit=${newId}`);
-        else navigate('/doctor/clinics');
-        return;
-      }
+      await doctors.createClinic(payload);
+      toast.success('Clinic submitted for approval');
       navigate('/doctor/clinics');
     } catch (err) {
       toast.error(err.message || 'Save failed');
@@ -134,9 +117,10 @@ export default function DoctorAddClinic() {
   return (
     <DashboardLayout links={DOCTOR_NAV} variant="doctor">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">{editId ? 'Edit clinic profile' : 'Add clinic'}</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Add clinic</h1>
         <p className="text-sm text-slate-600 mt-1">
-          Complete your clinic profile — hours, services, gallery & stats appear on your public clinic page.
+          Submit a new clinic for admin approval. After approval, the clinic owner manages the full
+          profile from the Clinic Portal.
         </p>
       </div>
 
@@ -229,7 +213,7 @@ export default function DoctorAddClinic() {
             Cancel
           </button>
           <button type="submit" disabled={saving} className="btn-primary flex-1 sm:flex-none sm:min-w-[10rem] !bg-emerald-600 hover:!bg-emerald-700">
-            {saving ? 'Saving…' : editId ? 'Save profile' : 'Submit for approval'}
+            {saving ? 'Saving…' : 'Submit for approval'}
           </button>
         </div>
       </form>

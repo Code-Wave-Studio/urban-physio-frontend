@@ -285,10 +285,12 @@ export default function DoctorClinics() {
                       <FaIcon icon="fa-calendar-days" />
                       Set availability
                     </Link>
-                    <Link to={`/doctor/clinics/new?edit=${c.id}`} className="btn-outline text-sm inline-flex items-center gap-2">
-                      <FaIcon icon="fa-pen" />
-                      {c.can_edit !== false ? (c.approval_status === 'approved' ? 'Edit profile' : 'Edit') : 'View'}
-                    </Link>
+                    {c.slug && (
+                      <Link to={`/clinics/${c.slug}`} className="btn-outline text-sm inline-flex items-center gap-2">
+                        <FaIcon icon="fa-eye" />
+                        View public page
+                      </Link>
+                    )}
                     {c.is_assigned && !c.is_owner && (
                       <button
                         type="button"

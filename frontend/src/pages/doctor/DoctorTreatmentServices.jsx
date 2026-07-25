@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../../components/FaIcon';
-import { doctors, profileServices } from '../../services/api';
+import { profileServices } from '../../services/api';
 import { DOCTOR_NAV } from '../../constants/doctorNav';
 import toast from 'react-hot-toast';
 
@@ -80,53 +80,30 @@ function ServiceForm({ form, set, onSubmit, onCancel, saving, submitLabel }) {
   );
 }
 
+/** Doctor-owned treatment services only. Clinic profile services live in the Clinic Portal. */
 export default function DoctorTreatmentServices() {
-  const [tab, setTab] = useState('doctor');
-  const [doctorServices, setDoctorServices] = useState([]);
-  const [clinicServices, setClinicServices] = useState([]);
-  const [clinics, setClinics] = useState([]);
-  const [clinicId, setClinicId] = useState('');
+  const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState(emptyForm);
 
-  const loadDoctorServices = useCallback(async () => {
-    const res = await profileServices.listDoctor();
-    setDoctorServices(res?.data || []);
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await profileServices.listDoctor();
+      setServices(res?.data || []);
+    } catch {
+      toast.error('Could not load services');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const loadClinics = useCallback(async () => {
-    const res = await doctors.clinics();
-    const rows = res?.data || [];
-    setClinics(rows);
-    if (!clinicId && rows[0]?.id) setClinicId(String(rows[0].id));
-  }, [clinicId]);
-
-  const loadClinicServices = useCallback(async () => {
-    if (!clinicId) {
-      setClinicServices([]);
-      return;
-    }
-    const res = await profileServices.listClinic(clinicId);
-    setClinicServices(res?.data || []);
-  }, [clinicId]);
-
   useEffect(() => {
-    setLoading(true);
-    Promise.all([loadDoctorServices(), loadClinics()])
-      .catch(() => toast.error('Could not load services'))
-      .finally(() => setLoading(false));
-  }, [loadDoctorServices, loadClinics]);
-
-  useEffect(() => {
-    if (tab === 'clinic' && clinicId) {
-      loadClinicServices().catch(() => toast.error('Could not load clinic services'));
-    }
-  }, [tab, clinicId, loadClinicServices]);
-
-  const activeList = tab === 'doctor' ? doctorServices : clinicServices;
+    load();
+  }, [load]);
 
   const resetForm = () => {
     setForm(emptyForm());
@@ -159,27 +136,14 @@ export default function DoctorTreatmentServices() {
         short_description: form.short_description.trim(),
         is_active: form.is_active ? 1 : 0,
       };
-      if (tab === 'doctor') {
-        if (editingId) {
-          await profileServices.updateDoctor(editingId, payload);
-        } else {
-          await profileServices.createDoctor(payload);
-        }
-        await loadDoctorServices();
+      if (editingId) {
+        await profileServices.updateDoctor(editingId, payload);
       } else {
-        if (!clinicId) {
-          toast.error('Select a clinic first');
-          return;
-        }
-        if (editingId) {
-          await profileServices.updateClinic(clinicId, editingId, payload);
-        } else {
-          await profileServices.createClinic(clinicId, payload);
-        }
-        await loadClinicServices();
+        await profileServices.createDoctor(payload);
       }
       toast.success(editingId ? 'Service updated' : 'Service added');
       resetForm();
+      await load();
     } catch (err) {
       toast.error(err.message || 'Save failed');
     } finally {
@@ -188,73 +152,40 @@ export default function DoctorTreatmentServices() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Remove this service from your profile?')) return;
+    if (!window.confirm('Remove this service?')) return;
     try {
-      if (tab === 'doctor') {
-        await profileServices.deleteDoctor(id);
-        await loadDoctorServices();
-      } else {
-        await profileServices.deleteClinic(clinicId, id);
-        await loadClinicServices();
-      }
+      await profileServices.deleteDoctor(id);
       toast.success('Service removed');
       if (editingId === id) resetForm();
+      await load();
     } catch (err) {
       toast.error(err.message || 'Delete failed');
     }
   };
 
-  const examples = useMemo(
-    () => ['Cupping Therapy', 'Wet Cupping', 'Dry Needling', 'Chiropractic', 'Sports Massage', 'Manual Therapy', 'Shockwave Therapy'],
-    []
-  );
+  const examples = ['Dry Needling', 'Cupping Therapy', 'Sports Rehab', 'Neuro Physiotherapy'];
 
   return (
-    <DashboardLayout title="Services & treatments" navItems={DOCTOR_NAV}>
-      <div className="max-w-3xl mx-auto space-y-6">
-        <div className="glass-card p-5 md:p-6">
-          <h1 className="text-xl font-bold text-slate-900">Services &amp; treatments</h1>
-          <p className="text-sm text-slate-600 mt-2 leading-relaxed">
-            Add unlimited treatment services with name, price, and a short description. These appear on your public doctor
-            or clinic profile — separate from consultation mode toggles and treatment packages.
+    <DashboardLayout links={DOCTOR_NAV} variant="doctor">
+      <div className="max-w-3xl space-y-5">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Services & treatments</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Manage your personal treatment services. Clinic profile services are managed by the clinic owner
+            in the Clinic Portal.
           </p>
-          <div className="mt-4 flex flex-wrap gap-2">
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          <p className="font-medium text-slate-800 mb-1">Examples</p>
+          <div className="flex flex-wrap gap-2">
             {examples.map((ex) => (
-              <span key={ex} className="text-xs px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+              <span key={ex} className="text-xs px-2.5 py-1 rounded-full bg-white text-slate-600 border border-slate-200">
                 {ex}
               </span>
             ))}
           </div>
         </div>
-
-        <div className="flex gap-2 p-1 rounded-xl bg-slate-100 border border-slate-200">
-          <button
-            type="button"
-            onClick={() => { setTab('doctor'); resetForm(); }}
-            className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition ${tab === 'doctor' ? 'bg-white shadow text-primary-700' : 'text-slate-600'}`}
-          >
-            My services
-          </button>
-          <button
-            type="button"
-            onClick={() => { setTab('clinic'); resetForm(); }}
-            className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition ${tab === 'clinic' ? 'bg-white shadow text-emerald-700' : 'text-slate-600'}`}
-          >
-            Clinic services
-          </button>
-        </div>
-
-        {tab === 'clinic' && (
-          <div className="glass-card p-4">
-            <label className="block text-sm font-medium text-slate-700 mb-1">Select clinic</label>
-            <select className="input-field" value={clinicId} onChange={(e) => { setClinicId(e.target.value); resetForm(); }}>
-              {clinics.length === 0 ? <option value="">No clinics linked</option> : null}
-              {clinics.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
-        )}
 
         {!showAdd && !editingId && (
           <button type="button" onClick={() => { setShowAdd(true); setForm(emptyForm()); }} className="btn-primary text-sm inline-flex items-center gap-2">
@@ -278,13 +209,13 @@ export default function DoctorTreatmentServices() {
           <div className="flex justify-center py-12">
             <div className="animate-spin w-10 h-10 border-4 border-primary-600 border-t-transparent rounded-full" />
           </div>
-        ) : activeList.length === 0 ? (
+        ) : services.length === 0 ? (
           <div className="glass-card text-center py-12 px-6 text-slate-500 text-sm">
             No services yet. Add your first treatment service above.
           </div>
         ) : (
           <div className="space-y-3">
-            {activeList.map((service) => (
+            {services.map((service) => (
               <div key={service.id} className="glass-card p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">

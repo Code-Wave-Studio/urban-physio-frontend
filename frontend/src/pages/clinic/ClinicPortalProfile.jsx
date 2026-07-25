@@ -5,37 +5,61 @@ import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../../components/FaIcon';
 import PasswordSecuritySection from '../../components/PasswordSecuritySection';
 import ClinicLogoUpload from '../../components/ClinicLogoUpload';
-import ClinicCoverUpload from '../../components/clinic/ClinicCoverUpload';
+import ClinicGalleryUpload from '../../components/clinic/ClinicGalleryUpload';
+import ClinicPortalProfileServices from '../../components/clinic/ClinicPortalProfileServices';
+import LocationMapModal from '../../components/LocationMapModal';
 import SearchableLocationSelect from '../../components/SearchableLocationSelect';
+import {
+  ClinicOpeningHoursFields,
+  ClinicLocationFields,
+  ClinicProfileDetailsFields,
+  ClinicSocialLinksFields,
+  ClinicStatisticsFields,
+  ClinicTagListFields,
+} from '../../components/clinic/ClinicProfileFormSections';
 import { CLINIC_NAV } from '../../constants/clinicNav';
 import { auth, clinicPortal, location } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import {
+  buildClinicPayload,
+  clinicRecordToForm,
+  emptyClinicForm,
+} from '../../utils/clinicProfileUtils';
 
 const TABS = [
   { id: 'clinic', label: 'Clinic details', icon: 'fa-hospital' },
   { id: 'security', label: 'Account & security', icon: 'fa-shield-halved' },
 ];
 
-const empty = () => ({
-  name: '',
+function FormSection({ title, icon, children, defaultOpen = true }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white/80 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left bg-slate-50/80 border-b border-slate-100"
+      >
+        <span className="font-semibold text-slate-800 text-sm inline-flex items-center gap-2">
+          <FaIcon icon={icon} className="text-teal-600" />
+          {title}
+        </span>
+        <FaIcon icon={open ? 'fa-chevron-up' : 'fa-chevron-down'} className="text-slate-400 text-xs" />
+      </button>
+      {open && <div className="p-4 space-y-4">{children}</div>}
+    </div>
+  );
+}
+
+const emptyOrg = () => ({
   owner_name: '',
   manager_name: '',
-  phone: '',
-  email: '',
-  website: '',
-  address: '',
-  pincode: '',
-  city_id: '',
   gstin: '',
   pan: '',
   registration_number: '',
   clinic_type: '',
   specialization: '',
   emergency_contact: '',
-  description: '',
-  logo: '',
-  cover_image: '',
-  google_maps_url: '',
   resubmit_note: '',
 });
 
@@ -44,7 +68,7 @@ export default function ClinicPortalProfile() {
   const tab = searchParams.get('tab') === 'security' ? 'security' : 'clinic';
   const { user, setUser } = useAuth();
 
-  const [form, setForm] = useState(empty);
+  const [form, setForm] = useState(() => ({ ...emptyClinicForm(), ...emptyOrg() }));
   const [clinicId, setClinicId] = useState(null);
   const [status, setStatus] = useState('');
   const [rejection, setRejection] = useState('');
@@ -53,12 +77,26 @@ export default function ClinicPortalProfile() {
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
   const [stateId, setStateId] = useState('');
+  const [mapOpen, setMapOpen] = useState(false);
   const [accountForm, setAccountForm] = useState({ first_name: '', last_name: '', phone: '' });
   const [savingAccount, setSavingAccount] = useState(false);
 
   const setTab = (id) => {
     if (id === 'security') setSearchParams({ tab: 'security' });
     else setSearchParams({});
+  };
+
+  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const setSocial = (key, value) =>
+    setForm((f) => ({ ...f, social_links: { ...f.social_links, [key]: value } }));
+  const setHours = (key, value) => {
+    const slots = value.trim()
+      ? value.split(',').map((s) => s.trim()).filter(Boolean)
+      : [];
+    setForm((f) => ({
+      ...f,
+      opening_hours: { ...f.opening_hours, [key]: slots },
+    }));
   };
 
   const load = useCallback(() => {
@@ -70,9 +108,16 @@ export default function ClinicPortalProfile() {
         const c = me.clinic || {};
         setClinicId(c.id || null);
         setForm({
-          ...empty(),
-          ...c,
-          city_id: c.city_id ? String(c.city_id) : '',
+          ...clinicRecordToForm(c),
+          owner_name: c.owner_name || '',
+          manager_name: c.manager_name || '',
+          gstin: c.gstin || '',
+          pan: c.pan || '',
+          registration_number: c.registration_number || '',
+          clinic_type: c.clinic_type || '',
+          specialization: c.specialization || '',
+          emergency_contact: c.emergency_contact || '',
+          resubmit_note: c.resubmit_note || '',
         });
         setStatus(c.portal_status || c.approval_status || '');
         setRejection(c.rejection_reason || '');
@@ -103,17 +148,28 @@ export default function ClinicPortalProfile() {
     location.cities(stateId).then((res) => setCities(res.data || [])).catch(() => setCities([]));
   }, [stateId]);
 
-  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
-
   const save = async (e, resubmit = false) => {
     e.preventDefault();
+    if (!form.name.trim() || !form.address.trim() || !form.phone.trim()) {
+      toast.error('Clinic name, address and phone are required');
+      return;
+    }
     setSaving(true);
     try {
-      await clinicPortal.updateProfile({
-        ...form,
-        city_id: form.city_id || undefined,
+      const payload = {
+        ...buildClinicPayload(form),
+        owner_name: form.owner_name.trim() || undefined,
+        manager_name: form.manager_name.trim() || undefined,
+        gstin: form.gstin.trim() || undefined,
+        pan: form.pan.trim() || undefined,
+        registration_number: form.registration_number.trim() || undefined,
+        clinic_type: form.clinic_type.trim() || undefined,
+        specialization: form.specialization.trim() || undefined,
+        emergency_contact: form.emergency_contact.trim() || undefined,
         resubmit,
-      });
+        resubmit_note: form.resubmit_note.trim() || undefined,
+      };
+      await clinicPortal.updateProfile(payload);
       toast.success(resubmit ? 'Resubmitted for review' : 'Profile saved');
       load();
     } catch (err) {
@@ -165,6 +221,7 @@ export default function ClinicPortalProfile() {
           <h1 className="text-2xl font-bold text-slate-900">Clinic profile</h1>
           <p className="text-sm text-slate-500 mt-1">
             Status: <span className="font-semibold capitalize">{status || '—'}</span>
+            {' · '}Manage banner photos, hours, services, stats and more
           </p>
           {rejection && <p className="text-sm text-rose-600 mt-1">Rejection: {rejection}</p>}
         </div>
@@ -246,75 +303,121 @@ export default function ClinicPortalProfile() {
             </div>
           </div>
         ) : (
-          <form onSubmit={(e) => save(e, false)} className="glass-card !p-6 space-y-4">
-            <ClinicLogoUpload
-              logo={form.logo}
-              name={form.name}
-              clinicId={clinicId}
-              onUploaded={(url) => set('logo', url)}
-            />
-            <ClinicCoverUpload
-              coverImage={form.cover_image}
-              clinicId={clinicId}
-              onChange={(url) => set('cover_image', url)}
-            />
-
-            <input
-              className="input-field"
-              placeholder="Clinic name"
-              value={form.name || ''}
-              onChange={(e) => set('name', e.target.value)}
-              required
-            />
-            <div className="grid sm:grid-cols-2 gap-3">
-              <input className="input-field" placeholder="Owner name" value={form.owner_name || ''} onChange={(e) => set('owner_name', e.target.value)} />
-              <input className="input-field" placeholder="Manager name" value={form.manager_name || ''} onChange={(e) => set('manager_name', e.target.value)} />
-              <input className="input-field" placeholder="Phone" value={form.phone || ''} onChange={(e) => set('phone', e.target.value)} />
-              <input className="input-field" placeholder="Email" value={form.email || ''} onChange={(e) => set('email', e.target.value)} />
-              <input className="input-field" placeholder="Website" value={form.website || ''} onChange={(e) => set('website', e.target.value)} />
-              <input className="input-field" placeholder="Emergency contact" value={form.emergency_contact || ''} onChange={(e) => set('emergency_contact', e.target.value)} />
-              <input className="input-field" placeholder="PIN code" value={form.pincode || ''} onChange={(e) => set('pincode', e.target.value)} />
-              <input className="input-field" placeholder="Clinic type" value={form.clinic_type || ''} onChange={(e) => set('clinic_type', e.target.value)} />
-              <input className="input-field" placeholder="GSTIN" value={form.gstin || ''} onChange={(e) => set('gstin', e.target.value)} />
-              <input className="input-field" placeholder="PAN" value={form.pan || ''} onChange={(e) => set('pan', e.target.value)} />
-              <input className="input-field sm:col-span-2" placeholder="Registration number" value={form.registration_number || ''} onChange={(e) => set('registration_number', e.target.value)} />
-              <input className="input-field sm:col-span-2" placeholder="Specialization / focus" value={form.specialization || ''} onChange={(e) => set('specialization', e.target.value)} />
-            </div>
-
-            <div className="grid sm:grid-cols-2 gap-3">
-              <SearchableLocationSelect
-                label="State"
-                placeholder="Select state"
-                options={states}
-                value={stateId}
-                onChange={(id) => {
-                  setStateId(id);
-                  set('city_id', '');
-                }}
+          <form onSubmit={(e) => save(e, false)} className="space-y-4">
+            <FormSection title="Basic details" icon="fa-hospital">
+              <ClinicLogoUpload
+                logo={form.logo}
+                name={form.name}
+                clinicId={clinicId}
+                onUploaded={(url) => set('logo', url)}
               />
-              <SearchableLocationSelect
-                label="City"
-                placeholder={stateId ? 'Select city' : 'Select state first'}
-                options={cities}
-                value={form.city_id || ''}
-                onChange={(id) => set('city_id', id)}
-                disabled={!stateId}
-              />
-            </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Clinic name</label>
+                  <input className="input-field" value={form.name} onChange={(e) => set('name', e.target.value)} required />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+                  <input className="input-field" value={form.phone} onChange={(e) => set('phone', e.target.value)} required />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Address</label>
+                <textarea className="input-field" rows={3} value={form.address} onChange={(e) => set('address', e.target.value)} required />
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <SearchableLocationSelect
+                  label="State"
+                  placeholder="Select state"
+                  options={states}
+                  value={stateId}
+                  onChange={(id) => {
+                    setStateId(id);
+                    set('city_id', '');
+                  }}
+                />
+                <SearchableLocationSelect
+                  label="City"
+                  placeholder={stateId ? 'Select city' : 'Select state first'}
+                  options={cities}
+                  value={form.city_id || ''}
+                  onChange={(id) => set('city_id', id)}
+                  disabled={!stateId}
+                />
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Pincode</label>
+                  <input className="input-field" value={form.pincode} onChange={(e) => set('pincode', e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                  <input type="email" className="input-field" value={form.email || ''} onChange={(e) => set('email', e.target.value)} />
+                </div>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <input className="input-field" placeholder="Owner name" value={form.owner_name} onChange={(e) => set('owner_name', e.target.value)} />
+                <input className="input-field" placeholder="Manager name" value={form.manager_name} onChange={(e) => set('manager_name', e.target.value)} />
+                <input className="input-field" placeholder="Clinic type" value={form.clinic_type} onChange={(e) => set('clinic_type', e.target.value)} />
+                <input className="input-field" placeholder="Emergency contact" value={form.emergency_contact} onChange={(e) => set('emergency_contact', e.target.value)} />
+                <input className="input-field" placeholder="GSTIN" value={form.gstin} onChange={(e) => set('gstin', e.target.value)} />
+                <input className="input-field" placeholder="PAN" value={form.pan} onChange={(e) => set('pan', e.target.value)} />
+                <input className="input-field sm:col-span-2" placeholder="Registration number" value={form.registration_number} onChange={(e) => set('registration_number', e.target.value)} />
+                <input className="input-field sm:col-span-2" placeholder="Specialization / focus" value={form.specialization} onChange={(e) => set('specialization', e.target.value)} />
+              </div>
+              <ClinicLocationFields form={form} set={set} onPickMap={() => setMapOpen(true)} />
+            </FormSection>
 
-            <textarea className="input-field min-h-[70px]" placeholder="Address" value={form.address || ''} onChange={(e) => set('address', e.target.value)} />
-            <textarea className="input-field min-h-[90px]" placeholder="Description" value={form.description || ''} onChange={(e) => set('description', e.target.value)} />
-            <input className="input-field" placeholder="Google Maps URL" value={form.google_maps_url || ''} onChange={(e) => set('google_maps_url', e.target.value)} />
+            <FormSection title="About, cover & website" icon="fa-circle-info">
+              <ClinicProfileDetailsFields form={form} set={set} setHours={setHours} clinicId={clinicId} />
+            </FormSection>
+
+            <FormSection title="Opening hours" icon="fa-clock">
+              <ClinicOpeningHoursFields form={form} setHours={setHours} />
+            </FormSection>
+
+            <FormSection title="Social media" icon="fa-share-nodes" defaultOpen={false}>
+              <ClinicSocialLinksFields form={form} setSocial={setSocial} />
+            </FormSection>
+
+            <FormSection title="Services & equipment" icon="fa-hand-holding-medical" defaultOpen={false}>
+              <ClinicTagListFields form={form} set={set} />
+            </FormSection>
+
+            {clinicId ? (
+              <FormSection title="Treatment services (profile cards)" icon="fa-spa">
+                <ClinicPortalProfileServices clinicId={clinicId} />
+              </FormSection>
+            ) : null}
+
+            <FormSection title="Clinic statistics" icon="fa-chart-simple" defaultOpen={false}>
+              <ClinicStatisticsFields form={form} set={set} />
+            </FormSection>
+
+            <FormSection title="Banner photos (max 10)" icon="fa-images">
+              <p className="text-xs text-slate-500 -mt-1 mb-2">
+                Extra photos for the profile carousel. Recommended 1600 × 1000 px · max 3MB each.
+              </p>
+              <ClinicGalleryUpload
+                images={form.image_urls}
+                clinicId={clinicId}
+                onChange={(urls) => set('image_urls', urls)}
+                max={10}
+              />
+            </FormSection>
 
             {(status === 'rejected' || status === 'pending') && (
-              <textarea
-                className="input-field min-h-[60px]"
-                placeholder="Note for admin when resubmitting"
-                value={form.resubmit_note || ''}
-                onChange={(e) => set('resubmit_note', e.target.value)}
-              />
+              <div className="glass-card !p-4">
+                <label className="block text-sm font-medium text-slate-700 mb-1">Note for admin when resubmitting</label>
+                <textarea
+                  className="input-field min-h-[60px]"
+                  value={form.resubmit_note || ''}
+                  onChange={(e) => set('resubmit_note', e.target.value)}
+                />
+              </div>
             )}
-            <div className="flex flex-wrap gap-2 pt-2">
+
+            <div className="flex flex-wrap gap-2 pt-1 pb-4">
               <button type="submit" className="btn-primary" disabled={saving}>
                 {saving ? 'Saving…' : 'Save profile'}
               </button>
@@ -327,6 +430,17 @@ export default function ClinicPortalProfile() {
           </form>
         )}
       </div>
+
+      <LocationMapModal
+        open={mapOpen}
+        onClose={() => setMapOpen(false)}
+        initialLat={form.latitude}
+        initialLng={form.longitude}
+        onConfirm={({ lat, lng }) => {
+          set('latitude', lat);
+          set('longitude', lng);
+        }}
+      />
     </DashboardLayout>
   );
 }
