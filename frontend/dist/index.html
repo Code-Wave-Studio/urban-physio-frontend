@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-L99NTLTYLP"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-L99NTLTYLP');
+    </script>
+    <!-- End Google tag (gtag.js) -->
+    <link rel="icon" type="image/png" href="/logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="google-site-verification" content="RpK2QwZFoePw3KEGjil75SyeOziir6HQ6hQW0fsa_3w" />
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-PFSW99XB');</script>
+    <!-- End Google Tag Manager -->
+    <title>The Urban Physio - Premium Physiotherapy Care Across India</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" crossorigin href="/static/index-DfyV8BzP.css">
+    <script type="module" crossorigin src="/static/index-4UczFLb5.js"></script>
+    
+  </head>
+  <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PFSW99XB"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+    <div id="root"></div>
+    <script>
+      // Self-heal a poisoned/stale deploy: if a build asset fails to load or the app
+      // never mounts (e.g. HTML served in place of a .js chunk -> "Unexpected token '<'"),
+      // clear caches/service workers and hard-reload ONCE (sentinel prevents loops).
+      (function () {
+        var KEY = '__tup_boot_reload';
+        function healOnce() {
+          try {
+            if (sessionStorage.getItem(KEY)) return;
+            sessionStorage.setItem(KEY, String(Date.now()));
+          } catch (e) {}
+          try {
+            if (window.caches && caches.keys) {
+              caches.keys().then(function (ks) { ks.forEach(function (k) { caches.delete(k); }); });
+            }
+            if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+              navigator.serviceWorker.getRegistrations().then(function (rs) {
+                rs.forEach(function (r) { r.unregister(); });
+              });
+            }
+          } catch (e) {}
+          location.reload();
+        }
+        window.addEventListener('error', function (e) {
+          var t = e && e.target;
+          if (t && (t.tagName === 'SCRIPT' || t.tagName === 'LINK')) healOnce();
+        }, true);
+        window.addEventListener('load', function () {
+          setTimeout(function () {
+            var root = document.getElementById('root');
+            if (root && root.childElementCount === 0) healOnce();
+            else { try { sessionStorage.removeItem(KEY); } catch (e) {} }
+          }, 6000);
+        });
+      })();
+    </script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  </body>
+</html>

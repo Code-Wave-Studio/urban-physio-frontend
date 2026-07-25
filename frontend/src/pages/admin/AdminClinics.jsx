@@ -35,7 +35,31 @@ function StatusBadge({ status }) {
   return <span className={`text-xs px-2 py-0.5 rounded-full border capitalize ${STATUS_STYLE[s] || STATUS_STYLE.pending}`}>{s}</span>;
 }
 
-function ClinicRow({ clinic, onApprove, onReject, onEdit, onDelete, onManageDoctors }) {
+/**
+ * A clinic added by staff is usually linked to the admin's own user account.
+ * That is a placeholder, not a login the clinic can actually use, so only a
+ * clinic-role owner counts as having an account.
+ */
+const hasClinicLogin = (clinic) => clinic.owner_role_slug === 'clinic' && !!clinic.owner_email;
+
+function AccountBadge({ clinic }) {
+  if (hasClinicLogin(clinic)) {
+    return (
+      <span className="text-xs px-2 py-0.5 rounded-full border bg-sky-100 text-sky-800 border-sky-200 inline-flex items-center gap-1">
+        <FaIcon icon="fa-key" className="text-[10px]" />
+        Login account
+      </span>
+    );
+  }
+  return (
+    <span className="text-xs px-2 py-0.5 rounded-full border bg-amber-100 text-amber-900 border-amber-200 inline-flex items-center gap-1">
+      <FaIcon icon="fa-user-slash" className="text-[10px]" />
+      No login
+    </span>
+  );
+}
+
+function ClinicRow({ clinic, onApprove, onReject, onEdit, onDelete, onManageDoctors, onManageAccount }) {
   return (
     <div className="rounded-2xl border border-white/70 bg-white/50 hover:bg-white/70 transition p-4 md:p-5">
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
@@ -45,6 +69,7 @@ function ClinicRow({ clinic, onApprove, onReject, onEdit, onDelete, onManageDoct
           <div className="flex flex-wrap items-center gap-2">
             <p className="font-bold text-slate-900 truncate">{clinic.name}</p>
             <StatusBadge status={clinic.approval_status} />
+            <AccountBadge clinic={clinic} />
             {!clinic.is_active && (
               <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 border border-slate-300">
                 Inactive
@@ -77,6 +102,22 @@ function ClinicRow({ clinic, onApprove, onReject, onEdit, onDelete, onManageDoct
               · {clinic.submitted_by_email}
             </p>
           )}
+          {hasClinicLogin(clinic) && (
+            <p className="text-xs text-slate-500 mt-2">
+              Clinic login:{' '}
+              <span className="font-medium text-slate-700">{clinic.owner_email}</span>
+              {clinic.owner_last_login_at
+                ? ` · last signed in ${new Date(clinic.owner_last_login_at).toLocaleDateString()}`
+                : ' · never signed in'}
+            </p>
+          )}
+          {!hasClinicLogin(clinic) && clinic.owner_email && (
+            <p className="text-xs text-slate-500 mt-2">
+              Currently linked to {clinic.owner_role_slug || 'staff'} account{' '}
+              <span className="font-medium text-slate-700">{clinic.owner_email}</span> — the clinic cannot sign in
+              with this.
+            </p>
+          )}
           {clinic.approval_status === 'rejected' && clinic.rejection_reason && (
             <p className="text-xs text-red-700 mt-2">
               <span className="font-semibold">Reason:</span> {clinic.rejection_reason}
@@ -86,6 +127,16 @@ function ClinicRow({ clinic, onApprove, onReject, onEdit, onDelete, onManageDoct
         </div>
 
         <div className="admin-table-scroll flex flex-nowrap md:flex-wrap gap-2 md:justify-end shrink-0 pb-1 md:pb-0">
+          <button
+            type="button"
+            className={`text-sm inline-flex items-center gap-1.5 whitespace-nowrap ${
+              hasClinicLogin(clinic) ? 'btn-outline' : 'btn-outline border-sky-200 text-sky-700 hover:bg-sky-50'
+            }`}
+            onClick={() => onManageAccount(clinic)}
+          >
+            <FaIcon icon="fa-key" />
+            {hasClinicLogin(clinic) ? 'Manage account' : 'Create account'}
+          </button>
           <button type="button" className="btn-outline text-sm inline-flex items-center gap-1.5" onClick={() => onManageDoctors(clinic)}>
             <FaIcon icon="fa-user-doctor" />
             Assign Doctors
@@ -484,6 +535,311 @@ function ClinicDoctorsModal({ open, onClose, clinic }) {
   );
 }
 
+const emptyAccountForm = () => ({
+  email: '',
+  first_name: '',
+  last_name: '',
+  phone: '',
+  password: '',
+  send_email: true,
+});
+
+/**
+ * Gives a clinic profile that was created by an admin (or submitted by a doctor)
+ * a real login for the clinic portal.
+ */
+function ClinicAccountModal({ open, onClose, clinic, onChanged }) {
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [info, setInfo] = useState(null);
+  const [form, setForm] = useState(emptyAccountForm);
+  const [issued, setIssued] = useState(null);
+
+  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const owner = info?.owner || null;
+
+  useEffect(() => {
+    if (!open || !clinic?.id) return;
+    setIssued(null);
+    setInfo(null);
+    setForm(emptyAccountForm());
+    setLoading(true);
+    admin
+      .clinicAccount(clinic.id)
+      .then((res) => {
+        const data = res.data ?? res;
+        setInfo(data);
+        const fallbackName = data.suggested_owner_name || data.clinic_name || '';
+        setForm({
+          ...emptyAccountForm(),
+          email: data.suggested_email || '',
+          first_name: fallbackName,
+          phone: data.suggested_phone || '',
+        });
+      })
+      .catch((e) => toast.error(e.message || 'Could not load clinic account'))
+      .finally(() => setLoading(false));
+  }, [open, clinic?.id]);
+
+  const copy = async (value) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success('Copied');
+    } catch {
+      toast.error('Could not copy — please select the text manually');
+    }
+  };
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!form.email.trim()) {
+      toast.error('Email is required for the clinic login');
+      return;
+    }
+    if (form.password.trim() && form.password.trim().length < 8) {
+      toast.error('Password must be at least 8 characters');
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await admin.clinicCreateAccount(clinic.id, {
+        email: form.email.trim(),
+        first_name: form.first_name.trim() || undefined,
+        last_name: form.last_name.trim() || undefined,
+        phone: form.phone.trim() || undefined,
+        password: form.password.trim() || undefined,
+        skip_email: !form.send_email,
+      });
+      const data = res.data ?? res;
+      setIssued(data);
+      setInfo((prev) => ({ ...(prev || {}), owner: data.owner, placeholder_owner: null, has_clinic_login: true }));
+      toast.success(res.message || 'Clinic account created');
+      onChanged?.();
+    } catch (err) {
+      toast.error(err.message || 'Could not create the clinic account');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const resetPassword = async () => {
+    if (!owner) return;
+    if (!window.confirm(`Issue a new password for ${owner.email}? The current one stops working.`)) return;
+    setSaving(true);
+    try {
+      const res = await admin.clinicCreateAccount(clinic.id, {
+        email: owner.email,
+        replace_existing: true,
+        reset_password: true,
+        skip_email: false,
+      });
+      const data = res.data ?? res;
+      setIssued(data);
+      toast.success('New password issued');
+      onChanged?.();
+    } catch (err) {
+      toast.error(err.message || 'Could not reset the password');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const unlink = async () => {
+    if (!owner) return;
+    if (!window.confirm(`Remove ${owner.email} from this clinic? The user account itself is kept.`)) return;
+    setSaving(true);
+    try {
+      await admin.clinicUnlinkAccount(clinic.id);
+      toast.success('Clinic login removed');
+      setInfo((prev) => ({ ...(prev || {}), owner: null }));
+      setIssued(null);
+      onChanged?.();
+    } catch (err) {
+      toast.error(err.message || 'Could not remove the clinic login');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <GlassModal open={open} onClose={onClose} size="lg" titleId="clinic-account-modal">
+      <GlassModalHeader
+        titleId="clinic-account-modal"
+        title={clinic?.name ? `Clinic account — ${clinic.name}` : 'Clinic account'}
+        subtitle="Create a portal login for a clinic that already has a profile here."
+        icon="fa-key"
+        accent="primary"
+        onClose={onClose}
+      />
+      <GlassModalBody className="space-y-4">
+        {loading ? (
+          <div className="animate-pulse h-32 bg-slate-200 rounded-xl" />
+        ) : (
+          <>
+            {issued?.temporary_password && (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                <p className="font-semibold text-emerald-900 text-sm inline-flex items-center gap-2">
+                  <FaIcon icon="fa-circle-check" />
+                  {issued.linked_existing_user ? 'Existing account linked' : 'Account ready'}
+                </p>
+                <p className="text-xs text-emerald-800 mt-1">
+                  {issued.email_sent
+                    ? 'Credentials were emailed to the clinic. '
+                    : 'The email could not be sent, so share these details manually. '}
+                  This password is shown only once.
+                </p>
+                <div className="mt-3 space-y-2">
+                  {[
+                    ['Email', issued.owner?.email],
+                    ['Temporary password', issued.temporary_password],
+                    ['Sign-in page', issued.login_url],
+                  ].map(([label, value]) => (
+                    <div key={label} className="flex items-center gap-2">
+                      <span className="text-[11px] uppercase tracking-wide text-emerald-700 w-32 shrink-0">{label}</span>
+                      <code className="flex-1 min-w-0 truncate text-sm bg-white border border-emerald-200 rounded-lg px-2.5 py-1.5 text-slate-800">
+                        {value}
+                      </code>
+                      <button type="button" className="btn-outline !px-2.5 !py-1.5 text-xs" onClick={() => copy(value)}>
+                        Copy
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {owner ? (
+              <div className="rounded-xl border border-slate-200 bg-white/60 p-4">
+                <p className="font-semibold text-slate-800 text-sm mb-3">Current clinic login</p>
+                <dl className="grid sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                  {[
+                    ['Name', `${owner.first_name || ''} ${owner.last_name || ''}`.trim() || '—'],
+                    ['Email', owner.email],
+                    ['Phone', owner.phone || '—'],
+                    ['Status', owner.is_active ? 'Active' : 'Deactivated'],
+                    [
+                      'Last sign-in',
+                      owner.last_login_at ? new Date(owner.last_login_at).toLocaleString() : 'Never signed in',
+                    ],
+                    ['Own password set', owner.password_customized ? 'Yes' : 'Still using issued password'],
+                  ].map(([label, value]) => (
+                    <div key={label}>
+                      <dt className="text-[11px] uppercase tracking-wide text-slate-400">{label}</dt>
+                      <dd className="text-slate-800 break-words">{value}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <div className="flex flex-wrap gap-2 mt-4">
+                  <button type="button" className="btn-outline text-sm" onClick={resetPassword} disabled={saving}>
+                    Issue new password
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-outline text-sm border-red-200 text-red-700 hover:bg-red-50"
+                    onClick={unlink}
+                    disabled={saving}
+                  >
+                    Remove login
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={submit} className="space-y-4" id="clinic-account-form">
+                <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 flex gap-2 items-start">
+                  <FaIcon icon="fa-circle-info" className="mt-0.5 shrink-0 text-sky-600" />
+                  <span>
+                    This clinic has a profile but no way to sign in. Creating an account lets them manage their
+                    own doctors, appointments and profile from the clinic portal.
+                  </span>
+                </div>
+
+                {info?.placeholder_owner && (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 flex gap-2 items-start">
+                    <FaIcon icon="fa-triangle-exclamation" className="mt-0.5 shrink-0 text-amber-600" />
+                    <span>
+                      This profile is currently linked to the{' '}
+                      <strong>{info.placeholder_owner.role_slug || 'staff'}</strong> account{' '}
+                      <strong>{info.placeholder_owner.email}</strong>, which the clinic cannot sign in with.
+                      Creating an account below replaces that link.
+                    </span>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Login email *</label>
+                  <input
+                    type="email"
+                    className="input-field"
+                    value={form.email}
+                    onChange={(e) => set('email', e.target.value)}
+                    required
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Used as the username. If a clinic account with this email already exists, it is linked instead.
+                  </p>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Contact first name</label>
+                    <input className="input-field" value={form.first_name} onChange={(e) => set('first_name', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Contact last name</label>
+                    <input className="input-field" value={form.last_name} onChange={(e) => set('last_name', e.target.value)} />
+                  </div>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+                    <input className="input-field" value={form.phone} onChange={(e) => set('phone', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                    <input
+                      className="input-field"
+                      value={form.password}
+                      onChange={(e) => set('password', e.target.value)}
+                      placeholder="Leave blank to generate one"
+                      minLength={8}
+                    />
+                  </div>
+                </div>
+
+                <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                    checked={form.send_email}
+                    onChange={(e) => set('send_email', e.target.checked)}
+                  />
+                  <span className="text-sm text-slate-700">
+                    Email the sign-in details to the clinic
+                    <span className="block text-xs text-slate-500">
+                      You can still copy the password from this screen afterwards.
+                    </span>
+                  </span>
+                </label>
+              </form>
+            )}
+          </>
+        )}
+      </GlassModalBody>
+      <GlassModalFooter>
+        <button type="button" className="btn-outline text-sm" onClick={onClose}>
+          Close
+        </button>
+        {!owner && !loading && (
+          <button type="submit" form="clinic-account-form" className="btn-primary text-sm ml-auto" disabled={saving}>
+            {saving ? 'Creating…' : 'Create login account'}
+          </button>
+        )}
+      </GlassModalFooter>
+    </GlassModal>
+  );
+}
+
 export default function AdminClinics() {
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -497,6 +853,8 @@ export default function AdminClinics() {
   const [rejectReason, setRejectReason] = useState('');
   const [doctorsOpen, setDoctorsOpen] = useState(false);
   const [doctorsClinic, setDoctorsClinic] = useState(null);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [accountClinic, setAccountClinic] = useState(null);
 
   const load = () => {
     setLoading(true);
@@ -593,12 +951,19 @@ export default function AdminClinics() {
     setDoctorsOpen(true);
   };
 
+  const manageAccount = (c) => {
+    setAccountClinic(c);
+    setAccountOpen(true);
+  };
+
   return (
     <AdminDashboardLayout>
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Clinics</h1>
-          <p className="text-sm text-slate-600 mt-1">Approve doctor-submitted clinics, manage details, and attach doctors.</p>
+          <p className="text-sm text-slate-600 mt-1">
+            Approve doctor-submitted clinics, manage details, attach doctors, and issue portal logins.
+          </p>
         </div>
         <button type="button" className="btn-primary text-sm inline-flex items-center gap-2" onClick={() => openEdit(null)}>
           <FaIcon icon="fa-plus" /> Create clinic
@@ -671,6 +1036,7 @@ export default function AdminClinics() {
               onEdit={openEdit}
               onDelete={del}
               onManageDoctors={manageDoctors}
+              onManageAccount={manageAccount}
             />
           ))}
         </div>
@@ -706,6 +1072,13 @@ export default function AdminClinics() {
       </GlassModal>
 
       <ClinicDoctorsModal open={doctorsOpen} onClose={() => setDoctorsOpen(false)} clinic={doctorsClinic} />
+
+      <ClinicAccountModal
+        open={accountOpen}
+        onClose={() => setAccountOpen(false)}
+        clinic={accountClinic}
+        onChanged={load}
+      />
     </AdminDashboardLayout>
   );
 }

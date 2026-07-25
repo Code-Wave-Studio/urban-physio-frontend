@@ -53,6 +53,10 @@ export default defineConfig(({ mode }) => {
     ],
     server: {
       port: 5173,
+      // Mirrors public/_headers so the Google sign-in popup can postMessage back in dev too.
+      headers: {
+        'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+      },
       proxy: {
         [apiProxyPath]: {
           target: 'http://localhost',

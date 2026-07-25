@@ -5,10 +5,15 @@ const clientId = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim();
 
 const MIN_WIDTH = 240;
 const MAX_WIDTH = 400;
+// Every change to GoogleLogin's width prop re-runs google.accounts.id.initialize(),
+// so only react to real layout changes — not the few px of jitter a scrollbar or
+// font swap produces. Rendering starts once a measurement exists, which keeps the
+// common case down to a single initialize() call.
+const WIDTH_CHANGE_THRESHOLD = 24;
 
 export default function GoogleSignInButton({ onSuccess, onError, text = 'continue_with' }) {
   const containerRef = useRef(null);
-  const [btnWidth, setBtnWidth] = useState(320);
+  const [btnWidth, setBtnWidth] = useState(null);
   const [scriptError, setScriptError] = useState(false);
 
   useEffect(() => {
@@ -19,7 +24,9 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'continu
       const available = Math.floor(el.getBoundingClientRect().width);
       if (available <= 0) return;
       const next = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, available));
-      setBtnWidth((prev) => (Math.abs(prev - next) < 8 ? prev : next));
+      setBtnWidth((prev) =>
+        prev !== null && Math.abs(prev - next) < WIDTH_CHANGE_THRESHOLD ? prev : next,
+      );
     };
 
     updateWidth();
@@ -54,28 +61,30 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'continu
 
   return (
     <div ref={containerRef} className="google-signin-wrap w-full min-w-0">
-      <div className="google-signin-inner flex justify-center w-full">
-        <GoogleLogin
-          onSuccess={(res) => {
-            if (res?.credential) {
-              onSuccess(res.credential);
-            } else {
-              onError?.({ message: 'Google did not return a sign-in credential' });
-            }
-          }}
-          onError={() => {
-            setScriptError(false);
-            onError?.({ message: 'Google sign-in was cancelled or blocked by the browser' });
-          }}
-          useOneTap={false}
-          theme="outline"
-          size="large"
-          width={String(btnWidth)}
-          text={text}
-          shape="rectangular"
-          locale="en"
-          context={text === 'signup_with' ? 'signup' : 'signin'}
-        />
+      <div className="google-signin-inner flex justify-center w-full min-h-[44px]">
+        {btnWidth !== null && (
+          <GoogleLogin
+            onSuccess={(res) => {
+              if (res?.credential) {
+                onSuccess(res.credential);
+              } else {
+                onError?.({ message: 'Google did not return a sign-in credential' });
+              }
+            }}
+            onError={() => {
+              setScriptError(false);
+              onError?.({ message: 'Google sign-in was cancelled or blocked by the browser' });
+            }}
+            useOneTap={false}
+            theme="outline"
+            size="large"
+            width={String(btnWidth)}
+            text={text}
+            shape="rectangular"
+            locale="en"
+            context={text === 'signup_with' ? 'signup' : 'signin'}
+          />
+        )}
       </div>
     </div>
   );

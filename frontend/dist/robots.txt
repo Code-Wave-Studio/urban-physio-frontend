@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin
+Disallow: /patient
+Disallow: /doctor
+Disallow: /login
+Disallow: /register
+
+Sitemap: https://theurbanphysio.com/backend/api/sitemap
