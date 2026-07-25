@@ -29,6 +29,7 @@ import ClinicPortalPatients from './pages/clinic/ClinicPortalPatients';
 import ClinicPortalEarnings from './pages/clinic/ClinicPortalEarnings';
 import PatientProfile from './pages/patient/PatientProfile';
 import AdminInvoiceSettings from './pages/admin/AdminInvoiceSettings';
+import AdminNotificationSettings from './pages/admin/AdminNotificationSettings';
 import AdminSeo from './pages/admin/AdminSeo';
 import NotFoundPage from './pages/NotFoundPage';
 import AdminPainSelection from './pages/admin/AdminPainSelection';
@@ -82,6 +83,7 @@ import DoctorTreatmentServices from './pages/doctor/DoctorTreatmentServices';
 import DoctorServicePackages from './pages/doctor/DoctorServicePackages';
 import DoctorAdminPackagePrices from './pages/doctor/DoctorAdminPackagePrices';
 import DoctorPrescriptions from './pages/doctor/DoctorPrescriptions';
+import PatientExercises from './pages/patient/PatientExercises';
 import PhysioFeed from './pages/PhysioFeed';
 import PhysioFeedDetail from './pages/PhysioFeedDetail';
 import AdminPhysioFeed from './pages/admin/AdminPhysioFeed';
@@ -243,6 +245,7 @@ export default function App() {
       <Route path="/doctor/documents" element={<ProtectedRoute roles={['doctor']}><DocumentsPage /></ProtectedRoute>} />
       <Route path="/clinic-portal" element={<ProtectedRoute roles={['clinic']}><ClinicPortalHome /></ProtectedRoute>} />
       <Route path="/clinic-portal/doctors" element={<ProtectedRoute roles={['clinic']}><ClinicPortalDoctors /></ProtectedRoute>} />
+      <Route path="/clinic-portal/documents" element={<ProtectedRoute roles={['clinic']}><DocumentsPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/appointments" element={<ProtectedRoute roles={['clinic']}><ClinicPortalAppointments /></ProtectedRoute>} />
       <Route path="/clinic-portal/patients" element={<ProtectedRoute roles={['clinic']}><ClinicPortalPatients /></ProtectedRoute>} />
       <Route path="/clinic-portal/earnings" element={<ProtectedRoute roles={['clinic']}><ClinicPortalEarnings /></ProtectedRoute>} />
@@ -261,6 +264,8 @@ export default function App() {
       <Route path="/doctor/service-packages" element={<ProtectedRoute roles={['doctor']}><DoctorServicePackages /></ProtectedRoute>} />
       <Route path="/doctor/admin-package-prices" element={<ProtectedRoute roles={['doctor']}><DoctorAdminPackagePrices /></ProtectedRoute>} />
       <Route path="/doctor/prescriptions" element={<ProtectedRoute roles={['doctor']}><DoctorPrescriptions /></ProtectedRoute>} />
+      <Route path="/patient/exercises" element={<ProtectedRoute roles={['patient']}><PatientExercises /></ProtectedRoute>} />
+      <Route path="/clinic-portal/exercises" element={<ProtectedRoute roles={['clinic']}><DoctorPrescriptions /></ProtectedRoute>} />
       <Route path="/doctor/requests" element={<ProtectedRoute roles={['doctor']}><AppointmentRequestsPage navItems={DOCTOR_NAV} title="Reschedule & cancellation" scope="doctor" /></ProtectedRoute>} />
       <Route path="/doctor/emergency" element={<ProtectedRoute roles={['doctor']}><DoctorEmergency /></ProtectedRoute>} />
       <Route path="/doctor/notifications" element={<ProtectedRoute roles={['doctor']}><NotificationsPage /></ProtectedRoute>} />
@@ -296,6 +301,7 @@ export default function App() {
       <Route path="/admin/logs" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminLogs /></ProtectedRoute>} />
       <Route path="/admin/profile" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminProfile /></ProtectedRoute>} />
       <Route path="/admin/notifications" element={<ProtectedRoute roles={['admin', 'super_admin']}><NotificationsPage /></ProtectedRoute>} />
+      <Route path="/admin/notification-settings" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminNotificationSettings /></ProtectedRoute>} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
     </SeoProvider>

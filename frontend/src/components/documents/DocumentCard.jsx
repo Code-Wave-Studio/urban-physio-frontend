@@ -22,11 +22,14 @@ export default function DocumentCard({
   onOpen,
   onDownload,
   onEdit,
+  onShare,
   onArchive,
   onRestore,
   onDelete,
   canModify = false,
   canDelete = false,
+  canShare = false,
+  canDownload = true,
 }) {
   const icon = fileIcon(doc);
   const color = fileColor(doc);
@@ -47,6 +50,11 @@ export default function DocumentCard({
       {!isLink && <span>{formatBytes(doc.file_size)}</span>}
       <span>{fmtDate(doc.created_at)}</span>
       {doc.version > 1 && <span className="text-primary-600 font-medium">v{doc.version}</span>}
+      {doc.is_view_only && (
+        <span className="text-[10px] uppercase font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
+          View only
+        </span>
+      )}
     </>
   );
 
@@ -55,9 +63,16 @@ export default function DocumentCard({
       <button type="button" onClick={() => onOpen(doc)} className="doc-action" title="Preview">
         <FaIcon icon="fa-eye" />
       </button>
-      <button type="button" onClick={() => onDownload(doc)} className="doc-action" title={isLink ? 'Open link' : 'Download'}>
-        <FaIcon icon={isLink ? 'fa-arrow-up-right-from-square' : 'fa-download'} />
-      </button>
+      {(isLink || canDownload) && (
+        <button type="button" onClick={() => onDownload(doc)} className="doc-action" title={isLink ? 'Open link' : 'Download'}>
+          <FaIcon icon={isLink ? 'fa-arrow-up-right-from-square' : 'fa-download'} />
+        </button>
+      )}
+      {canShare && (
+        <button type="button" onClick={() => onShare?.(doc)} className="doc-action" title="Share">
+          <FaIcon icon="fa-share-nodes" />
+        </button>
+      )}
       {canModify && (
         <button type="button" onClick={() => onEdit(doc)} className="doc-action" title="Edit">
           <FaIcon icon="fa-pen" />

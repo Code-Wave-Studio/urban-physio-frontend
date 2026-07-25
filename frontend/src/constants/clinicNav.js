@@ -4,6 +4,8 @@ export const CLINIC_NAV = [
   { to: '/clinic-portal/appointments', label: 'Appointments', icon: 'fa-calendar-check' },
   { to: '/clinic-portal/patients', label: 'Patients', icon: 'fa-users' },
   { to: '/clinic-portal/doctors', label: 'Doctors', icon: 'fa-user-doctor' },
+  { to: '/clinic-portal/documents', label: 'Documents', icon: 'fa-folder-tree' },
+  { to: '/clinic-portal/exercises', label: 'Exercises', icon: 'fa-dumbbell' },
   { to: '/clinic-portal/earnings', label: 'Earnings', icon: 'fa-sack-dollar' },
   { to: '/clinic-portal/profile', label: 'Clinic Profile', icon: 'fa-hospital' },
   { to: '/clinic-portal/notifications', label: 'Notifications', icon: 'fa-bell', notifyKey: true },

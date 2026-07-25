@@ -6,9 +6,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { PATIENT_NAV } from '../constants/patientNav';
 import { DOCTOR_NAV } from '../constants/doctorNav';
 import { ADMIN_NAV } from '../constants/adminNav';
+import { CLINIC_NAV } from '../constants/clinicNav';
 
 function navFor(role) {
   if (role === 'doctor') return { links: DOCTOR_NAV, variant: 'doctor' };
+  if (role === 'clinic') return { links: CLINIC_NAV, variant: 'clinic' };
   if (role === 'admin' || role === 'super_admin') return { links: ADMIN_NAV, variant: 'admin' };
   return { links: PATIENT_NAV, variant: 'patient' };
 }
@@ -16,6 +18,7 @@ function navFor(role) {
 const COPY = {
   patient: 'Store and share X-rays, reports, prescriptions, bills and more with your care team.',
   doctor: 'Manage assessments, reports, treatment plans and patient documents in one secure place.',
+  clinic: 'Upload clinic documents, share with patients and doctors, and keep medical records organised.',
   admin: 'Full oversight of every document across patients, doctors and clinics.',
 };
 

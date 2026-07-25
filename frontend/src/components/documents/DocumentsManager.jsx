@@ -13,12 +13,13 @@ import DocumentCard from './DocumentCard';
 import DocumentUploadModal from './DocumentUploadModal';
 import DocumentPreviewModal from './DocumentPreviewModal';
 import DocumentEditModal from './DocumentEditModal';
+import DocumentShareModal from './DocumentShareModal';
 
 export default function DocumentsManager({ initialFilters = {} }) {
   const { user } = useAuth();
   const role = user?.role_slug || 'patient';
   const isAdmin = role === 'admin' || role === 'super_admin';
-  const isStaff = isAdmin || role === 'doctor';
+  const isStaff = isAdmin || role === 'doctor' || role === 'clinic';
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,6 +40,7 @@ export default function DocumentsManager({ initialFilters = {} }) {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [previewDoc, setPreviewDoc] = useState(null);
   const [editDoc, setEditDoc] = useState(null);
+  const [shareDoc, setShareDoc] = useState(null);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(filters.q), 350);
@@ -68,8 +70,14 @@ export default function DocumentsManager({ initialFilters = {} }) {
 
   const setF = (k, v) => setFilters((f) => ({ ...f, [k]: v }));
 
-  const canModify = (doc) => isAdmin || (user && Number(doc.uploaded_by) === Number(user.id));
-  const canDelete = (doc) => isAdmin || (user && Number(doc.uploaded_by) === Number(user.id));
+  const canModify = (doc) =>
+    doc.can_modify === true || isAdmin || (user && Number(doc.uploaded_by) === Number(user.id));
+  const canDelete = (doc) =>
+    doc.can_delete === true || isAdmin || (user && Number(doc.uploaded_by) === Number(user.id));
+  const canShare = (doc) =>
+    doc.can_share === true || (isStaff && canModify(doc));
+  const canDownload = (doc) =>
+    doc.can_download !== false && !(doc.is_view_only && !canModify(doc));
 
   const toggleSelect = (doc) => {
     setSelected((prev) => {
@@ -83,6 +91,10 @@ export default function DocumentsManager({ initialFilters = {} }) {
   const openDoc = (doc) => setPreviewDoc(doc);
 
   const downloadDoc = async (doc) => {
+    if (!canDownload(doc) && doc.source !== 'link') {
+      toast.error('This document is view-only');
+      return;
+    }
     if (doc.source === 'link') {
       window.open(doc.file_url, '_blank', 'noopener');
       return;
@@ -268,15 +280,18 @@ export default function DocumentsManager({ initialFilters = {} }) {
               doc={doc}
               view={view}
               selected={selected.has(doc.id)}
-              onSelect={doc.source !== 'link' ? toggleSelect : undefined}
+              onSelect={doc.source !== 'link' && canDownload(doc) ? toggleSelect : undefined}
               onOpen={openDoc}
               onDownload={downloadDoc}
               onEdit={setEditDoc}
+              onShare={setShareDoc}
               onArchive={archiveDoc}
               onRestore={restoreDoc}
               onDelete={deleteDoc}
               canModify={canModify(doc)}
               canDelete={canDelete(doc)}
+              canShare={canShare(doc)}
+              canDownload={canDownload(doc)}
             />
           ))}
         </div>
@@ -295,12 +310,19 @@ export default function DocumentsManager({ initialFilters = {} }) {
         onClose={() => setPreviewDoc(null)}
         onChanged={load}
         canModify={previewDoc ? canModify(previewDoc) : false}
+        canDownload={previewDoc ? canDownload(previewDoc) : false}
       />
       <DocumentEditModal
         open={!!editDoc}
         doc={editDoc}
         onClose={() => setEditDoc(null)}
         onSaved={load}
+      />
+      <DocumentShareModal
+        open={!!shareDoc}
+        doc={shareDoc}
+        onClose={() => setShareDoc(null)}
+        onShared={load}
       />
     </div>
   );

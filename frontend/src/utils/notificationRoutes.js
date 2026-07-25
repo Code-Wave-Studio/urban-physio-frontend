@@ -13,6 +13,11 @@ const APPOINTMENT_TYPES = new Set([
   'appointment_status',
   'appointment_completed',
   'appointment_cancelled',
+  'appointment_reminder',
+  'session_today',
+  'appointment_missed',
+  'payment_reminder',
+  'followup_reminder',
   'payment_online',
   'payment_confirmed',
   'payment_refund',
@@ -101,6 +106,18 @@ export function getNotificationPath(notification, roleSlug) {
   }
 
   if (type === 'user_registered') return '/admin/users';
+
+  if (type === 'exercise_reminder' || type === 'exercise_assigned' || type === 'exercise_plan_updated' || type === 'exercise_missed') {
+    if (role === 'patient') return '/patient/exercises';
+    if (role === 'doctor') return '/doctor/prescriptions';
+    if (role === 'clinic') return '/clinic-portal/exercises';
+    return null;
+  }
+
+  if (type === 'package_expiry' || type === 'sessions_remaining' || type === 'weekly_summary') {
+    if (role === 'patient') return '/patient/packages';
+    return '/admin/users';
+  }
 
   if (type === 'review_submitted') {
     if (role === 'doctor') return '/doctor';

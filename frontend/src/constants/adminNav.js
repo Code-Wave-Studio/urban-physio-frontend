@@ -21,6 +21,7 @@ export const ADMIN_NAV = [
   { to: '/admin/emergency', label: 'Emergency', icon: 'fa-truck-medical' },
   { to: '/admin/booking-settings', label: 'Booking', icon: 'fa-puzzle-piece' },
   { to: '/admin/notifications', label: 'Notifications', icon: 'fa-bell', notifyKey: true },
+  { to: '/admin/notification-settings', label: 'Notification rules', icon: 'fa-bell-concierge' },
   { to: '/admin/contact', label: 'Contact & footer', icon: 'fa-envelope' },
   { to: '/admin/home-hero', label: 'Homepage hero', icon: 'fa-house-medical-circle-check' },
   { to: '/admin/home-images', label: 'Homepage images', icon: 'fa-image' },

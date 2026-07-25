@@ -278,6 +278,9 @@ export const documents = {
   archive: (id) => api.post(`/documents/${id}/archive`),
   restore: (id) => api.post(`/documents/${id}/restore`),
   remove: (id) => api.delete(`/documents/${id}`),
+  share: (id, data) => api.post(`/documents/${id}/share`, data),
+  shares: (id) => api.get(`/documents/${id}/shares`),
+  unshare: (id, shareId) => api.delete(`/documents/${id}/shares/${shareId}`),
   downloadBlob: (id) =>
     axios
       .get(`${API_BASE}/documents/${id}/download`, { headers: authHeaders(), responseType: 'blob' })
@@ -394,6 +397,19 @@ export const notifications = {
   unreadCount: () => api.get('/notifications/unread-count'),
   markRead: (ids) => api.post('/notifications/read', { ids }),
   markAllRead: () => api.post('/notifications/read', { all: true }),
+  markUnread: (ids) => api.post('/notifications/unread', { ids }),
+  remove: (id) => api.delete(`/notifications/${id}`),
+  clearRead: () => api.post('/notifications/clear-read'),
+  prefs: () => api.get('/notifications/preferences'),
+  updatePrefs: (data) => api.put('/notifications/preferences', data),
+};
+
+export const notificationSettings = {
+  get: () => api.get('/notification-settings'),
+  update: (events) => api.put('/notification-settings', { events }),
+  queue: (params) => api.get('/notification-settings/queue', { params }),
+  run: () => api.post('/notification-settings/run'),
+  retryFailed: () => api.post('/notification-settings/retry-failed'),
 };
 
 export const profileServices = {
@@ -758,4 +774,7 @@ export const exercisePrescriptions = {
   create: (data) => api.post('/exercise-prescriptions', data),
   update: (id, data) => api.put(`/exercise-prescriptions/${id}`, data),
   cancel: (id) => api.delete(`/exercise-prescriptions/${id}`),
+  progress: (id) => api.get(`/exercise-prescriptions/${id}/progress`),
+  log: (id, data) => api.post(`/exercise-prescriptions/${id}/log`, data),
+  deleteLog: (id, logId) => api.delete(`/exercise-prescriptions/${id}/log/${logId}`),
 };

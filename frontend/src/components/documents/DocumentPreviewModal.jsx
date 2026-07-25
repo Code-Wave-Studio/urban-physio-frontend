@@ -68,7 +68,7 @@ function Preview({ doc }) {
   );
 }
 
-export default function DocumentPreviewModal({ open, doc, onClose, onChanged, canModify = false }) {
+export default function DocumentPreviewModal({ open, doc, onClose, onChanged, canModify = false, canDownload = true }) {
   const [tab, setTab] = useState('preview');
   const [versions, setVersions] = useState(null);
   const [activity, setActivity] = useState(null);
@@ -96,6 +96,10 @@ export default function DocumentPreviewModal({ open, doc, onClose, onChanged, ca
   const download = async () => {
     if (doc.source === 'link') {
       window.open(doc.file_url, '_blank', 'noopener');
+      return;
+    }
+    if (!canDownload) {
+      toast.error('This document is view-only');
       return;
     }
     setDownloading(true);
@@ -235,12 +239,17 @@ export default function DocumentPreviewModal({ open, doc, onClose, onChanged, ca
 
       <GlassModalFooter>
         <button type="button" onClick={onClose} className="btn-outline">Close</button>
-        <button type="button" onClick={download} disabled={downloading} className="btn-primary">
-          {downloading ? <FaIcon icon="fa-spinner" className="fa-spin mr-1.5" /> : (
-            <FaIcon icon={doc.source === 'link' ? 'fa-arrow-up-right-from-square' : 'fa-download'} className="mr-1.5" />
-          )}
-          {doc.source === 'link' ? 'Open link' : 'Download'}
-        </button>
+        {(doc.source === 'link' || canDownload) && (
+          <button type="button" onClick={download} disabled={downloading} className="btn-primary">
+            {downloading ? <FaIcon icon="fa-spinner" className="fa-spin mr-1.5" /> : (
+              <FaIcon icon={doc.source === 'link' ? 'fa-arrow-up-right-from-square' : 'fa-download'} className="mr-1.5" />
+            )}
+            {doc.source === 'link' ? 'Open link' : 'Download'}
+          </button>
+        )}
+        {!canDownload && doc.source !== 'link' && (
+          <span className="text-xs text-amber-700 bg-amber-50 px-3 py-2 rounded-lg">View only — download disabled</span>
+        )}
       </GlassModalFooter>
     </GlassModal>
   );
