@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import AuthPortalLayout from '../../components/auth/AuthPortalLayout';
@@ -22,7 +22,10 @@ export default function AuthRegisterPage({ portalId }) {
   const { register, googleLogin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const redirectTo = location.state?.from;
+  const clinicInvite =
+    searchParams.get('clinic_invite') || location.state?.clinicInvite || '';
 
   const [form, setForm] = useState({
     first_name: '',
@@ -53,6 +56,7 @@ export default function AuthRegisterPage({ portalId }) {
     role: portal.role,
     accepted_terms: true,
     registration_intent: portal.registrationIntent || portal.id,
+    clinic_invite: clinicInvite || undefined,
     clinic_name: portal.showClinicName ? form.clinic_name.trim() : undefined,
     owner_name: portal.showClinicOrgFields
       ? form.owner_name.trim() || `${form.first_name} ${form.last_name}`.trim()
@@ -87,7 +91,12 @@ export default function AuthRegisterPage({ portalId }) {
       const result = await register(buildPayload());
       toast.success('Check your email for the verification code');
       navigate('/verify-otp', {
-        state: { email: result.email || form.email, from: redirectTo, portalId },
+        state: {
+          email: result.email || form.email,
+          from: redirectTo,
+          portalId,
+          clinicInvite: clinicInvite || undefined,
+        },
       });
     } catch (err) {
       toast.error(err.message);
@@ -114,6 +123,7 @@ export default function AuthRegisterPage({ portalId }) {
         accepted_terms: true,
         specialization: form.specialization.trim() || undefined,
         phone: form.phone.trim() || undefined,
+        clinic_invite: clinicInvite || undefined,
       };
       if (portal.showClinicName || portal.showClinicOrgFields) {
         Object.assign(extra, {
@@ -157,6 +167,16 @@ export default function AuthRegisterPage({ portalId }) {
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">{portal.registerTitle}</h1>
         <p className="text-sm text-slate-500 mt-2 max-w-sm mx-auto">{portal.registerSubtitle}</p>
       </div>
+
+      {portal.id === 'patient' && clinicInvite && (
+        <div className="mb-5 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-900 flex gap-2 items-start">
+          <FaIcon icon="fa-hospital" className="mt-0.5 shrink-0 text-teal-600" />
+          <span>
+            <strong>Create your The Urban Physio Account.</strong> A clinic invited you — after
+            verification you will be connected automatically and can view sessions, appointments, and more.
+          </span>
+        </div>
+      )}
 
       {portal.id === 'patient' && (
         <div className="mb-5 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 flex gap-2 items-start">

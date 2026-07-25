@@ -19,6 +19,7 @@ export default function VerifyOtp() {
   const inputsRef = useRef([]);
 
   const portalId = location.state?.portalId;
+  const clinicInvite = location.state?.clinicInvite || '';
   const registerBack = portalId === 'doctor' ? '/doctor/register' : '/patient/register';
 
   useEffect(() => {
@@ -69,7 +70,7 @@ export default function VerifyOtp() {
     }
     setLoading(true);
     try {
-      const user = await verifyOtp(email, otpValue);
+      const user = await verifyOtp(email, otpValue, clinicInvite ? { clinic_invite: clinicInvite } : {});
       toast.success('Email verified!');
       navigateAfterAuth(navigate, user, redirectTo);
     } catch (err) {

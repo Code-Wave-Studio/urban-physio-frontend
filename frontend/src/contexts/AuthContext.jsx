@@ -129,8 +129,8 @@ export function AuthProvider({ children }) {
     return res?.data ?? res;
   };
 
-  const verifyOtp = async (email, otp) => {
-    const res = await auth.verifyOtp({ email, otp });
+  const verifyOtp = async (email, otp, extra = {}) => {
+    const res = await auth.verifyOtp({ email, otp, ...extra });
     return applyAuthResponse(res);
   };
 

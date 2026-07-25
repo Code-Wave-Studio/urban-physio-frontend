@@ -649,6 +649,10 @@ export const clinicPortal = {
     api.post(`/clinic-portal/${clinicId}/bulk-invite-patients`, data),
   bulkInviteDoctors: (clinicId, data) =>
     api.post(`/clinic-portal/${clinicId}/bulk-invite-doctors`, data),
+  createOfflinePatient: (clinicId, data) =>
+    api.post(`/clinic-portal/${clinicId}/offline-patients`, data),
+  resendOfflinePatientInvite: (clinicId, clinicPatientId) =>
+    api.post(`/clinic-portal/${clinicId}/offline-patients/${clinicPatientId}/resend-invite`),
 };
 
 export const about = {
