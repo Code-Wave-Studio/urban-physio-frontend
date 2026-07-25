@@ -19,6 +19,7 @@ const TABS = [
   { id: 'doctors', label: 'Doctors', icon: 'fa-user-doctor' },
   { id: 'clinics', label: 'Clinics', icon: 'fa-hospital' },
   { id: 'cities', label: 'Cities', icon: 'fa-city' },
+  { id: 'physiofeed', label: 'PhysioFeed', icon: 'fa-rss' },
   { id: 'settings', label: 'Global', icon: 'fa-sliders' },
   { id: 'social', label: 'Social & Schema', icon: 'fa-share-nodes' },
   { id: 'robots', label: 'Sitemap & Robots', icon: 'fa-robot' },
@@ -625,6 +626,14 @@ export default function AdminSeo() {
               <AdminSeoEntityPanel
                 entityType="clinic"
                 title="Clinic profile SEO"
+                defaultOg={settings.default_og_image}
+              />
+            )}
+
+            {tab === 'physiofeed' && (
+              <AdminSeoEntityPanel
+                entityType="physiofeed"
+                title="PhysioFeed SEO (blogs, conditions, podcasts)"
                 defaultOg={settings.default_og_image}
               />
             )}

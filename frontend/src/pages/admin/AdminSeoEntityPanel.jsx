@@ -14,7 +14,18 @@ const SCHEMA_TYPES = [
   'LocalBusiness',
   'FAQPage',
   'Organization',
+  'Article',
+  'MedicalWebPage',
+  'PodcastEpisode',
 ];
+
+/** Split a page path into its parent prefix and the editable last slug segment. */
+function splitPath(path) {
+  const parts = (path || '').split('/').filter(Boolean);
+  const slug = parts.pop() || '';
+  const parent = parts.length ? '/' + parts.join('/') + '/' : '/';
+  return { parent, slug };
+}
 
 function scoreColor(score) {
   if (score >= 80) return 'text-emerald-700 bg-emerald-50 border-emerald-200';
@@ -124,7 +135,8 @@ export default function AdminSeoEntityPanel({ entityType, title, defaultOg = '' 
 
   const openRow = (row) => {
     setSelectedId(row.id);
-    setForm({ ...emptyEntity(), ...row, seo_score: row.seo_score });
+    const { slug } = splitPath(row.page_path);
+    setForm({ ...emptyEntity(), ...row, slug, _origSlug: slug, seo_score: row.seo_score });
   };
 
   const save = async (e) => {
@@ -143,6 +155,11 @@ export default function AdminSeoEntityPanel({ entityType, title, defaultOg = '' 
       delete payload.entity_type;
       delete payload.entity_id;
       delete payload.page_key;
+      delete payload._origSlug;
+      // Only send slug when it actually changed (backend rewrites the URL + adds a 301 redirect).
+      if (!payload.slug || payload.slug === form._origSlug) {
+        delete payload.slug;
+      }
       const res = await admin.seoEntityUpdate(selectedId, payload);
       const saved = res.data || res;
       toast.success('Entity SEO saved');
@@ -161,7 +178,7 @@ export default function AdminSeoEntityPanel({ entityType, title, defaultOg = '' 
       const res = await admin.seoEntitiesSync();
       const stats = res.data || res || {};
       toast.success(
-        `Synced: ${stats.doctors || 0} doctors, ${stats.clinics || 0} clinics, ${stats.city_pages || 0} city pages`
+        `Synced: ${stats.doctors || 0} doctors, ${stats.clinics || 0} clinics, ${stats.city_pages || 0} city pages, ${stats.physiofeed || 0} physiofeed`
       );
       load();
     } catch (err) {
@@ -179,6 +196,7 @@ export default function AdminSeoEntityPanel({ entityType, title, defaultOg = '' 
   const filteredHint = useMemo(() => {
     if (entityType === 'doctor') return 'Verified doctor public profiles (/doctor/slug)';
     if (entityType === 'clinic') return 'Approved clinic public profiles (/clinic/slug)';
+    if (entityType === 'physiofeed') return 'PhysioFeed posts — blogs, conditions & podcasts (/physiofeed/slug)';
     if (entityType === 'city_clinics') return 'Best physiotherapy clinic in {city}';
     return 'Best physiotherapist in {city}';
   }, [entityType]);
@@ -276,7 +294,26 @@ export default function AdminSeoEntityPanel({ entityType, title, defaultOg = '' 
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Basic</p>
                 <div className="grid sm:grid-cols-2 gap-3">
                   <input className="input-field sm:col-span-2" value={form.page_label || ''} disabled readOnly />
-                  <input className="input-field sm:col-span-2 font-mono text-xs" value={form.page_path || ''} disabled readOnly />
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold text-slate-500 mb-1">URL slug (editable)</label>
+                    <div className="flex items-stretch rounded-lg border border-slate-200 overflow-hidden bg-white">
+                      <span className="px-2 py-2 bg-slate-50 text-slate-500 font-mono text-xs flex items-center border-r border-slate-200 whitespace-nowrap max-w-[55%] overflow-x-auto">
+                        {splitPath(form.page_path).parent}
+                      </span>
+                      <input
+                        className="flex-1 px-2 py-2 font-mono text-xs outline-none min-w-0"
+                        value={form.slug || ''}
+                        placeholder="page-slug"
+                        onChange={(e) => setField('slug', e.target.value)}
+                      />
+                    </div>
+                    {form.slug && form.slug !== form._origSlug && (
+                      <p className="text-[11px] text-amber-700 mt-1">
+                        <FaIcon icon="fa-triangle-exclamation" className="mr-1" />
+                        Slug changed — saving will update the live URL and auto-create a 301 redirect from the old URL.
+                      </p>
+                    )}
+                  </div>
                   <input
                     className="input-field sm:col-span-2"
                     placeholder="Meta title"

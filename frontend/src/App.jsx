@@ -69,6 +69,7 @@ import AppointmentRequestsPage from './pages/AppointmentRequestsPage';
 import TreatmentPackages from './pages/TreatmentPackages';
 import PackageBookingWizard from './pages/PackageBookingWizard';
 import ExerciseLibrary from './pages/ExerciseLibrary';
+import ExerciseDetail from './pages/ExerciseDetail';
 import AdminTreatmentPackages from './pages/admin/AdminTreatmentPackages';
 import AdminDoctorPackages from './pages/admin/AdminDoctorPackages';
 import AdminExercises from './pages/admin/AdminExercises';
@@ -197,6 +198,7 @@ export default function App() {
         }
       />
       <Route path="/exercises" element={<ExerciseLibrary />} />
+      <Route path="/exercises/:slug" element={<ExerciseDetail />} />
       <Route path="/physiofeed" element={<PhysioFeed />} />
       <Route path="/physiofeed/:slug" element={<PhysioFeedDetail />} />
 
