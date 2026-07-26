@@ -52,11 +52,20 @@
               });
             }
           } catch (e) {}
-          location.reload();
+          var u = location.href.split('#')[0];
+          location.replace(u + (u.indexOf('?') >= 0 ? '&' : '?') + '_tup=' + Date.now());
+        }
+        function isHtmlAsJs(msg) {
+          return /Unexpected token\s*['"]?</i.test(String(msg || ''));
         }
         window.addEventListener('error', function (e) {
           var t = e && e.target;
-          if (t && (t.tagName === 'SCRIPT' || t.tagName === 'LINK')) healOnce();
+          if (t && (t.tagName === 'SCRIPT' || t.tagName === 'LINK')) {
+            healOnce();
+            return;
+          }
+          // 200 HTML for a .js URL does not fire a SCRIPT load error — only a SyntaxError.
+          if (e && isHtmlAsJs(e.message)) healOnce();
         }, true);
         window.addEventListener('load', function () {
           setTimeout(function () {
