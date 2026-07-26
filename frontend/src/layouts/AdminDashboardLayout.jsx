@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
 import AdminSidebar from '../components/admin/AdminSidebar';
@@ -7,28 +7,6 @@ import FaIcon from '../components/FaIcon';
 import { ADMIN_NAV } from '../constants/adminNav';
 import { notifications } from '../services/api';
 import { hasStoredToken } from '../utils/authSession';
-
-function AdminMobileNavLink({ link, pathname, unreadCount }) {
-  const active = pathname === link.to;
-  return (
-    <Link
-      to={link.to}
-      className={`dashboard-mobile-nav-link ${active ? 'dashboard-mobile-nav-link--active' : ''}`}
-    >
-      {typeof link.icon === 'string' && link.icon.startsWith('fa-') ? (
-        <FaIcon icon={link.icon} className="text-xs shrink-0" />
-      ) : (
-        <span>{link.icon}</span>
-      )}
-      <span className="whitespace-nowrap">{link.label}</span>
-      {link.notifyKey && unreadCount > 0 && (
-        <span className="min-w-[1.1rem] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center shrink-0">
-          {unreadCount > 99 ? '99+' : unreadCount}
-        </span>
-      )}
-    </Link>
-  );
-}
 
 export default function AdminDashboardLayout({ children, links = ADMIN_NAV }) {
   const { pathname } = useLocation();
@@ -104,26 +82,17 @@ export default function AdminDashboardLayout({ children, links = ADMIN_NAV }) {
 
   return (
     <div className="min-h-screen relative admin-shell">
-      <Navbar beforeLogo={sidebarToggle} />
+      <Navbar beforeLogo={sidebarToggle} portalMode />
       <AdminSidebar open={sidebarOpen} onClose={closeSidebar} links={links} unreadCount={unreadCount} />
-
-      <nav
-        className="lg:hidden sticky top-16 z-20 border-b border-slate-200/80 bg-white/90 backdrop-blur-md"
-        aria-label="Admin navigation"
-      >
-        <div className="max-w-7xl mx-auto px-3 py-2.5 flex gap-2 overflow-x-auto scrollbar-thin">
-          {links.map((link) => (
-            <AdminMobileNavLink key={link.to} link={link} pathname={pathname} unreadCount={unreadCount} />
-          ))}
-        </div>
-      </nav>
 
       <div
         className={`admin-main-wrap transition-[padding] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
           sidebarOpen ? 'lg:pl-72' : 'lg:pl-0'
         }`}
       >
-        <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-5 sm:py-8 animate-fade-in">{children}</main>
+        <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 animate-fade-in min-w-0">
+          {children}
+        </main>
       </div>
     </div>
   );

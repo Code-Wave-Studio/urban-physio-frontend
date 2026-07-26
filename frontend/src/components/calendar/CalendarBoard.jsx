@@ -452,39 +452,43 @@ export default function CalendarBoard({
       {/* Week view */}
       {view === 'week' && (
         <div className="glass-card !p-0 overflow-hidden">
-          <div className="grid grid-cols-7 border-b border-slate-100">
-            {weekDays.map((d) => {
-              const isToday = sameDay(d, today);
-              return (
-                <div
-                  key={toYmd(d)}
-                  className={`px-1 sm:px-2 py-2 text-center border-r border-slate-50 last:border-0 ${isToday ? 'bg-teal-50' : 'bg-slate-50/60'}`}
-                >
-                  <p className="text-[10px] sm:text-xs font-semibold uppercase text-slate-500">{WEEKDAYS[d.getDay()]}</p>
-                  <p className={`text-sm sm:text-lg font-bold ${isToday ? 'text-teal-700' : 'text-slate-800'}`}>{d.getDate()}</p>
-                </div>
-              );
-            })}
-          </div>
-          <div className="grid grid-cols-7 min-h-[420px]">
-            {weekDays.map((d) => {
-              const key = toYmd(d);
-              const dayEvents = byDate[key] || [];
-              const isToday = sameDay(d, today);
-              return (
-                <div
-                  key={key}
-                  className={`border-r border-slate-50 last:border-0 p-1 sm:p-1.5 space-y-1 overflow-y-auto max-h-[520px] ${isToday ? 'bg-teal-50/30' : ''}`}
-                >
-                  {dayEvents.length === 0 && (
-                    <p className="text-[10px] text-slate-300 text-center pt-6 hidden sm:block">—</p>
-                  )}
-                  {dayEvents.map((ev) => (
-                    <EventChip key={ev.id} ev={ev} onClick={setSelected} />
-                  ))}
-                </div>
-              );
-            })}
+          <div className="portal-calendar-scroll">
+            <div className="portal-calendar-grid">
+              <div className="grid grid-cols-7 border-b border-slate-100">
+                {weekDays.map((d) => {
+                  const isToday = sameDay(d, today);
+                  return (
+                    <div
+                      key={toYmd(d)}
+                      className={`px-1 sm:px-2 py-2 text-center border-r border-slate-50 last:border-0 ${isToday ? 'bg-teal-50' : 'bg-slate-50/60'}`}
+                    >
+                      <p className="text-[10px] sm:text-xs font-semibold uppercase text-slate-500">{WEEKDAYS[d.getDay()]}</p>
+                      <p className={`text-sm sm:text-lg font-bold ${isToday ? 'text-teal-700' : 'text-slate-800'}`}>{d.getDate()}</p>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="grid grid-cols-7 min-h-[360px] sm:min-h-[420px]">
+                {weekDays.map((d) => {
+                  const key = toYmd(d);
+                  const dayEvents = byDate[key] || [];
+                  const isToday = sameDay(d, today);
+                  return (
+                    <div
+                      key={key}
+                      className={`border-r border-slate-50 last:border-0 p-1 sm:p-1.5 space-y-1 overflow-y-auto max-h-[520px] ${isToday ? 'bg-teal-50/30' : ''}`}
+                    >
+                      {dayEvents.length === 0 && (
+                        <p className="text-[10px] text-slate-300 text-center pt-6 hidden sm:block">—</p>
+                      )}
+                      {dayEvents.map((ev) => (
+                        <EventChip key={ev.id} ev={ev} onClick={setSelected} />
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -492,40 +496,44 @@ export default function CalendarBoard({
       {/* Month view */}
       {view === 'month' && (
         <div className="glass-card !p-0 overflow-hidden">
-          <div className="grid grid-cols-7 border-b border-slate-100 bg-slate-50/60">
-            {WEEKDAYS.map((w) => (
-              <div key={w} className="px-2 py-2 text-center text-[11px] font-semibold uppercase text-slate-500 border-r border-slate-50 last:border-0">
-                {w}
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-7">
-            {monthCells.map((d) => {
-              const key = toYmd(d);
-              const inMonth = d.getMonth() === anchor.getMonth();
-              const isToday = sameDay(d, today);
-              const dayEvents = byDate[key] || [];
-              return (
-                <div
-                  key={key}
-                  className={`min-h-[96px] sm:min-h-[110px] border-r border-b border-slate-50 last:border-r-0 p-1 ${
-                    !inMonth ? 'bg-slate-50/40' : isToday ? 'bg-teal-50/40' : 'bg-white'
-                  }`}
-                >
-                  <p className={`text-[11px] font-bold mb-0.5 px-0.5 ${isToday ? 'text-teal-700' : inMonth ? 'text-slate-700' : 'text-slate-300'}`}>
-                    {d.getDate()}
-                  </p>
-                  <div className="space-y-0.5">
-                    {dayEvents.slice(0, 3).map((ev) => (
-                      <EventChip key={ev.id} ev={ev} onClick={setSelected} />
-                    ))}
-                    {dayEvents.length > 3 && (
-                      <p className="text-[10px] text-slate-400 px-1">+{dayEvents.length - 3} more</p>
-                    )}
+          <div className="portal-calendar-scroll">
+            <div className="portal-calendar-grid">
+              <div className="grid grid-cols-7 border-b border-slate-100 bg-slate-50/60">
+                {WEEKDAYS.map((w) => (
+                  <div key={w} className="px-2 py-2 text-center text-[11px] font-semibold uppercase text-slate-500 border-r border-slate-50 last:border-0">
+                    {w}
                   </div>
-                </div>
-              );
-            })}
+                ))}
+              </div>
+              <div className="grid grid-cols-7">
+                {monthCells.map((d) => {
+                  const key = toYmd(d);
+                  const inMonth = d.getMonth() === anchor.getMonth();
+                  const isToday = sameDay(d, today);
+                  const dayEvents = byDate[key] || [];
+                  return (
+                    <div
+                      key={key}
+                      className={`min-h-[88px] sm:min-h-[110px] border-r border-b border-slate-50 last:border-r-0 p-1 ${
+                        !inMonth ? 'bg-slate-50/40' : isToday ? 'bg-teal-50/40' : 'bg-white'
+                      }`}
+                    >
+                      <p className={`text-[11px] font-bold mb-0.5 px-0.5 ${isToday ? 'text-teal-700' : inMonth ? 'text-slate-700' : 'text-slate-300'}`}>
+                        {d.getDate()}
+                      </p>
+                      <div className="space-y-0.5">
+                        {dayEvents.slice(0, 3).map((ev) => (
+                          <EventChip key={ev.id} ev={ev} onClick={setSelected} />
+                        ))}
+                        {dayEvents.length > 3 && (
+                          <p className="text-[10px] text-slate-400 px-1">+{dayEvents.length - 3} more</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       )}

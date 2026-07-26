@@ -972,6 +972,84 @@
     backdrop-filter: blur(12px);
   }
 
+  /* Admin / portal shells */
+  .admin-shell {
+    @apply overflow-x-hidden;
+  }
+
+  .admin-main-wrap {
+    @apply min-w-0 w-full;
+  }
+
+  .admin-icon-btn {
+    @apply inline-flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200/80
+           bg-white/80 text-slate-600 shrink-0
+           transition-[background-color,color,border-color,transform] duration-200;
+  }
+
+  @media (hover: hover) {
+    .admin-icon-btn:hover {
+      @apply bg-slate-100 text-slate-900 border-slate-300;
+    }
+  }
+
+  .admin-icon-btn:active {
+    transform: scale(0.96);
+  }
+
+  /* Portal tables / calendars — always scrollable on narrow screens */
+  .portal-table-wrap {
+    @apply overflow-x-auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .portal-table-wrap > table {
+    @apply min-w-[640px] w-full;
+  }
+
+  .portal-calendar-scroll {
+    @apply overflow-x-auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .portal-calendar-scroll > .portal-calendar-grid {
+    @apply min-w-[640px];
+  }
+
+  /* Stacked filter toolbars on mobile */
+  .portal-toolbar {
+    @apply flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between;
+  }
+
+  .portal-toolbar-scroll {
+    @apply flex gap-2 overflow-x-auto pb-1 -mx-1 px-1;
+  }
+
+  /* Touch-friendly tab strips */
+  .portal-tabs {
+    @apply flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1;
+  }
+
+  .portal-tabs > button,
+  .portal-tabs > a {
+    @apply shrink-0;
+  }
+
+  @media (max-width: 639px) {
+    .admin-shell h1 {
+      @apply text-xl leading-snug;
+    }
+
+    .admin-shell .glass-card {
+      @apply rounded-xl;
+    }
+
+    /* Prevent KPI grids from crushing labels */
+    .admin-shell .grid.grid-cols-2 > * {
+      @apply min-w-0;
+    }
+  }
+
   /* Admin — sidebar only (public Navbar on top) */
   .admin-sidebar-backdrop {
     will-change: opacity;
@@ -979,13 +1057,6 @@
 
   .admin-sidebar {
     will-change: transform;
-  }
-
-  @media (min-width: 1024px) {
-    .admin-sidebar.admin-sidebar--desktop-open,
-    .admin-sidebar.translate-x-0 {
-      /* desktop open state handled via translate-x-0 class */
-    }
   }
 
   .footer-contact-card {

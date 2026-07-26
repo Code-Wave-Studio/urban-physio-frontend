@@ -26,10 +26,10 @@ export default function ClinicPortalShell({ children, title, subtitle, actions }
     <DashboardLayout links={links} variant="clinic">
       <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="min-w-0">
-          {title && <h1 className="text-2xl md:text-3xl font-bold text-slate-900">{title}</h1>}
-          {subtitle && <p className="text-sm text-slate-500 mt-1">{subtitle}</p>}
+          {title && <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 break-words">{title}</h1>}
+          {subtitle && <p className="text-sm text-slate-500 mt-1 break-words">{subtitle}</p>}
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
           {actions}
           <button
             type="button"

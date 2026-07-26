@@ -21,9 +21,12 @@ export default function DashboardPortalSidebar({
   const activeClass =
     accent === 'teal'
       ? 'bg-teal-600 text-white shadow-md shadow-teal-600/25'
-      : 'bg-primary-600 text-white shadow-md shadow-primary-600/25';
+      : accent === 'emerald'
+        ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25'
+        : 'bg-primary-600 text-white shadow-md shadow-primary-600/25';
 
-  const accentLabel = accent === 'teal' ? 'text-teal-700' : 'text-primary-600';
+  const accentLabel =
+    accent === 'teal' ? 'text-teal-700' : accent === 'emerald' ? 'text-emerald-700' : 'text-primary-600';
 
   return (
     <>
@@ -50,7 +53,12 @@ export default function DashboardPortalSidebar({
               <p className="text-xs text-slate-500 truncate">{subtitle}</p>
             </div>
           </div>
-          <button type="button" className="admin-icon-btn" onClick={onClose} aria-label="Close menu">
+          <button
+            type="button"
+            className="admin-icon-btn"
+            onClick={onClose}
+            aria-label="Close menu"
+          >
             <FaIcon icon="fa-xmark" />
           </button>
         </div>

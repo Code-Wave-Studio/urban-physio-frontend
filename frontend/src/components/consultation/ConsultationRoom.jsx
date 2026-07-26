@@ -637,13 +637,13 @@ export default function ConsultationRoom({ appointmentId, backTo, layout: Layout
         )}
       </div>
 
-      <div className="flex flex-wrap gap-1.5 p-1 rounded-xl bg-slate-100/80">
+      <div className="portal-tabs p-1 rounded-xl bg-slate-100/80">
         {TABS.map((t) => (
           <button
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
-            className={`flex-1 min-w-[120px] inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition ${
+            className={`flex-1 min-w-[7.5rem] sm:min-w-[120px] inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 sm:py-2 text-sm font-semibold transition ${
               tab === t.id ? 'bg-white text-primary-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
             }`}
           >

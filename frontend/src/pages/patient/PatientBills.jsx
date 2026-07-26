@@ -134,7 +134,7 @@ export default function PatientBills() {
             <p className="text-sm">No bills to show.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto portal-table-wrap">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-[11px] uppercase text-slate-400 border-b border-slate-100 bg-slate-50/60">

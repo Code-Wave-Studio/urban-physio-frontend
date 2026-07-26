@@ -28,10 +28,10 @@ const MORE_NAV_LINKS = [
 ];
 
 /**
- * Public site header — same on home, booking, login, and admin (admin adds sidebar toggle via beforeLogo).
- * @param {{ beforeLogo?: import('react').ReactNode, headerSpacerClass?: string }} props
+ * Public site header — same on home, booking, login, and portals (portals add sidebar toggle via beforeLogo).
+ * @param {{ beforeLogo?: import('react').ReactNode, headerSpacerClass?: string, portalMode?: boolean }} props
  */
-export default function Navbar({ beforeLogo = null, headerSpacerClass = '' }) {
+export default function Navbar({ beforeLogo = null, headerSpacerClass = '', portalMode = false }) {
   const { pathname, search } = useLocation();
   const { user, logout, hasRole } = useAuth();
   const { city, setShowSelector, locationLabel } = useLocationContext();
@@ -156,7 +156,8 @@ export default function Navbar({ beforeLogo = null, headerSpacerClass = '' }) {
               </Link>
             </div>
 
-            {/* Tablet + desktop navigation */}
+            {/* Tablet + desktop public navigation (hidden inside portals — use sidebar) */}
+            {!portalMode && (
             <nav
               className="hidden md:flex items-center gap-0.5 ml-4 lg:ml-6 xl:ml-10 shrink-0"
               aria-label="Main"
@@ -213,24 +214,29 @@ export default function Navbar({ beforeLogo = null, headerSpacerClass = '' }) {
                 )}
               </div>
             </nav>
+            )}
 
             <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto">
               {user && <NotificationBell />}
+              {!portalMode && (
               <Link to="/book" className="hidden sm:inline-flex btn-primary text-sm !py-2 !px-4">
                 Book Appointment
               </Link>
+              )}
               {user ? (
                 <>
+                  {!portalMode && (
                   <Link
                     to={dashboardPath()}
                     className="hidden md:inline-flex text-sm font-medium text-slate-600 hover:text-primary-600 px-1"
                   >
                     {dashboardLabel()}
                   </Link>
+                  )}
                   <button
                     type="button"
                     onClick={handleLogout}
-                    className="hidden sm:inline-flex btn-outline text-sm !py-2 !px-3"
+                    className="inline-flex btn-outline text-sm !py-1.5 !px-2.5 sm:!py-2 sm:!px-3"
                   >
                     Logout
                   </button>
@@ -243,30 +249,34 @@ export default function Navbar({ beforeLogo = null, headerSpacerClass = '' }) {
                   Login
                 </Link>
               )}
-              <button
-                type="button"
-                className="site-header-menu-btn md:hidden"
-                onClick={() => setMobileOpen((o) => !o)}
-                aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
-                aria-expanded={mobileOpen}
-              >
-                <FaIcon icon={mobileOpen ? 'fa-xmark' : 'fa-bars'} className="text-lg" />
-              </button>
+              {!portalMode && (
+                <button
+                  type="button"
+                  className="site-header-menu-btn md:hidden"
+                  onClick={() => setMobileOpen((o) => !o)}
+                  aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+                  aria-expanded={mobileOpen}
+                >
+                  <FaIcon icon={mobileOpen ? 'fa-xmark' : 'fa-bars'} className="text-lg" />
+                </button>
+              )}
             </div>
           </div>
         </div>
       </header>
 
-      <MobileNavDrawer
-        open={mobileOpen}
-        onClose={() => setMobileOpen(false)}
-        user={user}
-        hasRole={hasRole}
-        city={city}
-        locationLabel={locationLabel}
-        onShowLocation={() => setShowSelector(true)}
-        onLogout={handleLogout}
-      />
+      {!portalMode && (
+        <MobileNavDrawer
+          open={mobileOpen}
+          onClose={() => setMobileOpen(false)}
+          user={user}
+          hasRole={hasRole}
+          city={city}
+          locationLabel={locationLabel}
+          onShowLocation={() => setShowSelector(true)}
+          onLogout={handleLogout}
+        />
+      )}
 
       <div
         className={`site-header-spacer shrink-0 ${headerSpacerClass}`}

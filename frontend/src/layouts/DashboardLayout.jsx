@@ -119,7 +119,7 @@ export default function DashboardLayout({ children, links = [], variant }) {
   if (usePortalSidebar) {
     return (
       <div className="min-h-screen relative admin-shell">
-        <Navbar beforeLogo={sidebarToggle} />
+        <Navbar beforeLogo={sidebarToggle} portalMode />
         <DashboardPortalSidebar
           open={sidebarOpen}
           onClose={closeSidebar}
@@ -135,7 +135,7 @@ export default function DashboardLayout({ children, links = [], variant }) {
             sidebarOpen ? 'lg:pl-72' : 'lg:pl-0'
           }`}
         >
-          <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-5 sm:py-8 animate-fade-in">{children}</main>
+          <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 animate-fade-in min-w-0">{children}</main>
         </div>
       </div>
     );

@@ -268,7 +268,7 @@ export default function ClinicBillingPage() {
         <div className="glass-card text-center py-12 text-slate-500">No billing access.</div>
       ) : (
         <div className="space-y-4">
-          <div className="flex gap-2 overflow-x-auto pb-1">
+          <div className="portal-tabs pb-1">
             {visibleTabs.map((t) => (
               <button
                 key={t.id}
@@ -319,7 +319,7 @@ export default function ClinicBillingPage() {
                     <h3 className="font-semibold text-slate-900">Pending payments</h3>
                     <button type="button" className="btn-outline text-xs" onClick={load}>Refresh</button>
                   </div>
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto portal-table-wrap">
                     <table className="w-full text-sm">
                       <thead className="text-[11px] uppercase text-slate-500 bg-slate-50/80 text-left">
                         <tr>
@@ -360,9 +360,9 @@ export default function ClinicBillingPage() {
 
               {(tab === 'payments' || tab === 'invoices' || tab === 'receipts') && (
                 <div className="space-y-3">
-                  <div className="flex flex-wrap gap-2 items-end">
-                    <input className="input-field text-sm max-w-xs" placeholder="Search patient / invoice…" value={q} onChange={(e) => setQ(e.target.value)} />
-                    <div className="flex gap-1">
+                  <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:items-end">
+                    <input className="input-field text-sm w-full sm:max-w-xs" placeholder="Search patient / invoice…" value={q} onChange={(e) => setQ(e.target.value)} />
+                    <div className="portal-toolbar-scroll">
                       {['all', 'online', 'offline'].map((c) => (
                         <button
                           key={c}
@@ -379,7 +379,8 @@ export default function ClinicBillingPage() {
                     <button type="button" className="btn-outline text-sm" onClick={load}>Apply</button>
                   </div>
                   <div className="glass-card !p-0 overflow-hidden">
-                    <table className="w-full text-sm">
+                    <div className="portal-table-wrap">
+                      <table className="w-full text-sm">
                       <thead className="text-[11px] uppercase text-slate-500 bg-slate-50/80 text-left">
                         <tr>
                           <th className="px-4 py-3">Invoice / Receipt</th>
@@ -437,7 +438,8 @@ export default function ClinicBillingPage() {
                           <tr><td colSpan={6} className="px-4 py-10 text-center text-slate-500">No payments found</td></tr>
                         )}
                       </tbody>
-                    </table>
+                      </table>
+                    </div>
                   </div>
                 </div>
               )}
@@ -448,6 +450,7 @@ export default function ClinicBillingPage() {
                     <h3 className="font-semibold">Patient packages</h3>
                     <p className="text-xs text-slate-500">Walk-in / clinic packages linked to billing</p>
                   </div>
+                  <div className="portal-table-wrap">
                   <table className="w-full text-sm">
                     <thead className="text-[11px] uppercase text-slate-500 bg-slate-50/80 text-left">
                       <tr>
@@ -471,6 +474,7 @@ export default function ClinicBillingPage() {
                       )}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               )}
 
@@ -536,6 +540,7 @@ export default function ClinicBillingPage() {
                       <p className="text-xs text-slate-500 mt-1">Receptionist can view; Clinic Admin processes refunds from Payments tab.</p>
                     )}
                   </div>
+                  <div className="portal-table-wrap">
                   <table className="w-full text-sm">
                     <thead className="text-[11px] uppercase text-slate-500 bg-slate-50/80 text-left">
                       <tr>
@@ -561,6 +566,7 @@ export default function ClinicBillingPage() {
                       )}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               )}
             </>

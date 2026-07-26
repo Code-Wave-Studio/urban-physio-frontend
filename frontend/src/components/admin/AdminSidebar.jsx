@@ -34,7 +34,12 @@ export default function AdminSidebar({ open, onClose, links, unreadCount = 0 }) 
               </p>
             </div>
           </div>
-          <button type="button" className="admin-icon-btn" onClick={onClose} aria-label="Close menu">
+          <button
+            type="button"
+            className="admin-icon-btn"
+            onClick={onClose}
+            aria-label="Close menu"
+          >
             <FaIcon icon="fa-xmark" />
           </button>
         </div>
@@ -53,7 +58,7 @@ export default function AdminSidebar({ open, onClose, links, unreadCount = 0 }) 
           </div>
         </div>
 
-        <nav className="dashboard-sidebar-nav flex-1 p-3 space-y-0.5" aria-label="Admin navigation">
+        <nav className="dashboard-sidebar-nav flex-1 min-h-0 p-3 space-y-0.5 overflow-y-auto overscroll-contain" aria-label="Admin navigation">
           {links.map((link, i) => {
             const active = pathname === link.to;
             return (
