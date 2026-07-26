@@ -36,7 +36,8 @@ const APPOINTMENT_TYPES = new Set([
 export function getNotificationPath(notification, roleSlug) {
   const type = notification?.type || '';
   const data = notification?.data || {};
-  const role = roleSlug === 'super_admin' ? 'admin' : roleSlug;
+  let role = roleSlug === 'super_admin' ? 'admin' : roleSlug;
+  if (role === 'clinic_staff') role = 'clinic';
 
   if (APPOINTMENT_TYPES.has(type)) {
     const q = appointmentQuery(data);

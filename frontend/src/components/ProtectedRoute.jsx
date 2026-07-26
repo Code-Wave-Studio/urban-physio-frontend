@@ -6,7 +6,7 @@ import { dashboardPath } from '../utils/authRedirect';
 function loginPathForRoles(roles) {
   if (!roles || roles.length === 0) return '/login';
   if (roles.length === 1) {
-    if (roles[0] === 'clinic') return '/clinic/login';
+    if (roles[0] === 'clinic' || roles[0] === 'clinic_staff') return '/clinic/login';
     if (roles[0] === 'doctor') return '/doctor/login';
     if (roles[0] === 'patient') return '/patient/login';
   }

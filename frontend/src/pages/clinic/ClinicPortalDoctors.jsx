@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../../components/FaIcon';
 import BulkInvitePanel from '../../components/clinic/BulkInvitePanel';
-import { CLINIC_NAV } from '../../constants/clinicNav';
+import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
 import { clinicPortal } from '../../services/api';
+import useClinicPortal from '../../hooks/useClinicPortal';
 
 export default function ClinicPortalDoctors() {
+  const { isAdminMode, can, loading: boot } = useClinicPortal();
   const [clinicId, setClinicId] = useState(null);
   const [doctors, setDoctors] = useState([]);
   const [requests, setRequests] = useState([]);
@@ -41,8 +43,12 @@ export default function ClinicPortalDoctors() {
   }, []);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    if (isAdminMode && can('doctors.manage')) load();
+  }, [load, isAdminMode, can]);
+
+  if (!boot && (!isAdminMode || !can('doctors.manage'))) {
+    return <Navigate to="/clinic-portal" replace />;
+  }
 
   const invite = async (e) => {
     e.preventDefault();
@@ -91,13 +97,8 @@ export default function ClinicPortalDoctors() {
   };
 
   return (
-    <DashboardLayout links={CLINIC_NAV} variant="clinic">
+    <ClinicPortalShell title="Doctors" subtitle="Invite doctors, approve join requests, or remove linked doctors">
       <div className="space-y-6 max-w-4xl">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Doctors</h1>
-          <p className="text-sm text-slate-500 mt-1">Invite doctors, approve join requests, or remove linked doctors</p>
-        </div>
-
         <form onSubmit={invite} className="glass-card !p-5 grid sm:grid-cols-2 gap-3">
           <h2 className="font-bold sm:col-span-2 flex items-center gap-2">
             <FaIcon icon="fa-envelope" className="text-primary-600" />
@@ -210,6 +211,6 @@ export default function ClinicPortalDoctors() {
           </>
         )}
       </div>
-    </DashboardLayout>
+    </ClinicPortalShell>
   );
 }

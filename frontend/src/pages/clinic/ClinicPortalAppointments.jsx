@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
-import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../../components/FaIcon';
-import { CLINIC_NAV } from '../../constants/clinicNav';
+import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
 import { clinicPortal } from '../../services/api';
 import useClinicPortal from '../../hooks/useClinicPortal';
 import { STATUS_STYLES, TYPE_ICONS, formatTime, formatType } from '../../utils/appointmentListUtils';
@@ -20,7 +19,7 @@ function money(n) {
 }
 
 export default function ClinicPortalAppointments() {
-  const { clinicId, loading: bootLoading } = useClinicPortal();
+  const { clinicId, loading: bootLoading, can } = useClinicPortal();
   const [rows, setRows] = useState([]);
   const [summary, setSummary] = useState({});
   const [loading, setLoading] = useState(true);
@@ -28,7 +27,8 @@ export default function ClinicPortalAppointments() {
   const [q, setQ] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
-  const [view, setView] = useState('list'); // list | today
+  const [view, setView] = useState('list');
+  const [acting, setActing] = useState(null);
 
   const load = useCallback(async () => {
     if (!clinicId) return;
@@ -66,36 +66,98 @@ export default function ClinicPortalAppointments() {
     [rows]
   );
 
-  return (
-    <DashboardLayout links={CLINIC_NAV} variant="clinic">
-      <div className="space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Appointments</h1>
-            <p className="text-sm text-slate-500 mt-1">All clinic bookings across linked doctors</p>
-          </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              className={`px-3 py-1.5 rounded-full text-sm font-medium ${
-                view === 'today' ? 'bg-teal-600 text-white' : 'bg-white border border-slate-200 text-slate-600'
-              }`}
-              onClick={() => setView('today')}
-            >
-              Today ({todayCount || '…'})
-            </button>
-            <button
-              type="button"
-              className={`px-3 py-1.5 rounded-full text-sm font-medium ${
-                view === 'list' ? 'bg-teal-600 text-white' : 'bg-white border border-slate-200 text-slate-600'
-              }`}
-              onClick={() => setView('list')}
-            >
-              All list
-            </button>
-          </div>
-        </div>
+  const canManage = can('appointments.manage');
+  const canBill = can('billing.collect');
 
+  const checkIn = async (a) => {
+    setActing(a.id);
+    try {
+      await clinicPortal.updateAppointment(clinicId, a.id, { check_in: true });
+      toast.success('Checked in');
+      load();
+    } catch (e) {
+      toast.error(e.message || 'Check-in failed');
+    } finally {
+      setActing(null);
+    }
+  };
+
+  const setApptStatus = async (a, next) => {
+    setActing(a.id);
+    try {
+      await clinicPortal.updateAppointment(clinicId, a.id, { status: next });
+      toast.success(`Marked ${next}`);
+      load();
+    } catch (e) {
+      toast.error(e.message || 'Update failed');
+    } finally {
+      setActing(null);
+    }
+  };
+
+  const collect = async (a) => {
+    if (!window.confirm(`Collect payment of ${money(a.amount)}?`)) return;
+    setActing(a.id);
+    try {
+      await clinicPortal.collectPayment(clinicId, a.id, { method: 'cash' });
+      toast.success('Payment collected');
+      load();
+    } catch (e) {
+      toast.error(e.message || 'Payment failed');
+    } finally {
+      setActing(null);
+    }
+  };
+
+  const printSlip = (a) => {
+    const w = window.open('', '_blank', 'width=420,height=600');
+    if (!w) return;
+    w.document.write(`<!doctype html><html><head><title>Appointment slip</title>
+      <style>body{font-family:system-ui,sans-serif;padding:24px;color:#0f172a}
+      h1{font-size:18px;margin:0 0 8px}p{margin:4px 0;font-size:13px}
+      .box{border:1px solid #cbd5e1;border-radius:12px;padding:16px;margin-top:12px}</style></head><body>
+      <h1>The Urban Physio — Appointment Slip</h1>
+      <div class="box">
+        <p><strong>${a.patient_name || 'Patient'}</strong></p>
+        <p>Booking: ${a.booking_id || a.id}</p>
+        <p>Doctor: ${a.doctor_name || '—'}</p>
+        <p>Date: ${a.appointment_date} · ${formatTime(a.start_time)}</p>
+        <p>Type: ${formatType(a.consultation_type)}</p>
+        <p>Status: ${a.status}</p>
+        <p>Amount: ${money(a.amount)} (${a.payment_status || 'unpaid'})</p>
+      </div>
+      <script>window.print()</script></body></html>`);
+    w.document.close();
+  };
+
+  return (
+    <ClinicPortalShell
+      title="Appointments"
+      subtitle="Queue, check-in, reschedule status and payment collection"
+      actions={
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+              view === 'today' ? 'bg-teal-600 text-white' : 'bg-white border border-slate-200 text-slate-600'
+            }`}
+            onClick={() => setView('today')}
+          >
+            Today ({todayCount || '…'})
+          </button>
+          <button
+            type="button"
+            className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+              view === 'list' ? 'bg-teal-600 text-white' : 'bg-white border border-slate-200 text-slate-600'
+            }`}
+            onClick={() => setView('list')}
+          >
+            All list
+          </button>
+        </div>
+      }
+    >
+      <div className="space-y-5">
         <div className="grid sm:grid-cols-4 gap-3">
           {[
             ['Total shown', summary.total ?? rows.length, 'fa-calendar'],
@@ -162,6 +224,7 @@ export default function ClinicPortalAppointments() {
                     <th className="px-4 py-3">Type</th>
                     <th className="px-4 py-3">Amount</th>
                     <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -184,17 +247,49 @@ export default function ClinicPortalAppointments() {
                           {formatType(a.consultation_type)}
                         </span>
                       </td>
-                      <td className="px-4 py-3 font-medium">{money(a.amount)}</td>
+                      <td className="px-4 py-3 font-medium">
+                        {money(a.amount)}
+                        {a.payment_status !== 'paid' && Number(a.amount) > 0 && (
+                          <span className="block text-[10px] text-rose-600 uppercase font-bold">Unpaid</span>
+                        )}
+                      </td>
                       <td className="px-4 py-3">
                         <span className={`text-xs px-2 py-0.5 rounded-full border capitalize ${STATUS_STYLES[a.status] || STATUS_STYLES.pending}`}>
                           {a.status}
                         </span>
                       </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col gap-1 items-start">
+                          {canManage && a.status === 'pending' && (
+                            <button type="button" disabled={acting === a.id} onClick={() => checkIn(a)} className="text-[11px] font-semibold text-teal-700 hover:underline">
+                              Check in
+                            </button>
+                          )}
+                          {canManage && a.status === 'confirmed' && (
+                            <button type="button" disabled={acting === a.id} onClick={() => setApptStatus(a, 'completed')} className="text-[11px] font-semibold text-emerald-700 hover:underline">
+                              Complete
+                            </button>
+                          )}
+                          {canManage && !['cancelled', 'completed'].includes(a.status) && (
+                            <button type="button" disabled={acting === a.id} onClick={() => setApptStatus(a, 'cancelled')} className="text-[11px] font-semibold text-rose-600 hover:underline">
+                              Cancel
+                            </button>
+                          )}
+                          {canBill && a.payment_status !== 'paid' && Number(a.amount) > 0 && (
+                            <button type="button" disabled={acting === a.id} onClick={() => collect(a)} className="text-[11px] font-semibold text-violet-700 hover:underline">
+                              Collect pay
+                            </button>
+                          )}
+                          <button type="button" onClick={() => printSlip(a)} className="text-[11px] font-semibold text-slate-600 hover:underline">
+                            Print slip
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                   {!rows.length && (
                     <tr>
-                      <td colSpan={7} className="px-4 py-12 text-center text-slate-500">
+                      <td colSpan={8} className="px-4 py-12 text-center text-slate-500">
                         No appointments match these filters
                       </td>
                     </tr>
@@ -205,6 +300,6 @@ export default function ClinicPortalAppointments() {
           )}
         </div>
       </div>
-    </DashboardLayout>
+    </ClinicPortalShell>
   );
 }

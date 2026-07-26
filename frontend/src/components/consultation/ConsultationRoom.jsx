@@ -1,0 +1,678 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import FaIcon from '../FaIcon';
+import DocumentsManager from '../documents/DocumentsManager';
+import {
+  consultation,
+  exercisePrescriptions,
+  exercises as exercisesApi,
+  treatmentJourney,
+} from '../../services/api';
+import { formatTime } from '../../utils/appointmentListUtils';
+
+const TABS = [
+  { id: 'video', label: 'Video Call', icon: 'fa-video' },
+  { id: 'documents', label: 'Documents', icon: 'fa-folder-open' },
+  { id: 'exercises', label: 'Exercise Explain', icon: 'fa-dumbbell' },
+  { id: 'prescription', label: 'Prescription', icon: 'fa-file-prescription' },
+];
+
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(`${String(d).slice(0, 10)}T12:00:00`).toLocaleDateString('en-IN', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+function youtubeEmbed(url) {
+  if (!url) return null;
+  const m = String(url).match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{6,})/);
+  return m ? `https://www.youtube.com/embed/${m[1]}` : null;
+}
+
+function jitsiEmbedUrl(link) {
+  if (!link) return null;
+  try {
+    const u = new URL(link);
+    // meet.jit.si / custom jitsi — append config to hide some chrome in iframe
+    const sep = u.search ? '&' : '?';
+    return `${link}${sep}config.startWithAudioMuted=false&config.startWithVideoMuted=false&interfaceConfig.DISABLE_JOIN_LEAVE_NOTIFICATIONS=true`;
+  } catch {
+    return link;
+  }
+}
+
+function StatusPill({ join, status }) {
+  if (status === 'confirmed' && join?.can_join) {
+    return <span className="rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold px-2.5 py-1">Live · Ready to join</span>;
+  }
+  if (status === 'confirmed' && join?.is_today) {
+    return <span className="rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[11px] font-semibold px-2.5 py-1">Today · Preparing</span>;
+  }
+  if (status === 'confirmed') {
+    return <span className="rounded-full bg-sky-50 text-sky-700 border border-sky-200 text-[11px] font-semibold px-2.5 py-1">Confirmed</span>;
+  }
+  return <span className="rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[11px] font-semibold px-2.5 py-1 capitalize">{status}</span>;
+}
+
+/* ---------- Video panel ---------- */
+function VideoPanel({ room, canStart }) {
+  const [embedded, setEmbedded] = useState(false);
+  const link = room.appointment?.google_meet_link;
+  const embed = jitsiEmbedUrl(link);
+  const join = room.join || {};
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-2xl border border-slate-100 bg-slate-900 text-white overflow-hidden min-h-[320px] md:min-h-[480px] relative">
+        {embedded && embed ? (
+          <iframe
+            title="Video consultation"
+            src={embed}
+            allow="camera; microphone; fullscreen; display-capture; autoplay"
+            className="absolute inset-0 w-full h-full border-0"
+          />
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mb-4">
+              <FaIcon icon="fa-video" className="text-2xl text-primary-300" />
+            </div>
+            <h3 className="text-lg font-bold">Online Video Consultation</h3>
+            <p className="text-sm text-slate-300 mt-1 max-w-md">
+              {join.reason || 'Start the video call when you and the other person are ready. Camera & mic permission will be requested.'}
+            </p>
+            <div className="flex flex-wrap gap-2 mt-5 justify-center">
+              {canStart && link ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setEmbedded(true)}
+                    className="inline-flex items-center gap-2 rounded-lg bg-primary-500 hover:bg-primary-600 text-white font-semibold text-sm px-4 py-2.5"
+                  >
+                    <FaIcon icon="fa-play" /> Start in room
+                  </button>
+                  <a
+                    href={link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold text-sm px-4 py-2.5"
+                  >
+                    <FaIcon icon="fa-arrow-up-right-from-square" /> Open in new tab
+                  </a>
+                </>
+              ) : (
+                <span className="text-sm text-slate-400">{join.reason || 'Video not available yet'}</span>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+      {embedded && link && (
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={() => setEmbedded(false)} className="btn-outline text-sm py-1.5 px-3">
+            <FaIcon icon="fa-xmark" className="mr-1.5" /> Close video
+          </button>
+          <a href={link} target="_blank" rel="noopener noreferrer" className="btn-outline text-sm py-1.5 px-3">
+            <FaIcon icon="fa-arrow-up-right-from-square" className="mr-1.5" /> Pop out
+          </a>
+        </div>
+      )}
+      <div className="grid sm:grid-cols-3 gap-3 text-sm">
+        <div className="rounded-xl border border-slate-100 bg-white p-3">
+          <p className="text-[11px] uppercase text-slate-400 font-semibold">Appointment</p>
+          <p className="font-semibold text-slate-800 mt-0.5">{fmtDate(room.appointment?.appointment_date)}</p>
+          <p className="text-slate-500 text-xs mt-0.5">
+            {formatTime(room.appointment?.start_time)}
+            {room.appointment?.end_time ? ` – ${formatTime(room.appointment.end_time)}` : ''}
+          </p>
+        </div>
+        <div className="rounded-xl border border-slate-100 bg-white p-3">
+          <p className="text-[11px] uppercase text-slate-400 font-semibold">Patient</p>
+          <p className="font-semibold text-slate-800 mt-0.5">
+            {room.patient?.first_name} {room.patient?.last_name}
+          </p>
+        </div>
+        <div className="rounded-xl border border-slate-100 bg-white p-3">
+          <p className="text-[11px] uppercase text-slate-400 font-semibold">Doctor</p>
+          <p className="font-semibold text-slate-800 mt-0.5">
+            Dr. {room.doctor?.first_name} {room.doctor?.last_name}
+          </p>
+          {room.doctor?.specialization && <p className="text-xs text-primary-600 mt-0.5">{room.doctor.specialization}</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Exercise panel ---------- */
+function ExercisePanel({ room, onReload }) {
+  const isDoctor = room.permissions?.can_prescribe;
+  const [library, setLibrary] = useState([]);
+  const [selectedPlanId, setSelectedPlanId] = useState(null);
+  const [detail, setDetail] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    title: 'Home exercise plan',
+    diagnosis_notes: '',
+    therapist_notes: '',
+    start_date: new Date().toISOString().slice(0, 10),
+    exercises: [{ exercise_id: '', sets: 3, reps: '10', frequency: 'Daily', special_instructions: '' }],
+  });
+
+  const plans = room.exercise_plans || [];
+
+  useEffect(() => {
+    if (isDoctor) {
+      exercisesApi.list().then((r) => setLibrary(r.data || [])).catch(() => {});
+    }
+  }, [isDoctor]);
+
+  useEffect(() => {
+    if (!selectedPlanId && plans.length) setSelectedPlanId(plans[0].id);
+  }, [plans, selectedPlanId]);
+
+  const loadDetail = useCallback(
+    (id) => {
+      if (!id) {
+        setDetail(null);
+        return;
+      }
+      setDetailLoading(true);
+      consultation
+        .exerciseDetail(room.appointment.id, id)
+        .then((r) => setDetail(r.data))
+        .catch((e) => toast.error(e.message || 'Could not load exercises'))
+        .finally(() => setDetailLoading(false));
+    },
+    [room.appointment.id]
+  );
+
+  useEffect(() => {
+    loadDetail(selectedPlanId);
+  }, [selectedPlanId, loadDetail]);
+
+  const setEx = (i, k, v) => {
+    setForm((f) => {
+      const exercises = [...f.exercises];
+      exercises[i] = { ...exercises[i], [k]: v };
+      return { ...f, exercises };
+    });
+  };
+
+  const createPlan = async () => {
+    if (!form.exercises.some((e) => e.exercise_id)) {
+      toast.error('Select at least one exercise');
+      return;
+    }
+    setSaving(true);
+    try {
+      await exercisePrescriptions.create({
+        patient_id: room.patient.id,
+        title: form.title || 'Home exercise plan',
+        diagnosis_notes: form.diagnosis_notes,
+        therapist_notes: form.therapist_notes,
+        start_date: form.start_date,
+        exercises: form.exercises
+          .filter((e) => e.exercise_id)
+          .map((e) => ({
+            exercise_id: Number(e.exercise_id),
+            sets: Number(e.sets) || 3,
+            reps: String(e.reps || '10'),
+            frequency: e.frequency || 'Daily',
+            special_instructions: e.special_instructions || '',
+          })),
+      });
+      toast.success('Exercise plan shared with patient');
+      setShowCreate(false);
+      onReload?.();
+    } catch (e) {
+      toast.error(e.message || 'Could not create plan');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-slate-600">Explain exercises live — show videos, sets & instructions side-by-side with the call.</p>
+        {isDoctor && (
+          <button type="button" onClick={() => setShowCreate((v) => !v)} className="btn-primary text-sm py-1.5 px-3">
+            <FaIcon icon="fa-plus" className="mr-1.5" /> {showCreate ? 'Cancel' : 'Prescribe exercises'}
+          </button>
+        )}
+      </div>
+
+      {showCreate && isDoctor && (
+        <div className="rounded-2xl border border-primary-100 bg-primary-50/40 p-4 space-y-3">
+          <input
+            className="input w-full"
+            placeholder="Plan title"
+            value={form.title}
+            onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+          />
+          <textarea
+            className="input w-full min-h-[60px]"
+            placeholder="Diagnosis notes (optional)"
+            value={form.diagnosis_notes}
+            onChange={(e) => setForm((f) => ({ ...f, diagnosis_notes: e.target.value }))}
+          />
+          {form.exercises.map((row, i) => (
+            <div key={i} className="grid sm:grid-cols-12 gap-2 items-start bg-white rounded-xl p-3 border border-slate-100">
+              <select
+                className="input sm:col-span-5"
+                value={row.exercise_id}
+                onChange={(e) => setEx(i, 'exercise_id', e.target.value)}
+              >
+                <option value="">Select exercise…</option>
+                {library.map((ex) => (
+                  <option key={ex.id} value={ex.id}>
+                    {ex.name}
+                  </option>
+                ))}
+              </select>
+              <input className="input sm:col-span-2" type="number" min="1" placeholder="Sets" value={row.sets} onChange={(e) => setEx(i, 'sets', e.target.value)} />
+              <input className="input sm:col-span-2" placeholder="Reps" value={row.reps} onChange={(e) => setEx(i, 'reps', e.target.value)} />
+              <input className="input sm:col-span-3" placeholder="Instructions for patient" value={row.special_instructions} onChange={(e) => setEx(i, 'special_instructions', e.target.value)} />
+            </div>
+          ))}
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="btn-outline text-sm py-1.5 px-3"
+              onClick={() =>
+                setForm((f) => ({
+                  ...f,
+                  exercises: [...f.exercises, { exercise_id: '', sets: 3, reps: '10', frequency: 'Daily', special_instructions: '' }],
+                }))
+              }
+            >
+              <FaIcon icon="fa-plus" className="mr-1" /> Add exercise
+            </button>
+            <button type="button" disabled={saving} onClick={createPlan} className="btn-primary text-sm py-1.5 px-3">
+              {saving ? 'Saving…' : 'Share with patient'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {plans.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-slate-400 text-sm">
+          No exercise plans yet for this patient.
+        </div>
+      ) : (
+        <div className="grid lg:grid-cols-[220px_1fr] gap-3">
+          <div className="space-y-1.5">
+            {plans.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => setSelectedPlanId(p.id)}
+                className={`w-full text-left rounded-xl border px-3 py-2.5 text-sm transition ${
+                  selectedPlanId === p.id ? 'border-primary-300 bg-primary-50 text-primary-800' : 'border-slate-100 bg-white hover:border-slate-200'
+                }`}
+              >
+                <p className="font-semibold truncate">{p.title}</p>
+                <p className="text-[11px] text-slate-500">{p.item_count} exercises · {p.status}</p>
+              </button>
+            ))}
+          </div>
+          <div className="space-y-3">
+            {detailLoading ? (
+              <div className="p-8 text-center text-slate-400">
+                <FaIcon icon="fa-spinner" className="fa-spin text-xl" />
+              </div>
+            ) : !detail ? (
+              <p className="text-sm text-slate-400 p-4">Select a plan</p>
+            ) : (
+              (detail.exercises || []).map((ex) => {
+                const yt = youtubeEmbed(ex.video_url);
+                return (
+                  <div key={ex.id} className="rounded-2xl border border-slate-100 bg-white overflow-hidden">
+                    <div className="grid md:grid-cols-2 gap-0">
+                      <div className="bg-slate-900 min-h-[180px] relative">
+                        {yt ? (
+                          <iframe title={ex.exercise_name} src={yt} className="absolute inset-0 w-full h-full border-0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+                        ) : ex.image_url ? (
+                          <img src={ex.image_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center text-slate-500">
+                            <FaIcon icon="fa-person-walking" className="text-3xl" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-4">
+                        <h4 className="font-bold text-slate-900">{ex.exercise_name}</h4>
+                        <p className="text-xs text-slate-500 mt-0.5 capitalize">
+                          {ex.body_area || 'General'} · {ex.difficulty || 'beginner'}
+                          {ex.equipment ? ` · ${ex.equipment}` : ''}
+                        </p>
+                        <p className="text-sm font-semibold text-primary-700 mt-2">
+                          {ex.sets} sets × {ex.reps} reps
+                          {ex.hold_seconds ? ` · hold ${ex.hold_seconds}s` : ''} · {ex.frequency || 'Daily'}
+                        </p>
+                        {ex.special_instructions && (
+                          <p className="text-sm text-amber-800 bg-amber-50 rounded-lg px-2.5 py-1.5 mt-2">{ex.special_instructions}</p>
+                        )}
+                        {ex.instructions && (
+                          <p className="text-sm text-slate-600 mt-2 whitespace-pre-line line-clamp-6">{ex.instructions}</p>
+                        )}
+                        {ex.precautions && (
+                          <p className="text-xs text-rose-600 mt-2">
+                            <FaIcon icon="fa-triangle-exclamation" className="mr-1" />
+                            {ex.precautions}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Field({ label, children }) {
+  return (
+    <label className="block">
+      <span className="text-[11px] uppercase tracking-wide text-slate-400 font-semibold">{label}</span>
+      <div className="mt-1">{children}</div>
+    </label>
+  );
+}
+
+/* ---------- Prescription / notes panel ---------- */
+function PrescriptionPanel({ room, onReload }) {
+  const canWrite = room.permissions?.can_write_notes;
+  const existing = room.session_note;
+  const [form, setForm] = useState({
+    pain_score: existing?.pain_score ?? '',
+    medicines: existing?.medicines || '',
+    techniques: existing?.techniques || '',
+    exercises: existing?.exercises || '',
+    doctor_notes: existing?.doctor_notes || '',
+    progress_notes: existing?.progress_notes || '',
+    next_visit: existing?.next_visit || '',
+  });
+  const [saving, setSaving] = useState(false);
+  const [noteId, setNoteId] = useState(existing?.id || null);
+
+  useEffect(() => {
+    if (existing) {
+      setNoteId(existing.id);
+      setForm({
+        pain_score: existing.pain_score ?? '',
+        medicines: existing.medicines || '',
+        techniques: existing.techniques || '',
+        exercises: existing.exercises || '',
+        doctor_notes: existing.doctor_notes || '',
+        progress_notes: existing.progress_notes || '',
+        next_visit: existing.next_visit || '',
+      });
+    }
+  }, [existing]);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const payload = {
+        patient_id: room.patient.id,
+        appointment_id: room.appointment.id,
+        clinic_id: room.appointment.clinic_id || undefined,
+        visit_date: room.appointment.appointment_date,
+        visit_time: String(room.appointment.start_time || '').slice(0, 5) || undefined,
+        pain_score: form.pain_score === '' ? null : Number(form.pain_score),
+        medicines: form.medicines,
+        techniques: form.techniques,
+        exercises: form.exercises,
+        doctor_notes: form.doctor_notes,
+        progress_notes: form.progress_notes,
+        next_visit: form.next_visit,
+      };
+      if (noteId) {
+        await treatmentJourney.update(noteId, payload);
+        toast.success('Prescription updated');
+      } else {
+        const res = await treatmentJourney.create(payload);
+        setNoteId(res.data?.id || null);
+        toast.success('Prescription saved — patient can view it now');
+      }
+      onReload?.();
+    } catch (e) {
+      toast.error(e.message || 'Could not save');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!canWrite) {
+    const notes = room.recent_notes || [];
+    return (
+      <div className="space-y-3">
+        <p className="text-sm text-slate-600">Prescriptions and notes from your doctor for this consultation.</p>
+        {notes.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-slate-400 text-sm">
+            No prescription or notes yet. They will appear here once the doctor saves them.
+          </div>
+        ) : (
+          notes.map((n) => (
+            <div
+              key={n.id}
+              className={`rounded-2xl border p-4 ${
+                Number(n.appointment_id) === Number(room.appointment.id)
+                  ? 'border-primary-200 bg-primary-50/30'
+                  : 'border-slate-100 bg-white'
+              }`}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                <p className="font-bold text-slate-900">
+                  Session {n.session_number} · {fmtDate(n.visit_date)}
+                  {Number(n.appointment_id) === Number(room.appointment.id) && (
+                    <span className="ml-2 text-[10px] uppercase bg-primary-600 text-white rounded-full px-2 py-0.5">This visit</span>
+                  )}
+                </p>
+                {n.pain_score != null && (
+                  <span className="text-xs font-semibold text-rose-600">Pain {n.pain_score}/10</span>
+                )}
+              </div>
+              {n.medicines && (
+                <p className="text-sm mt-1">
+                  <span className="font-semibold text-slate-700">Medicines: </span>
+                  {n.medicines}
+                </p>
+              )}
+              {n.doctor_notes && (
+                <p className="text-sm mt-1 whitespace-pre-line">
+                  <span className="font-semibold text-slate-700">Doctor notes: </span>
+                  {n.doctor_notes}
+                </p>
+              )}
+              {n.exercises && (
+                <p className="text-sm mt-1">
+                  <span className="font-semibold text-slate-700">Exercises: </span>
+                  {n.exercises}
+                </p>
+              )}
+              {n.techniques && (
+                <p className="text-sm mt-1">
+                  <span className="font-semibold text-slate-700">Techniques: </span>
+                  {n.techniques}
+                </p>
+              )}
+              {n.next_visit && (
+                <p className="text-sm mt-1 text-sky-700">
+                  <FaIcon icon="fa-calendar-day" className="mr-1" />
+                  Next: {n.next_visit}
+                </p>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-slate-600">
+        Write prescription & clinical notes for this visit. Patient sees them instantly in their portal.
+      </p>
+      <div className="grid sm:grid-cols-2 gap-3">
+        <Field label="Pain score (0–10)">
+          <input
+            type="number"
+            min="0"
+            max="10"
+            className="input w-full"
+            value={form.pain_score}
+            onChange={(e) => setForm((f) => ({ ...f, pain_score: e.target.value }))}
+          />
+        </Field>
+        <Field label="Next visit">
+          <input
+            className="input w-full"
+            placeholder="e.g. Follow-up in 7 days"
+            value={form.next_visit}
+            onChange={(e) => setForm((f) => ({ ...f, next_visit: e.target.value }))}
+          />
+        </Field>
+        <Field label="Medicines / advice">
+          <textarea className="input w-full min-h-[72px]" value={form.medicines} onChange={(e) => setForm((f) => ({ ...f, medicines: e.target.value }))} />
+        </Field>
+        <Field label="Techniques used">
+          <textarea className="input w-full min-h-[72px]" value={form.techniques} onChange={(e) => setForm((f) => ({ ...f, techniques: e.target.value }))} />
+        </Field>
+        <Field label="Exercises advised">
+          <textarea className="input w-full min-h-[72px]" value={form.exercises} onChange={(e) => setForm((f) => ({ ...f, exercises: e.target.value }))} />
+        </Field>
+        <Field label="Progress notes">
+          <textarea className="input w-full min-h-[72px]" value={form.progress_notes} onChange={(e) => setForm((f) => ({ ...f, progress_notes: e.target.value }))} />
+        </Field>
+        <div className="sm:col-span-2">
+          <Field label="Doctor notes / prescription">
+            <textarea className="input w-full min-h-[100px]" value={form.doctor_notes} onChange={(e) => setForm((f) => ({ ...f, doctor_notes: e.target.value }))} />
+          </Field>
+        </div>
+      </div>
+      <button type="button" disabled={saving} onClick={save} className="btn-primary text-sm py-2 px-4">
+        <FaIcon icon="fa-floppy-disk" className="mr-1.5" />
+        {saving ? 'Saving…' : noteId ? 'Update prescription' : 'Save & share with patient'}
+      </button>
+    </div>
+  );
+}
+
+/**
+ * Shared Online Consultation Room.
+ * @param {{ appointmentId: number|string, backTo: string, layout: (props: {children: React.ReactNode}) => React.ReactNode }} props
+ */
+export default function ConsultationRoom({ appointmentId, backTo, layout: Layout }) {
+  const navigate = useNavigate();
+  const [room, setRoom] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState('video');
+
+  const load = useCallback((opts = {}) => {
+    // Soft refresh keeps the video iframe mounted during prescribe/save.
+    if (!opts.silent) setLoading(true);
+    consultation
+      .room(appointmentId)
+      .then((r) => setRoom(r.data))
+      .catch((e) => {
+        toast.error(e.message || 'Could not open consultation room');
+        navigate(backTo);
+      })
+      .finally(() => setLoading(false));
+  }, [appointmentId, backTo, navigate]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const softReload = useCallback(() => load({ silent: true }), [load]);
+
+  const canStart = useMemo(() => {
+    if (!room) return false;
+    return room.permissions?.can_start_video || room.join?.can_join;
+  }, [room]);
+
+  const content = loading || !room ? (
+    <div className="glass-card p-12 text-center text-slate-400">
+      <FaIcon icon="fa-spinner" className="fa-spin text-2xl" />
+      <p className="text-sm mt-2">Opening consultation room…</p>
+    </div>
+  ) : (
+    <div className="space-y-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div>
+          <div className="flex flex-wrap items-center gap-2 mb-1">
+            <Link to={backTo} className="text-sm text-slate-500 hover:text-primary-600">
+              <FaIcon icon="fa-arrow-left" className="mr-1" /> Back
+            </Link>
+            <StatusPill join={room.join} status={room.appointment.status} />
+          </div>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Consultation Room</h1>
+          <p className="text-sm text-slate-500 mt-0.5">
+            {room.appointment.booking_id} · {fmtDate(room.appointment.appointment_date)} ·{' '}
+            {formatTime(room.appointment.start_time)}
+            {room.viewer === 'doctor'
+              ? ` · ${room.patient.first_name} ${room.patient.last_name}`
+              : ` · Dr. ${room.doctor.first_name} ${room.doctor.last_name}`}
+          </p>
+        </div>
+        {canStart && room.appointment.google_meet_link && (
+          <button type="button" onClick={() => setTab('video')} className="btn-primary inline-flex items-center gap-2 text-sm self-start">
+            <FaIcon icon="fa-video" /> Join Video Call
+          </button>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-1.5 p-1 rounded-xl bg-slate-100/80">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setTab(t.id)}
+            className={`flex-1 min-w-[120px] inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition ${
+              tab === t.id ? 'bg-white text-primary-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <FaIcon icon={t.icon} />
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="glass-card !p-4 md:!p-5">
+        {tab === 'video' && <VideoPanel room={room} canStart={canStart} />}
+        {tab === 'documents' && (
+          <div>
+            <p className="text-sm text-slate-600 mb-3">
+              Share MRI, X-ray, reports or any file during the call. Both of you see the same folder.
+            </p>
+            <DocumentsManager
+              initialFilters={{
+                patient_id: room.patient.id,
+                appointment_id: room.appointment.id,
+              }}
+            />
+          </div>
+        )}
+        {tab === 'exercises' && <ExercisePanel room={room} onReload={softReload} />}
+        {tab === 'prescription' && <PrescriptionPanel room={room} onReload={softReload} />}
+      </div>
+    </div>
+  );
+
+  return <Layout>{content}</Layout>;
+}

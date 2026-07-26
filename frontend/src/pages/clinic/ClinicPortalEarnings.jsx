@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -11,9 +11,8 @@ import {
 } from 'chart.js';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import toast from 'react-hot-toast';
-import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../../components/FaIcon';
-import { CLINIC_NAV } from '../../constants/clinicNav';
+import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
 import { clinicPortal } from '../../services/api';
 import useClinicPortal from '../../hooks/useClinicPortal';
 
@@ -24,7 +23,7 @@ function money(n) {
 }
 
 export default function ClinicPortalEarnings() {
-  const { clinicId, loading: bootLoading } = useClinicPortal();
+  const { clinicId, loading: bootLoading, isAdminMode, can } = useClinicPortal();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -43,8 +42,8 @@ export default function ClinicPortalEarnings() {
   }, [clinicId]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    if (clinicId && isAdminMode && can('earnings.view')) load();
+  }, [load, clinicId, isAdminMode, can]);
 
   const totals = data?.totals || {};
   const byMonth = data?.by_month || [];
@@ -91,20 +90,22 @@ export default function ClinicPortalEarnings() {
     { label: 'Completed sessions', value: totals.completed_sessions ?? 0, icon: 'fa-circle-check', tone: 'text-sky-600 bg-sky-100' },
   ];
 
-  return (
-    <DashboardLayout links={CLINIC_NAV} variant="clinic">
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Earnings</h1>
-            <p className="text-sm text-slate-500 mt-1">Clinic revenue from confirmed &amp; completed appointments</p>
-          </div>
-          <Link to="/clinic-portal/appointments" className="btn-outline text-sm inline-flex items-center gap-2">
-            <FaIcon icon="fa-calendar-check" />
-            View appointments
-          </Link>
-        </div>
+  if (!bootLoading && (!isAdminMode || !can('earnings.view'))) {
+    return <Navigate to="/clinic-portal" replace />;
+  }
 
+  return (
+    <ClinicPortalShell
+      title="Finance & Earnings"
+      subtitle="Clinic revenue from confirmed & completed appointments"
+      actions={
+        <Link to="/clinic-portal/appointments" className="btn-outline text-sm inline-flex items-center gap-2">
+          <FaIcon icon="fa-calendar-check" />
+          View appointments
+        </Link>
+      }
+    >
+      <div className="space-y-6">
         {bootLoading || loading ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {[1, 2, 3, 4].map((i) => (
@@ -197,6 +198,6 @@ export default function ClinicPortalEarnings() {
           </>
         )}
       </div>
-    </DashboardLayout>
+    </ClinicPortalShell>
   );
 }

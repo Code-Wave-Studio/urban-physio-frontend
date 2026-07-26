@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../../components/FaIcon';
 import BulkInvitePanel from '../../components/clinic/BulkInvitePanel';
 import ClinicOfflinePatientForm from '../../components/clinic/ClinicOfflinePatientForm';
-import { CLINIC_NAV } from '../../constants/clinicNav';
+import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
 import { clinicPortal } from '../../services/api';
 import useClinicPortal from '../../hooks/useClinicPortal';
 
@@ -92,15 +91,11 @@ export default function ClinicPortalPatients() {
   };
 
   return (
-    <DashboardLayout links={CLINIC_NAV} variant="clinic">
+    <ClinicPortalShell
+      title="Patients"
+      subtitle="Walk-in (offline) patients, invites, and people who booked at your clinic"
+    >
       <div className="space-y-5">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Patients</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Walk-in (offline) patients, invites, and people who booked at your clinic
-          </p>
-        </div>
-
         <div className="grid sm:grid-cols-4 gap-3">
           <div className="glass-card !p-4">
             <p className="text-xs text-slate-500">On roster</p>
@@ -231,6 +226,6 @@ export default function ClinicPortalPatients() {
           )}
         </div>
       </div>
-    </DashboardLayout>
+    </ClinicPortalShell>
   );
 }

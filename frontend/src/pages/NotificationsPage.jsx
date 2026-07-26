@@ -8,6 +8,7 @@ import { ADMIN_NAV } from '../constants/adminNav';
 import { DOCTOR_NAV } from '../constants/doctorNav';
 import { PATIENT_NAV } from '../constants/patientNav';
 import { CLINIC_NAV } from '../constants/clinicNav';
+import ClinicPortalShell from '../components/clinic/ClinicPortalShell';
 import { getNotificationPath } from '../utils/notificationRoutes';
 import toast from 'react-hot-toast';
 
@@ -72,7 +73,7 @@ const PREF_CHANNELS = [
 
 function resolveRole(hasRole) {
   if (hasRole('super_admin', 'admin')) return 'admin';
-  if (hasRole('clinic')) return 'clinic';
+  if (hasRole('clinic', 'clinic_staff')) return 'clinic';
   if (hasRole('doctor')) return 'doctor';
   return 'patient';
 }
@@ -108,7 +109,7 @@ export default function NotificationsPage() {
         subtitle: 'Appointments, clinics, payments, reviews, and patient reports.',
       };
     }
-    if (hasRole('clinic')) {
+    if (hasRole('clinic', 'clinic_staff')) {
       return {
         links: CLINIC_NAV,
         variant: 'clinic',
@@ -237,8 +238,31 @@ export default function NotificationsPage() {
     }
   };
 
+  const Layout = variant === 'clinic' ? ClinicPortalShell : DashboardLayout;
+  const layoutProps =
+    variant === 'clinic'
+      ? {
+          title: 'Notifications',
+          subtitle,
+          actions: (
+            <div className="flex items-center gap-2 flex-wrap">
+              <button type="button" className="btn-outline text-sm !py-2" onClick={() => setPrefsOpen((v) => !v)}>
+                <FaIcon icon="fa-sliders" className="mr-1.5" /> Preferences
+              </button>
+              <button type="button" className="btn-outline text-sm !py-2" onClick={clearRead}>
+                <FaIcon icon="fa-broom" className="mr-1.5" /> Clear read
+              </button>
+              <button type="button" className="btn-primary text-sm !py-2" onClick={markAll} disabled={!unread.length}>
+                Mark all read
+              </button>
+            </div>
+          ),
+        }
+      : { links, variant };
+
   return (
-    <DashboardLayout links={links} variant={variant}>
+    <Layout {...layoutProps}>
+      {variant !== 'clinic' && (
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-5">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Notifications</h1>
@@ -260,6 +284,7 @@ export default function NotificationsPage() {
           </button>
         </div>
       </div>
+      )}
 
       {prefsOpen && (
         <div className="glass-card !p-4 md:!p-5 mb-5">
@@ -427,6 +452,6 @@ export default function NotificationsPage() {
           })}
         </div>
       )}
-    </DashboardLayout>
+    </Layout>
   );
 }

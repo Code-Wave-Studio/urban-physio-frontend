@@ -269,16 +269,14 @@ export default function PatientAppointments() {
                         {payingId === a.id ? 'Opening…' : `Pay ₹${dueNow.toLocaleString('en-IN')}`}
                       </button>
                     )}
-                    {a.consultation_type === 'online' && a.google_meet_link && a.status === 'confirmed' && (
-                      <a
-                        href={a.google_meet_link}
-                        target="_blank"
-                        rel="noreferrer"
+                    {a.consultation_type === 'online' && a.status === 'confirmed' && (
+                      <Link
+                        to={`/patient/consultation/${a.id}`}
                         className="btn-primary text-sm py-2 px-4 flex-1 lg:flex-none text-center inline-flex items-center justify-center gap-1.5"
                       >
                         <FaIcon icon="fa-video" />
-                        Join Meet
-                      </a>
+                        Enter Consultation
+                      </Link>
                     )}
                     {isInvoiceAvailable(a) && (
                       <button

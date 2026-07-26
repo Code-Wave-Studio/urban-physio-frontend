@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { clinicPortal } from '../services/api';
 
 /**
- * Loads clinic portal "me" + clinic id for scoped API calls.
+ * Loads clinic portal identity + RBAC (portal_role, permissions, switch capability).
  */
 export default function useClinicPortal() {
   const [me, setMe] = useState(null);
@@ -33,11 +33,26 @@ export default function useClinicPortal() {
     reload().catch(() => {});
   }, [reload]);
 
+  const portalRole = me?.portal_role || 'receptionist';
+  const permissions = me?.permissions || [];
+  const canSwitchAdmin = !!me?.can_switch_admin;
+  const isAdminMode = portalRole === 'clinic_admin';
+
+  const can = useMemo(
+    () => (perm) => !perm || permissions.includes(perm),
+    [permissions]
+  );
+
   return {
     me,
     clinic: me?.clinic || null,
     clinicId,
     portalReady: !!me?.portal_ready,
+    portalRole,
+    permissions,
+    canSwitchAdmin,
+    isAdminMode,
+    can,
     loading,
     error,
     reload,

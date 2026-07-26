@@ -4,7 +4,7 @@ import FaIcon from '../../components/FaIcon';
 import GlassModal, { GlassModalBody, GlassModalFooter, GlassModalHeader } from '../../components/GlassModal';
 import { clinicPortal, doctors, exercisePrescriptions, exercises } from '../../services/api';
 import { DOCTOR_NAV } from '../../constants/doctorNav';
-import { CLINIC_NAV } from '../../constants/clinicNav';
+import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
 import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
@@ -45,8 +45,8 @@ function ProgressBar({ percent = 0 }) {
 
 export default function DoctorPrescriptions() {
   const { user } = useAuth();
-  const isClinic = user?.role_slug === 'clinic';
-  const nav = isClinic ? CLINIC_NAV : DOCTOR_NAV;
+  const isClinic = user?.role_slug === 'clinic' || user?.role_slug === 'clinic_staff';
+  const nav = DOCTOR_NAV;
   const variant = isClinic ? 'clinic' : 'doctor';
 
   const [list, setList] = useState([]);
@@ -242,9 +242,22 @@ export default function DoctorPrescriptions() {
 
   const progress = detail?.progress;
   const todayPct = progress?.today?.percent ?? 0;
+  const Layout = isClinic ? ClinicPortalShell : DashboardLayout;
+  const layoutProps = isClinic
+    ? {
+        title: 'Exercise & Rehab Plans',
+        subtitle: 'Assign, update and track patient rehabilitation exercises',
+        actions: (
+          <button type="button" onClick={openCreate} className="btn-primary inline-flex items-center gap-2">
+            <FaIcon icon="fa-plus" /> New plan
+          </button>
+        ),
+      }
+    : { links: nav, variant };
 
   return (
-    <DashboardLayout links={nav} variant={variant}>
+    <Layout {...layoutProps}>
+      {!isClinic && (
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-slate-800">Exercise & Rehab Plans</h1>
@@ -254,6 +267,14 @@ export default function DoctorPrescriptions() {
           <FaIcon icon="fa-plus" /> New plan
         </button>
       </div>
+      )}
+      {isClinic && (
+        <div className="mb-4">
+          <button type="button" onClick={openCreate} className="btn-primary inline-flex items-center gap-2 sm:hidden">
+            <FaIcon icon="fa-plus" /> New plan
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <div className="grid gap-3 sm:grid-cols-2">{[1, 2, 3].map((i) => <div key={i} className="glass-card h-28 animate-pulse" />)}</div>
@@ -537,6 +558,6 @@ export default function DoctorPrescriptions() {
           </GlassModalFooter>
         </form>
       </GlassModal>
-    </DashboardLayout>
+    </Layout>
   );
 }

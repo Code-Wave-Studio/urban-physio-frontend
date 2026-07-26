@@ -510,6 +510,9 @@ export const admin = {
   invoiceSettings: () => api.get('/admin/invoice-settings'),
   repairHtmlEntities: () => api.post('/admin/maintenance/fix-html-entities', {}),
   updateInvoiceSettings: (data) => api.put('/admin/invoice-settings', data),
+  billingOverview: () => api.get('/admin/billing'),
+  updateBillingControls: (data) => api.put('/admin/billing/controls', data),
+  updateClinicBilling: (clinicId, data) => api.put(`/admin/billing/clinics/${clinicId}`, data),
   seoDashboard: () => api.get('/admin/seo/dashboard'),
   seoSettings: () => api.get('/admin/seo/settings'),
   updateSeoSettings: (data) => api.put('/admin/seo/settings', data),
@@ -616,6 +619,10 @@ export const admin = {
   couponRedemptions: (id) => api.get(`/admin/coupons/${id}/redemptions`),
   analyticsOverview: () => api.get('/admin/analytics'),
   analyticsReports: (params) => api.get('/admin/analytics/reports', { params }),
+  analyticsExportUrl: (params) => {
+    const q = new URLSearchParams(params || {}).toString();
+    return `/admin/analytics/export${q ? `?${q}` : ''}`;
+  },
   doctorReviewsList: (params) => api.get('/admin/reviews/doctors', { params }),
   clinicReviewsList: (params) => api.get('/admin/reviews/clinics', { params }),
   moderateDoctorReview: (id, data) => api.put(`/admin/reviews/doctor/${id}`, data),
@@ -643,10 +650,29 @@ export const careers = {
 
 export const clinicPortal = {
   me: () => api.get('/clinic-portal/me'),
+  switchMode: (data) => api.post('/clinic-portal/switch-mode', data),
   updateProfile: (data) => api.put('/clinic-portal/profile', data),
   myClinics: () => api.get('/clinic-portal/clinics'),
   overview: (clinicId) => api.get(`/clinic-portal/${clinicId}/overview`),
+  adminAnalytics: (clinicId) => api.get(`/clinic-portal/${clinicId}/admin-analytics`),
+  receptionDashboard: (clinicId) => api.get(`/clinic-portal/${clinicId}/reception-dashboard`),
   appointments: (clinicId, params) => api.get(`/clinic-portal/${clinicId}/appointments`, { params }),
+  updateAppointment: (clinicId, apptId, data) =>
+    api.patch(`/clinic-portal/${clinicId}/appointments/${apptId}`, data),
+  collectPayment: (clinicId, apptId, data) =>
+    api.post(`/clinic-portal/${clinicId}/appointments/${apptId}/collect-payment`, data),
+  billingOverview: (clinicId) => api.get(`/clinic-portal/${clinicId}/billing/overview`),
+  billingPayments: (clinicId, params) => api.get(`/clinic-portal/${clinicId}/billing/payments`, { params }),
+  billingPending: (clinicId) => api.get(`/clinic-portal/${clinicId}/billing/pending`),
+  billingPackages: (clinicId) => api.get(`/clinic-portal/${clinicId}/billing/packages`),
+  billingInvoices: (clinicId, params) => api.get(`/clinic-portal/${clinicId}/billing/invoices`, { params }),
+  billingSettings: (clinicId) => api.get(`/clinic-portal/${clinicId}/billing/settings`),
+  updateBillingSettings: (clinicId, data) => api.put(`/clinic-portal/${clinicId}/billing/settings`, data),
+  billingCollect: (clinicId, data) => api.post(`/clinic-portal/${clinicId}/billing/collect`, data),
+  billingRefund: (clinicId, paymentId, data) =>
+    api.post(`/clinic-portal/${clinicId}/billing/payments/${paymentId}/refund`, data),
+  billingReceipt: (clinicId, paymentId) =>
+    api.get(`/clinic-portal/${clinicId}/billing/receipts/${paymentId}`),
   patients: (clinicId, params) => api.get(`/clinic-portal/${clinicId}/patients`, { params }),
   earnings: (clinicId) => api.get(`/clinic-portal/${clinicId}/earnings`),
   doctors: (clinicId) => api.get(`/clinic-portal/${clinicId}/doctors`),
@@ -655,6 +681,10 @@ export const clinicPortal = {
   joinRequests: (clinicId) => api.get(`/clinic-portal/${clinicId}/join-requests`),
   decideJoinRequest: (clinicId, requestId, data) =>
     api.post(`/clinic-portal/${clinicId}/join-requests/${requestId}/decide`, data),
+  listStaff: (clinicId) => api.get(`/clinic-portal/${clinicId}/staff`),
+  createStaff: (clinicId, data) => api.post(`/clinic-portal/${clinicId}/staff`, data),
+  updateStaff: (clinicId, staffId, data) => api.put(`/clinic-portal/${clinicId}/staff/${staffId}`, data),
+  removeStaff: (clinicId, staffId) => api.delete(`/clinic-portal/${clinicId}/staff/${staffId}`),
   profileServices: (clinicId) => api.get(`/clinic-portal/${clinicId}/profile-services`),
   createProfileService: (clinicId, data) => api.post(`/clinic-portal/${clinicId}/profile-services`, data),
   updateProfileService: (clinicId, serviceId, data) =>
@@ -710,6 +740,46 @@ export const search = {
   suggest: (params, config = {}) =>
     api.get('/search/suggest', { params, timeout: 15000, ...config }),
   trackClick: (data) => api.post('/search/track', data),
+};
+
+/** Advanced Patient Search — role-scoped (admin / doctor / clinic admin / receptionist) */
+export const patientSearch = {
+  run: (params, config = {}) =>
+    api.get('/search/patients', { params, timeout: SEARCH_TIMEOUT_MS, ...config }),
+  filters: () => api.get('/search/filters'),
+  addTag: (data) => api.post('/search/tags', data),
+  removeTag: (data) => api.delete('/search/tags', { data }),
+};
+
+/** Live Online Consultation Room */
+export const consultation = {
+  room: (appointmentId) => api.get(`/consultation/${appointmentId}`),
+  exerciseDetail: (appointmentId, prescriptionId) =>
+    api.get(`/consultation/${appointmentId}/exercise/${prescriptionId}`),
+};
+
+/** Patient Portal — dashboard aggregates (bills, progress, prescriptions, video) */
+export const patientPortal = {
+  dashboard: () => api.get('/patient-portal/dashboard'),
+  bills: () => api.get('/patient-portal/bills'),
+  progress: () => api.get('/patient-portal/progress'),
+  prescriptions: () => api.get('/patient-portal/prescriptions'),
+  videoConsultations: () => api.get('/patient-portal/video-consultations'),
+};
+
+/** Doctor Calendar — schedule, appointments, rooms, holidays, leave */
+export const calendar = {
+  feed: (params) => api.get('/calendar/feed', { params }),
+  doctors: () => api.get('/calendar/doctors'),
+  clinics: () => api.get('/calendar/clinics'),
+  createLeave: (data) => api.post('/calendar/leaves', data),
+  deleteLeave: (id) => api.delete(`/calendar/leaves/${id}`),
+  createHoliday: (data) => api.post('/calendar/holidays', data),
+  deleteHoliday: (id) => api.delete(`/calendar/holidays/${id}`),
+  rooms: (clinicId) => api.get('/calendar/rooms', { params: { clinic_id: clinicId } }),
+  createRoom: (data) => api.post('/calendar/rooms', data),
+  bookRoom: (data) => api.post('/calendar/room-bookings', data),
+  cancelRoomBooking: (id) => api.delete(`/calendar/room-bookings/${id}`),
 };
 
 export const customSlots = {

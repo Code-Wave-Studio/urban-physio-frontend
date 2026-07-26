@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../../components/FaIcon';
 import PasswordSecuritySection from '../../components/PasswordSecuritySection';
 import ClinicLogoUpload from '../../components/ClinicLogoUpload';
 import ClinicGalleryUpload from '../../components/clinic/ClinicGalleryUpload';
 import ClinicPortalProfileServices from '../../components/clinic/ClinicPortalProfileServices';
+import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
 import LocationMapModal from '../../components/LocationMapModal';
 import SearchableLocationSelect from '../../components/SearchableLocationSelect';
 import {
@@ -17,9 +17,9 @@ import {
   ClinicStatisticsFields,
   ClinicTagListFields,
 } from '../../components/clinic/ClinicProfileFormSections';
-import { CLINIC_NAV } from '../../constants/clinicNav';
 import { auth, clinicPortal, location } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import useClinicPortal from '../../hooks/useClinicPortal';
 import {
   buildClinicPayload,
   clinicRecordToForm,
@@ -67,6 +67,7 @@ export default function ClinicPortalProfile() {
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get('tab') === 'security' ? 'security' : 'clinic';
   const { user, setUser } = useAuth();
+  const { isAdminMode, can, loading: boot } = useClinicPortal();
 
   const [form, setForm] = useState(() => ({ ...emptyClinicForm(), ...emptyOrg() }));
   const [clinicId, setClinicId] = useState(null);
@@ -214,17 +215,17 @@ export default function ClinicPortalProfile() {
     }
   };
 
+  if (!boot && (!isAdminMode || !can('profile.manage'))) {
+    return <Navigate to="/clinic-portal" replace />;
+  }
+
   return (
-    <DashboardLayout links={CLINIC_NAV} variant="clinic">
+    <ClinicPortalShell
+      title="Clinic Settings"
+      subtitle={`Status: ${status || '—'} · Manage banner photos, hours, services, stats and more`}
+    >
       <div className="max-w-3xl space-y-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Clinic profile</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Status: <span className="font-semibold capitalize">{status || '—'}</span>
-            {' · '}Manage banner photos, hours, services, stats and more
-          </p>
-          {rejection && <p className="text-sm text-rose-600 mt-1">Rejection: {rejection}</p>}
-        </div>
+        {rejection && <p className="text-sm text-rose-600">Rejection: {rejection}</p>}
 
         <div className="flex flex-wrap gap-2">
           {TABS.map((t) => (
@@ -441,6 +442,6 @@ export default function ClinicPortalProfile() {
           set('longitude', lng);
         }}
       />
-    </DashboardLayout>
+    </ClinicPortalShell>
   );
 }

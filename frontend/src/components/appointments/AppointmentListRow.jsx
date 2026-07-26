@@ -1,4 +1,5 @@
 import FaIcon from '../FaIcon';
+import { Link } from 'react-router-dom';
 import AppointmentDetailCard from '../AppointmentDetailCard';
 import {
   STATUS_STYLES,
@@ -173,16 +174,14 @@ export default function AppointmentListRow({
 
       {expanded && (
         <div className="border-t border-white/70 bg-white/30 p-3 md:p-4 animate-slide-up">
-          {appt.status === 'confirmed' && appt.google_meet_link && (
-            <a
-              href={appt.google_meet_link}
-              target="_blank"
-              rel="noreferrer"
+          {view === 'doctor' && appt.consultation_type === 'online' && appt.status === 'confirmed' && (
+            <Link
+              to={`/doctor/consultation/${appt.id}`}
               className="btn-primary text-sm py-2 px-4 inline-flex items-center gap-2 mb-3"
             >
               <FaIcon icon="fa-video" />
-              Join video call
-            </a>
+              Open Consultation Room
+            </Link>
           )}
           <AppointmentDetailCard
             appt={appt}
