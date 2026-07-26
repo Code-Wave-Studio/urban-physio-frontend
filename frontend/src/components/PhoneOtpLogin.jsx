@@ -8,6 +8,12 @@ import { navigateAfterAuth } from '../utils/authRedirect';
 
 const RESEND_COOLDOWN = 60;
 
+const WRONG_PORTAL_PATHS = {
+  patient: '/patient/login',
+  doctor: '/doctor/login',
+  clinic: '/clinic/login',
+};
+
 export default function PhoneOtpLogin({ redirectTo, defaultRole = 'patient', fixedRole = null }) {
   const [step, setStep] = useState('phone');
   const [phone, setPhone] = useState('');
@@ -47,6 +53,14 @@ export default function PhoneOtpLogin({ redirectTo, defaultRole = 'patient', fix
     if (data.email_masked) setEmailMasked(data.email_masked);
   };
 
+  const wrongPortal = (err) => {
+    if (!err?.errors?.wrong_portal) return false;
+    toast.error(err.message);
+    const target = WRONG_PORTAL_PATHS[err.errors.account_portal];
+    if (target) navigate(target, { state: { from: redirectTo || location.state?.from } });
+    return true;
+  };
+
   const sendOtp = async (e) => {
     e?.preventDefault();
     setLoading(true);
@@ -58,6 +72,9 @@ export default function PhoneOtpLogin({ redirectTo, defaultRole = 'patient', fix
       setCooldown(RESEND_COOLDOWN);
       setTimeout(() => inputRefs.current[0]?.focus(), 100);
     } catch (err) {
+      if (wrongPortal(err)) {
+        return;
+      }
       if (err.status === 429) {
         toast.error('Too many OTP requests. Wait 15 minutes or use email sign-in below.');
       } else {
@@ -81,7 +98,7 @@ export default function PhoneOtpLogin({ redirectTo, defaultRole = 'patient', fix
       toast.success('Welcome back!');
       navigateAfterAuth(navigate, user, redirectTo || location.state?.from);
     } catch (err) {
-      toast.error(err.message || 'Invalid OTP');
+      if (!wrongPortal(err)) toast.error(err.message || 'Invalid OTP');
     } finally {
       setLoading(false);
     }

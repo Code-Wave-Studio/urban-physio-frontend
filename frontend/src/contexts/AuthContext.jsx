@@ -109,9 +109,10 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const login = async (email, password) => {
+  /** `portal` keeps the patient / doctor / clinic sign-in pages separate. */
+  const login = async (email, password, portal = null) => {
     try {
-      const res = await auth.login({ email, password });
+      const res = await auth.login({ email, password, ...(portal ? { portal } : {}) });
       return await applyAuthResponse(res);
     } catch (err) {
       if (err.errors?.needs_verification) {

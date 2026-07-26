@@ -3,6 +3,7 @@ import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import FaIcon from '../../components/FaIcon';
 import PasswordSecuritySection from '../../components/PasswordSecuritySection';
+import ClinicAdminPasswordCard from '../../components/clinic/ClinicAdminPasswordCard';
 import ClinicLogoUpload from '../../components/ClinicLogoUpload';
 import ClinicGalleryUpload from '../../components/clinic/ClinicGalleryUpload';
 import ClinicPortalProfileServices from '../../components/clinic/ClinicPortalProfileServices';
@@ -283,8 +284,13 @@ export default function ClinicPortalProfile() {
               </form>
             </div>
 
+            <ClinicAdminPasswordCard />
+
             <div className="glass-card !p-6 space-y-4">
-              <h2 className="font-semibold text-slate-800">Password & security</h2>
+              <h2 className="font-semibold text-slate-800">Clinic login password</h2>
+              <p className="text-sm text-slate-500 -mt-1">
+                Used to sign in on the clinic login page. Separate from the Clinic Admin unlock password above.
+              </p>
               <PasswordSecuritySection
                 passwordCustomized={!!user?.password_customized}
                 onUpdated={onPasswordUpdated}

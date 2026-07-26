@@ -5,8 +5,14 @@ import { useAuth } from '../contexts/AuthContext';
 import PasswordInput from './PasswordInput';
 import { navigateAfterAuth } from '../utils/authRedirect';
 
+const WRONG_PORTAL_PATHS = {
+  patient: '/patient/login',
+  doctor: '/doctor/login',
+  clinic: '/clinic/login',
+};
+
 /** Email & password sign-in when mobile OTP is not available. */
-export default function AuthFallbackLogin({ redirectTo, forgotPasswordRole, forgotPasswordLoginPath }) {
+export default function AuthFallbackLogin({ redirectTo, forgotPasswordRole, forgotPasswordLoginPath, portal = null }) {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,10 +24,16 @@ export default function AuthFallbackLogin({ redirectTo, forgotPasswordRole, forg
     e.preventDefault();
     setLoading(true);
     try {
-      const user = await login(email, password);
+      const user = await login(email, password, portal);
       toast.success('Welcome back!');
       navigateAfterAuth(navigate, user, redirectTo);
     } catch (err) {
+      if (err.errors?.wrong_portal) {
+        const target = WRONG_PORTAL_PATHS[err.errors.account_portal];
+        toast.error(err.message);
+        if (target) navigate(target, { state: { from: redirectTo } });
+        return;
+      }
       if (err.needsVerification) {
         toast.error('Please verify your email first');
         navigate('/verify-otp', {

@@ -41,6 +41,7 @@ export default function AuthLoginPage({ portalId }) {
 
           <AuthFallbackLogin
             redirectTo={redirectTo}
+            portal={portal.id}
             forgotPasswordRole={portal.forgotPasswordRole}
             forgotPasswordLoginPath={portal.loginPath}
           />
