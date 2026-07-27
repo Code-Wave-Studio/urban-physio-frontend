@@ -28,6 +28,9 @@ export default defineConfig(({ mode }) => {
       // with Content-Type: application/javascript → "Unexpected token '<'" white screen).
       // History: assets → static → app
       assetsDir: 'app',
+      // esbuild CSS minify turns Font Awesome 7 `--fa:"\f271"` private-use escapes into `--fa:"?"`,
+      // which breaks every icon (tofu / empty glyph). Keep CSS minify off so FA unicode survives.
+      cssMinify: false,
     },
     plugins: [
       react(),

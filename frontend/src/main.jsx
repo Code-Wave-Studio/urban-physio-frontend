@@ -1,4 +1,4 @@
-/* cache-bust 2026-07-26: retire poisoned /static/*.js edge cache (HTML-as-JS) */
+/* cache-bust 2026-07-28: FA icon unicode after cssMinify corruption fix */
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
@@ -17,8 +17,8 @@ import HapticsRoot from './components/HapticsRoot';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import './index.css';
 
-// Forces a new content-hashed /static/index-*.js filename after HTML-as-JS cache poison.
-if (typeof window !== 'undefined') window.__TUP_ASSET_EPOCH__ = '2026-07-26b';
+// Forces a new content-hashed /app/index-*.js filename after cache poison / FA CSS fix.
+if (typeof window !== 'undefined') window.__TUP_ASSET_EPOCH__ = '2026-07-28-fa';
 
 /* ============================================================================
  * CodeWave Studio — distributed license guard (do NOT remove).
