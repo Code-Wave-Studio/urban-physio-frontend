@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import FaIcon from '../FaIcon';
 import { calendar } from '../../services/api';
@@ -97,18 +97,22 @@ const inputCls =
  *  - canManageRooms: can create clinic rooms (clinic admin / main admin)
  *  - showDoctorFilter: admin / clinic
  *  - roleLabel: subtitle hint
+ *  - lockedClinicId: lock feed + forms to one clinic (clinic portal)
+ *  - hideClinicFilter: hide the All clinics dropdown
  */
 export default function CalendarBoard({
   canManage = true,
   canManageRooms = false,
   showDoctorFilter = false,
   roleLabel = '',
+  lockedClinicId = null,
+  hideClinicFilter = false,
 }) {
   const [view, setView] = useState('week'); // week | month
   const [anchor, setAnchor] = useState(() => new Date());
   const [types, setTypes] = useState(() => [...ALL_TYPES]);
   const [doctorId, setDoctorId] = useState('');
-  const [clinicId, setClinicId] = useState('');
+  const [clinicId, setClinicId] = useState(() => (lockedClinicId ? String(lockedClinicId) : ''));
   const [doctors, setDoctors] = useState([]);
   const [clinics, setClinics] = useState([]);
   const [events, setEvents] = useState([]);
@@ -117,6 +121,28 @@ export default function CalendarBoard({
   const [form, setForm] = useState(null); // 'leave' | 'holiday' | 'room' | 'roomBooking' | null
   const [rooms, setRooms] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const addMenuRef = useRef(null);
+
+  useEffect(() => {
+    if (lockedClinicId) setClinicId(String(lockedClinicId));
+  }, [lockedClinicId]);
+
+  useEffect(() => {
+    if (!addOpen) return undefined;
+    const onDoc = (e) => {
+      if (addMenuRef.current && !addMenuRef.current.contains(e.target)) setAddOpen(false);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') setAddOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDoc);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [addOpen]);
 
   const range = useMemo(() => {
     if (view === 'week') {
@@ -379,7 +405,7 @@ export default function CalendarBoard({
                 ))}
               </select>
             )}
-            {clinics.length > 0 && (
+            {!hideClinicFilter && !lockedClinicId && clinics.length > 0 && (
               <select value={clinicId} onChange={(e) => setClinicId(e.target.value)} className={`${inputCls} !w-auto min-w-[140px]`}>
                 <option value="">All clinics</option>
                 {clinics.map((c) => (
@@ -390,30 +416,51 @@ export default function CalendarBoard({
               </select>
             )}
             {canManage && (
-              <div className="relative group">
+              <div className="relative" ref={addMenuRef}>
                 <button
                   type="button"
+                  aria-expanded={addOpen}
+                  onClick={() => setAddOpen((v) => !v)}
                   className="inline-flex items-center gap-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold px-3 py-2"
                 >
                   <FaIcon icon="fa-plus" />
                   Add
+                  <FaIcon icon="fa-chevron-down" className="text-[10px] opacity-80" />
                 </button>
-                <div className="absolute right-0 top-full mt-1 hidden group-hover:block group-focus-within:block z-20 min-w-[180px] rounded-xl border border-slate-200 bg-white shadow-xl py-1">
-                  <button type="button" onClick={() => setForm('leave')} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 flex items-center gap-2">
-                    <FaIcon icon="fa-plane-departure" className="text-rose-500 w-4" /> Leave
-                  </button>
-                  <button type="button" onClick={() => setForm('holiday')} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 flex items-center gap-2">
-                    <FaIcon icon="fa-umbrella-beach" className="text-amber-500 w-4" /> Holiday
-                  </button>
-                  <button type="button" onClick={() => setForm('roomBooking')} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 flex items-center gap-2">
-                    <FaIcon icon="fa-door-open" className="text-indigo-500 w-4" /> Room booking
-                  </button>
-                  {canManageRooms && (
-                    <button type="button" onClick={() => setForm('room')} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 flex items-center gap-2">
-                      <FaIcon icon="fa-hospital" className="text-slate-500 w-4" /> New room
+                {addOpen && (
+                  <div className="absolute right-0 top-full mt-1 z-40 min-w-[200px] rounded-xl border border-slate-200 bg-white shadow-xl py-1">
+                    <button
+                      type="button"
+                      onClick={() => { setForm('leave'); setAddOpen(false); }}
+                      className="w-full text-left px-3 py-2.5 text-sm hover:bg-slate-50 flex items-center gap-2"
+                    >
+                      <FaIcon icon="fa-plane-departure" className="text-rose-500 w-4" /> Leave
                     </button>
-                  )}
-                </div>
+                    <button
+                      type="button"
+                      onClick={() => { setForm('holiday'); setAddOpen(false); }}
+                      className="w-full text-left px-3 py-2.5 text-sm hover:bg-slate-50 flex items-center gap-2"
+                    >
+                      <FaIcon icon="fa-umbrella-beach" className="text-amber-500 w-4" /> Holiday
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setForm('roomBooking'); setAddOpen(false); }}
+                      className="w-full text-left px-3 py-2.5 text-sm hover:bg-slate-50 flex items-center gap-2"
+                    >
+                      <FaIcon icon="fa-door-open" className="text-indigo-500 w-4" /> Room booking
+                    </button>
+                    {canManageRooms && (
+                      <button
+                        type="button"
+                        onClick={() => { setForm('room'); setAddOpen(false); }}
+                        className="w-full text-left px-3 py-2.5 text-sm hover:bg-slate-50 flex items-center gap-2"
+                      >
+                        <FaIcon icon="fa-hospital" className="text-slate-500 w-4" /> New room
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -479,7 +526,9 @@ export default function CalendarBoard({
                       className={`border-r border-slate-50 last:border-0 p-1 sm:p-1.5 space-y-1 overflow-y-auto max-h-[520px] ${isToday ? 'bg-teal-50/30' : ''}`}
                     >
                       {dayEvents.length === 0 && (
-                        <p className="text-[10px] text-slate-300 text-center pt-6 hidden sm:block">—</p>
+                        <p className="text-[10px] text-slate-400 text-center pt-8 px-1 leading-snug">
+                          {canManage ? 'Free' : 'No events'}
+                        </p>
                       )}
                       {dayEvents.map((ev) => (
                         <EventChip key={ev.id} ev={ev} onClick={setSelected} />
@@ -490,6 +539,16 @@ export default function CalendarBoard({
               </div>
             </div>
           </div>
+          {!loading && events.length === 0 && (
+            <div className="border-t border-slate-100 px-4 py-3 text-center text-sm text-slate-500">
+              No schedules, appointments, leave or holidays in this range.
+              {canManage && (
+                <button type="button" className="text-teal-700 font-semibold ml-1 hover:underline" onClick={() => setAddOpen(true)}>
+                  Add leave or holiday
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -635,7 +694,9 @@ export default function CalendarBoard({
               ))}
             </select>
           </label>
-          {clinics.length > 0 && (
+          {lockedClinicId ? (
+            <input type="hidden" name="clinic_id" value={clinicId} />
+          ) : clinics.length > 0 ? (
             <label className="block text-xs font-semibold text-slate-500">
               Clinic (optional)
               <select name="clinic_id" defaultValue={clinicId} className={`${inputCls} mt-1`}>
@@ -645,7 +706,7 @@ export default function CalendarBoard({
                 ))}
               </select>
             </label>
-          )}
+          ) : null}
           <label className="block text-xs font-semibold text-slate-500">
             Reason
             <input type="text" name="reason" className={`${inputCls} mt-1`} placeholder="Optional" />
@@ -673,7 +734,9 @@ export default function CalendarBoard({
               <input type="date" name="end_date" className={`${inputCls} mt-1`} />
             </label>
           </div>
-          {clinics.length > 0 && (
+          {lockedClinicId ? (
+            <input type="hidden" name="clinic_id" value={clinicId} />
+          ) : clinics.length > 0 ? (
             <label className="block text-xs font-semibold text-slate-500">
               Clinic (optional)
               <select name="clinic_id" defaultValue={clinicId} className={`${inputCls} mt-1`}>
@@ -683,7 +746,7 @@ export default function CalendarBoard({
                 ))}
               </select>
             </label>
-          )}
+          ) : null}
           {showDoctorFilter && (
             <label className="block text-xs font-semibold text-slate-500">
               Doctor (optional)
@@ -708,15 +771,19 @@ export default function CalendarBoard({
       {/* New room */}
       <Modal open={form === 'room'} title="Add clinic room" onClose={() => setForm(null)}>
         <form onSubmit={submitRoom} className="space-y-3">
-          <label className="block text-xs font-semibold text-slate-500">
-            Clinic
-            <select name="clinic_id" defaultValue={clinicId} required className={`${inputCls} mt-1`}>
-              <option value="">Select clinic</option>
-              {clinics.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </label>
+          {lockedClinicId ? (
+            <input type="hidden" name="clinic_id" value={clinicId} />
+          ) : (
+            <label className="block text-xs font-semibold text-slate-500">
+              Clinic
+              <select name="clinic_id" defaultValue={clinicId} required className={`${inputCls} mt-1`}>
+                <option value="">Select clinic</option>
+                {clinics.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </label>
+          )}
           <label className="block text-xs font-semibold text-slate-500">
             Room name
             <input type="text" name="name" required className={`${inputCls} mt-1`} placeholder="e.g. Therapy Room 1" />
@@ -744,7 +811,7 @@ export default function CalendarBoard({
       {/* Room booking */}
       <Modal open={form === 'roomBooking'} title="Book a room" onClose={() => setForm(null)}>
         <form onSubmit={submitRoomBooking} className="space-y-3">
-          {clinics.length > 1 && (
+          {!lockedClinicId && clinics.length > 1 && (
             <label className="block text-xs font-semibold text-slate-500">
               Clinic
               <select
@@ -763,7 +830,7 @@ export default function CalendarBoard({
           <label className="block text-xs font-semibold text-slate-500">
             Room
             <select name="room_id" required className={`${inputCls} mt-1`} disabled={!rooms.length}>
-              <option value="">{rooms.length ? 'Select room' : 'Select a clinic with rooms first'}</option>
+              <option value="">{rooms.length ? 'Select room' : 'Add a room first (Add → New room)'}</option>
               {rooms.filter((r) => Number(r.is_active) !== 0).map((r) => (
                 <option key={r.id} value={r.id}>
                   {r.name}{r.room_code ? ` (${r.room_code})` : ''}
