@@ -11,8 +11,8 @@ const LABELS = {
   report: ['Progress report', 'Patients can open their visit progress reports'],
 };
 
-function purposeUrl(purpose, token, publicUrl) {
-  if (publicUrl) return publicUrl.startsWith('http') ? publicUrl : `${window.location.origin}${publicUrl}`;
+function purposeUrl(purpose, token) {
+  // Always use the current site origin (SPA), never the API host from public_url
   if (purpose === 'report') return `${window.location.origin}/clinic-report/${token}`;
   if (purpose === 'booking') return `${window.location.origin}/clinic-intake/${token}?intent=booking`;
   return `${window.location.origin}/c/${token}`;
@@ -145,7 +145,7 @@ export default function ClinicQrPage() {
             {Object.entries(LABELS).map(([purpose, [title, desc]]) => {
               const item = tokens[purpose];
               if (!item) return null;
-              const url = purposeUrl(purpose, item.token, item.public_url);
+              const url = purposeUrl(purpose, item.token);
               const qrUrl = qrImageUrl(url);
               return (
                 <section key={purpose} className="glass-card !p-5 text-center break-inside-avoid flex flex-col">

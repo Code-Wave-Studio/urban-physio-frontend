@@ -360,7 +360,7 @@ export default function CalendarBoard({
   return (
     <div className="space-y-4">
       {/* Toolbar */}
-      <div className="glass-card !p-3 sm:!p-4">
+      <div className={`glass-card !p-3 sm:!p-4 !bg-white relative ${addOpen ? 'z-50' : 'z-10'}`}>
         <div className="flex flex-col lg:flex-row lg:items-center gap-3 justify-between">
           <div className="flex items-center gap-2 flex-wrap">
             <div className="inline-flex rounded-lg border border-slate-200 overflow-hidden">
@@ -428,7 +428,10 @@ export default function CalendarBoard({
                   <FaIcon icon="fa-chevron-down" className="text-[10px] opacity-80" />
                 </button>
                 {addOpen && (
-                  <div className="absolute right-0 top-full mt-1 z-40 min-w-[200px] rounded-xl border border-slate-200 bg-white shadow-xl py-1">
+                  <div
+                    className="absolute right-0 top-full mt-1 z-[100] min-w-[200px] rounded-xl border border-slate-200 bg-white shadow-2xl py-1"
+                    style={{ backgroundColor: '#ffffff' }}
+                  >
                     <button
                       type="button"
                       onClick={() => { setForm('leave'); setAddOpen(false); }}
@@ -498,7 +501,7 @@ export default function CalendarBoard({
 
       {/* Week view */}
       {view === 'week' && (
-        <div className="glass-card !p-0 overflow-hidden">
+        <div className={`glass-card !p-0 overflow-hidden relative ${addOpen ? 'z-0' : 'z-[1]'}`}>
           <div className="portal-calendar-scroll">
             <div className="portal-calendar-grid">
               <div className="grid grid-cols-7 border-b border-slate-100">
@@ -554,7 +557,7 @@ export default function CalendarBoard({
 
       {/* Month view */}
       {view === 'month' && (
-        <div className="glass-card !p-0 overflow-hidden">
+        <div className={`glass-card !p-0 overflow-hidden relative ${addOpen ? 'z-0' : 'z-[1]'}`}>
           <div className="portal-calendar-scroll">
             <div className="portal-calendar-grid">
               <div className="grid grid-cols-7 border-b border-slate-100 bg-slate-50/60">
