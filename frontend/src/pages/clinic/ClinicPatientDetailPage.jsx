@@ -129,14 +129,15 @@ export default function ClinicPatientDetailPage() {
       title={loading ? 'Patient' : name}
       subtitle="Clinical, package and payment history in one place"
       actions={(
-        <div className="flex gap-2">
-          <Link to="/clinic-portal/patients" className="btn-outline text-sm">
-            <FaIcon icon="fa-arrow-left" className="mr-2" />
-            Patients
+        <div className="portal-page-actions">
+          <Link to="/clinic-portal/patients" className="btn-outline inline-flex items-center gap-2">
+            <FaIcon icon="fa-arrow-left" />
+            <span className="hidden sm:inline">Patients</span>
+            <span className="sm:hidden">Back</span>
           </Link>
           {can('appointments.manage') && (
-            <button type="button" className="btn-primary text-sm" onClick={() => setBooking(true)}>
-              <FaIcon icon="fa-calendar-plus" className="mr-2" />
+            <button type="button" className="btn-primary inline-flex items-center gap-2" onClick={() => setBooking(true)}>
+              <FaIcon icon="fa-calendar-plus" />
               Book
             </button>
           )}
@@ -177,13 +178,13 @@ export default function ClinicPatientDetailPage() {
             </div>
           </section>
 
-          <div className="flex gap-2 overflow-x-auto pb-1">
+          <div className="portal-tabs">
             {TABS.map((item) => (
               <button
                 key={item}
                 type="button"
                 onClick={() => setTab(item)}
-                className={`shrink-0 px-3 py-2 rounded-full text-xs font-semibold ${
+                className={`px-3 py-2 rounded-full text-xs font-semibold ${
                   tab === item ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-600'
                 }`}
               >
@@ -192,9 +193,9 @@ export default function ClinicPatientDetailPage() {
             ))}
           </div>
 
-          <section className="glass-card !p-4 md:!p-5">
+          <section className="glass-card !p-3 sm:!p-4 md:!p-5 min-w-0">
             {tab === 'Overview' && (
-              <div className="grid lg:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 <div>
                   <h2 className="font-bold mb-3">Patient details</h2>
                   <KeyValues
@@ -334,29 +335,47 @@ export default function ClinicPatientDetailPage() {
             )}
 
             {tab === 'Payments' && (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                  <thead className="text-[11px] uppercase text-slate-500 bg-slate-50">
-                    <tr>
-                      <th className="px-3 py-2">Date</th>
-                      <th className="px-3 py-2">Booking</th>
-                      <th className="px-3 py-2">Status</th>
-                      <th className="px-3 py-2 text-right">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(data.payments || []).map((pay) => (
-                      <tr key={pay.id} className="border-t">
-                        <td className="px-3 py-3 whitespace-nowrap">{String(pay.created_at || pay.appointment_date || '').slice(0, 10)}</td>
-                        <td className="px-3 py-3">{pay.booking_id || '—'}</td>
-                        <td className="px-3 py-3 capitalize">{pay.status || '—'}</td>
-                        <td className="px-3 py-3 text-right font-semibold">{money(pay.amount)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {!data.payments?.length && <Empty>No payments recorded.</Empty>}
-              </div>
+              <>
+                {!data.payments?.length ? (
+                  <Empty>No payments recorded.</Empty>
+                ) : (
+                  <>
+                    <div className="portal-mobile-list !p-0 space-y-3">
+                      {(data.payments || []).map((pay) => (
+                        <article key={pay.id} className="rounded-xl border border-slate-100 p-3 flex justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold">{pay.booking_id || '—'}</p>
+                            <p className="text-xs text-slate-500">{String(pay.created_at || pay.appointment_date || '').slice(0, 10)} · <span className="capitalize">{pay.status || '—'}</span></p>
+                          </div>
+                          <p className="font-semibold text-emerald-700 shrink-0">{money(pay.amount)}</p>
+                        </article>
+                      ))}
+                    </div>
+                    <div className="portal-desktop-table portal-table-wrap">
+                      <table className="w-full text-sm text-left">
+                        <thead className="text-[11px] uppercase text-slate-500 bg-slate-50">
+                          <tr>
+                            <th className="px-3 py-2">Date</th>
+                            <th className="px-3 py-2">Booking</th>
+                            <th className="px-3 py-2">Status</th>
+                            <th className="px-3 py-2 text-right">Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(data.payments || []).map((pay) => (
+                            <tr key={pay.id} className="border-t">
+                              <td className="px-3 py-3 whitespace-nowrap">{String(pay.created_at || pay.appointment_date || '').slice(0, 10)}</td>
+                              <td className="px-3 py-3">{pay.booking_id || '—'}</td>
+                              <td className="px-3 py-3 capitalize">{pay.status || '—'}</td>
+                              <td className="px-3 py-3 text-right font-semibold">{money(pay.amount)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )}
+              </>
             )}
 
             {tab === 'SOAP' && (

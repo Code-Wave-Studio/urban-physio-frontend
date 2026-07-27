@@ -378,7 +378,7 @@ export default function AdvancedPatientSearch({ patientLinkFor, canTag = true })
             <p className="text-sm">No patients match these filters.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="portal-table-wrap">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500 border-b border-slate-100">

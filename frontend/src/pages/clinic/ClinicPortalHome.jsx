@@ -104,12 +104,12 @@ export default function ClinicPortalHome() {
       )}
 
       {loading || boot ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <div className="portal-kpi-grid mb-5">
           {[1, 2, 3, 4].map((i) => <div key={i} className="glass-card h-24 animate-pulse" />)}
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
+          <div className="portal-kpi-grid mb-5 md:!grid-cols-3 xl:!grid-cols-5">
             <Metric icon="fa-calendar-day" label="Today's appointments" value={m.today_total ?? 0} />
             <Metric icon="fa-hourglass-half" label="Pending" value={m.today_pending ?? 0} tint="amber" />
             <Metric icon="fa-circle-check" label="Confirmed" value={m.today_confirmed ?? 0} tint="emerald" />

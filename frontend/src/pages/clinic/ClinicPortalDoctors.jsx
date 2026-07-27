@@ -105,8 +105,8 @@ export default function ClinicPortalDoctors() {
         </Link>
       }
     >
-      <div className="space-y-5 max-w-4xl">
-        <form onSubmit={invite} className="glass-card !p-5 grid sm:grid-cols-2 gap-3">
+      <div className="space-y-4 sm:space-y-5 max-w-4xl">
+        <form onSubmit={invite} className="glass-card !p-4 sm:!p-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <h2 className="font-bold sm:col-span-2 flex items-center gap-2">
             <FaIcon icon="fa-envelope" className="text-teal-600" />
             Invite physiotherapist
@@ -125,7 +125,7 @@ export default function ClinicPortalDoctors() {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
           />
-          <button type="submit" className="btn-primary sm:col-span-2" disabled={inviting || !clinicId}>
+          <button type="submit" className="btn-primary sm:col-span-2 w-full" disabled={inviting || !clinicId}>
             {inviting ? 'Sending…' : 'Send invitation'}
           </button>
           <p className="sm:col-span-2 text-xs text-slate-500">
@@ -176,59 +176,89 @@ export default function ClinicPortalDoctors() {
           </div>
           {boot || loading ? (
             <div className="h-32 animate-pulse bg-slate-100 m-4 rounded-xl" />
+          ) : !doctors.length ? (
+            <p className="px-4 py-10 text-center text-slate-500">No doctors linked yet. Invite a physiotherapist by TUP email.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="text-[11px] uppercase tracking-wide text-slate-500 bg-slate-50/80 text-left">
-                  <tr>
-                    <th className="px-4 py-3">Name</th>
-                    <th className="px-4 py-3">Email</th>
-                    <th className="px-4 py-3">Specialization</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {doctors.map((d) => {
-                    const doctorId = d.doctor_id || d.id;
-                    return (
-                      <tr key={doctorId} className="border-t border-slate-100">
-                        <td className="px-4 py-3 font-medium text-slate-900">
-                          {[d.first_name, d.last_name].filter(Boolean).join(' ') || 'Doctor'}
-                          {Number(d.is_clinic_manager) ? (
-                            <span className="ml-2 text-[10px] uppercase font-bold text-violet-700 bg-violet-50 px-1.5 py-0.5 rounded">Manager</span>
-                          ) : null}
-                        </td>
-                        <td className="px-4 py-3 text-slate-600">{d.email || '—'}</td>
-                        <td className="px-4 py-3 text-slate-600">{d.specialization || '—'}</td>
-                        <td className="px-4 py-3">
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 capitalize">
-                            {d.status || 'active'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <button
-                            type="button"
-                            className="text-xs font-semibold text-rose-600 hover:underline"
-                            disabled={removingId === doctorId}
-                            onClick={() => remove(d)}
-                          >
-                            Remove
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {!doctors.length && (
+            <>
+              <div className="portal-mobile-list">
+                {doctors.map((d) => {
+                  const doctorId = d.doctor_id || d.id;
+                  const name = [d.first_name, d.last_name].filter(Boolean).join(' ') || 'Doctor';
+                  return (
+                    <article key={doctorId} className="rounded-2xl border border-slate-100 bg-white p-3.5 space-y-2 shadow-sm">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-semibold text-slate-900 truncate">
+                            {name}
+                            {Number(d.is_clinic_manager) ? (
+                              <span className="ml-2 text-[10px] uppercase font-bold text-violet-700 bg-violet-50 px-1.5 py-0.5 rounded">Manager</span>
+                            ) : null}
+                          </p>
+                          <p className="text-xs text-slate-500 truncate">{d.email || '—'}</p>
+                          <p className="text-xs text-slate-500">{d.specialization || '—'}</p>
+                        </div>
+                        <span className="shrink-0 text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 capitalize">
+                          {d.status || 'active'}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        className="text-xs font-semibold text-rose-600"
+                        disabled={removingId === doctorId}
+                        onClick={() => remove(d)}
+                      >
+                        Remove
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
+              <div className="portal-desktop-table portal-table-wrap">
+                <table className="w-full text-sm">
+                  <thead className="text-[11px] uppercase tracking-wide text-slate-500 bg-slate-50/80 text-left">
                     <tr>
-                      <td colSpan={5} className="px-4 py-10 text-center text-slate-500">
-                        No doctors linked yet. Invite a physiotherapist by TUP email.
-                      </td>
+                      <th className="px-4 py-3">Name</th>
+                      <th className="px-4 py-3">Email</th>
+                      <th className="px-4 py-3">Specialization</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3" />
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {doctors.map((d) => {
+                      const doctorId = d.doctor_id || d.id;
+                      return (
+                        <tr key={doctorId} className="border-t border-slate-100">
+                          <td className="px-4 py-3 font-medium text-slate-900">
+                            {[d.first_name, d.last_name].filter(Boolean).join(' ') || 'Doctor'}
+                            {Number(d.is_clinic_manager) ? (
+                              <span className="ml-2 text-[10px] uppercase font-bold text-violet-700 bg-violet-50 px-1.5 py-0.5 rounded">Manager</span>
+                            ) : null}
+                          </td>
+                          <td className="px-4 py-3 text-slate-600">{d.email || '—'}</td>
+                          <td className="px-4 py-3 text-slate-600">{d.specialization || '—'}</td>
+                          <td className="px-4 py-3">
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 capitalize">
+                              {d.status || 'active'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <button
+                              type="button"
+                              className="text-xs font-semibold text-rose-600 hover:underline"
+                              disabled={removingId === doctorId}
+                              onClick={() => remove(d)}
+                            >
+                              Remove
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       </div>

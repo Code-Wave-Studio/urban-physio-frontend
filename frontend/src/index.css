@@ -999,12 +999,13 @@
 
   /* Portal tables / calendars — always scrollable on narrow screens */
   .portal-table-wrap {
-    @apply overflow-x-auto;
+    @apply overflow-x-auto -mx-0;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
   }
 
   .portal-table-wrap > table {
-    @apply min-w-[640px] w-full;
+    @apply min-w-[720px] w-full;
   }
 
   .portal-calendar-scroll {
@@ -1023,16 +1024,68 @@
 
   .portal-toolbar-scroll {
     @apply flex gap-2 overflow-x-auto pb-1 -mx-1 px-1;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* Touch-friendly tab strips */
   .portal-tabs {
     @apply flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1;
+    -webkit-overflow-scrolling: touch;
   }
 
   .portal-tabs > button,
   .portal-tabs > a {
     @apply shrink-0;
+  }
+
+  /* Page header action cluster */
+  .portal-page-actions {
+    @apply flex flex-wrap items-center gap-2 w-full sm:w-auto;
+  }
+
+  .portal-page-actions > .btn-primary,
+  .portal-page-actions > .btn-outline,
+  .portal-page-actions > button,
+  .portal-page-actions > a {
+    @apply text-xs sm:text-sm !py-2;
+  }
+
+  /* KPI grids — never jump 1→4 at sm */
+  .portal-kpi-grid {
+    @apply grid grid-cols-2 md:grid-cols-4 gap-3;
+  }
+
+  .portal-kpi-grid > * {
+    @apply min-w-0;
+  }
+
+  /* Mobile card list (hide table, show cards) */
+  .portal-mobile-list {
+    @apply block md:hidden space-y-3 p-3 sm:p-4;
+  }
+
+  .portal-desktop-table {
+    @apply hidden md:block;
+  }
+
+  /* Sticky mobile ops strip under page header */
+  .portal-mobile-ops {
+    @apply flex lg:hidden gap-2 overflow-x-auto pb-1 -mx-1 px-1 mb-4;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .portal-mobile-ops::-webkit-scrollbar {
+    display: none;
+  }
+
+  .portal-mobile-ops a {
+    @apply shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold
+           bg-white border border-slate-200 text-slate-700 shadow-sm;
+  }
+
+  .portal-mobile-ops a.portal-mobile-ops--active {
+    @apply bg-teal-600 text-white border-teal-600;
   }
 
   @media (max-width: 639px) {
@@ -1047,6 +1100,19 @@
     /* Prevent KPI grids from crushing labels */
     .admin-shell .grid.grid-cols-2 > * {
       @apply min-w-0;
+    }
+
+    .admin-shell .input-field,
+    .admin-shell input:not([type='checkbox']):not([type='radio']):not([type='range']),
+    .admin-shell select,
+    .admin-shell textarea {
+      @apply text-base; /* avoid iOS zoom on focus */
+    }
+  }
+
+  @media (max-width: 374px) {
+    .portal-kpi-grid {
+      @apply gap-2;
     }
   }
 

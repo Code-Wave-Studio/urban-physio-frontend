@@ -101,12 +101,12 @@ export default function ClinicQrPage() {
       title="Clinic QR Codes"
       subtitle="Printable links for intake, bookings and progress reports"
       actions={
-        <div className="flex items-center gap-2 print:hidden">
-          <button type="button" className="btn-outline text-sm" onClick={load} disabled={loading}>
-            <FaIcon icon="fa-rotate" className="mr-2" /> Refresh
+        <div className="portal-page-actions print:hidden">
+          <button type="button" className="btn-outline" onClick={load} disabled={loading}>
+            <FaIcon icon="fa-rotate" className="mr-1.5" /> Refresh
           </button>
-          <button type="button" className="btn-primary text-sm" onClick={() => window.print()} disabled={!tokenEntries.length}>
-            <FaIcon icon="fa-print" className="mr-2" /> Print
+          <button type="button" className="btn-primary" onClick={() => window.print()} disabled={!tokenEntries.length}>
+            <FaIcon icon="fa-print" className="mr-1.5" /> Print
           </button>
         </div>
       }
@@ -152,21 +152,21 @@ export default function ClinicQrPage() {
             </ul>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {Object.entries(LABELS).map(([purpose, [title, desc]]) => {
               const item = tokens[purpose];
               if (!item) return null;
               const url = purposeUrl(purpose, item.token);
               const qrUrl = qrImageUrl(url);
               return (
-                <section key={purpose} className="glass-card !p-5 text-center break-inside-avoid flex flex-col">
+                <section key={purpose} className="glass-card !p-4 sm:!p-5 text-center break-inside-avoid flex flex-col min-w-0">
                   <p className="text-[10px] uppercase tracking-wide font-bold text-teal-700">{purpose}</p>
                   <h2 className="font-bold text-slate-900 mt-1">{title}</h2>
                   <p className="text-xs text-slate-500 mt-1 min-h-10">{desc}</p>
                   <img
                     src={qrUrl}
                     alt={`${title} QR code`}
-                    className="w-[220px] h-[220px] max-w-full mx-auto my-4 rounded-xl border border-slate-100 bg-white"
+                    className="w-[200px] sm:w-[220px] h-[200px] sm:h-[220px] max-w-full mx-auto my-4 rounded-xl border border-slate-100 bg-white"
                   />
                   <p className="text-[11px] text-slate-400 truncate" title={url}>{url}</p>
                   <div className="flex flex-wrap justify-center gap-2 mt-4 print:hidden mt-auto">

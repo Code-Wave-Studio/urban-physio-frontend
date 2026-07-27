@@ -71,16 +71,27 @@ export default function ClinicBrandingPage() {
     <ClinicPortalShell
       title="Branding"
       subtitle="Clinic logo and colour theme for PDFs and patient-facing screens"
-      actions={<Link to="/clinic-portal/profile" className="btn-outline text-sm inline-flex items-center gap-2"><FaIcon icon="fa-image" />Logo & profile</Link>}
+      actions={(
+        <div className="portal-page-actions">
+          <Link to="/clinic-portal/profile" className="btn-outline inline-flex items-center gap-2">
+            <FaIcon icon="fa-image" />
+            <span className="hidden sm:inline">Logo & profile</span>
+            <span className="sm:hidden">Profile</span>
+          </Link>
+        </div>
+      )}
     >
       {boot || loading ? <div className="glass-card h-72 animate-pulse" /> : (
-        <form onSubmit={save} className="grid lg:grid-cols-2 gap-5">
-          <section className="glass-card !p-5 space-y-5">
+        <form onSubmit={save} className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
+          <section className="glass-card !p-4 sm:!p-5 space-y-5">
             <div><h2 className="font-bold text-slate-900">Colour theme</h2><p className="text-xs text-slate-500 mt-1">Used on clinic PDFs and public patient screens.</p></div>
             {[['primary_color', 'Primary colour'], ['secondary_color', 'Secondary colour'], ['accent_color', 'Accent colour']].map(([key, label]) => (
-              <label key={key} className="flex items-center justify-between gap-4 text-sm font-medium">
+              <label key={key} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 text-sm font-medium">
                 {label}
-                <div className="flex items-center gap-2"><input type="text" pattern="#[0-9a-fA-F]{6}" className="input-field !w-28 font-mono text-xs" value={form[key] || ''} onChange={(e) => setForm({ ...form, [key]: e.target.value })} /><input type="color" className="w-11 h-11 rounded-lg cursor-pointer" value={form[key] || '#000000'} onChange={(e) => setForm({ ...form, [key]: e.target.value })} /></div>
+                <div className="flex items-center gap-2">
+                  <input type="text" pattern="#[0-9a-fA-F]{6}" className="input-field !w-28 font-mono text-xs" value={form[key] || ''} onChange={(e) => setForm({ ...form, [key]: e.target.value })} />
+                  <input type="color" className="w-11 h-11 rounded-lg cursor-pointer shrink-0" value={form[key] || '#000000'} onChange={(e) => setForm({ ...form, [key]: e.target.value })} />
+                </div>
               </label>
             ))}
             <div className="border-t border-slate-100 pt-5 space-y-4">
@@ -108,9 +119,9 @@ export default function ClinicBrandingPage() {
             </div>
             <button type="submit" className="btn-primary w-full justify-center" disabled={saving}>{saving ? 'Saving…' : 'Save branding'}</button>
           </section>
-          <section className="glass-card !p-5 self-start">
+          <section className="glass-card !p-4 sm:!p-5 self-start">
             <h2 className="font-bold mb-3">PDF preview</h2>
-            <div className="aspect-[1/1.3] rounded-xl border bg-white shadow-sm p-6 flex flex-col" style={{ borderTop: `8px solid ${form.primary_color}` }}>
+            <div className="aspect-[1/1.3] max-w-md mx-auto rounded-xl border bg-white shadow-sm p-4 sm:p-6 flex flex-col" style={{ borderTop: `8px solid ${form.primary_color}` }}>
               <div className="flex justify-between border-b pb-4" style={{ borderColor: form.accent_color }}><div><p className="font-bold text-lg" style={{ color: form.secondary_color }}>The Urban Physio Clinic</p><p className="text-[10px] text-slate-500 whitespace-pre-wrap">{form.pdf_header_text || 'Your clinic header appears here'}</p></div><div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400"><FaIcon icon="fa-image" /></div></div>
               <div className="flex-1 pt-5"><p className="text-xs font-bold uppercase" style={{ color: form.primary_color }}>Progress Report</p><div className="mt-4 space-y-2">{[100, 85, 92, 70].map((width, index) => <div key={index} className="h-2 bg-slate-100 rounded" style={{ width: `${width}%` }} />)}</div></div>
               <p className="text-[9px] text-slate-400 border-t pt-3 whitespace-pre-wrap">{form.pdf_footer_text || 'Your PDF footer appears here'}</p>

@@ -99,8 +99,8 @@ export default function ClinicStaffPage() {
         </Link>
       }
     >
-      <div className="space-y-5 max-w-4xl">
-        <form onSubmit={submit} className="glass-card !p-5 grid sm:grid-cols-2 gap-3">
+      <div className="space-y-4 sm:space-y-5 max-w-4xl">
+        <form onSubmit={submit} className="glass-card !p-4 sm:!p-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <h2 className="font-bold sm:col-span-2 flex items-center gap-2">
             <FaIcon icon="fa-user-plus" className="text-primary-600" />
             Add staff member
@@ -135,7 +135,7 @@ export default function ClinicStaffPage() {
               <option key={o.value} value={o.value}>{o.label}</option>
             ))}
           </select>
-          <button type="submit" className="btn-primary sm:col-span-2" disabled={saving || !clinicId}>
+          <button type="submit" className="btn-primary sm:col-span-2 w-full" disabled={saving || !clinicId}>
             {saving ? 'Saving…' : 'Create / invite staff'}
           </button>
           <p className="sm:col-span-2 text-xs text-slate-500">
@@ -146,58 +146,84 @@ export default function ClinicStaffPage() {
         <div className="glass-card !p-0 overflow-hidden">
           {boot || loading ? (
             <div className="h-32 animate-pulse bg-slate-100 m-4 rounded-xl" />
+          ) : !staff.length ? (
+            <p className="px-4 py-10 text-center text-slate-500">No staff yet. Add a receptionist to share front-desk access.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="text-[11px] uppercase tracking-wide text-slate-500 bg-slate-50/80 text-left">
-                  <tr>
-                    <th className="px-4 py-3">Name</th>
-                    <th className="px-4 py-3">Email</th>
-                    <th className="px-4 py-3">Role</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {staff.map((s) => (
-                    <tr key={s.id} className="border-t border-slate-100">
-                      <td className="px-4 py-3 font-medium text-slate-900">{s.full_name}</td>
-                      <td className="px-4 py-3 text-slate-600">{s.email || '—'}</td>
-                      <td className="px-4 py-3">
-                        <select
-                          className="input-field !py-1 text-xs"
-                          value={s.staff_role || 'receptionist'}
-                          onChange={(e) => setRole(s, e.target.value)}
-                        >
-                          {ROLE_OPTIONS.map((o) => (
-                            <option key={o.value} value={o.value}>{o.label}</option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${Number(s.is_active) ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-                          {Number(s.is_active) ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        {Number(s.is_active) ? (
-                          <button type="button" className="text-xs font-semibold text-rose-600 hover:underline" onClick={() => deactivate(s)}>
-                            Deactivate
-                          </button>
-                        ) : null}
-                      </td>
-                    </tr>
-                  ))}
-                  {!staff.length && (
+            <>
+              <div className="portal-mobile-list">
+                {staff.map((s) => (
+                  <article key={s.id} className="rounded-2xl border border-slate-100 bg-white p-3.5 space-y-2.5 shadow-sm">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-slate-900 truncate">{s.full_name}</p>
+                        <p className="text-xs text-slate-500 truncate">{s.email || '—'}</p>
+                      </div>
+                      <span className={`shrink-0 text-xs px-2 py-0.5 rounded-full ${Number(s.is_active) ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                        {Number(s.is_active) ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                    <select
+                      className="input-field !py-2 text-sm w-full"
+                      value={s.staff_role || 'receptionist'}
+                      onChange={(e) => setRole(s, e.target.value)}
+                    >
+                      {ROLE_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </select>
+                    {Number(s.is_active) ? (
+                      <button type="button" className="text-xs font-semibold text-rose-600" onClick={() => deactivate(s)}>
+                        Deactivate
+                      </button>
+                    ) : null}
+                  </article>
+                ))}
+              </div>
+              <div className="portal-desktop-table portal-table-wrap">
+                <table className="w-full text-sm">
+                  <thead className="text-[11px] uppercase tracking-wide text-slate-500 bg-slate-50/80 text-left">
                     <tr>
-                      <td colSpan={5} className="px-4 py-10 text-center text-slate-500">
-                        No staff yet. Add a receptionist to share front-desk access.
-                      </td>
+                      <th className="px-4 py-3">Name</th>
+                      <th className="px-4 py-3">Email</th>
+                      <th className="px-4 py-3">Role</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3" />
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {staff.map((s) => (
+                      <tr key={s.id} className="border-t border-slate-100">
+                        <td className="px-4 py-3 font-medium text-slate-900">{s.full_name}</td>
+                        <td className="px-4 py-3 text-slate-600">{s.email || '—'}</td>
+                        <td className="px-4 py-3">
+                          <select
+                            className="input-field !py-1 text-xs"
+                            value={s.staff_role || 'receptionist'}
+                            onChange={(e) => setRole(s, e.target.value)}
+                          >
+                            {ROLE_OPTIONS.map((o) => (
+                              <option key={o.value} value={o.value}>{o.label}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${Number(s.is_active) ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                            {Number(s.is_active) ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {Number(s.is_active) ? (
+                            <button type="button" className="text-xs font-semibold text-rose-600 hover:underline" onClick={() => deactivate(s)}>
+                              Deactivate
+                            </button>
+                          ) : null}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       </div>

@@ -114,27 +114,65 @@ export default function ClinicTeamPage() {
 
       {boot || loading ? <div className="glass-card h-64 animate-pulse mt-4" /> : (
         <div className="space-y-4 mt-4">
-          <section className={`glass-card !p-5 border ${closed ? 'border-rose-200 bg-rose-50/40' : 'border-emerald-200'}`}>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              <div className="flex-1">
+          <section className={`glass-card !p-4 sm:!p-5 border ${closed ? 'border-rose-200 bg-rose-50/40' : 'border-emerald-200'}`}>
+            <div className="flex flex-col gap-3 sm:gap-4">
+              <div className="min-w-0">
                 <h2 className="font-bold text-slate-900">Clinic booking status</h2>
                 <p className="text-sm text-slate-500 mt-1">
                   {closed ? 'Closed — new clinic bookings are blocked.' : 'Open — patients can book available appointments.'}
                 </p>
               </div>
-              <input
-                className="input-field sm:max-w-xs"
-                placeholder="Closure reason"
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-              />
-              <button type="button" className={closed ? 'btn-primary' : 'btn-outline'} onClick={toggleClosure}>
-                {closed ? 'Reopen clinic' : 'Close clinic'}
-              </button>
+              <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                <input
+                  className="input-field flex-1"
+                  placeholder="Closure reason"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                />
+                <button type="button" className={`${closed ? 'btn-primary' : 'btn-outline'} w-full sm:w-auto shrink-0`} onClick={toggleClosure}>
+                  {closed ? 'Reopen clinic' : 'Close clinic'}
+                </button>
+              </div>
             </div>
           </section>
-          <section className="glass-card !p-0 overflow-hidden"><div className="p-4 border-b"><h2 className="font-bold">Doctor availability</h2></div><div className="divide-y">{availability.map((row) => <div key={row.doctor_id || row.id} className="p-4 flex items-center gap-3"><span className="w-10 h-10 rounded-full bg-teal-50 text-teal-700 flex items-center justify-center"><FaIcon icon="fa-user-doctor" /></span><div className="flex-1"><p className="font-semibold">{row.doctor_name || row.name}</p><p className="text-xs text-slate-500">{Boolean(Number(row.is_available)) ? 'Available for bookings' : 'Unavailable'}</p></div><button type="button" onClick={() => toggleDoctor(row)} className={`relative w-12 h-7 rounded-full transition ${Boolean(Number(row.is_available)) ? 'bg-teal-600' : 'bg-slate-300'}`}><span className={`absolute top-1 w-5 h-5 bg-white rounded-full transition ${Boolean(Number(row.is_available)) ? 'left-6' : 'left-1'}`} /></button></div>)}{!availability.length && <p className="p-8 text-center text-sm text-slate-500">No linked doctors.</p>}</div></section>
-          <section className="glass-card !p-0 overflow-hidden"><div className="p-4 border-b"><h2 className="font-bold">Doctor payout configuration</h2></div><div className="divide-y">{payouts.map((row, index) => <div key={row.doctor_id || index} className="p-4 grid md:grid-cols-[1fr_180px_130px_auto] gap-3 items-center"><div><p className="font-semibold">{row.doctor_name || row.name || `Doctor ${row.doctor_id}`}</p><p className="text-xs text-slate-500">Configure fixed pay or revenue share</p></div><select className="input-field text-sm" value={row.payout_model || 'revenue_share'} onChange={(e) => setPayouts((old) => old.map((p, i) => i === index ? { ...p, payout_model: e.target.value } : p))}><option value="revenue_share">Revenue share</option><option value="fixed_salary">Fixed salary</option></select><input className="input-field text-sm" type="number" min="0" value={row.payout_model === 'fixed_salary' ? row.fixed_salary || 0 : row.revenue_share_pct || 0} onChange={(e) => setPayouts((old) => old.map((p, i) => i === index ? { ...p, [row.payout_model === 'fixed_salary' ? 'fixed_salary' : 'revenue_share_pct']: e.target.value } : p))} /><button type="button" className="btn-primary text-xs !py-2" onClick={() => savePayout(payouts[index])}>Save</button></div>)}{!payouts.length && <p className="p-8 text-center text-sm text-slate-500">No payout records.</p>}</div></section>
+          <section className="glass-card !p-0 overflow-hidden">
+            <div className="p-4 border-b"><h2 className="font-bold">Doctor availability</h2></div>
+            <div className="divide-y">
+              {availability.map((row) => (
+                <div key={row.doctor_id || row.id} className="p-3 sm:p-4 flex items-center gap-3">
+                  <span className="w-10 h-10 rounded-full bg-teal-50 text-teal-700 flex items-center justify-center shrink-0"><FaIcon icon="fa-user-doctor" /></span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold truncate">{row.doctor_name || row.name}</p>
+                    <p className="text-xs text-slate-500">{Boolean(Number(row.is_available)) ? 'Available for bookings' : 'Unavailable'}</p>
+                  </div>
+                  <button type="button" onClick={() => toggleDoctor(row)} className={`relative w-12 h-7 rounded-full transition shrink-0 ${Boolean(Number(row.is_available)) ? 'bg-teal-600' : 'bg-slate-300'}`}>
+                    <span className={`absolute top-1 w-5 h-5 bg-white rounded-full transition ${Boolean(Number(row.is_available)) ? 'left-6' : 'left-1'}`} />
+                  </button>
+                </div>
+              ))}
+              {!availability.length && <p className="p-8 text-center text-sm text-slate-500">No linked doctors.</p>}
+            </div>
+          </section>
+          <section className="glass-card !p-0 overflow-hidden">
+            <div className="p-4 border-b"><h2 className="font-bold">Doctor payout configuration</h2></div>
+            <div className="divide-y">
+              {payouts.map((row, index) => (
+                <div key={row.doctor_id || index} className="p-3 sm:p-4 grid grid-cols-1 md:grid-cols-[1fr_minmax(0,180px)_minmax(0,130px)_auto] gap-3 items-stretch md:items-center">
+                  <div className="min-w-0">
+                    <p className="font-semibold truncate">{row.doctor_name || row.name || `Doctor ${row.doctor_id}`}</p>
+                    <p className="text-xs text-slate-500">Configure fixed pay or revenue share</p>
+                  </div>
+                  <select className="input-field text-sm" value={row.payout_model || 'revenue_share'} onChange={(e) => setPayouts((old) => old.map((p, i) => i === index ? { ...p, payout_model: e.target.value } : p))}>
+                    <option value="revenue_share">Revenue share</option>
+                    <option value="fixed_salary">Fixed salary</option>
+                  </select>
+                  <input className="input-field text-sm" type="number" min="0" value={row.payout_model === 'fixed_salary' ? row.fixed_salary || 0 : row.revenue_share_pct || 0} onChange={(e) => setPayouts((old) => old.map((p, i) => i === index ? { ...p, [row.payout_model === 'fixed_salary' ? 'fixed_salary' : 'revenue_share_pct']: e.target.value } : p))} />
+                  <button type="button" className="btn-primary text-xs !py-2 w-full md:w-auto" onClick={() => savePayout(payouts[index])}>Save</button>
+                </div>
+              ))}
+              {!payouts.length && <p className="p-8 text-center text-sm text-slate-500">No payout records.</p>}
+            </div>
+          </section>
         </div>
       )}
     </ClinicPortalShell>

@@ -228,7 +228,7 @@ export default function ClinicPortalProfile() {
       <div className="max-w-3xl space-y-4">
         {rejection && <p className="text-sm text-rose-600">Rejection: {rejection}</p>}
 
-        <div className="flex flex-wrap gap-2">
+        <div className="portal-tabs">
           {TABS.map((t) => (
             <button
               key={t.id}
@@ -250,14 +250,14 @@ export default function ClinicPortalProfile() {
           <div className="glass-card h-64 animate-pulse" />
         ) : tab === 'security' ? (
           <div className="space-y-4">
-            <div className="glass-card !p-6 space-y-4">
+            <div className="glass-card !p-4 sm:!p-6 space-y-4">
               <h2 className="font-semibold text-slate-800">Login account</h2>
               <p className="text-sm text-slate-500">
                 Signed in as <strong>{user?.email}</strong>
                 {user?.auth_provider === 'google' ? ' · Google account linked' : ''}
               </p>
               <form onSubmit={saveAccount} className="space-y-3 max-w-md">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <input
                     className="input-field"
                     placeholder="First name"

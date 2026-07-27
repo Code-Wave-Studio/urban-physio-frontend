@@ -41,8 +41,8 @@ export default function ClinicCalendarPage() {
       subtitle="Working hours, doctor schedules, rooms/beds, holidays and leave for your clinic."
     >
       <div className="space-y-4">
-        <div className="grid sm:grid-cols-3 gap-3">
-          <div className="glass-card !p-4 flex items-start gap-3">
+        <div className="portal-kpi-grid md:!grid-cols-3">
+          <div className="glass-card !p-3 sm:!p-4 flex items-start gap-3">
             <span className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0">
               <FaIcon icon="fa-hospital" />
             </span>
@@ -52,11 +52,11 @@ export default function ClinicCalendarPage() {
               <p className="text-xs text-slate-500 mt-0.5">Calendar is locked to this clinic</p>
             </div>
           </div>
-          <div className="glass-card !p-4 flex items-start gap-3">
+          <div className="glass-card !p-3 sm:!p-4 flex items-start gap-3">
             <span className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0">
               <FaIcon icon="fa-door-open" />
             </span>
-            <div>
+            <div className="min-w-0">
               <p className="text-[11px] uppercase tracking-wide text-slate-400 font-semibold">Rooms / beds</p>
               <p className="font-semibold text-slate-900">
                 {roomsLoading ? '…' : `${rooms.length} room${rooms.length === 1 ? '' : 's'}`}
@@ -66,11 +66,11 @@ export default function ClinicCalendarPage() {
               </p>
             </div>
           </div>
-          <div className="glass-card !p-4 flex items-start gap-3">
+          <div className="glass-card !p-3 sm:!p-4 flex items-start gap-3">
             <span className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
               <FaIcon icon="fa-calendar-plus" />
             </span>
-            <div>
+            <div className="min-w-0">
               <p className="text-[11px] uppercase tracking-wide text-slate-400 font-semibold">Quick actions</p>
               <p className="font-semibold text-slate-900">{canManage ? 'Leave · Holiday · Rooms' : 'View only'}</p>
               <p className="text-xs text-slate-500 mt-0.5">

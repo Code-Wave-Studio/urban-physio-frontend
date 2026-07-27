@@ -285,14 +285,14 @@ export default function ClinicBillingPage() {
           </div>
 
           {loading || boot ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="portal-kpi-grid">
               {[1, 2, 3, 4].map((i) => <div key={i} className="glass-card h-24 animate-pulse" />)}
             </div>
           ) : (
             <>
               {tab === 'overview' && (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
+                  <div className="portal-kpi-grid md:!grid-cols-3 xl:!grid-cols-5">
                     <Kpi label="Today's revenue" value={money(ov.revenue_today)} icon="fa-indian-rupee-sign" tint="emerald" />
                     <Kpi label="Month revenue" value={money(ov.revenue_month)} icon="fa-calendar" tint="violet" />
                     <Kpi label="Pending payments" value={`${ov.pending_count || 0} · ${money(ov.pending_amount)}`} icon="fa-hourglass-half" tint="rose" />
@@ -315,46 +315,68 @@ export default function ClinicBillingPage() {
 
               {tab === 'pending' && (
                 <div className="glass-card !p-0 overflow-hidden">
-                  <div className="px-4 py-3 border-b border-slate-100 flex justify-between items-center">
+                  <div className="px-4 py-3 border-b border-slate-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                     <h3 className="font-semibold text-slate-900">Pending payments</h3>
-                    <button type="button" className="btn-outline text-xs" onClick={load}>Refresh</button>
+                    <button type="button" className="btn-outline text-xs w-full sm:w-auto" onClick={load}>Refresh</button>
                   </div>
-                  <div className="overflow-x-auto portal-table-wrap">
-                    <table className="w-full text-sm">
-                      <thead className="text-[11px] uppercase text-slate-500 bg-slate-50/80 text-left">
-                        <tr>
-                          <th className="px-4 py-3">Patient</th>
-                          <th className="px-4 py-3">When</th>
-                          <th className="px-4 py-3">Doctor</th>
-                          <th className="px-4 py-3">Amount</th>
-                          <th className="px-4 py-3">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                  {!pending.length ? (
+                    <p className="px-4 py-10 text-center text-slate-500">No pending payments</p>
+                  ) : (
+                    <>
+                      <div className="portal-mobile-list">
                         {pending.map((row) => (
-                          <tr key={row.id} className="border-t border-slate-100">
-                            <td className="px-4 py-3">
-                              <p className="font-medium">{row.patient_full_name || 'Patient'}</p>
-                              <p className="text-xs text-slate-500">{row.booking_id}</p>
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap">{row.appointment_date} · {row.start_time}</td>
-                            <td className="px-4 py-3">{row.doctor_name || '—'}</td>
-                            <td className="px-4 py-3 font-semibold">{money(row.amount)}</td>
-                            <td className="px-4 py-3">
-                              {can('billing.collect') && (
-                                <button type="button" className="text-xs font-semibold text-teal-700 hover:underline" onClick={() => openCollect(row)}>
-                                  Collect payment
-                                </button>
-                              )}
-                            </td>
-                          </tr>
+                          <article key={row.id} className="rounded-2xl border border-slate-100 bg-white p-3.5 space-y-2 shadow-sm">
+                            <div className="flex justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="font-semibold truncate">{row.patient_full_name || 'Patient'}</p>
+                                <p className="text-[11px] font-mono text-slate-500">{row.booking_id}</p>
+                              </div>
+                              <p className="font-bold text-slate-900 shrink-0">{money(row.amount)}</p>
+                            </div>
+                            <p className="text-xs text-slate-600">{row.appointment_date} · {row.start_time} · {row.doctor_name || '—'}</p>
+                            {can('billing.collect') && (
+                              <button type="button" className="text-xs font-semibold text-teal-700" onClick={() => openCollect(row)}>
+                                Collect payment
+                              </button>
+                            )}
+                          </article>
                         ))}
-                        {!pending.length && (
-                          <tr><td colSpan={5} className="px-4 py-10 text-center text-slate-500">No pending payments</td></tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
+                      </div>
+                      <div className="portal-desktop-table portal-table-wrap">
+                        <table className="w-full text-sm">
+                          <thead className="text-[11px] uppercase text-slate-500 bg-slate-50/80 text-left">
+                            <tr>
+                              <th className="px-4 py-3">Patient</th>
+                              <th className="px-4 py-3">When</th>
+                              <th className="px-4 py-3">Doctor</th>
+                              <th className="px-4 py-3">Amount</th>
+                              <th className="px-4 py-3">Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {pending.map((row) => (
+                              <tr key={row.id} className="border-t border-slate-100">
+                                <td className="px-4 py-3">
+                                  <p className="font-medium">{row.patient_full_name || 'Patient'}</p>
+                                  <p className="text-xs text-slate-500">{row.booking_id}</p>
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap">{row.appointment_date} · {row.start_time}</td>
+                                <td className="px-4 py-3">{row.doctor_name || '—'}</td>
+                                <td className="px-4 py-3 font-semibold">{money(row.amount)}</td>
+                                <td className="px-4 py-3">
+                                  {can('billing.collect') && (
+                                    <button type="button" className="text-xs font-semibold text-teal-700 hover:underline" onClick={() => openCollect(row)}>
+                                      Collect payment
+                                    </button>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
@@ -379,8 +401,40 @@ export default function ClinicBillingPage() {
                     <button type="button" className="btn-outline text-sm" onClick={load}>Apply</button>
                   </div>
                   <div className="glass-card !p-0 overflow-hidden">
-                    <div className="portal-table-wrap">
-                      <table className="w-full text-sm">
+                    {!filteredPayments.length ? (
+                      <p className="px-4 py-10 text-center text-slate-500">No payments found</p>
+                    ) : (
+                      <>
+                        <div className="portal-mobile-list">
+                          {filteredPayments.map((p) => (
+                            <article key={p.id} className="rounded-2xl border border-slate-100 bg-white p-3.5 space-y-2 shadow-sm">
+                              <div className="flex justify-between gap-2">
+                                <div className="min-w-0">
+                                  <p className="font-semibold truncate">{p.patient_full_name || '—'}</p>
+                                  <p className="text-[11px] font-mono text-slate-500 truncate">{p.invoice_number || '—'}</p>
+                                </div>
+                                <div className="text-right shrink-0">
+                                  <p className="font-bold">{money(p.amount)}</p>
+                                  <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${
+                                    p.status === 'paid' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
+                                  }`}>{p.status}</span>
+                                </div>
+                              </div>
+                              <p className="text-xs text-slate-500 capitalize">
+                                {(p.channel || p.payment_channel || (p.razorpay_payment_id ? 'online' : 'offline'))}
+                                {p.payment_method ? ` · ${p.payment_method}` : ''}
+                              </p>
+                              <div className="flex flex-wrap gap-3 pt-1 border-t border-slate-100">
+                                <button type="button" className="text-xs font-semibold text-teal-700" onClick={() => printReceipt(p.id)}>Print receipt</button>
+                                {can('billing.refund') && p.status === 'paid' && settings?.enable_refunds && (
+                                  <button type="button" className="text-xs font-semibold text-rose-600" onClick={() => doRefund(p)} disabled={busy}>Refund</button>
+                                )}
+                              </div>
+                            </article>
+                          ))}
+                        </div>
+                        <div className="portal-desktop-table portal-table-wrap">
+                          <table className="w-full text-sm">
                       <thead className="text-[11px] uppercase text-slate-500 bg-slate-50/80 text-left">
                         <tr>
                           <th className="px-4 py-3">Invoice / Receipt</th>
@@ -434,12 +488,11 @@ export default function ClinicBillingPage() {
                             </td>
                           </tr>
                         ))}
-                        {!filteredPayments.length && (
-                          <tr><td colSpan={6} className="px-4 py-10 text-center text-slate-500">No payments found</td></tr>
-                        )}
                       </tbody>
-                      </table>
-                    </div>
+                          </table>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               )}

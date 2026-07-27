@@ -117,29 +117,32 @@ export default function ClinicPortalEarnings() {
       title="Finance & Earnings"
       subtitle="Clinic revenue from confirmed & completed appointments"
       actions={
-        <Link to="/clinic-portal/appointments" className="btn-outline text-sm inline-flex items-center gap-2">
-          <FaIcon icon="fa-calendar-check" />
-          View appointments
-        </Link>
+        <div className="portal-page-actions">
+          <Link to="/clinic-portal/appointments" className="btn-outline inline-flex items-center gap-2">
+            <FaIcon icon="fa-calendar-check" />
+            <span className="hidden sm:inline">View appointments</span>
+            <span className="sm:hidden">Appts</span>
+          </Link>
+        </div>
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {bootLoading || loading ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="portal-kpi-grid">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="glass-card h-24 animate-pulse" />
             ))}
           </div>
         ) : (
           <>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="portal-kpi-grid">
               {cards.map((c) => (
-                <div key={c.label} className="glass-card !p-4">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-2 ${c.tone}`}>
+                <div key={c.label} className="glass-card !p-3 sm:!p-4 min-w-0">
+                  <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center mb-2 ${c.tone}`}>
                     <FaIcon icon={c.icon} />
                   </div>
-                  <p className="text-xs text-slate-500">{c.label}</p>
-                  <p className="text-xl font-bold text-slate-900 mt-0.5">{c.value}</p>
+                  <p className="text-xs text-slate-500 truncate">{c.label}</p>
+                  <p className="text-lg sm:text-xl font-bold text-slate-900 mt-0.5 truncate">{c.value}</p>
                 </div>
               ))}
             </div>
@@ -151,23 +154,26 @@ export default function ClinicPortalEarnings() {
               </div>
             )}
 
-            <div className="grid lg:grid-cols-5 gap-4">
-              <div className="lg:col-span-3 glass-card !p-5">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+              <div className="lg:col-span-3 glass-card !p-3 sm:!p-5 min-w-0">
                 <h2 className="font-bold text-slate-900 mb-4">Revenue — last 12 months</h2>
                 {byMonth.length ? (
-                  <Bar
-                    data={monthChart}
-                    options={{
-                      responsive: true,
-                      plugins: { legend: { display: false } },
-                      scales: { y: { beginAtZero: true } },
-                    }}
-                  />
+                  <div className="h-52 sm:h-64 w-full min-w-0">
+                    <Bar
+                      data={monthChart}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true } },
+                      }}
+                    />
+                  </div>
                 ) : (
                   <p className="text-sm text-slate-500 py-10 text-center">No revenue data yet</p>
                 )}
               </div>
-              <div className="lg:col-span-2 glass-card !p-5">
+              <div className="lg:col-span-2 glass-card !p-3 sm:!p-5 min-w-0">
                 <h2 className="font-bold text-slate-900 mb-4">By consultation type</h2>
                 {byType.length ? (
                   <div className="max-w-[240px] mx-auto">
@@ -179,8 +185,8 @@ export default function ClinicPortalEarnings() {
               </div>
             </div>
 
-            <div className="grid lg:grid-cols-2 gap-4">
-              <div className="glass-card !p-5">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="glass-card !p-3 sm:!p-5">
                 <h2 className="font-bold text-slate-900 mb-3">By doctor</h2>
                 <ul className="space-y-2">
                   {byDoctor.map((d) => (
@@ -195,7 +201,7 @@ export default function ClinicPortalEarnings() {
                   {!byDoctor.length && <p className="text-sm text-slate-500">No doctor revenue yet</p>}
                 </ul>
               </div>
-              <div className="glass-card !p-5">
+              <div className="glass-card !p-3 sm:!p-5">
                 <h2 className="font-bold text-slate-900 mb-3">Recent revenue appointments</h2>
                 <ul className="space-y-2 max-h-80 overflow-y-auto">
                   {(data?.recent || []).map((a) => (
@@ -214,20 +220,20 @@ export default function ClinicPortalEarnings() {
               </div>
             </div>
 
-            <div className="glass-card !p-5 max-w-md">
+            <div className="glass-card !p-3 sm:!p-5 max-w-md w-full">
               <h2 className="font-bold text-slate-900">Session mode prices</h2>
               <p className="text-xs text-slate-500 mt-1 mb-4">Default price used for clinic-created bookings and mode changes.</p>
               <div className="space-y-3">
                 {['clinic', 'home_visit', 'online'].map((mode) => (
-                  <label key={mode} className="flex items-center justify-between gap-3 text-sm font-medium capitalize">
+                  <label key={mode} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm font-medium capitalize">
                     {mode === 'clinic' ? 'At clinic' : mode.replace('_', ' ')}
-                    <div className="relative">
+                    <div className="relative w-full sm:w-auto">
                       <span className="absolute left-3 top-2.5 text-slate-400">₹</span>
                       <input
                         type="number"
                         min="0"
                         step="0.01"
-                        className="input-field !w-36 !pl-7"
+                        className="input-field w-full sm:!w-36 !pl-7"
                         value={modePrices[mode] ?? ''}
                         onChange={(e) => setModePrices((old) => ({ ...old, [mode]: e.target.value }))}
                       />

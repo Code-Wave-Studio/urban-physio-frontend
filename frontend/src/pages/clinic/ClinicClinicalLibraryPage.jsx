@@ -227,13 +227,13 @@ export default function ClinicClinicalLibraryPage() {
       title="Clinical Library"
       subtitle="Custom diagnoses, symptoms, treatment types and versioned assessment templates"
     >
-      <div className="flex gap-2 overflow-x-auto mb-4">
+      <div className="portal-tabs mb-4">
         {TABS.map(([id, label]) => (
           <button
             key={id}
             type="button"
             onClick={() => { setTab(id); reset(); }}
-            className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold ${tab === id ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-600'}`}
+            className={`rounded-full px-4 py-2 text-xs font-semibold ${tab === id ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-600'}`}
           >
             {label}
           </button>
@@ -251,8 +251,8 @@ export default function ClinicClinicalLibraryPage() {
         </div>
       )}
 
-      <div className="grid lg:grid-cols-[1fr_440px] gap-5">
-        <section className="glass-card !p-0 overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(280px,400px)] gap-4 sm:gap-5">
+        <section className="glass-card !p-0 overflow-hidden order-2 lg:order-1 min-w-0">
           {loading ? (
             <div className="h-56 m-4 bg-slate-100 rounded-xl animate-pulse" />
           ) : tab === 'assessment' ? (
@@ -323,16 +323,18 @@ export default function ClinicClinicalLibraryPage() {
           ) : (
             <div className="divide-y divide-slate-100">
               {rows.map((row) => (
-                <div key={row.id} className="p-4 flex items-start gap-3">
-                  <span className="w-9 h-9 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center">
+                <div key={row.id} className="p-3 sm:p-4 flex flex-col sm:flex-row sm:items-start gap-3">
+                  <span className="w-9 h-9 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0">
                     <FaIcon icon="fa-book-medical" />
                   </span>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <p className="font-semibold text-slate-900">{row.name || row.label}</p>
                     <p className="text-xs text-slate-500 mt-1">{row.description || 'Clinic library entry'}</p>
                   </div>
-                  <button type="button" className="text-xs font-semibold text-teal-700" onClick={() => editLibrary(row)}>Edit</button>
-                  <button type="button" className="text-xs font-semibold text-rose-600" onClick={() => remove(row)}>Delete</button>
+                  <div className="flex gap-3 shrink-0">
+                    <button type="button" className="text-xs font-semibold text-teal-700" onClick={() => editLibrary(row)}>Edit</button>
+                    <button type="button" className="text-xs font-semibold text-rose-600" onClick={() => remove(row)}>Delete</button>
+                  </div>
                 </div>
               ))}
               {!rows.length && <div className="py-12 text-center text-sm text-slate-500">No entries in this category.</div>}
@@ -340,7 +342,7 @@ export default function ClinicClinicalLibraryPage() {
           )}
         </section>
 
-        <form onSubmit={save} className="glass-card !p-5 space-y-4 self-start">
+        <form onSubmit={save} className="glass-card !p-4 sm:!p-5 space-y-4 self-start order-1 lg:order-2 min-w-0">
           <div className="flex justify-between items-start gap-2">
             <div>
               <h2 className="font-bold">

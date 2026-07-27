@@ -96,28 +96,32 @@ export default function ClinicPortalPatients() {
       title="Patients"
       subtitle="Walk-in (offline) patients, invites, and people who booked at your clinic"
       actions={
-        <Link to="/clinic-portal/search" className="btn-outline inline-flex items-center gap-2 !py-2 !px-3 text-sm">
-          <FaIcon icon="fa-magnifying-glass-plus" /> Advanced search
-        </Link>
+        <div className="portal-page-actions">
+          <Link to="/clinic-portal/search" className="btn-outline inline-flex items-center gap-2">
+            <FaIcon icon="fa-magnifying-glass-plus" />
+            <span className="hidden sm:inline">Advanced search</span>
+            <span className="sm:hidden">Search</span>
+          </Link>
+        </div>
       }
     >
-      <div className="space-y-5">
-        <div className="grid sm:grid-cols-4 gap-3">
-          <div className="glass-card !p-4">
+      <div className="space-y-4 sm:space-y-5">
+        <div className="portal-kpi-grid">
+          <div className="glass-card !p-3 sm:!p-4 min-w-0">
             <p className="text-xs text-slate-500">On roster</p>
-            <p className="text-2xl font-bold text-slate-900 mt-1">{rows.length}</p>
+            <p className="text-xl sm:text-2xl font-bold text-slate-900 mt-1 truncate">{rows.length}</p>
           </div>
-          <div className="glass-card !p-4">
+          <div className="glass-card !p-3 sm:!p-4 min-w-0">
             <p className="text-xs text-slate-500">Online</p>
-            <p className="text-2xl font-bold text-emerald-700 mt-1">{online}</p>
+            <p className="text-xl sm:text-2xl font-bold text-emerald-700 mt-1 truncate">{online}</p>
           </div>
-          <div className="glass-card !p-4">
+          <div className="glass-card !p-3 sm:!p-4 min-w-0">
             <p className="text-xs text-slate-500">Awaiting account</p>
-            <p className="text-2xl font-bold text-amber-700 mt-1">{invited}</p>
+            <p className="text-xl sm:text-2xl font-bold text-amber-700 mt-1 truncate">{invited}</p>
           </div>
-          <div className="glass-card !p-4">
+          <div className="glass-card !p-3 sm:!p-4 min-w-0">
             <p className="text-xs text-slate-500">Total visits</p>
-            <p className="text-2xl font-bold text-slate-900 mt-1">{totalVisits}</p>
+            <p className="text-xl sm:text-2xl font-bold text-slate-900 mt-1 truncate">{totalVisits}</p>
           </div>
         </div>
 
@@ -131,107 +135,154 @@ export default function ClinicPortalPatients() {
           onSubmit={(contacts) => clinicPortal.bulkInvitePatients(clinicId, { contacts })}
         />
 
-        <div className="glass-card !p-4 flex flex-col sm:flex-row gap-3">
-          <input
-            className="input-field flex-1"
-            placeholder="Search name, phone, email…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
-          <button type="button" className="btn-outline text-sm" onClick={load}>
-            Search
-          </button>
+        <div className="glass-card !p-3 sm:!p-4">
+          <div className="portal-toolbar">
+            <input
+              className="input-field flex-1 text-sm w-full sm:max-w-md"
+              placeholder="Search name, phone, email…"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+            />
+            <button type="button" className="btn-outline text-sm w-full sm:w-auto" onClick={load}>
+              Search
+            </button>
+          </div>
         </div>
 
         <div className="glass-card !p-0 overflow-hidden">
           {bootLoading || loading ? (
             <div className="h-40 animate-pulse bg-slate-100 m-4 rounded-xl" />
+          ) : !rows.length ? (
+            <div className="px-4 py-12 text-center text-slate-500">
+              <FaIcon icon="fa-users" className="text-3xl text-slate-300 mb-2" />
+              <p>No patients yet — add a walk-in or wait for bookings.</p>
+            </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="text-[11px] uppercase tracking-wide text-slate-500 bg-slate-50/80 text-left">
-                  <tr>
-                    <th className="px-4 py-3">Patient</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3">Contact</th>
-                    <th className="px-4 py-3">Package</th>
-                    <th className="px-4 py-3">Visits</th>
-                    <th className="px-4 py-3">Spent</th>
-                    <th className="px-4 py-3">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((p) => {
-                    const key = p.clinic_patient_id
-                      ? `cp-${p.clinic_patient_id}`
-                      : `p-${p.patient_id}`;
-                    return (
-                      <tr key={key} className="border-t border-slate-100 hover:bg-teal-50/30">
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-9 h-9 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold">
-                              {(p.patient_name || 'P').slice(0, 1).toUpperCase()}
+            <>
+              <div className="portal-mobile-list">
+                {rows.map((p) => {
+                  const key = p.clinic_patient_id ? `cp-${p.clinic_patient_id}` : `p-${p.patient_id}`;
+                  return (
+                    <article key={key} className="rounded-2xl border border-slate-100 bg-white p-3.5 space-y-2.5 shadow-sm">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-9 h-9 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold shrink-0">
+                            {(p.patient_name || 'P').slice(0, 1).toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <Link to={`/clinic-portal/patients/${key}`} className="font-semibold text-slate-900 hover:text-teal-700 truncate block">
+                              {p.patient_name || 'Patient'}
+                            </Link>
+                            {p.last_visit && <p className="text-[11px] text-slate-400">Last visit {formatDate(p.last_visit)}</p>}
+                          </div>
+                        </div>
+                        <StatusBadge status={p.portal_status} />
+                      </div>
+                      <div className="text-xs text-slate-600 space-y-0.5">
+                        <p>{p.phone || '—'}{p.email ? ` · ${p.email}` : ''}</p>
+                        {p.package_name && (
+                          <p className="text-slate-800">
+                            {p.package_name} · {Number(p.package_completed || 0)}/{Number(p.package_sessions || 0)} sessions
+                          </p>
+                        )}
+                        <p>
+                          <span className="font-semibold">{p.visit_count || 0}</span> visits ·{' '}
+                          <span className="font-medium text-emerald-700">{money(p.total_spent)}</span>
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2 pt-1 border-t border-slate-100">
+                        <Link to={`/clinic-portal/patients/${key}`} className="btn-outline text-xs !py-1.5">View</Link>
+                        {p.clinic_patient_id && p.portal_status !== 'online' && (
+                          <button
+                            type="button"
+                            className="btn-outline text-xs !py-1.5"
+                            disabled={resendingId === p.clinic_patient_id}
+                            onClick={() => resend(p.clinic_patient_id)}
+                          >
+                            {resendingId === p.clinic_patient_id ? 'Sending…' : 'Resend invite'}
+                          </button>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+              <div className="portal-desktop-table portal-table-wrap">
+                <table className="w-full text-sm">
+                  <thead className="text-[11px] uppercase tracking-wide text-slate-500 bg-slate-50/80 text-left">
+                    <tr>
+                      <th className="px-4 py-3">Patient</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3">Contact</th>
+                      <th className="px-4 py-3">Package</th>
+                      <th className="px-4 py-3">Visits</th>
+                      <th className="px-4 py-3">Spent</th>
+                      <th className="px-4 py-3">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((p) => {
+                      const key = p.clinic_patient_id ? `cp-${p.clinic_patient_id}` : `p-${p.patient_id}`;
+                      return (
+                        <tr key={key} className="border-t border-slate-100 hover:bg-teal-50/30">
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-9 h-9 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold">
+                                {(p.patient_name || 'P').slice(0, 1).toUpperCase()}
+                              </div>
+                              <div>
+                                <Link to={`/clinic-portal/patients/${key}`} className="font-medium text-slate-900 hover:text-teal-700 hover:underline">
+                                  {p.patient_name || 'Patient'}
+                                </Link>
+                                {p.last_visit && (
+                                  <p className="text-[11px] text-slate-400">Last visit {formatDate(p.last_visit)}</p>
+                                )}
+                              </div>
                             </div>
-                            <div>
-                              <Link to={`/clinic-portal/patients/${key}`} className="font-medium text-slate-900 hover:text-teal-700 hover:underline">
-                                {p.patient_name || 'Patient'}
-                              </Link>
-                              {p.last_visit && (
-                                <p className="text-[11px] text-slate-400">Last visit {formatDate(p.last_visit)}</p>
+                          </td>
+                          <td className="px-4 py-3">
+                            <StatusBadge status={p.portal_status} />
+                          </td>
+                          <td className="px-4 py-3 text-slate-600">
+                            <p>{p.phone || '—'}</p>
+                            <p className="text-xs text-slate-400">{p.email || ''}</p>
+                          </td>
+                          <td className="px-4 py-3 text-slate-600 text-xs">
+                            {p.package_name ? (
+                              <>
+                                <p className="font-medium text-slate-800">{p.package_name}</p>
+                                <p>
+                                  {Number(p.package_completed || 0)}/{Number(p.package_sessions || 0)} sessions
+                                </p>
+                              </>
+                            ) : (
+                              '—'
+                            )}
+                          </td>
+                          <td className="px-4 py-3 font-semibold">{p.visit_count || 0}</td>
+                          <td className="px-4 py-3 font-medium text-emerald-700">{money(p.total_spent)}</td>
+                          <td className="px-4 py-3">
+                            <div className="flex flex-wrap gap-2">
+                              <Link to={`/clinic-portal/patients/${key}`} className="btn-outline text-xs !py-1.5">View</Link>
+                              {p.clinic_patient_id && p.portal_status !== 'online' && (
+                                <button
+                                  type="button"
+                                  className="btn-outline text-xs !py-1.5"
+                                  disabled={resendingId === p.clinic_patient_id}
+                                  onClick={() => resend(p.clinic_patient_id)}
+                                >
+                                  {resendingId === p.clinic_patient_id ? 'Sending…' : 'Resend invite'}
+                                </button>
                               )}
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <StatusBadge status={p.portal_status} />
-                        </td>
-                        <td className="px-4 py-3 text-slate-600">
-                          <p>{p.phone || '—'}</p>
-                          <p className="text-xs text-slate-400">{p.email || ''}</p>
-                        </td>
-                        <td className="px-4 py-3 text-slate-600 text-xs">
-                          {p.package_name ? (
-                            <>
-                              <p className="font-medium text-slate-800">{p.package_name}</p>
-                              <p>
-                                {Number(p.package_completed || 0)}/{Number(p.package_sessions || 0)} sessions
-                              </p>
-                            </>
-                          ) : (
-                            '—'
-                          )}
-                        </td>
-                        <td className="px-4 py-3 font-semibold">{p.visit_count || 0}</td>
-                        <td className="px-4 py-3 font-medium text-emerald-700">{money(p.total_spent)}</td>
-                        <td className="px-4 py-3">
-                          <div className="flex flex-wrap gap-2">
-                            <Link to={`/clinic-portal/patients/${key}`} className="btn-outline text-xs !py-1.5">View</Link>
-                            {p.clinic_patient_id && p.portal_status !== 'online' && (
-                              <button
-                                type="button"
-                                className="btn-outline text-xs !py-1.5"
-                                disabled={resendingId === p.clinic_patient_id}
-                                onClick={() => resend(p.clinic_patient_id)}
-                              >
-                                {resendingId === p.clinic_patient_id ? 'Sending…' : 'Resend invite'}
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {!rows.length && (
-                    <tr>
-                      <td colSpan={7} className="px-4 py-12 text-center text-slate-500">
-                        <FaIcon icon="fa-users" className="text-3xl text-slate-300 mb-2" />
-                        <p>No patients yet — add a walk-in or wait for bookings.</p>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       </div>

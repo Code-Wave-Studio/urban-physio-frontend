@@ -124,14 +124,14 @@ export default function ClinicAdminHome() {
       {!can('dashboard.admin') ? (
         <div className="glass-card text-center py-12 text-slate-500">No analytics access in this mode.</div>
       ) : loading || boot ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="portal-kpi-grid">
           {Array.from({ length: 8 }).map((_, i) => <div key={i} className="glass-card h-24 animate-pulse" />)}
         </div>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-4 sm:space-y-5">
           <ClinicQuickActions isAdmin />
 
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+          <div className="portal-kpi-grid md:!grid-cols-3 xl:!grid-cols-4">
             <Kpi label="Today's appointments" value={k.today_appointments ?? 0} icon="fa-calendar-check" />
             <Kpi label="Today's walk-ins" value={k.today_walkins ?? 0} icon="fa-person-walking" tint="sky" />
             <Kpi label="New patients (month)" value={k.new_patients ?? 0} icon="fa-user-plus" tint="emerald" />
@@ -150,16 +150,16 @@ export default function ClinicAdminHome() {
             <Kpi label="Month revenue" value={inr(k.month_revenue)} icon="fa-chart-column" tint="violet" />
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-4">
-            <div className="glass-card !p-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="glass-card !p-3 sm:!p-4">
               <h3 className="font-semibold text-slate-900 mb-3">Patient growth</h3>
-              <div className="h-56">
+              <div className="h-48 sm:h-56 w-full min-w-0">
                 <Line data={growthChart} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }} />
               </div>
             </div>
-            <div className="glass-card !p-4">
+            <div className="glass-card !p-3 sm:!p-4">
               <h3 className="font-semibold text-slate-900 mb-3">Revenue (6 months)</h3>
-              <div className="h-56">
+              <div className="h-48 sm:h-56 w-full min-w-0">
                 <Bar data={revenueChart} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }} />
               </div>
             </div>

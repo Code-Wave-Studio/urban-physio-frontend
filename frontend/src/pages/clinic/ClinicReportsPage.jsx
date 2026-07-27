@@ -117,14 +117,14 @@ export default function ClinicReportsPage() {
       }
     >
       {boot || loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="portal-kpi-grid">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="glass-card h-24 animate-pulse" />
           ))}
         </div>
       ) : (
-        <div className="space-y-5">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="space-y-4 sm:space-y-5">
+          <div className="portal-kpi-grid">
             <Kpi label="Today's appointments" value={m.today_total ?? 0} icon="fa-calendar-check" />
             <Kpi label="Unpaid today" value={m.unpaid_today ?? 0} icon="fa-hourglass-half" />
             <Kpi label="Walk-ins today" value={m.walkins_today ?? 0} icon="fa-person-walking" />
@@ -135,14 +135,14 @@ export default function ClinicReportsPage() {
             />
           </div>
           {billing && (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="portal-kpi-grid md:!grid-cols-3">
               <Kpi label="Revenue today" value={money(b.revenue_today)} icon="fa-indian-rupee-sign" />
               <Kpi label="Revenue month" value={money(b.revenue_month)} icon="fa-chart-line" />
               <Kpi label="Active packages" value={b.active_packages ?? 0} icon="fa-box-open" />
             </div>
           )}
           {(can('reports.export') || can('analytics.view')) && (
-          <div className="glass-card">
+          <div className="glass-card !p-3 sm:!p-5">
             <h3 className="font-semibold text-slate-800 mb-2">Exports</h3>
             <p className="text-sm text-slate-500 mb-4">Download revenue, appointment, doctor and package utilisation data.</p>
             <div className="flex flex-wrap gap-2 mb-3">
@@ -150,7 +150,7 @@ export default function ClinicReportsPage() {
                 <button
                   key={type}
                   type="button"
-                  className="btn-outline text-sm capitalize"
+                  className="btn-outline text-sm capitalize w-full sm:w-auto"
                   disabled={Boolean(exporting)}
                   onClick={() => exportReport('csv', type)}
                 >

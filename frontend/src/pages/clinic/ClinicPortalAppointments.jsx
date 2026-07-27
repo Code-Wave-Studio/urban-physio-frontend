@@ -215,61 +215,63 @@ export default function ClinicPortalAppointments() {
       title="Appointments"
       subtitle="Queue, check-in, reschedule status and payment collection"
       actions={
-        <div className="flex gap-2">
+        <div className="portal-page-actions">
           {canManage && (
-            <button type="button" className="btn-primary text-sm !py-2" onClick={() => setBookingOpen(true)}>
-              <FaIcon icon="fa-calendar-plus" className="mr-2" />Book New
+            <button type="button" className="btn-primary" onClick={() => setBookingOpen(true)}>
+              <FaIcon icon="fa-calendar-plus" className="mr-1.5" />
+              <span className="hidden sm:inline">Book New</span>
+              <span className="sm:hidden">Book</span>
             </button>
           )}
           <button
             type="button"
-            className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+            className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium shrink-0 ${
               view === 'today' ? 'bg-teal-600 text-white' : 'bg-white border border-slate-200 text-slate-600'
             }`}
             onClick={() => setView('today')}
           >
-            Today ({todayCount || '…'})
+            Today
           </button>
           <button
             type="button"
-            className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+            className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium shrink-0 ${
               view === 'list' ? 'bg-teal-600 text-white' : 'bg-white border border-slate-200 text-slate-600'
             }`}
             onClick={() => setView('list')}
           >
-            All list
+            All
           </button>
         </div>
       }
     >
-      <div className="space-y-5">
-        <div className="grid sm:grid-cols-4 gap-3">
+      <div className="space-y-4 sm:space-y-5">
+        <div className="portal-kpi-grid">
           {[
             ['Total shown', summary.total ?? rows.length, 'fa-calendar'],
             ['Pending', summary.pending ?? 0, 'fa-clock'],
             ['Confirmed', summary.confirmed ?? 0, 'fa-circle-check'],
             ['Completed', summary.completed ?? 0, 'fa-flag-checkered'],
           ].map(([label, value, icon]) => (
-            <div key={label} className="glass-card !p-3 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center">
+            <div key={label} className="glass-card !p-3 flex items-center gap-2.5 sm:gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
                 <FaIcon icon={icon} />
               </div>
-              <div>
-                <p className="text-lg font-bold text-slate-900">{value}</p>
-                <p className="text-[11px] text-slate-500">{label}</p>
+              <div className="min-w-0">
+                <p className="text-lg font-bold text-slate-900 truncate">{value}</p>
+                <p className="text-[11px] text-slate-500 truncate">{label}</p>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="glass-card !p-4 flex flex-col lg:flex-row gap-3 lg:items-end">
-          <div className="flex gap-2 overflow-x-auto pb-1 flex-1">
+        <div className="glass-card !p-3 sm:!p-4 space-y-3">
+          <div className="portal-tabs">
             {STATUS_FILTERS.map((f) => (
               <button
                 key={f.id}
                 type="button"
                 onClick={() => setStatus(f.id)}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold ${
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold ${
                   status === f.id ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
                 }`}
               >
@@ -277,135 +279,178 @@ export default function ClinicPortalAppointments() {
               </button>
             ))}
           </div>
-          <input
-            className="input-field text-sm lg:max-w-xs"
-            placeholder="Search booking, patient, doctor…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
-          {view === 'list' && (
-            <>
-              <input type="date" className="input-field text-sm" value={from} onChange={(e) => setFrom(e.target.value)} />
-              <input type="date" className="input-field text-sm" value={to} onChange={(e) => setTo(e.target.value)} />
-            </>
-          )}
-          <button type="button" className="btn-outline text-sm" onClick={load}>
-            Refresh
-          </button>
+          <div className="portal-toolbar">
+            <input
+              className="input-field text-sm w-full sm:max-w-xs"
+              placeholder="Search booking, patient, doctor…"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+            />
+            {view === 'list' && (
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <input type="date" className="input-field text-sm flex-1" value={from} onChange={(e) => setFrom(e.target.value)} />
+                <input type="date" className="input-field text-sm flex-1" value={to} onChange={(e) => setTo(e.target.value)} />
+              </div>
+            )}
+            <button type="button" className="btn-outline text-sm w-full sm:w-auto" onClick={load}>
+              Refresh
+            </button>
+          </div>
         </div>
 
         <div className="glass-card !p-0 overflow-hidden">
           {bootLoading || loading ? (
             <div className="h-40 animate-pulse bg-slate-100 m-4 rounded-xl" />
+          ) : !rows.length ? (
+            <p className="px-4 py-12 text-center text-slate-500">No appointments match these filters</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="text-[11px] uppercase tracking-wide text-slate-500 bg-slate-50/80 text-left">
-                  <tr>
-                    <th className="px-4 py-3">Booking</th>
-                    <th className="px-4 py-3">Patient</th>
-                    <th className="px-4 py-3">Doctor</th>
-                    <th className="px-4 py-3">When</th>
-                    <th className="px-4 py-3">Type</th>
-                    <th className="px-4 py-3">Amount</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((a) => (
-                    <tr key={a.id} className="border-t border-slate-100 hover:bg-teal-50/30">
-                      <td className="px-4 py-3 font-mono text-xs text-slate-600">
-                        {a.booking_id || a.id}
-                        {a.token_number && <span className="block mt-1 rounded bg-teal-100 text-teal-800 px-1.5 py-0.5 w-fit font-sans font-bold">Token #{a.token_number}</span>}
-                      </td>
-                      <td className="px-4 py-3">
-                        <p className="font-medium text-slate-900">{a.patient_name || '—'}</p>
-                        {a.patient_phone && <p className="text-xs text-slate-500">{a.patient_phone}</p>}
-                      </td>
-                      <td className="px-4 py-3 text-slate-700">{a.doctor_name || '—'}</td>
-                      <td className="px-4 py-3 text-slate-600 whitespace-nowrap">
-                        {a.appointment_date}
-                        <span className="text-slate-400"> · </span>
-                        {formatTime(a.start_time)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="inline-flex items-center gap-1.5 capitalize text-slate-700">
-                          <FaIcon icon={TYPE_ICONS[a.consultation_type] || 'fa-calendar'} className="text-teal-600 text-xs" />
-                          {formatType(a.consultation_type)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 font-medium">
+            <>
+              {/* Mobile cards */}
+              <div className="portal-mobile-list">
+                {rows.map((a) => (
+                  <article key={a.id} className="rounded-2xl border border-slate-100 bg-white p-3.5 space-y-2.5 shadow-sm">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-slate-900 truncate">{a.patient_name || '—'}</p>
+                        <p className="text-[11px] font-mono text-slate-500 truncate">{a.booking_id || a.id}</p>
+                      </div>
+                      <span className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full border capitalize ${STATUS_STYLES[a.status] || STATUS_STYLES.pending}`}>
+                        {a.status}
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-600 space-y-1">
+                      <p>
+                        <FaIcon icon="fa-user-doctor" className="text-teal-600 mr-1" />
+                        {a.doctor_name || '—'}
+                      </p>
+                      <p>
+                        <FaIcon icon="fa-calendar" className="text-teal-600 mr-1" />
+                        {a.appointment_date} · {formatTime(a.start_time)}
+                      </p>
+                      <p className="capitalize">
+                        <FaIcon icon={TYPE_ICONS[a.consultation_type] || 'fa-calendar'} className="text-teal-600 mr-1" />
+                        {formatType(a.consultation_type)}
+                        {a.token_number != null && <span className="ml-2 font-bold text-teal-800">Token #{a.token_number}</span>}
+                      </p>
+                      <p className="font-semibold text-slate-800">
                         {money(a.amount)}
                         {a.payment_status !== 'paid' && Number(a.amount) > 0 && (
-                          <span className="block text-[10px] text-rose-600 uppercase font-bold">Unpaid</span>
+                          <span className="ml-2 text-[10px] text-rose-600 uppercase">Unpaid</span>
                         )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`text-xs px-2 py-0.5 rounded-full border capitalize ${STATUS_STYLES[a.status] || STATUS_STYLES.pending}`}>
-                          {a.status}
-                        </span>
-                        {a.waiting_status && <span className="block text-[10px] font-semibold text-amber-700 capitalize mt-1">{String(a.waiting_status).replace(/_/g, ' ')}</span>}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-col gap-1 items-start">
-                          {canManage && a.status === 'pending' && (
-                            <button type="button" disabled={acting === a.id} onClick={() => checkIn(a)} className="text-[11px] font-semibold text-teal-700 hover:underline">
-                              Check in
-                            </button>
-                          )}
-                          {canManage && a.status === 'confirmed' && (
-                            <button type="button" disabled={acting === a.id} onClick={() => setApptStatus(a, 'completed')} className="text-[11px] font-semibold text-emerald-700 hover:underline">
-                              Complete
-                            </button>
-                          )}
-                          {canManage && !['cancelled', 'completed'].includes(a.status) && (
-                            <button type="button" disabled={acting === a.id} onClick={() => cancelRollover(a)} className="text-[11px] font-semibold text-rose-600 hover:underline">
-                              Cancel + rollover
-                            </button>
-                          )}
-                          {canManage && !['cancelled', 'completed'].includes(a.status) && (
-                            <button type="button" disabled={acting === a.id} onClick={() => changeMode(a)} className="text-[11px] font-semibold text-sky-700 hover:underline">
-                              Change mode
-                            </button>
-                          )}
-                          {canManage && a.consultation_type === 'online' && !a.google_meet_link && (
-                            <button type="button" disabled={acting === a.id} onClick={() => generateMeeting(a)} className="text-[11px] font-semibold text-violet-700 hover:underline">
-                              Generate meeting
-                            </button>
-                          )}
-                          {a.google_meet_link && <a href={a.google_meet_link} target="_blank" rel="noreferrer" className="text-[11px] font-semibold text-violet-700 hover:underline">Open meeting</a>}
-                          {can('soap.manage') && (
-                            <button type="button" onClick={() => openSoap(a)} className="text-[11px] font-semibold text-slate-700 hover:underline">
-                              SOAP note
-                            </button>
-                          )}
-                          {canBill && a.payment_status !== 'paid' && Number(a.amount) > 0 && (
-                            <ClinicCollectPaymentButton
-                              clinicId={clinicId}
-                              appointment={a}
-                              disabled={acting === a.id}
-                              label="Collect pay"
-                              onDone={load}
-                            />
-                          )}
-                          <button type="button" onClick={() => printSlip(a)} className="text-[11px] font-semibold text-slate-600 hover:underline">
-                            Print slip
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {!rows.length && (
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-x-3 gap-y-1.5 pt-1 border-t border-slate-100">
+                      {canManage && a.status === 'pending' && (
+                        <button type="button" disabled={acting === a.id} onClick={() => checkIn(a)} className="text-xs font-semibold text-teal-700">Check in</button>
+                      )}
+                      {canManage && a.status === 'confirmed' && (
+                        <button type="button" disabled={acting === a.id} onClick={() => setApptStatus(a, 'completed')} className="text-xs font-semibold text-emerald-700">Complete</button>
+                      )}
+                      {canManage && !['cancelled', 'completed'].includes(a.status) && (
+                        <>
+                          <button type="button" disabled={acting === a.id} onClick={() => cancelRollover(a)} className="text-xs font-semibold text-rose-600">Rollover</button>
+                          <button type="button" disabled={acting === a.id} onClick={() => changeMode(a)} className="text-xs font-semibold text-sky-700">Mode</button>
+                        </>
+                      )}
+                      {canManage && a.consultation_type === 'online' && !a.google_meet_link && (
+                        <button type="button" disabled={acting === a.id} onClick={() => generateMeeting(a)} className="text-xs font-semibold text-violet-700">Meeting</button>
+                      )}
+                      {a.google_meet_link && <a href={a.google_meet_link} target="_blank" rel="noreferrer" className="text-xs font-semibold text-violet-700">Open meet</a>}
+                      {can('soap.manage') && (
+                        <button type="button" onClick={() => openSoap(a)} className="text-xs font-semibold text-slate-700">SOAP</button>
+                      )}
+                      {canBill && a.payment_status !== 'paid' && Number(a.amount) > 0 && (
+                        <ClinicCollectPaymentButton clinicId={clinicId} appointment={a} disabled={acting === a.id} label="Collect" onDone={load} />
+                      )}
+                      <button type="button" onClick={() => printSlip(a)} className="text-xs font-semibold text-slate-600">Print</button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              {/* Desktop table */}
+              <div className="portal-desktop-table portal-table-wrap">
+                <table className="w-full text-sm">
+                  <thead className="text-[11px] uppercase tracking-wide text-slate-500 bg-slate-50/80 text-left">
                     <tr>
-                      <td colSpan={8} className="px-4 py-12 text-center text-slate-500">
-                        No appointments match these filters
-                      </td>
+                      <th className="px-4 py-3">Booking</th>
+                      <th className="px-4 py-3">Patient</th>
+                      <th className="px-4 py-3">Doctor</th>
+                      <th className="px-4 py-3">When</th>
+                      <th className="px-4 py-3">Type</th>
+                      <th className="px-4 py-3">Amount</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3">Actions</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {rows.map((a) => (
+                      <tr key={a.id} className="border-t border-slate-100 hover:bg-teal-50/30">
+                        <td className="px-4 py-3 font-mono text-xs text-slate-600">
+                          {a.booking_id || a.id}
+                          {a.token_number && <span className="block mt-1 rounded bg-teal-100 text-teal-800 px-1.5 py-0.5 w-fit font-sans font-bold">Token #{a.token_number}</span>}
+                        </td>
+                        <td className="px-4 py-3">
+                          <p className="font-medium text-slate-900">{a.patient_name || '—'}</p>
+                          {a.patient_phone && <p className="text-xs text-slate-500">{a.patient_phone}</p>}
+                        </td>
+                        <td className="px-4 py-3 text-slate-700">{a.doctor_name || '—'}</td>
+                        <td className="px-4 py-3 text-slate-600 whitespace-nowrap">
+                          {a.appointment_date}
+                          <span className="text-slate-400"> · </span>
+                          {formatTime(a.start_time)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="inline-flex items-center gap-1.5 capitalize text-slate-700">
+                            <FaIcon icon={TYPE_ICONS[a.consultation_type] || 'fa-calendar'} className="text-teal-600 text-xs" />
+                            {formatType(a.consultation_type)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 font-medium">
+                          {money(a.amount)}
+                          {a.payment_status !== 'paid' && Number(a.amount) > 0 && (
+                            <span className="block text-[10px] text-rose-600 uppercase font-bold">Unpaid</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`text-xs px-2 py-0.5 rounded-full border capitalize ${STATUS_STYLES[a.status] || STATUS_STYLES.pending}`}>
+                            {a.status}
+                          </span>
+                          {a.waiting_status && <span className="block text-[10px] font-semibold text-amber-700 capitalize mt-1">{String(a.waiting_status).replace(/_/g, ' ')}</span>}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex flex-col gap-1 items-start">
+                            {canManage && a.status === 'pending' && (
+                              <button type="button" disabled={acting === a.id} onClick={() => checkIn(a)} className="text-[11px] font-semibold text-teal-700 hover:underline">Check in</button>
+                            )}
+                            {canManage && a.status === 'confirmed' && (
+                              <button type="button" disabled={acting === a.id} onClick={() => setApptStatus(a, 'completed')} className="text-[11px] font-semibold text-emerald-700 hover:underline">Complete</button>
+                            )}
+                            {canManage && !['cancelled', 'completed'].includes(a.status) && (
+                              <>
+                                <button type="button" disabled={acting === a.id} onClick={() => cancelRollover(a)} className="text-[11px] font-semibold text-rose-600 hover:underline">Cancel + rollover</button>
+                                <button type="button" disabled={acting === a.id} onClick={() => changeMode(a)} className="text-[11px] font-semibold text-sky-700 hover:underline">Change mode</button>
+                              </>
+                            )}
+                            {canManage && a.consultation_type === 'online' && !a.google_meet_link && (
+                              <button type="button" disabled={acting === a.id} onClick={() => generateMeeting(a)} className="text-[11px] font-semibold text-violet-700 hover:underline">Generate meeting</button>
+                            )}
+                            {a.google_meet_link && <a href={a.google_meet_link} target="_blank" rel="noreferrer" className="text-[11px] font-semibold text-violet-700 hover:underline">Open meeting</a>}
+                            {can('soap.manage') && (
+                              <button type="button" onClick={() => openSoap(a)} className="text-[11px] font-semibold text-slate-700 hover:underline">SOAP note</button>
+                            )}
+                            {canBill && a.payment_status !== 'paid' && Number(a.amount) > 0 && (
+                              <ClinicCollectPaymentButton clinicId={clinicId} appointment={a} disabled={acting === a.id} label="Collect pay" onDone={load} />
+                            )}
+                            <button type="button" onClick={() => printSlip(a)} className="text-[11px] font-semibold text-slate-600 hover:underline">Print slip</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -416,18 +461,24 @@ export default function ClinicPortalAppointments() {
         onBooked={load}
       />
       {soapAppointment && (
-        <div className="fixed inset-0 z-50 bg-slate-950/40 p-3 flex items-center justify-center">
-          <form onSubmit={saveSoap} className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[92vh] overflow-y-auto">
-            <header className="sticky top-0 bg-white border-b px-5 py-4 flex justify-between items-center">
-              <div><h2 className="font-bold">SOAP note</h2><p className="text-xs text-slate-500">{soapAppointment.patient_name} · {soapAppointment.booking_id}</p></div>
-              <button type="button" onClick={() => setSoapAppointment(null)} className="w-9 h-9 rounded-full hover:bg-slate-100"><FaIcon icon="fa-xmark" /></button>
+        <div className="fixed inset-0 z-50 bg-slate-950/40 p-3 flex items-end sm:items-center justify-center">
+          <form onSubmit={saveSoap} className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full max-w-2xl max-h-[92vh] overflow-y-auto">
+            <header className="sticky top-0 bg-white border-b px-4 sm:px-5 py-4 flex justify-between items-center gap-2">
+              <div className="min-w-0">
+                <h2 className="font-bold">SOAP note</h2>
+                <p className="text-xs text-slate-500 truncate">{soapAppointment.patient_name} · {soapAppointment.booking_id}</p>
+              </div>
+              <button type="button" onClick={() => setSoapAppointment(null)} className="w-9 h-9 rounded-full hover:bg-slate-100 shrink-0"><FaIcon icon="fa-xmark" /></button>
             </header>
-            <div className="p-5 grid sm:grid-cols-2 gap-4">
+            <div className="p-4 sm:p-5 grid sm:grid-cols-2 gap-4">
               {[['subjective', 'Subjective'], ['objective', 'Objective'], ['assessment', 'Assessment'], ['plan', 'Plan']].map(([key, label]) => (
                 <label key={key} className="text-sm font-medium">{label}<textarea className="input-field mt-1" rows={5} value={soap[key]} onChange={(e) => setSoap((old) => ({ ...old, [key]: e.target.value }))} /></label>
               ))}
               <label className="sm:col-span-2 text-sm flex items-center gap-2"><input type="checkbox" checked={soap.visible_to_patient} onChange={(e) => setSoap((old) => ({ ...old, visible_to_patient: e.target.checked }))} />Visible to patient</label>
-              <div className="sm:col-span-2 flex justify-end gap-2"><button type="button" className="btn-outline" onClick={() => setSoapAppointment(null)}>Cancel</button><button type="submit" className="btn-primary" disabled={soapSaving}>{soapSaving ? 'Saving…' : 'Save SOAP'}</button></div>
+              <div className="sm:col-span-2 flex flex-col-reverse sm:flex-row justify-end gap-2">
+                <button type="button" className="btn-outline w-full sm:w-auto" onClick={() => setSoapAppointment(null)}>Cancel</button>
+                <button type="submit" className="btn-primary w-full sm:w-auto" disabled={soapSaving}>{soapSaving ? 'Saving…' : 'Save SOAP'}</button>
+              </div>
             </div>
           </form>
         </div>

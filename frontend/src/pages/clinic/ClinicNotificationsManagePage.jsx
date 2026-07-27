@@ -140,7 +140,7 @@ export default function ClinicNotificationsManagePage() {
         </p>
       </div>
 
-      <div className="flex gap-2 mb-4">
+      <div className="portal-tabs mb-4">
         {[['templates', 'Templates'], ['campaigns', 'Campaigns']].map(([id, label]) => (
           <button
             key={id}
@@ -158,8 +158,8 @@ export default function ClinicNotificationsManagePage() {
       ) : tab === 'templates' ? (
         <div className="space-y-4">
           {templates.map((template, index) => (
-            <section key={template.id} className="glass-card !p-5">
-              <div className="grid md:grid-cols-[200px_1fr] gap-4">
+            <section key={template.id} className="glass-card !p-3 sm:!p-5">
+              <div className="grid grid-cols-1 md:grid-cols-[minmax(0,200px)_1fr] gap-4">
                 <div>
                   <p className="font-bold">{template.name || template.event_key}</p>
                   <p className="text-[11px] text-slate-400 mt-0.5">{template.event_key}</p>
@@ -223,14 +223,14 @@ export default function ClinicNotificationsManagePage() {
           {!templates.length && <div className="glass-card text-center text-sm text-slate-500 py-12">No templates configured.</div>}
         </div>
       ) : (
-        <div className="grid lg:grid-cols-[1fr_400px] gap-5">
-          <section className="glass-card !p-0 overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(260px,360px)] gap-4 sm:gap-5">
+          <section className="glass-card !p-0 overflow-hidden order-2 lg:order-1 min-w-0">
             <div className="p-4 border-b"><h2 className="font-bold">Campaign history</h2></div>
             <div className="divide-y">
               {campaigns.map((row) => (
-                <div key={row.id} className="p-4 flex justify-between gap-3">
-                  <div>
-                    <p className="font-semibold">{row.title || row.name}</p>
+                <div key={row.id} className="p-3 sm:p-4 flex flex-col sm:flex-row sm:justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-semibold truncate">{row.title || row.name}</p>
                     <p className="text-xs text-slate-500 capitalize">
                       {row.campaign_type || 'broadcast'}
                       {' · '}
@@ -239,14 +239,14 @@ export default function ClinicNotificationsManagePage() {
                     </p>
                   </div>
                   {['draft', 'scheduled', null, undefined].includes(row.status) && (
-                    <button type="button" onClick={() => send(row)} className="btn-outline text-xs !py-1.5">Send now</button>
+                    <button type="button" onClick={() => send(row)} className="btn-outline text-xs !py-1.5 w-full sm:w-auto shrink-0">Send now</button>
                   )}
                 </div>
               ))}
               {!campaigns.length && <p className="py-12 text-center text-sm text-slate-500">No campaigns yet.</p>}
             </div>
           </section>
-          <form onSubmit={createCampaign} className="glass-card !p-5 space-y-3 self-start">
+          <form onSubmit={createCampaign} className="glass-card !p-4 sm:!p-5 space-y-3 self-start order-1 lg:order-2 min-w-0">
             <h2 className="font-bold">New campaign</h2>
             <input className="input-field" required placeholder="Campaign name" value={campaign.name} onChange={(e) => setCampaign({ ...campaign, name: e.target.value })} />
             <select className="input-field" value={campaign.campaign_type} onChange={(e) => setCampaign({ ...campaign, campaign_type: e.target.value })}>
@@ -256,7 +256,7 @@ export default function ClinicNotificationsManagePage() {
               <option value="birthday">Birthday blast</option>
               <option value="custom">Custom</option>
             </select>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <select className="input-field" value={campaign.channel} onChange={(e) => setCampaign({ ...campaign, channel: e.target.value })}>
                 <option value="email">Email</option>
                 <option value="sms">SMS</option>
