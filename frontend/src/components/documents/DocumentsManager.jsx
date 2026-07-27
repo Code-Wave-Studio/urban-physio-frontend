@@ -19,7 +19,7 @@ export default function DocumentsManager({ initialFilters = {} }) {
   const { user } = useAuth();
   const role = user?.role_slug || 'patient';
   const isAdmin = role === 'admin' || role === 'super_admin';
-  const isStaff = isAdmin || role === 'doctor' || role === 'clinic';
+  const isStaff = isAdmin || role === 'doctor' || role === 'clinic' || role === 'clinic_staff';
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);

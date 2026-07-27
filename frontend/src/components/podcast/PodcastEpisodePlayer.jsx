@@ -11,7 +11,7 @@ function buildEpisode(post, audioSrc) {
     featured_image: post.featured_image,
     audio_url: post.audio_url,
     audioSrc,
-    detailPath: `/physiofeed/${post.slug}`,
+    detailPath: post?.canonical_path || `/podcast/${post.slug}`,
   };
 }
 

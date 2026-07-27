@@ -36,6 +36,19 @@ import AdminAdvancedSearchPage from './pages/admin/AdminAdvancedSearchPage';
 import DoctorCalendarPage from './pages/doctor/DoctorCalendarPage';
 import AdminCalendarPage from './pages/admin/AdminCalendarPage';
 import ClinicCalendarPage from './pages/clinic/ClinicCalendarPage';
+import ClinicPackagesPage from './pages/clinic/ClinicPackagesPage';
+import ClinicReportsPage from './pages/clinic/ClinicReportsPage';
+import ClinicTeamPage from './pages/clinic/ClinicTeamPage';
+import ClinicBrandingPage from './pages/clinic/ClinicBrandingPage';
+import ClinicCreatePackagePage from './pages/clinic/ClinicCreatePackagePage';
+import ClinicClinicalLibraryPage from './pages/clinic/ClinicClinicalLibraryPage';
+import ClinicAvailabilityPage from './pages/clinic/ClinicAvailabilityPage';
+import ClinicQrPage from './pages/clinic/ClinicQrPage';
+import ClinicFormsPage from './pages/clinic/ClinicFormsPage';
+import ClinicPatientDetailPage from './pages/clinic/ClinicPatientDetailPage';
+import ClinicNotificationsManagePage from './pages/clinic/ClinicNotificationsManagePage';
+import ClinicQrIntakePage from './pages/public/ClinicQrIntakePage';
+import ClinicProgressPublicPage from './pages/public/ClinicProgressPublicPage';
 import PatientProfile from './pages/patient/PatientProfile';
 import AdminInvoiceSettings from './pages/admin/AdminInvoiceSettings';
 import AdminBillingPage from './pages/admin/AdminBillingPage';
@@ -171,10 +184,15 @@ export default function App() {
       <Route path="/verify-otp" element={<VerifyOtp />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/c/:token" element={<ClinicQrIntakePage />} />
+      <Route path="/clinic-intake/:token" element={<ClinicQrIntakePage />} />
+      <Route path="/clinic-report/:token" element={<ClinicProgressPublicPage />} />
       <Route path="/doctors" element={<Doctors />} />
       <Route path="/clinics" element={<Clinics />} />
-      <Route path="/best-physiotherapy-clinic-in/:citySlug" element={<CitySeoListingPage type="clinics" />} />
-      <Route path="/best-physiotherapist-in/:citySlug" element={<CitySeoListingPage type="doctors" />} />
+      <Route path="/best-physiotherapy-clinic-in/:citySlug" element={<CitySeoListingPage type="clinics" legacy />} />
+      <Route path="/best-physiotherapist-in/:citySlug" element={<CitySeoListingPage type="doctors" legacy />} />
+      <Route path="/:citySlug/physiotherapy-clinics" element={<CitySeoListingPage type="clinics" />} />
+      <Route path="/:citySlug/physiotherapists" element={<CitySeoListingPage type="doctors" />} />
       <Route
         path="/book"
         element={
@@ -200,9 +218,11 @@ export default function App() {
         }
       />
       <Route path="/doctors/:id" element={<DoctorDetail />} />
-      <Route path="/doctor/:slug" element={<DoctorProfilePage />} />
-      <Route path="/clinic/:slug" element={<ClinicProfilePage />} />
+      <Route path="/doctor/:slug" element={<DoctorProfilePage legacy />} />
+      <Route path="/clinic/:slug" element={<ClinicProfilePage legacy />} />
       <Route path="/clinic/id/:id" element={<ClinicProfilePage />} />
+      <Route path="/:citySlug/:locality/physiotherapists/:slug" element={<DoctorProfilePage />} />
+      <Route path="/:citySlug/:locality/physiotherapy-clinic/:slug" element={<ClinicProfilePage />} />
       <Route path="/treatments" element={<Treatments />} />
       <Route path="/treatments/:slug" element={<TreatmentDetail />} />
       <Route path="/conditions" element={<Conditions />} />
@@ -219,8 +239,13 @@ export default function App() {
       />
       <Route path="/exercises" element={<ExerciseLibrary />} />
       <Route path="/exercises/:slug" element={<ExerciseDetail />} />
-      <Route path="/physiofeed" element={<PhysioFeed />} />
-      <Route path="/physiofeed/:slug" element={<PhysioFeedDetail />} />
+      <Route path="/physiofeed" element={<PhysioFeed legacy />} />
+      <Route path="/physiofeed/:slug" element={<PhysioFeedDetail legacy />} />
+      <Route path="/blog" element={<PhysioFeed mode="blog" />} />
+      <Route path="/blog/category/:categorySlug" element={<PhysioFeed mode="blog-category" />} />
+      <Route path="/blog/:slug" element={<PhysioFeedDetail mode="blog" />} />
+      <Route path="/podcast" element={<PhysioFeed mode="podcast" />} />
+      <Route path="/podcast/:slug" element={<PhysioFeedDetail mode="podcast" />} />
 
       <Route path="/privacy-policy" element={<PolicyPage />} />
       <Route path="/terms-and-conditions" element={<PolicyPage />} />
@@ -274,12 +299,23 @@ export default function App() {
       <Route path="/clinic-portal/documents" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><DocumentsPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/appointments" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicPortalAppointments /></ProtectedRoute>} />
       <Route path="/clinic-portal/patients" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicPortalPatients /></ProtectedRoute>} />
+      <Route path="/clinic-portal/patients/:patientKey" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicPatientDetailPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/earnings" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicPortalEarnings /></ProtectedRoute>} />
       <Route path="/clinic-portal/billing" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicBillingPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/search" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicAdvancedSearchPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/calendar" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicCalendarPage /></ProtectedRoute>} />
+      <Route path="/clinic-portal/availability" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicAvailabilityPage /></ProtectedRoute>} />
+      <Route path="/clinic-portal/packages" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicPackagesPage /></ProtectedRoute>} />
+      <Route path="/clinic-portal/reports" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicReportsPage /></ProtectedRoute>} />
+      <Route path="/clinic-portal/team" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicTeamPage /></ProtectedRoute>} />
+      <Route path="/clinic-portal/branding" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicBrandingPage /></ProtectedRoute>} />
+      <Route path="/clinic-portal/create-package" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicCreatePackagePage /></ProtectedRoute>} />
+      <Route path="/clinic-portal/clinical-library" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicClinicalLibraryPage /></ProtectedRoute>} />
+      <Route path="/clinic-portal/qr" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicQrPage /></ProtectedRoute>} />
+      <Route path="/clinic-portal/forms" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicFormsPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/profile" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicPortalProfile /></ProtectedRoute>} />
       <Route path="/clinic-portal/notifications" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><NotificationsPage /></ProtectedRoute>} />
+      <Route path="/clinic-portal/notifications/manage" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicNotificationsManagePage /></ProtectedRoute>} />
       {/* Doctor/admin clinic analytics (does not collide with public /clinic/:slug profiles) */}
       <Route path="/clinic-manage" element={<ProtectedRoute roles={['doctor', 'admin', 'super_admin']}><ClinicDashboardPage /></ProtectedRoute>} />
       <Route path="/clinic-manage/:clinicId" element={<ProtectedRoute roles={['doctor', 'admin', 'super_admin']}><ClinicDashboardPage /></ProtectedRoute>} />

@@ -3,7 +3,17 @@ Allow: /
 
 Disallow: /admin
 Disallow: /patient
-Disallow: /doctor
+Disallow: /clinic-portal
+Disallow: /clinic/login
+Disallow: /clinic/register
+Disallow: /doctor/login
+Disallow: /doctor/register
+Disallow: /doctor/profile
+Disallow: /doctor/appointments
+Disallow: /doctor/clinics
+Disallow: /doctor/dashboard
+Disallow: /doctor/notifications
+Disallow: /clinic-manage
 Disallow: /login
 Disallow: /register
 

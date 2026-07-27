@@ -169,7 +169,7 @@ export default function Doctors() {
             {!sorted.length && (
               <div className="card text-center py-12 md:py-16 max-w-lg mx-auto">
                 <FaIcon icon="fa-user-doctor" className="text-5xl text-slate-200 mb-4" />
-                <p className="font-semibold text-slate-800 text-lg">No doctors match</p>
+                <p className="font-semibold text-slate-800 text-lg">No physiotherapists match</p>
                 <p className="text-slate-500 text-sm mt-2 px-4">
                   Try another city, clear your search, or browse all of India from the city selector.
                 </p>

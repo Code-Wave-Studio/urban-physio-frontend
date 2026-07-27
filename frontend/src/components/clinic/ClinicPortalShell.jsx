@@ -5,11 +5,12 @@ import FaIcon from '../FaIcon';
 import ClinicRoleSwitch from './ClinicRoleSwitch';
 import { clinicNavFor } from '../../constants/clinicNav';
 import useClinicPortal from '../../hooks/useClinicPortal';
+import { ClinicPortalProvider } from '../../contexts/ClinicPortalContext';
 
 /**
  * Shared clinic portal chrome: role-aware nav + mode switcher badge.
  */
-export default function ClinicPortalShell({ children, title, subtitle, actions }) {
+function ClinicPortalShellInner({ children, title, subtitle, actions }) {
   const {
     portalRole,
     permissions,
@@ -67,7 +68,6 @@ export default function ClinicPortalShell({ children, title, subtitle, actions }
         canSwitchAdmin={canSwitchAdmin}
         onSwitched={() => {
           reload();
-          // Soft refresh nav by remounting via location if needed
           window.dispatchEvent(new Event('clinic-role-changed'));
         }}
       />
@@ -75,19 +75,26 @@ export default function ClinicPortalShell({ children, title, subtitle, actions }
   );
 }
 
+export default function ClinicPortalShell(props) {
+  return (
+    <ClinicPortalProvider>
+      <ClinicPortalShellInner {...props} />
+    </ClinicPortalProvider>
+  );
+}
+
 export function ClinicQuickActions({ isAdmin }) {
   const reception = [
     { to: '/clinic-portal/patients', label: 'Register patient', icon: 'fa-user-plus' },
     { to: '/clinic-portal/appointments', label: 'Today\'s queue', icon: 'fa-list-ol' },
+    { to: '/clinic-portal/packages', label: 'Packages', icon: 'fa-box-open' },
     { to: '/clinic-portal/billing', label: 'Billing / collect', icon: 'fa-file-invoice-dollar' },
-    { to: '/clinic-portal/documents', label: 'Upload document', icon: 'fa-file-arrow-up' },
   ];
   const admin = [
-    { to: '/clinic-portal/admin', label: 'Analytics', icon: 'fa-chart-pie' },
-    { to: '/clinic-portal/staff', label: 'Manage staff', icon: 'fa-id-badge' },
-    { to: '/clinic-portal/billing', label: 'Billing control', icon: 'fa-file-invoice-dollar' },
+    { to: '/clinic-portal/reports', label: 'Reports', icon: 'fa-chart-column' },
+    { to: '/clinic-portal/team', label: 'My Team', icon: 'fa-user-group' },
     { to: '/clinic-portal/earnings', label: 'Finance', icon: 'fa-sack-dollar' },
-    { to: '/clinic-portal/profile', label: 'Clinic settings', icon: 'fa-gear' },
+    { to: '/clinic-portal/profile', label: 'Clinic Profile', icon: 'fa-hospital' },
   ];
   const items = isAdmin ? [...reception, ...admin] : reception;
   return (

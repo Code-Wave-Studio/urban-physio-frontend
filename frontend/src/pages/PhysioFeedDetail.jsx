@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, Navigate, useParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import FaIcon from '../components/FaIcon';
@@ -8,12 +8,13 @@ import { resolveMediaUrl } from '../utils/mediaUrl';
 import PodcastEpisodePlayer from '../components/podcast/PodcastEpisodePlayer';
 import PhysioFeedDetailSidebar from '../components/physiofeed/PhysioFeedDetailSidebar';
 import { cmsContentToHtml } from '../utils/htmlContent';
+import PageMeta, { breadcrumbSchema } from '../components/seo/PageMeta';
 
 function mediaSrc(url) {
   return resolveMediaUrl(url) || url;
 }
 
-export default function PhysioFeedDetail() {
+export default function PhysioFeedDetail({ mode = 'blog', legacy = false }) {
   const { slug } = useParams();
   const [post, setPost] = useState(null);
   const [related, setRelated] = useState([]);
@@ -21,14 +22,12 @@ export default function PhysioFeedDetail() {
   const [relatedLoading, setRelatedLoading] = useState(true);
 
   useEffect(() => {
-    document.title = 'PhysioFeed | The Urban Physio';
     setLoading(true);
     physioFeed
       .get(slug)
       .then((res) => {
         const p = res.data ?? res;
         setPost(p);
-        if (p.seo_title) document.title = p.seo_title;
       })
       .catch(() => setPost(null))
       .finally(() => setLoading(false));
@@ -57,8 +56,8 @@ export default function PhysioFeedDetail() {
         <Navbar />
         <div className="max-w-3xl mx-auto px-4 py-24 text-center">
           <p className="text-slate-600">Article not found.</p>
-          <Link to="/physiofeed" className="btn-primary mt-4 inline-block">
-            Back to PhysioFeed
+          <Link to="/blog" className="btn-primary mt-4 inline-block">
+            Back to Blog
           </Link>
         </div>
         <Footer />
@@ -70,17 +69,70 @@ export default function PhysioFeedDetail() {
   const videoSrc = mediaSrc(post.video_url);
   const isPodcast = post.type === 'podcast';
   const featuredSrc = post.featured_image ? mediaSrc(post.featured_image) : null;
+  const canonical = post.canonical_path || (isPodcast ? `/podcast/${slug}` : `/blog/${slug}`);
+  const breadcrumbItems = useMemo(
+    () => [
+      { label: 'Home', href: '/' },
+      { label: isPodcast ? 'Podcast' : 'Blog', href: isPodcast ? '/podcast' : '/blog' },
+      ...(post.category_slug && !isPodcast ? [{ label: post.category_slug.replace(/-/g, ' '), href: post.category_path }] : []),
+      { label: post.title },
+    ],
+    [isPodcast, post.category_slug, post.category_path, post.title]
+  );
+  const jsonLd = useMemo(() => {
+    const graph = [
+      breadcrumbSchema(breadcrumbItems, `${window.location.origin}${canonical}`),
+      isPodcast
+        ? {
+            '@context': 'https://schema.org',
+            '@type': 'PodcastEpisode',
+            name: post.title,
+            description: post.seo_description || post.excerpt,
+            url: `${window.location.origin}${canonical}`,
+            image: featuredSrc || undefined,
+            datePublished: post.published_at || undefined,
+            associatedMedia: audioSrc
+              ? { '@type': 'AudioObject', contentUrl: audioSrc }
+              : videoSrc
+                ? { '@type': 'VideoObject', contentUrl: videoSrc }
+                : undefined,
+          }
+        : {
+            '@context': 'https://schema.org',
+            '@type': 'Article',
+            headline: post.title,
+            description: post.seo_description || post.excerpt,
+            image: featuredSrc || undefined,
+            datePublished: post.published_at || undefined,
+            author: post.author_name ? { '@type': 'Person', name: post.author_name } : undefined,
+            url: `${window.location.origin}${canonical}`,
+          },
+    ].filter(Boolean);
+    return { '@context': 'https://schema.org', '@graph': graph };
+  }, [audioSrc, breadcrumbItems, canonical, featuredSrc, isPodcast, post, videoSrc]);
+
+  if (legacy && post?.canonical_path) {
+    return <Navigate to={post.canonical_path} replace />;
+  }
 
   return (
     <>
+      <PageMeta
+        title={post.seo_title || post.title}
+        description={post.seo_description || post.excerpt}
+        canonical={canonical}
+        image={featuredSrc}
+        ogType={isPodcast ? 'music.song' : 'article'}
+        jsonLd={jsonLd}
+      />
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-16">
         <div className="lg:grid lg:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] xl:grid-cols-[minmax(0,17rem)_minmax(0,48rem)] lg:gap-8 xl:gap-10 lg:justify-center">
           <PhysioFeedDetailSidebar posts={related} currentSlug={slug} loading={relatedLoading} />
 
           <article className="min-w-0 w-full max-w-3xl lg:max-w-none mx-auto lg:mx-0">
-            <Link to="/physiofeed" className="text-sm text-indigo-600 font-semibold inline-flex items-center gap-1 mb-5">
-              <FaIcon icon="fa-arrow-left" /> Back to PhysioFeed
+            <Link to={isPodcast ? '/podcast' : '/blog'} className="text-sm text-indigo-600 font-semibold inline-flex items-center gap-1 mb-5">
+              <FaIcon icon="fa-arrow-left" /> Back to {isPodcast ? 'Podcast' : 'Blog'}
             </Link>
 
             {featuredSrc && (
@@ -100,6 +152,7 @@ export default function PhysioFeedDetail() {
             <p className="text-sm text-slate-500 mt-2">
               {post.author_name}
               {post.published_at ? ` · ${post.published_at.slice(0, 10)}` : ''}
+              {post.reading_time_minutes ? ` · ${post.reading_time_minutes} min read` : ''}
             </p>
 
             {isPodcast && (videoSrc || audioSrc) && (

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, Navigate, useParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import FaIcon from '../components/FaIcon';
@@ -51,7 +51,7 @@ const PAGE_CONFIG = {
   },
 };
 
-export default function CitySeoListingPage({ type }) {
+export default function CitySeoListingPage({ type, legacy = false }) {
   const { citySlug } = useParams();
   const config = PAGE_CONFIG[type];
   const [city, setCity] = useState(null);
@@ -103,6 +103,10 @@ export default function CitySeoListingPage({ type }) {
   const sorted = useMemo(() => config.sortItems(list), [list, config]);
   const seo = city?.seo?.[type] || {};
   const canonical = city?.canonical?.[type] || '';
+  if (!loading && city && legacy && canonical) {
+    return <Navigate to={canonical} replace />;
+  }
+
   const canonicalUrl = typeof window !== 'undefined' && canonical ? `${window.location.origin}${canonical}` : canonical;
   const introText = (seo.intro_content || seo.description || '').trim();
 
@@ -173,7 +177,7 @@ export default function CitySeoListingPage({ type }) {
             <p className="text-slate-500 text-sm mt-2">This city may not be listed yet or the link is incorrect.</p>
             <div className="mt-6 flex flex-wrap gap-2 justify-center">
               <Link to="/clinics" className="btn-outline text-sm">Browse clinics</Link>
-              <Link to="/doctors" className="btn-primary text-sm">Browse doctors</Link>
+              <Link to="/doctors" className="btn-primary text-sm">Browse physiotherapists</Link>
             </div>
           </div>
         </div>
@@ -220,7 +224,7 @@ export default function CitySeoListingPage({ type }) {
               </div>
               {city.doctor_count > 0 && (
                 <div className="rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 px-4 py-3 min-w-[7rem]">
-                  <p className="text-[11px] font-bold uppercase text-white/70">Doctors in city</p>
+                  <p className="text-[11px] font-bold uppercase text-white/70">Physiotherapists in city</p>
                   <p className="text-2xl font-bold">{city.doctor_count}</p>
                 </div>
               )}

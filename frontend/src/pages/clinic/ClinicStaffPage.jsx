@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import FaIcon from '../../components/FaIcon';
 import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
@@ -93,6 +93,11 @@ export default function ClinicStaffPage() {
     <ClinicPortalShell
       title="Staff Management"
       subtitle="Receptionists and clinic admin users for this clinic"
+      actions={
+        <Link to="/clinic-portal/team" className="text-sm text-teal-700 font-medium hover:underline">
+          ← My Team
+        </Link>
+      }
     >
       <div className="space-y-5 max-w-4xl">
         <form onSubmit={submit} className="glass-card !p-5 grid sm:grid-cols-2 gap-3">

@@ -26,13 +26,19 @@ export default function ClinicPortalEarnings() {
   const { clinicId, loading: bootLoading, isAdminMode, can } = useClinicPortal();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [modePrices, setModePrices] = useState({ clinic: 0, home_visit: 0, online: 0 });
+  const [savingPrices, setSavingPrices] = useState(false);
 
   const load = useCallback(async () => {
     if (!clinicId) return;
     setLoading(true);
     try {
-      const res = await clinicPortal.earnings(clinicId);
+      const [res, priceRes] = await Promise.all([
+        clinicPortal.earnings(clinicId),
+        clinicPortal.getModePrices(clinicId),
+      ]);
       setData(res.data || res);
+      setModePrices((old) => ({ ...old, ...(priceRes.data || priceRes || {}) }));
     } catch (e) {
       toast.error(e.message || 'Failed to load earnings');
       setData(null);
@@ -93,6 +99,18 @@ export default function ClinicPortalEarnings() {
   if (!bootLoading && (!isAdminMode || !can('earnings.view'))) {
     return <Navigate to="/clinic-portal" replace />;
   }
+
+  const savePrices = async () => {
+    setSavingPrices(true);
+    try {
+      await clinicPortal.saveModePrices(clinicId, Object.fromEntries(Object.entries(modePrices).map(([key, value]) => [key, Number(value)])));
+      toast.success('Session mode prices saved');
+    } catch (error) {
+      toast.error(error.message || 'Could not save mode prices');
+    } finally {
+      setSavingPrices(false);
+    }
+  };
 
   return (
     <ClinicPortalShell
@@ -194,6 +212,34 @@ export default function ClinicPortalEarnings() {
                   {!data?.recent?.length && <p className="text-sm text-slate-500">No paid sessions yet</p>}
                 </ul>
               </div>
+            </div>
+
+            <div className="glass-card !p-5 max-w-md">
+              <h2 className="font-bold text-slate-900">Session mode prices</h2>
+              <p className="text-xs text-slate-500 mt-1 mb-4">Default price used for clinic-created bookings and mode changes.</p>
+              <div className="space-y-3">
+                {['clinic', 'home_visit', 'online'].map((mode) => (
+                  <label key={mode} className="flex items-center justify-between gap-3 text-sm font-medium capitalize">
+                    {mode === 'clinic' ? 'At clinic' : mode.replace('_', ' ')}
+                    <div className="relative">
+                      <span className="absolute left-3 top-2.5 text-slate-400">₹</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        className="input-field !w-36 !pl-7"
+                        value={modePrices[mode] ?? ''}
+                        onChange={(e) => setModePrices((old) => ({ ...old, [mode]: e.target.value }))}
+                      />
+                    </div>
+                  </label>
+                ))}
+              </div>
+              {can('billing.settings') && (
+                <button type="button" className="btn-primary w-full justify-center mt-4" disabled={savingPrices} onClick={savePrices}>
+                  {savingPrices ? 'Saving…' : 'Save prices'}
+                </button>
+              )}
             </div>
           </>
         )}

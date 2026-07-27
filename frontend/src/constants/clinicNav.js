@@ -1,30 +1,50 @@
-/** Clinic Portal navigation — filtered by active portal role (receptionist | clinic_admin) */
+/**
+ * Clinic Portal navigation — Feature Request v1.3 layout
+ * TOP = daily/weekly operational menus
+ * BOTTOM (Settings) = occasional configuration menus
+ */
 
+/** @typedef {{ to: string, label: string, icon: string, perm?: string, notifyKey?: boolean, section?: 'ops' | 'settings', match?: 'exact' | 'prefix' }} ClinicNavItem */
+
+/** @type {ClinicNavItem[]} */
 export const CLINIC_RECEPTIONIST_NAV = [
-  { to: '/clinic-portal', label: 'Front Desk', icon: 'fa-desktop', perm: 'dashboard.reception' },
-  { to: '/clinic-portal/appointments', label: 'Appointments', icon: 'fa-calendar-check', perm: 'appointments.view' },
-  { to: '/clinic-portal/calendar', label: 'Calendar', icon: 'fa-calendar-days', perm: 'calendar.view' },
-  { to: '/clinic-portal/patients', label: 'Patients', icon: 'fa-users', perm: 'patients.view' },
-  { to: '/clinic-portal/search', label: 'Advanced Search', icon: 'fa-magnifying-glass-plus', perm: 'patients.view' },
-  { to: '/clinic-portal/billing', label: 'Billing', icon: 'fa-file-invoice-dollar', perm: 'billing.view' },
-  { to: '/clinic-portal/documents', label: 'Documents', icon: 'fa-folder-tree', perm: 'documents.basic' },
-  { to: '/clinic-portal/notifications', label: 'Notifications', icon: 'fa-bell', notifyKey: true, perm: 'notifications.view' },
+  // —— Top: Operational ——
+  { to: '/clinic-portal', label: 'Dashboard', icon: 'fa-gauge-high', perm: 'dashboard.reception', section: 'ops', match: 'exact' },
+  { to: '/clinic-portal/appointments', label: 'Appointments', icon: 'fa-calendar-check', perm: 'appointments.view', section: 'ops' },
+  { to: '/clinic-portal/patients', label: 'Patients', icon: 'fa-users', perm: 'patients.view', section: 'ops', match: 'prefix' },
+  { to: '/clinic-portal/packages', label: 'Packages', icon: 'fa-box-open', perm: 'billing.view', section: 'ops' },
+  { to: '/clinic-portal/reports', label: 'Reports', icon: 'fa-chart-column', perm: 'dashboard.reception', section: 'ops' },
+  { to: '/clinic-portal/notifications', label: 'Notifications', icon: 'fa-bell', notifyKey: true, perm: 'notifications.view', section: 'ops' },
+  // Useful extras (not in Feature Request top list, keep for ops)
+  { to: '/clinic-portal/documents', label: 'Documents', icon: 'fa-folder-tree', perm: 'documents.basic', section: 'ops' },
+  { to: '/clinic-portal/billing', label: 'Billing', icon: 'fa-file-invoice-dollar', perm: 'billing.view', section: 'ops' },
+  { to: '/clinic-portal/qr', label: 'Clinic QR', icon: 'fa-qrcode', perm: 'qr.view', section: 'ops' },
 ];
 
+/** @type {ClinicNavItem[]} */
 export const CLINIC_ADMIN_NAV = [
-  { to: '/clinic-portal/admin', label: 'Admin Dashboard', icon: 'fa-chart-line', perm: 'dashboard.admin' },
-  { to: '/clinic-portal/appointments', label: 'Appointments', icon: 'fa-calendar-check', perm: 'appointments.view' },
-  { to: '/clinic-portal/calendar', label: 'Calendar', icon: 'fa-calendar-days', perm: 'calendar.view' },
-  { to: '/clinic-portal/patients', label: 'Patients', icon: 'fa-users', perm: 'patients.view' },
-  { to: '/clinic-portal/search', label: 'Advanced Search', icon: 'fa-magnifying-glass-plus', perm: 'patients.view' },
-  { to: '/clinic-portal/billing', label: 'Billing', icon: 'fa-file-invoice-dollar', perm: 'billing.view' },
-  { to: '/clinic-portal/doctors', label: 'Doctors', icon: 'fa-user-doctor', perm: 'doctors.manage' },
-  { to: '/clinic-portal/staff', label: 'Staff', icon: 'fa-id-badge', perm: 'staff.manage' },
-  { to: '/clinic-portal/documents', label: 'Documents', icon: 'fa-folder-tree', perm: 'documents.manage' },
-  { to: '/clinic-portal/exercises', label: 'Exercises', icon: 'fa-dumbbell', perm: 'exercises.manage' },
-  { to: '/clinic-portal/earnings', label: 'Finance', icon: 'fa-sack-dollar', perm: 'earnings.view' },
-  { to: '/clinic-portal/profile', label: 'Clinic Settings', icon: 'fa-hospital', perm: 'profile.manage' },
-  { to: '/clinic-portal/notifications', label: 'Notifications', icon: 'fa-bell', notifyKey: true, perm: 'notifications.view' },
+  // —— Top: Operational ——
+  { to: '/clinic-portal/admin', label: 'Dashboard', icon: 'fa-gauge-high', perm: 'dashboard.admin', section: 'ops', match: 'exact' },
+  { to: '/clinic-portal/appointments', label: 'Appointments', icon: 'fa-calendar-check', perm: 'appointments.view', section: 'ops' },
+  { to: '/clinic-portal/patients', label: 'Patients', icon: 'fa-users', perm: 'patients.view', section: 'ops', match: 'prefix' },
+  { to: '/clinic-portal/packages', label: 'Packages', icon: 'fa-box-open', perm: 'billing.view', section: 'ops' },
+  { to: '/clinic-portal/reports', label: 'Reports', icon: 'fa-chart-column', perm: 'analytics.view', section: 'ops' },
+  { to: '/clinic-portal/notifications', label: 'Notifications', icon: 'fa-bell', notifyKey: true, perm: 'notifications.view', section: 'ops' },
+  { to: '/clinic-portal/documents', label: 'Documents', icon: 'fa-folder-tree', perm: 'documents.manage', section: 'ops' },
+  { to: '/clinic-portal/billing', label: 'Billing', icon: 'fa-file-invoice-dollar', perm: 'billing.view', section: 'ops' },
+  { to: '/clinic-portal/exercises', label: 'Exercises', icon: 'fa-dumbbell', perm: 'exercises.manage', section: 'ops' },
+
+  // —— Bottom: Settings ——
+  { to: '/clinic-portal/profile', label: 'Clinic Profile', icon: 'fa-hospital', perm: 'profile.manage', section: 'settings' },
+  { to: '/clinic-portal/branding', label: 'Branding', icon: 'fa-palette', perm: 'profile.manage', section: 'settings' },
+  { to: '/clinic-portal/team', label: 'My Team', icon: 'fa-user-group', anyPerm: ['doctors.manage', 'staff.manage'], section: 'settings' },
+  { to: '/clinic-portal/calendar', label: 'Availability', icon: 'fa-clock', perm: 'calendar.view', section: 'settings' },
+  { to: '/clinic-portal/create-package', label: 'Create Package', icon: 'fa-boxes-stacked', perm: 'packages.manage', section: 'settings' },
+  { to: '/clinic-portal/earnings', label: 'Finance', icon: 'fa-sack-dollar', perm: 'earnings.view', section: 'settings' },
+  { to: '/clinic-portal/clinical-library', label: 'Clinical Library', icon: 'fa-book-medical', anyPerm: ['clinical_library.view', 'clinical_library.manage', 'profile.manage'], section: 'settings' },
+  { to: '/clinic-portal/forms', label: 'Registration Forms', icon: 'fa-list-check', perm: 'forms.manage', section: 'settings' },
+  { to: '/clinic-portal/qr', label: 'Clinic QR', icon: 'fa-qrcode', perm: 'qr.view', section: 'settings' },
+  { to: '/clinic-portal/notifications/manage', label: 'Notification Setup', icon: 'fa-bullhorn', perm: 'notifications.manage', section: 'settings' },
 ];
 
 /** Backward-compatible full list (admin). */
@@ -33,10 +53,33 @@ export const CLINIC_NAV = CLINIC_ADMIN_NAV;
 export function clinicNavFor(portalRole, permissions = []) {
   const list = portalRole === 'clinic_admin' ? CLINIC_ADMIN_NAV : CLINIC_RECEPTIONIST_NAV;
   if (!permissions?.length) return list;
-  return list.filter((item) => !item.perm || permissions.includes(item.perm));
+  return list.filter((item) => {
+    if (item.anyPerm?.length) {
+      return item.anyPerm.some((p) => permissions.includes(p));
+    }
+    return !item.perm || permissions.includes(item.perm);
+  });
 }
 
 export function hasClinicPerm(permissions, perm) {
   if (!perm) return true;
   return Array.isArray(permissions) && permissions.includes(perm);
+}
+
+/** Group filtered nav into ops + settings for sidebar rendering. */
+export function clinicNavSections(links = []) {
+  const ops = links.filter((l) => (l.section || 'ops') === 'ops');
+  const settings = links.filter((l) => l.section === 'settings');
+  return { ops, settings };
+}
+
+export function isClinicNavActive(pathname, link) {
+  if (!link?.to) return false;
+  if (link.match === 'exact') {
+    return pathname === link.to;
+  }
+  if (link.match === 'prefix') {
+    return pathname === link.to || pathname.startsWith(`${link.to}/`);
+  }
+  return pathname === link.to;
 }

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import FaIcon from '../../components/FaIcon';
 import BulkInvitePanel from '../../components/clinic/BulkInvitePanel';
@@ -94,6 +95,11 @@ export default function ClinicPortalPatients() {
     <ClinicPortalShell
       title="Patients"
       subtitle="Walk-in (offline) patients, invites, and people who booked at your clinic"
+      actions={
+        <Link to="/clinic-portal/search" className="btn-outline inline-flex items-center gap-2 !py-2 !px-3 text-sm">
+          <FaIcon icon="fa-magnifying-glass-plus" /> Advanced search
+        </Link>
+      }
     >
       <div className="space-y-5">
         <div className="grid sm:grid-cols-4 gap-3">
@@ -167,7 +173,9 @@ export default function ClinicPortalPatients() {
                               {(p.patient_name || 'P').slice(0, 1).toUpperCase()}
                             </div>
                             <div>
-                              <p className="font-medium text-slate-900">{p.patient_name || 'Patient'}</p>
+                              <Link to={`/clinic-portal/patients/${key}`} className="font-medium text-slate-900 hover:text-teal-700 hover:underline">
+                                {p.patient_name || 'Patient'}
+                              </Link>
                               {p.last_visit && (
                                 <p className="text-[11px] text-slate-400">Last visit {formatDate(p.last_visit)}</p>
                               )}
@@ -196,18 +204,19 @@ export default function ClinicPortalPatients() {
                         <td className="px-4 py-3 font-semibold">{p.visit_count || 0}</td>
                         <td className="px-4 py-3 font-medium text-emerald-700">{money(p.total_spent)}</td>
                         <td className="px-4 py-3">
-                          {p.clinic_patient_id && p.portal_status !== 'online' ? (
-                            <button
-                              type="button"
-                              className="btn-outline text-xs !py-1.5"
-                              disabled={resendingId === p.clinic_patient_id}
-                              onClick={() => resend(p.clinic_patient_id)}
-                            >
-                              {resendingId === p.clinic_patient_id ? 'Sending…' : 'Resend invite'}
-                            </button>
-                          ) : (
-                            <span className="text-xs text-slate-400">—</span>
-                          )}
+                          <div className="flex flex-wrap gap-2">
+                            <Link to={`/clinic-portal/patients/${key}`} className="btn-outline text-xs !py-1.5">View</Link>
+                            {p.clinic_patient_id && p.portal_status !== 'online' && (
+                              <button
+                                type="button"
+                                className="btn-outline text-xs !py-1.5"
+                                disabled={resendingId === p.clinic_patient_id}
+                                onClick={() => resend(p.clinic_patient_id)}
+                              >
+                                {resendingId === p.clinic_patient_id ? 'Sending…' : 'Resend invite'}
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );

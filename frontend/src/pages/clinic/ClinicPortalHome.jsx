@@ -4,8 +4,10 @@ import toast from 'react-hot-toast';
 import FaIcon from '../../components/FaIcon';
 import PasswordSetupAlert from '../../components/PasswordSetupAlert';
 import ClinicPortalShell, { ClinicQuickActions } from '../../components/clinic/ClinicPortalShell';
+import ClinicCollectPaymentButton from '../../components/clinic/ClinicCollectPaymentButton';
 import { clinicPortal } from '../../services/api';
 import useClinicPortal from '../../hooks/useClinicPortal';
+import useClinicLiveSync from '../../hooks/useClinicLiveSync';
 import { STATUS_STYLES, formatTime, formatType } from '../../utils/appointmentListUtils';
 
 function Metric({ icon, label, value, tint = 'teal' }) {
@@ -28,7 +30,7 @@ function Metric({ icon, label, value, tint = 'teal' }) {
 }
 
 export default function ClinicPortalHome() {
-  const { clinicId, portalReady, isAdminMode, loading: boot, reload } = useClinicPortal();
+  const { clinicId, portalReady, isAdminMode, loading: boot, reload, can } = useClinicPortal();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(null);
@@ -56,6 +58,11 @@ export default function ClinicPortalHome() {
     return () => window.removeEventListener('clinic-role-changed', h);
   }, [reload, load]);
 
+  const handleLiveEvent = useCallback(() => { load(); }, [load]);
+  const { connected: liveConnected, lastEventAt } = useClinicLiveSync(clinicId, handleLiveEvent, {
+    enabled: Boolean(clinicId && !isAdminMode),
+  });
+
   if (!boot && isAdminMode) {
     return <Navigate to="/clinic-portal/admin" replace />;
   }
@@ -67,25 +74,11 @@ export default function ClinicPortalHome() {
   const checkIn = async (appt) => {
     setActing(appt.id);
     try {
-      await clinicPortal.updateAppointment(clinicId, appt.id, { check_in: true });
+      await clinicPortal.checkIn(clinicId, appt.id, {});
       toast.success('Patient checked in');
       load();
     } catch (e) {
       toast.error(e.message || 'Check-in failed');
-    } finally {
-      setActing(null);
-    }
-  };
-
-  const collect = async (appt) => {
-    if (!window.confirm(`Record cash/UPI payment of ₹${Number(appt.amount || 0).toLocaleString('en-IN')}?`)) return;
-    setActing(appt.id);
-    try {
-      await clinicPortal.collectPayment(clinicId, appt.id, { method: 'cash' });
-      toast.success('Payment collected');
-      load();
-    } catch (e) {
-      toast.error(e.message || 'Payment failed');
     } finally {
       setActing(null);
     }
@@ -97,6 +90,12 @@ export default function ClinicPortalHome() {
       subtitle="Check-ins, queue, walk-ins, billing and follow-ups"
     >
       <PasswordSetupAlert className="mb-4" />
+
+      <div className="mb-4 flex items-center gap-2 text-xs text-slate-500">
+        <span className={`w-2 h-2 rounded-full ${liveConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
+        {liveConnected ? 'Live queue sync active' : 'Live queue sync reconnecting'}
+        {lastEventAt && <span className="text-slate-400">· updated {lastEventAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
+      </div>
 
       {!portalReady && (
         <div className="glass-card !p-4 mb-4 border border-amber-200 bg-amber-50/50 text-sm text-amber-900">
@@ -157,10 +156,13 @@ export default function ClinicPortalHome() {
                               Check in
                             </button>
                           )}
-                          {a.payment_status !== 'paid' && Number(a.amount) > 0 && (
-                            <button type="button" disabled={acting === a.id} onClick={() => collect(a)} className="text-[11px] font-semibold text-violet-700 hover:underline">
-                              Collect ₹{Number(a.amount).toLocaleString('en-IN')}
-                            </button>
+                          {can('billing.collect') && a.payment_status !== 'paid' && Number(a.amount) > 0 && (
+                            <ClinicCollectPaymentButton
+                              clinicId={clinicId}
+                              appointment={a}
+                              disabled={acting === a.id}
+                              onDone={load}
+                            />
                           )}
                         </div>
                       </div>

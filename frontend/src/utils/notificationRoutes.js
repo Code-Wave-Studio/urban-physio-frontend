@@ -75,7 +75,7 @@ export function getNotificationPath(notification, roleSlug) {
   }
 
   if (type === 'clinic_join_request' || type === 'clinic_invite') {
-    if (role === 'clinic') return '/clinic-portal/doctors';
+    if (role === 'clinic') return '/clinic-portal/team';
     if (role === 'doctor') return '/doctor/clinics';
     return '/admin/clinics';
   }
@@ -103,6 +103,7 @@ export function getNotificationPath(notification, roleSlug) {
   if (type === 'document_uploaded' || type === 'document_shared') {
     if (role === 'patient') return '/patient/documents';
     if (role === 'doctor') return '/doctor/documents';
+    if (role === 'clinic') return '/clinic-portal/documents';
     return '/admin/documents';
   }
 
@@ -117,6 +118,7 @@ export function getNotificationPath(notification, roleSlug) {
 
   if (type === 'package_expiry' || type === 'sessions_remaining' || type === 'weekly_summary') {
     if (role === 'patient') return '/patient/packages';
+    if (role === 'clinic') return '/clinic-portal/packages';
     return '/admin/users';
   }
 

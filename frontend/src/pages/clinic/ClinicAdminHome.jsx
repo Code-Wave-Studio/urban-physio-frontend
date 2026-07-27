@@ -121,7 +121,7 @@ export default function ClinicAdminHome() {
       title="Clinic Admin Dashboard"
       subtitle="Live operations, revenue and therapist performance"
     >
-      {!can('analytics.view') ? (
+      {!can('dashboard.admin') ? (
         <div className="glass-card text-center py-12 text-slate-500">No analytics access in this mode.</div>
       ) : loading || boot ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

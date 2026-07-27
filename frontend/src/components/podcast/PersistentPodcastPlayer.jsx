@@ -44,7 +44,7 @@ export default function PersistentPodcastPlayer() {
 
         <div className="min-w-0 flex-1">
           <Link
-            to={episode.detailPath || `/physiofeed/${episode.slug}`}
+            to={episode.detailPath || episode.canonical_path || `/podcast/${episode.slug}`}
             className="text-xs sm:text-sm font-semibold text-slate-900 truncate block hover:text-rose-700"
           >
             {episode.title}

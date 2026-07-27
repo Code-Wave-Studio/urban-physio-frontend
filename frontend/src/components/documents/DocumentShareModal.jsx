@@ -39,7 +39,7 @@ export default function DocumentShareModal({ open, doc, onClose, onShared }) {
         .then((res) => setPatients(res.data || []))
         .catch(() => setPatients([]));
     }
-    if (role === 'clinic') {
+    if (role === 'clinic' || role === 'clinic_staff') {
       clinicPortal
         .me()
         .then(async (res) => {
@@ -128,7 +128,7 @@ export default function DocumentShareModal({ open, doc, onClose, onShared }) {
           <div className="flex flex-wrap gap-2">
             {[
               { key: 'patient', label: 'Patient', show: true },
-              { key: 'doctor', label: 'Doctor', show: role === 'clinic' || role === 'admin' || role === 'super_admin' },
+              { key: 'doctor', label: 'Doctor', show: role === 'clinic' || role === 'clinic_staff' || role === 'admin' || role === 'super_admin' },
             ]
               .filter((t) => t.show)
               .map((t) => (

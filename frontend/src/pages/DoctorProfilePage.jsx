@@ -93,7 +93,7 @@ function StatPill({ label, value, icon, tone = 'primary', compact = false, onCli
   );
 }
 
-export default function DoctorProfilePage() {
+export default function DoctorProfilePage({ legacy = false }) {
   const { slug, id: legacyId } = useParams();
   const profileKey = slug || legacyId;
   const [doctor, setDoctor] = useState(null);
@@ -143,7 +143,7 @@ export default function DoctorProfilePage() {
     [adminPackages, doctorPackages]
   );
 
-  if (!loading && doctor?.slug && profileKey !== doctor.slug) {
+  if (!loading && doctor?.slug && (legacy || profileKey !== doctor.slug)) {
     return <Navigate to={doctorProfileUrl(doctor)} replace />;
   }
 
@@ -151,7 +151,7 @@ export default function DoctorProfilePage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-orange-50/40 to-primary-50/30">
         <div className="animate-spin w-11 h-11 border-4 border-primary-600 border-t-transparent rounded-full" />
-        <p className="text-sm text-slate-500 mt-4 font-medium">Loading doctor profile…</p>
+        <p className="text-sm text-slate-500 mt-4 font-medium">Loading physiotherapist profile...</p>
       </div>
     );
   }
@@ -165,11 +165,11 @@ export default function DoctorProfilePage() {
             <div className="w-16 h-16 mx-auto rounded-2xl bg-primary-50 flex items-center justify-center text-primary-600 mb-4">
               <FaIcon icon="fa-user-doctor" className="text-2xl" />
             </div>
-            <h1 className="text-xl font-bold text-slate-900">Doctor not found</h1>
+            <h1 className="text-xl font-bold text-slate-900">Physiotherapist not found</h1>
             <p className="text-slate-500 text-sm mt-2">This profile may have been removed or the link is incorrect.</p>
             <Link to="/doctors" className="btn-primary mt-6 inline-flex items-center gap-2">
               <FaIcon icon="fa-magnifying-glass" />
-              Find doctors
+              Find physiotherapists
             </Link>
           </div>
         </div>
@@ -225,7 +225,7 @@ export default function DoctorProfilePage() {
               className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-white bg-black/40 backdrop-blur-sm border border-white/20 shadow-sm px-3 py-1.5 rounded-full hover:bg-black/55 transition"
             >
               <FaIcon icon="fa-arrow-left" className="text-xs" />
-              All doctors
+              All physiotherapists
             </Link>
           </div>
           <div className="absolute bottom-0 left-0 right-0 z-20 max-w-6xl mx-auto px-4 pointer-events-none">
@@ -426,7 +426,7 @@ export default function DoctorProfilePage() {
 
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="lg:col-span-2 space-y-4 sm:space-y-6 order-2 lg:order-1">
-            <Section title="About the doctor" icon="fa-user-doctor" id="profile-overview">
+            <Section title="About the physiotherapist" icon="fa-user-doctor" id="profile-overview">
               <p className="text-slate-600 leading-relaxed whitespace-pre-line">
                 {doctor.bio ||
                   'Experienced physiotherapist dedicated to helping patients recover faster with evidence-based care.'}
@@ -526,7 +526,7 @@ export default function DoctorProfilePage() {
                 <DoctorAvatar doctor={doctor} size="md" className="shrink-0" />
                 <div className="min-w-0">
                   <p className="font-bold text-slate-900 leading-tight">Book with {doctor.first_name}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">Online · Home · Clinic</p>
+                <p className="text-xs text-slate-500 mt-0.5">Online · Home visit · Clinic</p>
                 </div>
               </div>
               <p className="text-sm text-slate-600 mb-4">Secure booking with Razorpay — pick a slot that works for you.</p>
@@ -535,7 +535,7 @@ export default function DoctorProfilePage() {
                 Book now
               </Link>
               <Link to="/doctors" className="text-sm text-primary-700 hover:text-primary-900 font-semibold hover:underline block text-center">
-                Compare other doctors
+                Compare other physiotherapists
               </Link>
             </div>
 
@@ -560,7 +560,7 @@ export default function DoctorProfilePage() {
                 {doctor.latitude && doctor.longitude && (
                   <div className="rounded-2xl overflow-hidden border border-slate-200 aspect-video shadow-inner">
                     <iframe
-                      title="Doctor location map"
+                      title="Physiotherapist location map"
                       loading="lazy"
                       className="w-full h-full border-0"
                       src={`https://maps.google.com/maps?q=${doctor.latitude},${doctor.longitude}&z=15&output=embed`}
@@ -582,7 +582,7 @@ export default function DoctorProfilePage() {
         </div>
 
         {doctor.related_doctors?.length > 0 && (
-          <Section title="Related doctors nearby" icon="fa-users">
+          <Section title="Related physiotherapists nearby" icon="fa-users">
             <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-4 sm:overflow-visible [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {doctor.related_doctors.map((d) => (
                 <Link

@@ -490,7 +490,7 @@ export default function SearchResultsPage() {
               icon="fa-newspaper"
               items={data?.articles}
               render={(a) => (
-                <Link key={a.id} to={`/physiofeed/${a.slug}`} className="glass-card p-4 hover:shadow-md block h-full">
+                <Link key={a.id} to={a.canonical_path || (a.type === 'podcast' ? `/podcast/${a.slug}` : `/blog/${a.slug}`)} className="glass-card p-4 hover:shadow-md block h-full">
                   <p className="font-semibold text-slate-900 line-clamp-2">
                     <HighlightText text={a.title} query={q} />
                   </p>

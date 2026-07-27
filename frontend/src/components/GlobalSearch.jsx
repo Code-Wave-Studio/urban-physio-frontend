@@ -174,7 +174,7 @@ export default function GlobalSearch({
         key: `art-${a.id}`,
         label: a.title,
         sub: a.excerpt || a.type || 'PhysioFeed',
-        to: a.slug ? `/physiofeed/${a.slug}` : '/physiofeed',
+        to: a.canonical_path || (a.slug ? (a.type === 'podcast' ? `/podcast/${a.slug}` : `/blog/${a.slug}`) : '/blog'),
         icon: 'fa-newspaper',
         iconColor: 'text-sky-600 bg-sky-50',
       });

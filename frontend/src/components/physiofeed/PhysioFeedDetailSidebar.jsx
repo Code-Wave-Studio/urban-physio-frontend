@@ -30,7 +30,7 @@ export default function PhysioFeedDetailSidebar({ posts = [], currentSlug, loadi
             return (
               <li key={post.id || post.slug}>
                 <Link
-                  to={`/physiofeed/${post.slug}`}
+                  to={post?.canonical_path || (post?.type === 'podcast' ? `/podcast/${post.slug}` : `/blog/${post.slug}`)}
                   className="group flex items-start gap-2.5 rounded-xl border border-transparent px-2 py-2 hover:bg-indigo-50/80 hover:border-indigo-100 transition"
                 >
                   {thumb ? (
@@ -57,7 +57,7 @@ export default function PhysioFeedDetailSidebar({ posts = [], currentSlug, loadi
         </ul>
       )}
       <Link
-        to="/physiofeed"
+        to="/blog"
         className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-800"
       >
         View all content

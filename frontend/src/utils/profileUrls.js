@@ -1,15 +1,45 @@
 /** SEO-friendly public profile URLs */
 
+function slugifyText(value, fallback = 'india') {
+  const slug = String(value || '')
+    .toLowerCase()
+    .trim()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return slug || fallback;
+}
+
+function localitySlugFromAddress(address, cityName) {
+  const raw = String(address || '')
+    .split(/[,\-|/]/)
+    .map((part) => part.trim())
+    .find(Boolean);
+  return slugifyText(raw || cityName || 'city-centre', 'city-centre');
+}
+
 export function doctorProfileUrl(doctor) {
   if (!doctor) return '/doctors';
-  if (doctor.slug) return `/doctor/${encodeURIComponent(doctor.slug)}`;
+  if (doctor.slug) {
+    const citySlug = encodeURIComponent(doctor.city_slug || slugifyText(doctor.city_name));
+    const localitySlug = encodeURIComponent(
+      doctor.locality_slug || localitySlugFromAddress(doctor.address, doctor.city_name)
+    );
+    return `/${citySlug}/${localitySlug}/physiotherapists/${encodeURIComponent(doctor.slug)}`;
+  }
   if (doctor.id) return `/doctors/${doctor.id}`;
   return '/doctors';
 }
 
 export function clinicProfileUrl(clinic) {
   if (!clinic) return '/clinics';
-  if (clinic.slug) return `/clinic/${encodeURIComponent(clinic.slug)}`;
+  if (clinic.slug) {
+    const citySlug = encodeURIComponent(clinic.city_slug || slugifyText(clinic.city_name));
+    const localitySlug = encodeURIComponent(
+      clinic.locality_slug || localitySlugFromAddress(clinic.address, clinic.city_name)
+    );
+    return `/${citySlug}/${localitySlug}/physiotherapy-clinic/${encodeURIComponent(clinic.slug)}`;
+  }
   if (clinic.id) return `/clinic/id/${clinic.id}`;
   return '/clinics';
 }

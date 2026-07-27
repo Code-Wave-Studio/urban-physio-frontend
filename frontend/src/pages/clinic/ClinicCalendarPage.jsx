@@ -17,8 +17,8 @@ export default function ClinicCalendarPage() {
 
   return (
     <ClinicPortalShell
-      title="Doctor Calendar"
-      subtitle="Schedules, appointments, room bookings, holidays and leave for doctors at your clinic."
+      title="Availability"
+      subtitle="Working hours, doctor schedules, rooms/beds, holidays and leave for your clinic."
     >
       <CalendarBoard
         canManage={isAdminMode || can('calendar.manage') || can('appointments.manage')}

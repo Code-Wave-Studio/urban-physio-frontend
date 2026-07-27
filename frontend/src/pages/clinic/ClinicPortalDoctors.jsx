@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import FaIcon from '../../components/FaIcon';
 import BulkInvitePanel from '../../components/clinic/BulkInvitePanel';
@@ -8,8 +8,7 @@ import { clinicPortal } from '../../services/api';
 import useClinicPortal from '../../hooks/useClinicPortal';
 
 export default function ClinicPortalDoctors() {
-  const { isAdminMode, can, loading: boot } = useClinicPortal();
-  const [clinicId, setClinicId] = useState(null);
+  const { clinicId, isAdminMode, can, loading: boot } = useClinicPortal();
   const [doctors, setDoctors] = useState([]);
   const [requests, setRequests] = useState([]);
   const [email, setEmail] = useState('');
@@ -19,32 +18,28 @@ export default function ClinicPortalDoctors() {
   const [removingId, setRemovingId] = useState(null);
 
   const load = useCallback(async () => {
+    if (!clinicId) return;
     setLoading(true);
     try {
-      const meRes = await clinicPortal.me();
-      const me = meRes.data || meRes;
-      const id = me.clinic?.id;
-      if (!id) {
-        toast.error('Clinic profile missing');
-        return;
-      }
-      setClinicId(id);
-      const [docs, joins] = await Promise.all([
-        clinicPortal.doctors(id),
-        clinicPortal.joinRequests(id),
-      ]);
+      const docs = await clinicPortal.doctors(clinicId);
       setDoctors(docs.data || docs || []);
-      setRequests(joins.data || joins || []);
+      try {
+        const joins = await clinicPortal.joinRequests(clinicId);
+        setRequests(joins.data || joins || []);
+      } catch {
+        setRequests([]);
+      }
     } catch (e) {
       toast.error(e.message || 'Failed to load doctors');
+      setDoctors([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [clinicId]);
 
   useEffect(() => {
-    if (isAdminMode && can('doctors.manage')) load();
-  }, [load, isAdminMode, can]);
+    if (clinicId && isAdminMode && can('doctors.manage')) load();
+  }, [load, clinicId, isAdminMode, can]);
 
   if (!boot && (!isAdminMode || !can('doctors.manage'))) {
     return <Navigate to="/clinic-portal" replace />;
@@ -58,9 +53,9 @@ export default function ClinicPortalDoctors() {
       const res = await clinicPortal.inviteDoctor(clinicId, { email, message });
       const data = res.data ?? res;
       if (data?.email_sent === false) {
-        toast.success('Invitation saved — email delivery failed, ask the doctor to check their portal');
+        toast.error(data?.email_error || 'Invite saved but email failed to send');
       } else {
-        toast.success('Invitation sent');
+        toast.success(data?.doctor_registered ? 'Invitation sent to registered doctor' : 'Invitation sent');
       }
       setEmail('');
       setMessage('');
@@ -72,48 +67,60 @@ export default function ClinicPortalDoctors() {
     }
   };
 
-  const decide = async (requestId, approve) => {
+  const decide = async (req, approve) => {
     try {
-      await clinicPortal.decideJoinRequest(clinicId, requestId, { approve });
-      toast.success(approve ? 'Doctor linked' : 'Request rejected');
+      await clinicPortal.decideJoinRequest(clinicId, req.id, { approve });
+      toast.success(approve ? 'Doctor approved' : 'Request rejected');
       load();
-    } catch (err) {
-      toast.error(err.message || 'Action failed');
+    } catch (e) {
+      toast.error(e.message || 'Could not update request');
     }
   };
 
-  const remove = async (doctorId, name) => {
+  const remove = async (doc) => {
+    const name = [doc.first_name, doc.last_name].filter(Boolean).join(' ') || 'doctor';
+    const doctorId = doc.doctor_id || doc.id;
     if (!window.confirm(`Remove ${name} from this clinic?`)) return;
     setRemovingId(doctorId);
     try {
       await clinicPortal.removeDoctor(clinicId, doctorId);
       toast.success('Doctor removed');
       load();
-    } catch (err) {
-      toast.error(err.message || 'Could not remove doctor');
+    } catch (e) {
+      toast.error(e.message || 'Could not remove');
     } finally {
       setRemovingId(null);
     }
   };
 
+  const pendingRequests = requests.filter((r) => (r.status || '') === 'pending');
+
   return (
-    <ClinicPortalShell title="Doctors" subtitle="Invite doctors, approve join requests, or remove linked doctors">
-      <div className="space-y-6 max-w-4xl">
+    <ClinicPortalShell
+      title="Physiotherapists"
+      subtitle="Invite verified TUP doctors, approve join requests, manage your clinical team"
+      actions={
+        <Link to="/clinic-portal/team" className="text-sm text-teal-700 font-medium hover:underline">
+          ← My Team
+        </Link>
+      }
+    >
+      <div className="space-y-5 max-w-4xl">
         <form onSubmit={invite} className="glass-card !p-5 grid sm:grid-cols-2 gap-3">
           <h2 className="font-bold sm:col-span-2 flex items-center gap-2">
-            <FaIcon icon="fa-envelope" className="text-primary-600" />
-            Invite doctor by email
+            <FaIcon icon="fa-envelope" className="text-teal-600" />
+            Invite physiotherapist
           </h2>
           <input
-            className="input-field"
+            className="input-field sm:col-span-2"
             type="email"
-            placeholder="Doctor email"
+            placeholder="Doctor's registered TUP email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-          <input
-            className="input-field"
+          <textarea
+            className="input-field sm:col-span-2 min-h-[72px]"
             placeholder="Optional message"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
@@ -122,94 +129,108 @@ export default function ClinicPortalDoctors() {
             {inviting ? 'Sending…' : 'Send invitation'}
           </button>
           <p className="sm:col-span-2 text-xs text-slate-500">
-            An email is sent to the doctor. If they already have an account, they also get an in-app notification.
+            Only doctors with an existing TUP Doctor account can join. The clinic cannot create doctor accounts.
           </p>
         </form>
 
         <BulkInvitePanel
           title="Bulk invite doctors"
-          description="Paste up to 50 doctors. New accounts get login credentials by email and SMS; existing doctors get a portal invite / reminder."
+          description="Paste emails (one per line). Optional: email, phone, first name, last name."
           roleLabel="doctor"
-          disabled={!clinicId || loading}
-          onSubmit={async (contacts) => {
-            const res = await clinicPortal.bulkInviteDoctors(clinicId, { contacts });
-            load();
-            return res;
-          }}
+          disabled={!clinicId}
+          onSubmit={(contacts) => clinicPortal.bulkInviteDoctors(clinicId, { contacts })}
         />
 
-        {loading ? (
-          <div className="glass-card h-40 animate-pulse" />
-        ) : (
-          <>
-            <div className="glass-card !p-5">
-              <h2 className="font-bold mb-3">Linked doctors</h2>
-              <ul className="space-y-2 text-sm">
-                {doctors.map((d) => {
-                  const name = `Dr. ${d.first_name || ''} ${d.last_name || ''}`.trim();
-                  return (
-                    <li
-                      key={d.doctor_id}
-                      className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2"
-                    >
-                      <div className="min-w-0">
-                        <p className="font-semibold text-slate-900">
-                          {name}
-                          {Number(d.is_clinic_manager) === 1 && (
-                            <span className="ml-2 text-[10px] uppercase bg-teal-100 text-teal-800 px-1.5 py-0.5 rounded">
-                              Manager
-                            </span>
-                          )}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {d.specialization || 'Physiotherapy'} · {d.email} · {d.status}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        className="btn-outline text-xs border-red-200 text-red-700 hover:bg-red-50"
-                        disabled={removingId === d.doctor_id}
-                        onClick={() => remove(d.doctor_id, name)}
-                      >
-                        {removingId === d.doctor_id ? 'Removing…' : 'Remove'}
-                      </button>
-                    </li>
-                  );
-                })}
-                {!doctors.length && <li className="text-slate-500">No doctors linked yet</li>}
-              </ul>
-            </div>
-
-            <div className="glass-card !p-5">
-              <h2 className="font-bold mb-3">Join requests</h2>
-              <ul className="space-y-3 text-sm">
-                {requests.map((r) => (
-                  <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                    <div>
-                      <p className="font-semibold">
-                        Dr. {r.first_name} {r.last_name}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {r.email} · {r.status} · {r.message || 'No message'}
-                      </p>
-                    </div>
-                    {r.status === 'pending' && (
-                      <div className="flex gap-2">
-                        <button type="button" className="btn-primary !py-1.5 text-xs" onClick={() => decide(r.id, true)}>
-                          Approve
-                        </button>
-                        <button type="button" className="btn-outline !py-1.5 text-xs" onClick={() => decide(r.id, false)}>
-                          Reject
-                        </button>
-                      </div>
-                    )}
-                  </li>
-                ))}
-                {!requests.length && <li className="text-slate-500">No join requests</li>}
-              </ul>
-            </div>
-          </>
+        {!!pendingRequests.length && (
+          <div className="glass-card !p-5">
+            <h2 className="font-bold mb-3 flex items-center gap-2">
+              <FaIcon icon="fa-inbox" className="text-amber-600" />
+              Join requests ({pendingRequests.length})
+            </h2>
+            <ul className="space-y-2">
+              {pendingRequests.map((r) => (
+                <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-100 bg-white px-3 py-2.5">
+                  <div>
+                    <p className="font-medium text-slate-900">
+                      {[r.first_name, r.last_name].filter(Boolean).join(' ') || 'Doctor'}
+                    </p>
+                    <p className="text-xs text-slate-500">{r.email} · {r.specialization || 'Physiotherapist'}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="button" className="text-xs font-semibold text-emerald-700 hover:underline" onClick={() => decide(r, true)}>
+                      Approve
+                    </button>
+                    <button type="button" className="text-xs font-semibold text-rose-600 hover:underline" onClick={() => decide(r, false)}>
+                      Reject
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
+
+        <div className="glass-card !p-0 overflow-hidden">
+          <div className="px-4 py-3 border-b border-slate-100">
+            <h2 className="font-bold text-slate-900">Linked doctors</h2>
+          </div>
+          {boot || loading ? (
+            <div className="h-32 animate-pulse bg-slate-100 m-4 rounded-xl" />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="text-[11px] uppercase tracking-wide text-slate-500 bg-slate-50/80 text-left">
+                  <tr>
+                    <th className="px-4 py-3">Name</th>
+                    <th className="px-4 py-3">Email</th>
+                    <th className="px-4 py-3">Specialization</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {doctors.map((d) => {
+                    const doctorId = d.doctor_id || d.id;
+                    return (
+                      <tr key={doctorId} className="border-t border-slate-100">
+                        <td className="px-4 py-3 font-medium text-slate-900">
+                          {[d.first_name, d.last_name].filter(Boolean).join(' ') || 'Doctor'}
+                          {Number(d.is_clinic_manager) ? (
+                            <span className="ml-2 text-[10px] uppercase font-bold text-violet-700 bg-violet-50 px-1.5 py-0.5 rounded">Manager</span>
+                          ) : null}
+                        </td>
+                        <td className="px-4 py-3 text-slate-600">{d.email || '—'}</td>
+                        <td className="px-4 py-3 text-slate-600">{d.specialization || '—'}</td>
+                        <td className="px-4 py-3">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 capitalize">
+                            {d.status || 'active'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            type="button"
+                            className="text-xs font-semibold text-rose-600 hover:underline"
+                            disabled={removingId === doctorId}
+                            onClick={() => remove(d)}
+                          >
+                            Remove
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {!doctors.length && (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-10 text-center text-slate-500">
+                        No doctors linked yet. Invite a physiotherapist by TUP email.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </ClinicPortalShell>
   );

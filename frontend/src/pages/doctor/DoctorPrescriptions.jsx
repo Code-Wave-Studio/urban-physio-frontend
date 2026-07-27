@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../../components/FaIcon';
 import GlassModal, { GlassModalBody, GlassModalFooter, GlassModalHeader } from '../../components/GlassModal';
@@ -6,6 +7,7 @@ import { clinicPortal, doctors, exercisePrescriptions, exercises } from '../../s
 import { DOCTOR_NAV } from '../../constants/doctorNav';
 import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
 import { useAuth } from '../../contexts/AuthContext';
+import useClinicPortal from '../../hooks/useClinicPortal';
 import toast from 'react-hot-toast';
 
 const EMPTY_ITEM = {
@@ -46,6 +48,12 @@ function ProgressBar({ percent = 0 }) {
 export default function DoctorPrescriptions() {
   const { user } = useAuth();
   const isClinic = user?.role_slug === 'clinic' || user?.role_slug === 'clinic_staff';
+  const {
+    clinicId,
+    isAdminMode,
+    can,
+    loading: portalBoot,
+  } = useClinicPortal();
   const nav = DOCTOR_NAV;
   const variant = isClinic ? 'clinic' : 'doctor';
 
@@ -73,14 +81,14 @@ export default function DoctorPrescriptions() {
   useEffect(() => {
     load();
     exercises.list().then((res) => setExerciseList(res.data || [])).catch(() => {});
+  }, [load]);
 
+  useEffect(() => {
     if (isClinic) {
+      if (!clinicId) return;
       clinicPortal
-        .me()
-        .then(async (res) => {
-          const cid = res.data?.clinic?.id || res.clinic?.id;
-          if (!cid) return;
-          const pats = await clinicPortal.patients(cid).catch(() => ({ data: [] }));
+        .patients(clinicId)
+        .then((pats) => {
           setPatients(
             (pats.data || []).map((p) => ({
               id: p.patient_id || p.id,
@@ -89,11 +97,15 @@ export default function DoctorPrescriptions() {
             })).filter((p) => p.id)
           );
         })
-        .catch(() => {});
+        .catch(() => setPatients([]));
     } else {
       doctors.patients().then((res) => setPatients(res.data || [])).catch(() => {});
     }
-  }, [load, isClinic]);
+  }, [isClinic, clinicId]);
+
+  if (isClinic && !portalBoot && (!isAdminMode || !can('exercises.manage'))) {
+    return <Navigate to="/clinic-portal" replace />;
+  }
 
   const openCreate = () => {
     setEditingId(null);
@@ -269,8 +281,8 @@ export default function DoctorPrescriptions() {
       </div>
       )}
       {isClinic && (
-        <div className="mb-4">
-          <button type="button" onClick={openCreate} className="btn-primary inline-flex items-center gap-2 sm:hidden">
+        <div className="mb-4 sm:hidden">
+          <button type="button" onClick={openCreate} className="btn-primary inline-flex items-center gap-2">
             <FaIcon icon="fa-plus" /> New plan
           </button>
         </div>

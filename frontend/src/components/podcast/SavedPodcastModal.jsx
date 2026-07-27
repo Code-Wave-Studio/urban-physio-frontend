@@ -84,7 +84,7 @@ export default function SavedPodcastModal({ podcast, onClose }) {
                   <PodcastEpisodePlayer post={item} audioSrc={audioSrc} videoSrc={videoSrc} />
                 )}
                 <Link
-                  to={`/physiofeed/${podcast.slug}`}
+                  to={podcast?.canonical_path || `/podcast/${podcast.slug}`}
                   onClick={onClose}
                   className="btn-outline w-full text-center text-sm inline-flex items-center justify-center gap-2"
                 >

@@ -194,11 +194,11 @@ export default function AdminSeoEntityPanel({ entityType, title, defaultOg = '' 
   const liveImage = form.og_image || defaultOg;
 
   const filteredHint = useMemo(() => {
-    if (entityType === 'doctor') return 'Verified doctor public profiles (/doctor/slug)';
-    if (entityType === 'clinic') return 'Approved clinic public profiles (/clinic/slug)';
-    if (entityType === 'physiofeed') return 'PhysioFeed posts — blogs, conditions & podcasts (/physiofeed/slug)';
-    if (entityType === 'city_clinics') return 'Best physiotherapy clinic in {city}';
-    return 'Best physiotherapist in {city}';
+    if (entityType === 'doctor') return 'Verified physiotherapist public profiles (/{city}/{locality}/physiotherapists/{slug})';
+    if (entityType === 'clinic') return 'Approved clinic public profiles (/{city}/{locality}/physiotherapy-clinic/{slug})';
+    if (entityType === 'physiofeed') return 'Blog and podcast URLs (/blog/{slug}, /podcast/{slug})';
+    if (entityType === 'city_clinics') return 'City clinic listings (/{city}/physiotherapy-clinics)';
+    return 'City physiotherapist listings (/{city}/physiotherapists)';
   }, [entityType]);
 
   return (

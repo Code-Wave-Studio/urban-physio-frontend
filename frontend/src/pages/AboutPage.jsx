@@ -133,7 +133,7 @@ export default function AboutPage() {
             <Link to="/clinics" className="inline-flex items-center justify-center gap-2 border border-white/40 text-white font-semibold px-6 py-3 rounded-xl text-sm hover:bg-white/10 transition">
               Find clinic
             </Link>
-            <Link to="/physiofeed" className="inline-flex items-center justify-center gap-2 border border-white/40 text-white font-semibold px-6 py-3 rounded-xl text-sm hover:bg-white/10 transition">
+            <Link to="/blog" className="inline-flex items-center justify-center gap-2 border border-white/40 text-white font-semibold px-6 py-3 rounded-xl text-sm hover:bg-white/10 transition">
               Read PhysioFeed
             </Link>
           </div>

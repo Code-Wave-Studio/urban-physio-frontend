@@ -704,6 +704,93 @@ export const clinicPortal = {
     api.post(`/clinic-portal/${clinicId}/offline-patients`, data),
   resendOfflinePatientInvite: (clinicId, clinicPatientId) =>
     api.post(`/clinic-portal/${clinicId}/offline-patients/${clinicPatientId}/resend-invite`),
+
+  // —— Feature Request ops ——
+  qrInfo: (clinicId) => api.get(`/clinic-portal/${clinicId}/qr`),
+  qrRegenerate: (clinicId) => api.post(`/clinic-portal/${clinicId}/qr/regenerate`),
+  registrationFields: (clinicId) => api.get(`/clinic-portal/${clinicId}/registration-fields`),
+  saveRegistrationFields: (clinicId, data) => api.put(`/clinic-portal/${clinicId}/registration-fields`, data),
+  createRegistrationField: (clinicId, data) => api.post(`/clinic-portal/${clinicId}/registration-fields`, data),
+  deleteRegistrationField: (clinicId, fieldId) =>
+    api.delete(`/clinic-portal/${clinicId}/registration-fields/${fieldId}`),
+  assessmentTemplates: (clinicId) => api.get(`/clinic-portal/${clinicId}/assessment-templates`),
+  saveAssessmentTemplate: (clinicId, data) => api.post(`/clinic-portal/${clinicId}/assessment-templates`, data),
+  updateAssessmentTemplate: (clinicId, id, data) =>
+    api.put(`/clinic-portal/${clinicId}/assessment-templates/${id}`, data),
+  submitAssessment: (clinicId, data) => api.post(`/clinic-portal/${clinicId}/assessments`, data),
+  patientDetail: (clinicId, patientKey) =>
+    api.get(`/clinic-portal/${clinicId}/patients/detail/${patientKey}`),
+  patientAssessments: (clinicId, patientKey) =>
+    api.get(`/clinic-portal/${clinicId}/patients/${patientKey}/assessments`),
+  createBooking: (clinicId, data) => api.post(`/clinic-portal/${clinicId}/bookings`, data),
+  checkIn: (clinicId, apptId, data = {}) =>
+    api.post(`/clinic-portal/${clinicId}/appointments/${apptId}/check-in`, data),
+  changeSessionMode: (clinicId, apptId, data) =>
+    api.post(`/clinic-portal/${clinicId}/appointments/${apptId}/change-mode`, data),
+  cancelWithRollover: (clinicId, apptId) =>
+    api.post(`/clinic-portal/${clinicId}/appointments/${apptId}/cancel-rollover`),
+  updateAttribution: (clinicId, apptId, data) =>
+    api.patch(`/clinic-portal/${clinicId}/appointments/${apptId}/attribution`, data),
+  generateMeeting: (clinicId, apptId, data) =>
+    api.post(`/clinic-portal/${clinicId}/appointments/${apptId}/meeting`, data),
+  getSoap: (clinicId, apptId) => api.get(`/clinic-portal/${clinicId}/appointments/${apptId}/soap`),
+  saveSoap: (clinicId, apptId, data) =>
+    api.put(`/clinic-portal/${clinicId}/appointments/${apptId}/soap`, data),
+  queueToday: (clinicId) => api.get(`/clinic-portal/${clinicId}/queue`),
+  packageTemplates: (clinicId) => api.get(`/clinic-portal/${clinicId}/package-templates`),
+  createPackageTemplate: (clinicId, data) => api.post(`/clinic-portal/${clinicId}/package-templates`, data),
+  updatePackageTemplate: (clinicId, id, data) =>
+    api.put(`/clinic-portal/${clinicId}/package-templates/${id}`, data),
+  deletePackageTemplate: (clinicId, id) =>
+    api.delete(`/clinic-portal/${clinicId}/package-templates/${id}`),
+  terminatePackage: (clinicId, packageId, data = {}) =>
+    api.post(`/clinic-portal/${clinicId}/packages/${packageId}/terminate`, data),
+  assignPackageTemplate: (clinicId, data) =>
+    api.post(`/clinic-portal/${clinicId}/packages/assign`, data),
+  clinicalLibrary: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/clinical-library`, { params }),
+  createLibraryEntry: (clinicId, data) => api.post(`/clinic-portal/${clinicId}/clinical-library`, data),
+  updateLibraryEntry: (clinicId, id, data) =>
+    api.put(`/clinic-portal/${clinicId}/clinical-library/${id}`, data),
+  deleteLibraryEntry: (clinicId, id) =>
+    api.delete(`/clinic-portal/${clinicId}/clinical-library/${id}`),
+  notificationTemplates: (clinicId) =>
+    api.get(`/clinic-portal/${clinicId}/notification-templates`),
+  saveNotificationTemplate: (clinicId, id, data) =>
+    api.put(`/clinic-portal/${clinicId}/notification-templates/${id}`, data),
+  notificationCampaigns: (clinicId) =>
+    api.get(`/clinic-portal/${clinicId}/notification-campaigns`),
+  createCampaign: (clinicId, data) =>
+    api.post(`/clinic-portal/${clinicId}/notification-campaigns`, data),
+  sendCampaign: (clinicId, id) =>
+    api.post(`/clinic-portal/${clinicId}/notification-campaigns/${id}/send`),
+  doctorAvailability: (clinicId) => api.get(`/clinic-portal/${clinicId}/doctor-availability`),
+  setDoctorAvailability: (clinicId, data) =>
+    api.post(`/clinic-portal/${clinicId}/doctor-availability`, data),
+  setClinicClosure: (clinicId, data) => api.post(`/clinic-portal/${clinicId}/closure`, data),
+  payouts: (clinicId) => api.get(`/clinic-portal/${clinicId}/payouts`),
+  savePayout: (clinicId, data) => api.put(`/clinic-portal/${clinicId}/payouts`, data),
+  payoutReport: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/payout-report`, { params }),
+  getBranding: (clinicId) => api.get(`/clinic-portal/${clinicId}/branding`),
+  saveBranding: (clinicId, data) => api.put(`/clinic-portal/${clinicId}/branding`, data),
+  getModePrices: (clinicId) => api.get(`/clinic-portal/${clinicId}/mode-prices`),
+  saveModePrices: (clinicId, data) => api.put(`/clinic-portal/${clinicId}/mode-prices`, data),
+  exportReports: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/reports/export`, {
+      params,
+      responseType: 'blob',
+    }),
+  progressReports: (clinicId) => api.get(`/clinic-portal/${clinicId}/progress-reports`),
+  createProgressReport: (clinicId, data) =>
+    api.post(`/clinic-portal/${clinicId}/progress-reports`, data),
+  liveEvents: (clinicId, params) => api.get(`/clinic-portal/${clinicId}/live/events`, { params }),
+};
+
+export const clinicQr = {
+  resolve: (token) => api.get('/clinic-qr/resolve', { params: { token } }),
+  register: (data) => api.post('/clinic-qr/register', data),
+  progress: (token) => api.get('/clinic-qr/progress', { params: { token } }),
 };
 
 export const about = {

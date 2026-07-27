@@ -2,9 +2,11 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import FaIcon from '../FaIcon';
 import Logo from '../Logo';
+import { clinicNavSections, isClinicNavActive } from '../../constants/clinicNav';
 
 /**
- * Slide-in sidebar for Doctor & Patient portals (matches Admin mobile UX).
+ * Slide-in sidebar for Doctor, Patient & Clinic portals.
+ * Clinic links may include section: 'ops' | 'settings' for Feature Request layout.
  */
 export default function DashboardPortalSidebar({
   open,
@@ -27,6 +29,45 @@ export default function DashboardPortalSidebar({
 
   const accentLabel =
     accent === 'teal' ? 'text-teal-700' : accent === 'emerald' ? 'text-emerald-700' : 'text-primary-600';
+
+  const hasSections = Array.isArray(links) && links.some((l) => l.section === 'settings' || l.section === 'ops');
+  const { ops, settings } = hasSections
+    ? clinicNavSections(links)
+    : { ops: links || [], settings: [] };
+
+  const renderLink = (link, i) => {
+    const active = isClinicNavActive(pathname, link) || (!link.match && pathname === link.to);
+    return (
+      <Link
+        key={link.to}
+        to={link.to}
+        onClick={onClose}
+        className={`admin-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+          active ? activeClass : 'text-slate-600 hover:bg-white/70 hover:text-slate-900'
+        }`}
+        style={{ transitionDelay: open ? `${i * 16}ms` : '0ms' }}
+      >
+        {typeof link.icon === 'string' && link.icon.startsWith('fa-') ? (
+          <span className="w-6 flex items-center justify-center shrink-0 opacity-90">
+            <FaIcon icon={link.icon} className="text-sm" />
+          </span>
+        ) : (
+          <span className="text-lg w-6 text-center shrink-0" aria-hidden="true">
+            {link.icon}
+          </span>
+        )}
+        <span className="truncate flex-1">{link.label}</span>
+        {link.notifyKey && unreadCount > 0 && (
+          <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
+        )}
+        {active && !link.notifyKey && (
+          <FaIcon icon="fa-chevron-right" className="ml-auto text-xs opacity-80 shrink-0" />
+        )}
+      </Link>
+    );
+  };
 
   return (
     <>
@@ -53,12 +94,7 @@ export default function DashboardPortalSidebar({
               <p className="text-xs text-slate-500 truncate">{subtitle}</p>
             </div>
           </div>
-          <button
-            type="button"
-            className="admin-icon-btn"
-            onClick={onClose}
-            aria-label="Close menu"
-          >
+          <button type="button" className="admin-icon-btn" onClick={onClose} aria-label="Close menu">
             <FaIcon icon="fa-xmark" />
           </button>
         </div>
@@ -74,39 +110,16 @@ export default function DashboardPortalSidebar({
         </div>
 
         <nav className="dashboard-sidebar-nav flex-1 p-3 space-y-0.5 overflow-y-auto overscroll-contain" aria-label="Portal navigation">
-          {links.map((link, i) => {
-            const active = pathname === link.to;
-            return (
-              <Link
-                key={link.to}
-                to={link.to}
-                onClick={onClose}
-                className={`admin-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  active ? activeClass : 'text-slate-600 hover:bg-white/70 hover:text-slate-900'
-                }`}
-                style={{ transitionDelay: open ? `${i * 16}ms` : '0ms' }}
-              >
-                {typeof link.icon === 'string' && link.icon.startsWith('fa-') ? (
-                  <span className="w-6 flex items-center justify-center shrink-0 opacity-90">
-                    <FaIcon icon={link.icon} className="text-sm" />
-                  </span>
-                ) : (
-                  <span className="text-lg w-6 text-center shrink-0" aria-hidden="true">
-                    {link.icon}
-                  </span>
-                )}
-                <span className="truncate flex-1">{link.label}</span>
-                {link.notifyKey && unreadCount > 0 && (
-                  <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
-                    {unreadCount > 99 ? '99+' : unreadCount}
-                  </span>
-                )}
-                {active && !link.notifyKey && (
-                  <FaIcon icon="fa-chevron-right" className="ml-auto text-xs opacity-80 shrink-0" />
-                )}
-              </Link>
-            );
-          })}
+          {ops.map((link, i) => renderLink(link, i))}
+
+          {settings.length > 0 && (
+            <div className="pt-3 mt-2 border-t border-slate-200/80">
+              <p className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                Settings
+              </p>
+              {settings.map((link, i) => renderLink(link, ops.length + i))}
+            </div>
+          )}
         </nav>
 
         <div className="p-4 border-t border-slate-200/80 shrink-0 text-xs text-slate-500">

@@ -49,7 +49,7 @@ export default function PhysioFeedSection() {
             {list.map((post) => {
               const meta = TYPE_META[post.type] || TYPE_META.blog;
               return (
-                <Link key={post.id} to={`/physiofeed/${post.slug}`} className="mobile-scroll-item glass-card p-4 block hover:shadow-lg transition group">
+                <Link key={post.id} to={post?.canonical_path || (post?.type === 'podcast' ? `/podcast/${post.slug}` : `/blog/${post.slug}`)} className="mobile-scroll-item glass-card p-4 block hover:shadow-lg transition group">
                   <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${meta.color}`}>
                     <FaIcon icon={meta.icon} /> {meta.label}
                   </span>
@@ -62,7 +62,7 @@ export default function PhysioFeedSection() {
         )}
 
         <div className="text-center mt-8">
-          <Link to="/physiofeed" className="btn-outline inline-flex items-center gap-2 text-sm">
+          <Link to="/blog" className="btn-outline inline-flex items-center gap-2 text-sm">
             Explore PhysioFeed <FaIcon icon="fa-arrow-right" />
           </Link>
         </div>

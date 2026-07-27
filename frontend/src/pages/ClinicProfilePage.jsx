@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, Navigate, useParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import FaIcon from '../components/FaIcon';
@@ -8,7 +8,7 @@ import ClinicProfileView from '../components/clinic/ClinicProfileView';
 import { clinics } from '../services/api';
 import { googleMapsUrl } from '../utils/locationHelpers';
 
-export default function ClinicProfilePage() {
+export default function ClinicProfilePage({ legacy = false }) {
   const { slug, id } = useParams();
   const identifier = id ?? slug;
   const [clinic, setClinic] = useState(null);
@@ -28,6 +28,10 @@ export default function ClinicProfilePage() {
   const canonical = clinic?.canonical_path || (slug ? `/clinic/${slug}` : '');
   const canonicalUrl = typeof window !== 'undefined' ? `${window.location.origin}${canonical}` : canonical;
   const jsonLd = useMemo(() => (clinic ? clinicSchema(clinic, canonicalUrl) : null), [clinic, canonicalUrl]);
+
+  if (!loading && clinic?.slug && legacy) {
+    return <Navigate to={clinic?.canonical_path || '/clinics'} replace />;
+  }
 
   if (loading) {
     return (

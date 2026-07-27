@@ -1,16 +1,16 @@
-/** SEO city listing URL helpers (must match backend CitySeoHelper path prefixes). */
+/** SEO city listing URL helpers for clean public URLs. */
 
-export const CITY_CLINIC_SEO_PREFIX = '/best-physiotherapy-clinic-in/';
-export const CITY_DOCTOR_SEO_PREFIX = '/best-physiotherapist-in/';
+export const CITY_CLINIC_SEO_SUFFIX = '/physiotherapy-clinics';
+export const CITY_DOCTOR_SEO_SUFFIX = '/physiotherapists';
 
 export function cityClinicsSeoUrl(cityOrSlug) {
   const slug = typeof cityOrSlug === 'string' ? cityOrSlug : cityOrSlug?.slug;
   if (!slug) return '/clinics';
-  return `${CITY_CLINIC_SEO_PREFIX}${encodeURIComponent(slug)}`;
+  return `/${encodeURIComponent(slug)}${CITY_CLINIC_SEO_SUFFIX}`;
 }
 
 export function cityDoctorsSeoUrl(cityOrSlug) {
   const slug = typeof cityOrSlug === 'string' ? cityOrSlug : cityOrSlug?.slug;
   if (!slug) return '/doctors';
-  return `${CITY_DOCTOR_SEO_PREFIX}${encodeURIComponent(slug)}`;
+  return `/${encodeURIComponent(slug)}${CITY_DOCTOR_SEO_SUFFIX}`;
 }

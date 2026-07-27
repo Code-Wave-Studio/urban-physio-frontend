@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { auth } from '../services/api';
+import { resetClinicPortalStore } from './ClinicPortalContext';
 import {
   extractAuthSession,
   hasStoredToken,
@@ -24,6 +25,7 @@ export function AuthProvider({ children }) {
   const clearSession = useCallback(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    resetClinicPortalStore();
     setUser(null);
   }, []);
 
