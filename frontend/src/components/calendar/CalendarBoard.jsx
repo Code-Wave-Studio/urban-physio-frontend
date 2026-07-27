@@ -163,6 +163,11 @@ export default function CalendarBoard({
   }, []);
 
   const load = useCallback(() => {
+    if (hideClinicFilter && !clinicId) {
+      setEvents([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     const params = {
       from: range.from,
@@ -176,7 +181,7 @@ export default function CalendarBoard({
       .then((res) => setEvents(res.data?.events || []))
       .catch((err) => toast.error(err?.message || 'Failed to load calendar'))
       .finally(() => setLoading(false));
-  }, [range.from, range.to, types, doctorId, clinicId]);
+  }, [range.from, range.to, types, doctorId, clinicId, hideClinicFilter]);
 
   useEffect(() => {
     load();

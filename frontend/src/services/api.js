@@ -83,6 +83,8 @@ api.interceptors.response.use(
       errors: err.response?.data?.errors,
       status,
       code: err.code,
+      // Preserve raw body for blob/export error parsing
+      responseData: err.response?.data,
     });
   }
 );

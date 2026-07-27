@@ -92,8 +92,8 @@ export default function ClinicReportsPage() {
     } catch (error) {
       let message = error.message || 'Export failed';
       try {
-        if (error.response?.data instanceof Blob) {
-          const text = await error.response.data.text();
+        if (error.responseData instanceof Blob) {
+          const text = await error.responseData.text();
           const parsed = JSON.parse(text);
           message = parsed.message || message;
         }

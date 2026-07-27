@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import FaIcon from '../../components/FaIcon';
 import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
@@ -11,11 +12,17 @@ const LABELS = {
   report: ['Progress report', 'Patients can open their visit progress reports'],
 };
 
+function appOriginPath(path) {
+  const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+  const clean = path.startsWith('/') ? path : `/${path}`;
+  return `${window.location.origin}${base}${clean}`;
+}
+
 function purposeUrl(purpose, token) {
-  // Always use the current site origin (SPA), never the API host from public_url
-  if (purpose === 'report') return `${window.location.origin}/clinic-report/${token}`;
-  if (purpose === 'booking') return `${window.location.origin}/clinic-intake/${token}?intent=booking`;
-  return `${window.location.origin}/c/${token}`;
+  // Always use the current SPA origin + Vite basename (never the API host)
+  if (purpose === 'report') return appOriginPath(`/clinic-report/${token}`);
+  if (purpose === 'booking') return appOriginPath(`/clinic-intake/${token}?intent=booking`);
+  return appOriginPath(`/c/${token}`);
 }
 
 function qrImageUrl(url, size = 240) {
@@ -84,6 +91,10 @@ export default function ClinicQrPage() {
   const tokens = data?.tokens || {};
   const tokenEntries = Object.keys(tokens);
   const branding = data?.branding;
+
+  if (!boot && !can('qr.view')) {
+    return <Navigate to="/clinic-portal" replace />;
+  }
 
   return (
     <ClinicPortalShell
