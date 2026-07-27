@@ -22,13 +22,17 @@ DirectoryIndex index.html
 # closes without ever delivering a credential.
 <IfModule mod_headers.c>
   Header always set Cross-Origin-Opener-Policy "same-origin-allow-popups"
+  # Never cache the SPA shell
+  <FilesMatch "^(index\.html)?$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </FilesMatch>
 </IfModule>
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
 
-  # Built Vite output lives in /static/ (see vite.config.js assetsDir)
+  # Built Vite output lives in /app/ (see vite.config.js assetsDir)
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
@@ -39,7 +43,7 @@ DirectoryIndex index.html
   # Missing build assets must 404 (never SPA-fallback to index.html), otherwise a
   # stale/edge cache stores HTML under a .js URL -> "Unexpected token '<'".
   RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteRule ^static/ - [R=404,L]
+  RewriteRule ^(app|static|assets)/ - [R=404,L]
 
   # React SPA fallback
   RewriteRule ^ index.html [L]

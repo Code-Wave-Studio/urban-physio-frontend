@@ -1,18 +1,11 @@
 # Cloudflare Pages — The Urban Physio
 # Format: one rule per line — [source] [destination] [code]
-# Multiline / _headers-style rules are IGNORED.
 #
 # DO NOT add "/* /index.html 200" here.
-# Cloudflare Pages already SPA-falls back to / when no 404.html exists,
-# AND still serves real files under /static/*. An explicit /* rewrite is
-# ALWAYS applied (even when the .js exists) → browser gets HTML → 
-# Uncaught SyntaxError: Unexpected token '<'.
+# Cloudflare Pages already SPA-falls back to index.html when no matching file
+# (and no custom 404.html) exists. An explicit /* rewrite has poisoned hashed
+# asset URLs in the past (HTML cached as .js → Unexpected token '<').
 #
-# www → apex: set in Cloudflare Dashboard → Rules → Redirects (domain-level
-# redirects are not supported in this file).
+# www → apex: set in Cloudflare Dashboard → Rules → Redirects.
 #
-# /backend/api proxy: not supported here (external destinations cannot be
-# proxied with 200). Frontend uses VITE_API_URL directly.
-
-# Optional: keep build assets from being mistaken for routes (identity is a no-op;
-# left empty on purpose — rely on CF static file serving + built-in SPA).
+# /backend/api: frontend uses VITE_API_URL (Hostinger), not a CF proxy.

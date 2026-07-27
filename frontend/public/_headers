@@ -1,44 +1,22 @@
-# Cloudflare Pages — extension-only MIME (NEVER use /static/* or /assets/* blanket rules)
+# Cloudflare Pages headers
+#
+# CRITICAL: Never set Cache-Control: immutable (or long max-age) on /app/* path
+# rules. If Cloudflare's SPA soft-404 returns index.html for a missing hashed
+# asset URL, that HTML would be cached forever under the .js path → white screen
+# ("Unexpected token '<'"). Hashed files already cache well via CF defaults.
+#
+# Also never force Content-Type on /app/*.js — same poison path would label HTML
+# as JavaScript and the browser would try to execute it.
 
-# Google Identity Services signs in through a popup that talks back via
-# window.postMessage. Plain "same-origin" severs that handle and the popup
-# closes without ever delivering a credential.
+# Google Identity Services popup needs postMessage back to opener.
 /*
   Cross-Origin-Opener-Policy: same-origin-allow-popups
 
-# Entry HTML must never be cached, so clients always fetch the current asset hashes.
-# This prevents a stale index.html from requesting a missing /static/*.js, which the
-# SPA fallback would answer with index.html (HTML) at status 200 — the browser then
-# throws "Unexpected token '<'" and Cloudflare caches the HTML under the .js URL.
+# SPA shell must always revalidate so clients pick up new /app/*.js hashes.
 /
-  Cache-Control: no-cache
+  Cache-Control: no-cache, no-store, must-revalidate
 /index.html
-  Cache-Control: no-cache
-
-# Content-hashed build assets never change for a given filename — cache them forever.
-/static/*
-  Cache-Control: public, max-age=31536000, immutable
-
-/static/*.css
-  Content-Type: text/css; charset=utf-8
-
-/static/*.js
-  Content-Type: application/javascript; charset=utf-8
-
-/static/*.mjs
-  Content-Type: application/javascript; charset=utf-8
-
-/static/*.woff2
-  Content-Type: font/woff2
-
-/static/*.woff
-  Content-Type: font/woff
-
-/static/*.png
-  Content-Type: image/png
-
-/static/*.svg
-  Content-Type: image/svg+xml
+  Cache-Control: no-cache, no-store, must-revalidate
 
 /logo.png
   Content-Type: image/png

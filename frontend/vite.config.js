@@ -24,8 +24,10 @@ export default defineConfig(({ mode }) => {
   return {
     base,
     build: {
-      // New folder name — bypasses Cloudflare edge cache that wrongly tagged /assets/*.css as JS
-      assetsDir: 'static',
+      // Hashed assets folder. Rename when CF edge cache is poisoned (HTML body under a .js URL
+      // with Content-Type: application/javascript → "Unexpected token '<'" white screen).
+      // History: assets → static → app
+      assetsDir: 'app',
     },
     plugins: [
       react(),

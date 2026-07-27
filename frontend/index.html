@@ -32,16 +32,23 @@
     <!-- End Google Tag Manager (noscript) -->
     <div id="root"></div>
     <script>
-      // Self-heal a poisoned/stale deploy: if a build asset fails to load or the app
-      // never mounts (e.g. HTML served in place of a .js chunk -> "Unexpected token '<'"),
-      // clear caches/service workers and hard-reload ONCE (sentinel prevents loops).
+      // Self-heal poisoned/stale deploys (HTML served as .js → Unexpected token '<').
+      // Up to 2 reloads; strips old cache-busters; clears SW/caches.
       (function () {
-        var KEY = '__tup_boot_reload';
-        function healOnce() {
-          try {
-            if (sessionStorage.getItem(KEY)) return;
-            sessionStorage.setItem(KEY, String(Date.now()));
-          } catch (e) {}
+        var KEY = '__tup_boot_reload_n';
+        var MAX = 2;
+        function count() {
+          try { return parseInt(sessionStorage.getItem(KEY) || '0', 10) || 0; } catch (e) { return 0; }
+        }
+        function bump() {
+          try { sessionStorage.setItem(KEY, String(count() + 1)); } catch (e) {}
+        }
+        function clear() {
+          try { sessionStorage.removeItem(KEY); } catch (e) {}
+        }
+        function heal() {
+          if (count() >= MAX) return;
+          bump();
           try {
             if (window.caches && caches.keys) {
               caches.keys().then(function (ks) { ks.forEach(function (k) { caches.delete(k); }); });
@@ -52,7 +59,7 @@
               });
             }
           } catch (e) {}
-          var u = location.href.split('#')[0];
+          var u = location.href.split('#')[0].replace(/([?&])_tup=\d+/g, '$1').replace(/[?&]$/, '');
           location.replace(u + (u.indexOf('?') >= 0 ? '&' : '?') + '_tup=' + Date.now());
         }
         function isHtmlAsJs(msg) {
@@ -61,18 +68,17 @@
         window.addEventListener('error', function (e) {
           var t = e && e.target;
           if (t && (t.tagName === 'SCRIPT' || t.tagName === 'LINK')) {
-            healOnce();
+            heal();
             return;
           }
-          // 200 HTML for a .js URL does not fire a SCRIPT load error — only a SyntaxError.
-          if (e && isHtmlAsJs(e.message)) healOnce();
+          if (e && isHtmlAsJs(e.message)) heal();
         }, true);
         window.addEventListener('load', function () {
           setTimeout(function () {
             var root = document.getElementById('root');
-            if (root && root.childElementCount === 0) healOnce();
-            else { try { sessionStorage.removeItem(KEY); } catch (e) {} }
-          }, 6000);
+            if (root && root.childElementCount === 0) heal();
+            else clear();
+          }, 4000);
         });
       })();
     </script>
