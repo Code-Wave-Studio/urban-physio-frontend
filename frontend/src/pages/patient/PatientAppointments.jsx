@@ -4,7 +4,8 @@ import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../../components/FaIcon';
 import InvoiceModal from '../../components/InvoiceModal';
 import useAppointmentDeepLink from '../../hooks/useAppointmentDeepLink';
-import { appointments } from '../../services/api';
+import usePatientLiveSync from '../../hooks/usePatientLiveSync';
+import { appointments, patientPortal } from '../../services/api';
 import { clinicLocationText, googleMapsUrl } from '../../utils/locationHelpers';
 import {
   completeAppointmentPayment,
@@ -32,6 +33,12 @@ const FILTERS = [
   { id: 'cancelled', label: 'Cancelled' },
 ];
 
+const MODE_OPTIONS = [
+  { value: 'clinic', label: 'Clinic visit' },
+  { value: 'home_visit', label: 'Home visit' },
+  { value: 'online', label: 'Online' },
+];
+
 function formatApptDate(d) {
   if (!d) return '—';
   return new Date(`${d}T12:00:00`).toLocaleDateString('en-IN', {
@@ -50,11 +57,18 @@ function matchesFilter(appt, filter) {
   return true;
 }
 
+function isUpcomingSession(a) {
+  if (!['pending', 'confirmed'].includes(a.status)) return false;
+  const start = new Date(`${a.appointment_date}T${(a.start_time || '00:00:00').slice(0, 8)}`);
+  return start.getTime() > Date.now();
+}
+
 export default function PatientAppointments() {
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [payingId, setPayingId] = useState(null);
+  const [modeChangingId, setModeChangingId] = useState(null);
   const [invoiceApptId, setInvoiceApptId] = useState(null);
 
   const load = useCallback(() => {
@@ -66,9 +80,21 @@ export default function PatientAppointments() {
       .finally(() => setLoading(false));
   }, []);
 
+  const softReload = useCallback(() => {
+    appointments
+      .list()
+      .then((res) => setList(res.data || []))
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     load();
   }, [load]);
+
+  const handleLiveEvent = useCallback(() => {
+    softReload();
+  }, [softReload]);
+  usePatientLiveSync(handleLiveEvent, { enabled: true });
 
   const filtered = useMemo(
     () =>
@@ -111,12 +137,34 @@ export default function PatientAppointments() {
     }
   };
 
+  const handleModeChange = async (appt, mode) => {
+    if (!mode || mode === appt.consultation_type) return;
+    if (!appt.clinic_id) {
+      toast.error('Mode change is available for clinic-linked sessions');
+      return;
+    }
+    setModeChangingId(appt.id);
+    try {
+      const res = await patientPortal.changeSessionMode(appt.id, { consultation_type: mode });
+      const result = res.data || res || {};
+      const diff = Number(result.difference || 0);
+      if (diff > 0) toast.success(`Mode updated · pay difference ₹${diff.toLocaleString('en-IN')}`);
+      else if (diff < 0) toast.success(`Mode updated · credit ₹${Math.abs(diff).toLocaleString('en-IN')}`);
+      else toast.success('Session mode updated');
+      load();
+    } catch (e) {
+      toast.error(e.message || 'Could not change mode');
+    } finally {
+      setModeChangingId(null);
+    }
+  };
+
   return (
     <DashboardLayout links={PATIENT_NAV} variant="patient">
       <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-slate-900">My Appointments</h1>
-          <p className="text-slate-600 text-sm mt-1">View, pay, and join your scheduled sessions.</p>
+          <p className="text-slate-600 text-sm mt-1">View, pay, change mode, and join your scheduled sessions.</p>
         </div>
         <Link to="/book" className="btn-primary inline-flex items-center justify-center gap-2 text-sm shrink-0">
           <FaIcon icon="fa-calendar-plus" />
@@ -178,6 +226,7 @@ export default function PatientAppointments() {
             const awaitingPay = isAwaitingOnlinePayment(a);
             const dueNow = getOnlinePaymentDue(a);
             const typeIcon = TYPE_ICONS[a.consultation_type] || 'fa-calendar';
+            const canChangeMode = isUpcomingSession(a) && a.clinic_id;
 
             return (
               <article
@@ -216,6 +265,30 @@ export default function PatientAppointments() {
                           <span className="text-amber-700 font-medium"> · Pay now: ₹{dueNow}</span>
                         )}
                       </p>
+
+                      {canChangeMode && (
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <label className="text-xs font-medium text-slate-600" htmlFor={`mode-${a.id}`}>
+                            Change mode
+                          </label>
+                          <select
+                            id={`mode-${a.id}`}
+                            disabled={modeChangingId === a.id}
+                            value={a.consultation_type || 'clinic'}
+                            onChange={(e) => handleModeChange(a, e.target.value)}
+                            className="text-sm border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-300"
+                          >
+                            {MODE_OPTIONS.map((m) => (
+                              <option key={m.value} value={m.value}>
+                                {m.label}
+                              </option>
+                            ))}
+                          </select>
+                          {modeChangingId === a.id && (
+                            <span className="text-xs text-slate-500">Updating…</span>
+                          )}
+                        </div>
+                      )}
 
                       {awaitingPay && (
                         <p className="text-xs text-amber-800 mt-2 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 inline-flex items-center gap-1.5">

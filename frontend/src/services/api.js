@@ -859,6 +859,9 @@ export const patientPortal = {
   progress: () => api.get('/patient-portal/progress'),
   prescriptions: () => api.get('/patient-portal/prescriptions'),
   videoConsultations: () => api.get('/patient-portal/video-consultations'),
+  changeSessionMode: (appointmentId, data) =>
+    api.post(`/patient-portal/appointments/${appointmentId}/session-mode`, data),
+  liveEvents: (params) => api.get('/patient-portal/live/events', { params }),
 };
 
 /** Doctor Calendar — schedule, appointments, rooms, holidays, leave */
