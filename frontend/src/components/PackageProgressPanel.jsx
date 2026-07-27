@@ -1,14 +1,8 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import FaIcon from './FaIcon';
+import RichSessionCard from './RichSessionCard';
 import { patientPackages } from '../services/api';
-
-const STATUS_STYLES = {
-  scheduled: 'bg-slate-100 text-slate-700',
-  completed: 'bg-emerald-50 text-emerald-700',
-  missed: 'bg-amber-50 text-amber-700',
-  cancelled: 'bg-red-50 text-red-700',
-};
 
 export default function PackageProgressPanel({ packageId, canEdit = false, onUpdated }) {
   const [pkg, setPkg] = useState(null);
@@ -39,7 +33,7 @@ export default function PackageProgressPanel({ packageId, canEdit = false, onUpd
       await patientPackages.completeSession(packageId, sessionNumber, {
         session_notes: noteDraft[sessionNumber] || '',
       });
-      toast.success('Session marked complete');
+      toast.success('Session marked complete — report emailed if clinic configured');
       await load();
       onUpdated?.();
     } catch (err) {
@@ -83,49 +77,18 @@ export default function PackageProgressPanel({ packageId, canEdit = false, onUpd
         </div>
       </div>
 
-      <div className="space-y-2 max-h-80 overflow-y-auto">
-        {pkg.sessions.map((s) => (
-          <div
-            key={s.session_number}
-            className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg bg-slate-50 border border-slate-100"
-          >
-            <div>
-              <p className="text-sm font-semibold text-slate-800">Session {s.session_number}</p>
-              <p className="text-xs text-slate-500">{s.scheduled_date || 'Date TBD'}</p>
-              {s.session_notes && (
-                <p className="text-xs text-slate-600 mt-1">{s.session_notes}</p>
-              )}
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${
-                  STATUS_STYLES[s.status] || STATUS_STYLES.scheduled
-                }`}
-              >
-                {s.status}
-              </span>
-              {canEdit && s.status === 'scheduled' && (
-                <>
-                  <input
-                    className="input-field text-xs py-1 px-2 max-w-[140px]"
-                    placeholder="Notes"
-                    value={noteDraft[s.session_number] || ''}
-                    onChange={(e) =>
-                      setNoteDraft((d) => ({ ...d, [s.session_number]: e.target.value }))
-                    }
-                  />
-                  <button
-                    type="button"
-                    disabled={updating === s.session_number}
-                    onClick={() => completeSession(s.session_number)}
-                    className="btn-primary text-xs py-1 px-2"
-                  >
-                    {updating === s.session_number ? '…' : 'Complete'}
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
+      <div className="space-y-3 max-h-[28rem] overflow-y-auto pr-1">
+        {pkg.sessions.map((s, idx) => (
+          <RichSessionCard
+            key={s.session_number || idx}
+            session={s}
+            index={idx}
+            canEdit={canEdit}
+            updating={updating === s.session_number}
+            noteDraft={noteDraft[s.session_number] || ''}
+            onNoteChange={(v) => setNoteDraft((d) => ({ ...d, [s.session_number]: v }))}
+            onComplete={completeSession}
+          />
         ))}
       </div>
     </div>

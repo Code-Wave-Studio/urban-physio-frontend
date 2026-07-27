@@ -4,10 +4,11 @@ import toast from 'react-hot-toast';
 import FaIcon from '../../components/FaIcon';
 import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
 import ClinicBookingModal from '../../components/clinic/ClinicBookingModal';
+import RichSessionCard from '../../components/RichSessionCard';
 import useClinicPortal from '../../hooks/useClinicPortal';
-import { clinicPortal } from '../../services/api';
+import { clinicPortal, exercisePrescriptions } from '../../services/api';
 
-const TABS = ['Overview', 'Timeline', 'Assessments', 'Packages', 'Payments', 'SOAP', 'Documents', 'Reports'];
+const TABS = ['Overview', 'Timeline', 'Assessments', 'Packages', 'Protocols', 'Payments', 'SOAP', 'Documents', 'Reports'];
 const money = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 const parse = (value) => {
   if (typeof value !== 'string') return value || {};
@@ -263,23 +264,72 @@ export default function ClinicPatientDetailPage() {
             )}
 
             {tab === 'Packages' && (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {data.packages?.map((p) => (
-                  <div key={p.id} className="rounded-xl border border-slate-100 p-4 flex justify-between gap-3">
-                    <div>
-                      <p className="font-semibold">{p.package_name || p.name || 'Package'}</p>
-                      <p className="text-xs text-slate-500">
-                        {p.completed_sessions || 0}/{p.total_sessions || 0} sessions · <span className="capitalize">{p.status}</span>
-                      </p>
+                  <div key={p.id} className="rounded-2xl border border-slate-100 p-4 space-y-3">
+                    <div className="flex justify-between gap-3">
+                      <div>
+                        <p className="font-semibold">{p.package_name || p.name || 'Package'}</p>
+                        <p className="text-xs text-slate-500">
+                          {p.completed_sessions || 0}/{p.total_sessions || 0} sessions · <span className="capitalize">{p.status}</span>
+                        </p>
+                      </div>
+                      {can('packages.manage') && !['terminated', 'completed'].includes(p.status) && (
+                        <button type="button" className="text-xs text-rose-600 font-semibold" onClick={() => terminate(p)}>
+                          Terminate
+                        </button>
+                      )}
                     </div>
-                    {can('packages.manage') && !['terminated', 'completed'].includes(p.status) && (
-                      <button type="button" className="text-xs text-rose-600 font-semibold" onClick={() => terminate(p)}>
-                        Terminate
-                      </button>
+                    {(p.sessions || []).length > 0 ? (
+                      <div className="space-y-3">
+                        {p.sessions.map((s, idx) => (
+                          <RichSessionCard key={s.id || idx} session={s} index={idx} />
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-400">No linked session appointments yet.</p>
                     )}
                   </div>
                 ))}
                 {!data.packages?.length && <Empty>No packages.</Empty>}
+              </div>
+            )}
+
+            {tab === 'Protocols' && (
+              <div className="space-y-3">
+                {(data.exercise_prescriptions || []).map((rx) => (
+                  <div key={rx.id} className="rounded-xl border border-slate-100 p-4 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-slate-900 flex items-center gap-2">
+                        {rx.is_protocol == 1 && <FaIcon icon="fa-notes-medical" className="text-teal-600 text-xs" />}
+                        {rx.title}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1 capitalize">
+                        {rx.publish_status || 'published'} · {rx.status}
+                        {rx.published_at ? ` · published ${String(rx.published_at).slice(0, 10)}` : ''}
+                      </p>
+                      {rx.protocol_goals && <p className="text-xs text-slate-600 mt-2">{rx.protocol_goals}</p>}
+                    </div>
+                    {(rx.publish_status === 'draft') && (
+                      <button
+                        type="button"
+                        className="btn-primary text-xs py-1.5 px-3"
+                        onClick={async () => {
+                          try {
+                            await exercisePrescriptions.publish(rx.id, { is_protocol: true });
+                            toast.success('Protocol published to patient');
+                            load();
+                          } catch (e) {
+                            toast.error(e.message || 'Publish failed');
+                          }
+                        }}
+                      >
+                        Publish to patient
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {!data.exercise_prescriptions?.length && <Empty>No treatment protocols / exercise plans.</Empty>}
               </div>
             )}
 

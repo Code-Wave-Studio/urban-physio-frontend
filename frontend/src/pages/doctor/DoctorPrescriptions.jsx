@@ -33,6 +33,9 @@ const emptyForm = () => ({
   start_date: new Date().toISOString().slice(0, 10),
   end_date: '',
   status: 'active',
+  is_protocol: true,
+  publish_status: 'draft',
+  protocol_goals: '',
   exercises: [{ ...EMPTY_ITEM }],
 });
 
@@ -219,15 +222,19 @@ export default function DoctorPrescriptions() {
       start_date: form.start_date,
       end_date: form.end_date || null,
       status: form.status,
+      is_protocol: Boolean(form.is_protocol),
+      publish_status: form.publish_status || 'draft',
+      protocol_goals: form.protocol_goals || '',
       exercises: validEx,
     };
+    if (isClinic && clinicId) payload.clinic_id = clinicId;
     try {
       if (editingId) {
         await exercisePrescriptions.update(editingId, payload);
         toast.success('Plan updated');
       } else {
         await exercisePrescriptions.create(payload);
-        toast.success('Exercise plan assigned');
+        toast.success(payload.publish_status === 'published' ? 'Protocol published to patient' : 'Draft protocol saved');
       }
       setModalOpen(false);
       setEditingId(null);
@@ -313,13 +320,14 @@ export default function DoctorPrescriptions() {
                   <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
                     rx.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
                   }`}>
-                    {rx.status}
+                    {rx.publish_status === 'draft' ? 'draft' : rx.status}
                   </span>
                 </div>
                 <div className="text-xs text-slate-500 flex flex-wrap gap-x-3 gap-y-1">
                   <span><FaIcon icon="fa-calendar" className="mr-1" />{rx.start_date}{rx.end_date ? ` → ${rx.end_date}` : ''}</span>
                   <span><FaIcon icon="fa-list" className="mr-1" />{rx.exercise_count || 0} exercises</span>
                   {rx.week_number && <span>Week {rx.week_number}</span>}
+                  {Number(rx.is_protocol) === 1 && <span className="text-teal-700 font-semibold">Protocol</span>}
                 </div>
                 {pct != null && rx.status === 'active' && (
                   <div>
@@ -337,6 +345,23 @@ export default function DoctorPrescriptions() {
                   <button type="button" className="btn-outline !py-1.5 !px-3 text-xs" onClick={() => openEdit(rx)}>
                     Edit
                   </button>
+                  {rx.publish_status === 'draft' && (
+                    <button
+                      type="button"
+                      className="btn-primary !py-1.5 !px-3 text-xs"
+                      onClick={async () => {
+                        try {
+                          await exercisePrescriptions.publish(rx.id, { is_protocol: true });
+                          toast.success('Published to patient');
+                          load();
+                        } catch (err) {
+                          toast.error(err.message || 'Publish failed');
+                        }
+                      }}
+                    >
+                      Publish
+                    </button>
+                  )}
                   {rx.status === 'active' && (
                     <button type="button" className="text-xs text-rose-600 font-medium px-2" onClick={() => cancelPlan(rx)}>
                       Cancel
@@ -496,6 +521,21 @@ export default function DoctorPrescriptions() {
             <div>
               <label className="text-sm font-medium text-slate-700 mb-1.5 block">Plan title *</label>
               <input className="input-field w-full" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required placeholder="e.g. Week 2 — knee strengthening" />
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input type="checkbox" checked={Boolean(form.is_protocol)} onChange={(e) => setForm({ ...form, is_protocol: e.target.checked })} />
+                Treatment protocol (sync to patient portal)
+              </label>
+              <label className="block text-sm">
+                <span className="font-medium text-slate-700">Publish</span>
+                <select className="input-field w-full mt-1" value={form.publish_status} onChange={(e) => setForm({ ...form, publish_status: e.target.value })}>
+                  <option value="draft">Save as draft</option>
+                  <option value="published">Publish to patient now</option>
+                </select>
+              </label>
+              <label className="block text-sm">
+                <span className="font-medium text-slate-700">Protocol goals</span>
+                <textarea className="input-field w-full mt-1" rows={2} value={form.protocol_goals || ''} onChange={(e) => setForm({ ...form, protocol_goals: e.target.value })} placeholder="e.g. Restore full knee ROM, pain &lt; 3/10" />
+              </label>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>

@@ -792,6 +792,8 @@ export const clinicPortal = {
 export const clinicQr = {
   resolve: (token) => api.get('/clinic-qr/resolve', { params: { token } }),
   register: (data) => api.post('/clinic-qr/register', data),
+  google: (data) => api.post('/clinic-qr/google', data),
+  bind: (data) => api.post('/clinic-qr/bind', data),
   progress: (token) => api.get('/clinic-qr/progress', { params: { token } }),
 };
 
@@ -940,6 +942,7 @@ export const exercisePrescriptions = {
   get: (id) => api.get(`/exercise-prescriptions/${id}`),
   create: (data) => api.post('/exercise-prescriptions', data),
   update: (id, data) => api.put(`/exercise-prescriptions/${id}`, data),
+  publish: (id, data = {}) => api.post(`/exercise-prescriptions/${id}/publish`, data),
   cancel: (id) => api.delete(`/exercise-prescriptions/${id}`),
   progress: (id) => api.get(`/exercise-prescriptions/${id}/progress`),
   log: (id, data) => api.post(`/exercise-prescriptions/${id}/log`, data),
