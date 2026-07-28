@@ -184,15 +184,15 @@ export default function AppointmentDetailCard({
             </div>
           )}
 
-          {appt.status === 'confirmed' && appt.google_meet_link && (
+          {appt.status === 'confirmed' && (appt.zoom_join_url || appt.google_meet_link) && (
             <a
-              href={appt.google_meet_link}
+              href={appt.zoom_start_url || appt.zoom_join_url || appt.google_meet_link}
               target="_blank"
               rel="noreferrer"
               className="btn-primary text-sm py-2 px-4 inline-flex items-center gap-2 w-fit"
             >
               <FaIcon icon="fa-video" />
-              Join video call
+              {appt.zoom_start_url ? 'Start Zoom meeting' : 'Join Zoom meeting'}
             </a>
           )}
         </>
@@ -279,18 +279,20 @@ export default function AppointmentDetailCard({
           <Detail label="Device" value={meta.device_type} />
           <Detail label="Internet quality" value={meta.internet_quality} />
           <Detail label="Preferred language" value={meta.preferred_language} />
-          {appt.google_meet_link && (
-            <Detail label="Video call" className="sm:col-span-2">
+          {(appt.zoom_join_url || appt.google_meet_link) && (
+            <Detail label="Zoom meeting" className="sm:col-span-2">
               <a
-                href={appt.google_meet_link}
+                href={appt.zoom_join_url || appt.google_meet_link}
                 target="_blank"
                 rel="noreferrer"
                 className="text-primary-600 font-medium hover:underline break-all"
               >
-                {appt.google_meet_link}
+                {appt.zoom_join_url || appt.google_meet_link}
               </a>
             </Detail>
           )}
+          {appt.zoom_status && <Detail label="Meeting status" value={appt.zoom_status} />}
+          {appt.zoom_meeting_id && <Detail label="Meeting ID" value={appt.zoom_meeting_id} />}
         </Section>
       )}
 

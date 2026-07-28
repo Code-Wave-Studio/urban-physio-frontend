@@ -61,7 +61,7 @@ export const POLICY_PAGES = {
         id: 'sharing',
         title: '4. Sharing & Disclosure',
         paragraphs: [
-          'We share necessary information with physiotherapists you book, payment partners (Razorpay), video session links for online consultations (e.g. Jitsi Meet), and infrastructure providers hosting our platform.',
+          'We share necessary information with physiotherapists you book, payment partners (Razorpay), video session links for online consultations (Zoom), and infrastructure providers hosting our platform.',
           'We do not sell your personal data. We may disclose information when required by law, court order, or to protect rights, safety, and fraud prevention.',
         ],
       },
@@ -351,7 +351,7 @@ export const POLICY_PAGES = {
         id: 'scope',
         title: '1. Scope of Services',
         paragraphs: [
-          'The Urban Physio enables three consultation modes: online video (Jitsi Meet), partner clinic visits, and home visits within doctor-defined service radius. Service availability varies by city and practitioner.',
+          'The Urban Physio enables three consultation modes: online video (Zoom), partner clinic visits, and home visits within doctor-defined service radius. Service availability varies by city and practitioner.',
         ],
       },
       {

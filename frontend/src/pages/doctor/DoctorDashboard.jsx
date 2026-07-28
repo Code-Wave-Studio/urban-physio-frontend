@@ -65,6 +65,8 @@ function formatDate(d) {
 function MiniApptRow({ appt }) {
   const name = patientLabel(appt);
   const typeIcon = TYPE_ICONS[appt.consultation_type] || 'fa-calendar';
+  const joinUrl = appt.zoom_join_url || appt.google_meet_link;
+  const startUrl = appt.zoom_start_url || joinUrl;
   return (
     <div className="flex items-start gap-3 py-3 border-b border-slate-100 last:border-0">
       <div className="w-10 h-10 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center shrink-0">
@@ -76,12 +78,44 @@ function MiniApptRow({ appt }) {
           <span className={`text-xs px-2 py-0.5 rounded-full border ${STATUS_STYLES[appt.status] || STATUS_STYLES.pending}`}>
             {appt.status}
           </span>
+          {appt.consultation_type === 'online' && (
+            <span className="text-[10px] uppercase px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-100">
+              Zoom {appt.zoom_status || (joinUrl ? 'ready' : 'pending')}
+            </span>
+          )}
         </div>
         <p className="text-sm text-slate-500 mt-0.5">
           {formatDate(appt.appointment_date)} · {formatTime(appt.start_time)}
           {appt.end_time ? `–${formatTime(appt.end_time)}` : ''} · {formatType(appt.consultation_type)}
         </p>
         {appt.booking_id && <p className="text-xs text-slate-400 mt-0.5 font-mono">{appt.booking_id}</p>}
+        {appt.consultation_type === 'online' && appt.status === 'confirmed' && startUrl && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            <a
+              href={startUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs font-semibold text-primary-700 hover:underline"
+            >
+              Start Zoom meeting
+            </a>
+            {joinUrl && (
+              <button
+                type="button"
+                className="text-xs font-semibold text-slate-600 hover:underline"
+                onClick={() => {
+                  navigator.clipboard?.writeText(joinUrl);
+                  toast.success('Join link copied');
+                }}
+              >
+                Copy link
+              </button>
+            )}
+            <Link to={`/doctor/consultation/${appt.id}`} className="text-xs font-semibold text-slate-600 hover:underline">
+              Open room
+            </Link>
+          </div>
+        )}
       </div>
       <div className="text-right shrink-0">
         <p className="font-semibold text-slate-800">{money(appt.amount)}</p>

@@ -130,13 +130,13 @@ export default function ClinicPortalAppointments() {
   const generateMeeting = async (a) => {
     setActing(a.id);
     try {
-      const res = await clinicPortal.generateMeeting(clinicId, a.id, { provider: 'jitsi' });
+      const res = await clinicPortal.generateMeeting(clinicId, a.id, { provider: 'zoom' });
       const result = res.data || res || {};
       const link = result.meeting_link || result.link || result.meeting?.meeting_link;
       if (link) {
         await navigator.clipboard?.writeText(link);
-        toast.success('Meeting created and link copied');
-      } else toast.success('Meeting created');
+        toast.success('Zoom meeting created and link copied');
+      } else toast.success('Zoom meeting created');
       load();
     } catch (e) {
       toast.error(e.message || 'Could not generate meeting');

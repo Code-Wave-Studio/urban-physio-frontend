@@ -11,7 +11,7 @@ export const CONTACT_INFO = {
 export const SITE_FAQS = [
   {
     q: 'How do I book a physiotherapy session?',
-    a: 'Sign in, choose your city, pick a verified doctor, select online (Jitsi video call), clinic, or home visit, then complete the booking wizard and pay via Razorpay. You receive email confirmation with your booking ID and session details.',
+    a: 'Sign in, choose your city, pick a verified doctor, select online (Zoom video call), clinic, or home visit, then complete the booking wizard and pay via Razorpay. You receive email confirmation with your booking ID and session details.',
     icon: 'fa-calendar-check',
   },
   {

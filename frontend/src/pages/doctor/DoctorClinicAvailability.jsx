@@ -21,7 +21,7 @@ const SERVICE_DEFS = [
     type: 'online',
     label: 'Online Consultation',
     icon: 'fa-video',
-    desc: 'Video call via Jitsi Meet',
+    desc: 'Video call via Zoom',
   },
   {
     type: 'home_visit',

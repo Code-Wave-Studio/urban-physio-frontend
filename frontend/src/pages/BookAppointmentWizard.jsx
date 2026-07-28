@@ -51,7 +51,7 @@ const STEPS = [
 ];
 
 const SERVICE_TYPES = [
-  { id: 'online', label: 'Online Consultation', icon: 'fa-video', desc: 'Video call via Jitsi Meet' },
+  { id: 'online', label: 'Online Consultation', icon: 'fa-video', desc: 'Video call via Zoom' },
   { id: 'home_visit', label: 'Home Visit', icon: 'fa-house-medical', desc: 'Physio at your doorstep' },
   { id: 'clinic', label: 'Clinic Visit', icon: 'fa-hospital', desc: 'In-clinic session' },
 ];

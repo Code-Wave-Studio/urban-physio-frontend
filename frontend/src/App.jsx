@@ -52,6 +52,7 @@ import ClinicProgressPublicPage from './pages/public/ClinicProgressPublicPage';
 import PatientProfile from './pages/patient/PatientProfile';
 import AdminInvoiceSettings from './pages/admin/AdminInvoiceSettings';
 import AdminBillingPage from './pages/admin/AdminBillingPage';
+import AdminZoomMeetings from './pages/admin/AdminZoomMeetings';
 import AdminNotificationSettings from './pages/admin/AdminNotificationSettings';
 import AdminSeo from './pages/admin/AdminSeo';
 import NotFoundPage from './pages/NotFoundPage';
@@ -361,6 +362,7 @@ export default function App() {
       <Route path="/admin/contact" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminContact /></ProtectedRoute>} />
       <Route path="/admin/invoice-settings" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminInvoiceSettings /></ProtectedRoute>} />
       <Route path="/admin/billing" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminBillingPage /></ProtectedRoute>} />
+      <Route path="/admin/zoom" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminZoomMeetings /></ProtectedRoute>} />
       <Route path="/admin/search" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminAdvancedSearchPage /></ProtectedRoute>} />
       <Route path="/admin/calendar" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminCalendarPage /></ProtectedRoute>} />
       <Route path="/admin/seo" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminSeo /></ProtectedRoute>} />

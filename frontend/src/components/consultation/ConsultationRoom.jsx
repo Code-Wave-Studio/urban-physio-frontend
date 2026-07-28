@@ -34,18 +34,6 @@ function youtubeEmbed(url) {
   return m ? `https://www.youtube.com/embed/${m[1]}` : null;
 }
 
-function jitsiEmbedUrl(link) {
-  if (!link) return null;
-  try {
-    const u = new URL(link);
-    // meet.jit.si / custom jitsi — append config to hide some chrome in iframe
-    const sep = u.search ? '&' : '?';
-    return `${link}${sep}config.startWithAudioMuted=false&config.startWithVideoMuted=false&interfaceConfig.DISABLE_JOIN_LEAVE_NOTIFICATIONS=true`;
-  } catch {
-    return link;
-  }
-}
-
 function StatusPill({ join, status }) {
   if (status === 'confirmed' && join?.can_join) {
     return <span className="rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold px-2.5 py-1">Live · Ready to join</span>;
@@ -59,68 +47,81 @@ function StatusPill({ join, status }) {
   return <span className="rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[11px] font-semibold px-2.5 py-1 capitalize">{status}</span>;
 }
 
-/* ---------- Video panel ---------- */
+/* ---------- Video panel (Zoom — opens in Zoom app / browser) ---------- */
 function VideoPanel({ room, canStart }) {
-  const [embedded, setEmbedded] = useState(false);
-  const link = room.appointment?.google_meet_link;
-  const embed = jitsiEmbedUrl(link);
+  const appt = room.appointment || {};
+  const viewer = room.viewer;
+  const joinUrl = appt.zoom_join_url || appt.google_meet_link;
+  const startUrl = viewer === 'doctor' || viewer === 'admin' ? appt.zoom_start_url : null;
+  const hostUrl = startUrl || joinUrl;
   const join = room.join || {};
+  const statusLabel = appt.zoom_status || (joinUrl ? 'scheduled' : 'pending');
+
+  const copyLink = async () => {
+    if (!joinUrl) return;
+    try {
+      await navigator.clipboard.writeText(joinUrl);
+      toast.success('Meeting link copied');
+    } catch {
+      toast.error('Could not copy link');
+    }
+  };
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-slate-100 bg-slate-900 text-white overflow-hidden min-h-[320px] md:min-h-[480px] relative">
-        {embedded && embed ? (
-          <iframe
-            title="Video consultation"
-            src={embed}
-            allow="camera; microphone; fullscreen; display-capture; autoplay"
-            className="absolute inset-0 w-full h-full border-0"
-          />
-        ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mb-4">
-              <FaIcon icon="fa-video" className="text-2xl text-primary-300" />
-            </div>
-            <h3 className="text-lg font-bold">Online Video Consultation</h3>
-            <p className="text-sm text-slate-300 mt-1 max-w-md">
-              {join.reason || 'Start the video call when you and the other person are ready. Camera & mic permission will be requested.'}
-            </p>
-            <div className="flex flex-wrap gap-2 mt-5 justify-center">
-              {canStart && link ? (
-                <>
+      <div className="rounded-2xl border border-slate-100 bg-slate-900 text-white overflow-hidden min-h-[280px] md:min-h-[360px] relative">
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mb-4">
+            <FaIcon icon="fa-video" className="text-2xl text-primary-300" />
+          </div>
+          <h3 className="text-lg font-bold">Zoom Video Consultation</h3>
+          <p className="text-sm text-slate-300 mt-1 max-w-md">
+            {join.reason
+              || 'Open Zoom when you are ready. Waiting room is enabled — the host admits participants.'}
+          </p>
+          <div className="flex flex-wrap gap-2 mt-3 justify-center text-[11px]">
+            <span className="px-2.5 py-1 rounded-full bg-white/10 border border-white/15 capitalize">
+              Status · {statusLabel}
+            </span>
+            {appt.zoom_meeting_id && (
+              <span className="px-2.5 py-1 rounded-full bg-white/10 border border-white/15">
+                ID · {appt.zoom_meeting_id}
+              </span>
+            )}
+            {appt.zoom_password && (
+              <span className="px-2.5 py-1 rounded-full bg-white/10 border border-white/15">
+                Password · {appt.zoom_password}
+              </span>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2 mt-5 justify-center">
+            {canStart && hostUrl ? (
+              <>
+                <a
+                  href={hostUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary-500 hover:bg-primary-600 text-white font-semibold text-sm px-4 py-2.5"
+                >
+                  <FaIcon icon="fa-play" />
+                  {startUrl ? 'Start Zoom meeting' : 'Join Zoom meeting'}
+                </a>
+                {joinUrl && (
                   <button
                     type="button"
-                    onClick={() => setEmbedded(true)}
-                    className="inline-flex items-center gap-2 rounded-lg bg-primary-500 hover:bg-primary-600 text-white font-semibold text-sm px-4 py-2.5"
-                  >
-                    <FaIcon icon="fa-play" /> Start in room
-                  </button>
-                  <a
-                    href={link}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    onClick={copyLink}
                     className="inline-flex items-center gap-2 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold text-sm px-4 py-2.5"
                   >
-                    <FaIcon icon="fa-arrow-up-right-from-square" /> Open in new tab
-                  </a>
-                </>
-              ) : (
-                <span className="text-sm text-slate-400">{join.reason || 'Video not available yet'}</span>
-              )}
-            </div>
+                    <FaIcon icon="fa-copy" /> Copy join link
+                  </button>
+                )}
+              </>
+            ) : (
+              <span className="text-sm text-slate-400">{join.reason || 'Zoom meeting not available yet'}</span>
+            )}
           </div>
-        )}
-      </div>
-      {embedded && link && (
-        <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={() => setEmbedded(false)} className="btn-outline text-sm py-1.5 px-3">
-            <FaIcon icon="fa-xmark" className="mr-1.5" /> Close video
-          </button>
-          <a href={link} target="_blank" rel="noopener noreferrer" className="btn-outline text-sm py-1.5 px-3">
-            <FaIcon icon="fa-arrow-up-right-from-square" className="mr-1.5" /> Pop out
-          </a>
         </div>
-      )}
+      </div>
       <div className="grid sm:grid-cols-3 gap-3 text-sm">
         <div className="rounded-xl border border-slate-100 bg-white p-3">
           <p className="text-[11px] uppercase text-slate-400 font-semibold">Appointment</p>

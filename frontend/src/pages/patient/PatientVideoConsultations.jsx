@@ -54,6 +54,11 @@ function ConsultCard({ appt, highlight }) {
         >
           {appt.status}
         </span>
+        {(appt.zoom_status || appt.google_meet_link || appt.zoom_join_url) && (
+          <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-100 self-center sm:self-end">
+            Zoom · {appt.zoom_status || (appt.can_join ? 'ready' : 'scheduled')}
+          </span>
+        )}
         {appt.status === 'confirmed' || appt.can_join ? (
           <Link
             to={`/patient/consultation/${appt.id}`}

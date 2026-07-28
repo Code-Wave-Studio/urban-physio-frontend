@@ -19,6 +19,7 @@ export const ADMIN_NAV = [
   { to: '/admin/analytics', label: 'Analytics', icon: 'fa-chart-pie' },
   { to: '/admin/pain-selection', label: 'Pain map', icon: 'fa-bullseye' },
   { to: '/admin/appointments', label: 'Appointments', icon: 'fa-calendar-check' },
+  { to: '/admin/zoom', label: 'Zoom Meetings', icon: 'fa-video' },
   { to: '/admin/calendar', label: 'Doctor Calendar', icon: 'fa-calendar-days' },
   { to: '/admin/appointment-requests', label: 'Doctor changes', icon: 'fa-user-doctor' },
   { to: '/admin/emergency', label: 'Emergency', icon: 'fa-truck-medical' },

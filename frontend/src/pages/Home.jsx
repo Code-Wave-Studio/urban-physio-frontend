@@ -23,7 +23,7 @@ import { emptySectionImages } from '../constants/homeSectionImages';
 import ManagedPageSeo from '../components/seo/ManagedPageSeo';
 
 const SERVICE_DEFS = [
-  { title: 'Online Consultation', imageKey: 'online_consult', fallback: SERVICE_CARD_IMAGES['Online Consultation'], desc: 'HD video sessions via Jitsi Meet from your home', icon: 'fa-video', color: 'from-orange-400/20 to-amber-400/20', iconColor: 'text-orange-600', link: '/book?type=online', linkLabel: 'Book' },
+  { title: 'Online Consultation', imageKey: 'online_consult', fallback: SERVICE_CARD_IMAGES['Online Consultation'], desc: 'HD video sessions via Zoom from your home', icon: 'fa-video', color: 'from-orange-400/20 to-amber-400/20', iconColor: 'text-orange-600', link: '/book?type=online', linkLabel: 'Book' },
   { title: 'Clinic Visit', imageKey: 'clinic_visit', fallback: SERVICE_CARD_IMAGES['Clinic Visit'], desc: 'Premium partner clinics with modern equipment', icon: 'fa-hospital', color: 'from-emerald-400/20 to-teal-400/20', iconColor: 'text-emerald-600', link: '/clinics', linkLabel: 'Find Clinic' },
   { title: 'Home Visit', imageKey: 'home_visit', fallback: SERVICE_CARD_IMAGES['Home Visit'], desc: 'Licensed physiotherapist at your doorstep', icon: 'fa-house-medical', color: 'from-amber-400/20 to-orange-400/20', iconColor: 'text-orange-600', link: '/book?type=home_visit', linkLabel: 'Book' },
 ];
