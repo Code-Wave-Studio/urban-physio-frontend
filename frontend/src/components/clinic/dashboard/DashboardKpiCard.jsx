@@ -62,7 +62,7 @@ export default function DashboardKpiCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="dash-kpi-label">{label}</p>
-          <p className="dash-kpi-value mt-2 truncate">{value}</p>
+          <p className="dash-kpi-value mt-1.5 truncate">{value}</p>
           {hint != null && hint !== '' && (
             <p className="text-[11px] text-slate-500 mt-2 truncate font-medium">{hint}</p>
           )}

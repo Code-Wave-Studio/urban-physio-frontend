@@ -167,7 +167,8 @@ export default function ClinicAdminHome() {
         id: 'charts_growth',
         title: 'Patient growth',
         icon: 'fa-chart-line',
-        span: '3',
+        span: 'half',
+        bodyClassName: 'admin-widget-body',
         render: () => (
           <div className="dash-chart-wrap">
             {growth.length ? (
@@ -184,7 +185,8 @@ export default function ClinicAdminHome() {
         id: 'charts_revenue',
         title: 'Revenue (6 months)',
         icon: 'fa-chart-column',
-        span: '3',
+        span: 'half',
+        bodyClassName: 'admin-widget-body',
         render: () => (
           <div className="dash-chart-wrap">
             {revenue.length ? (
@@ -201,7 +203,8 @@ export default function ClinicAdminHome() {
         id: 'therapist_workload',
         title: 'Therapist workload',
         icon: 'fa-user-doctor',
-        span: '3',
+        span: 'half',
+        bodyClassName: 'admin-widget-body',
         render: () =>
           workload.length === 0 ? (
             <p className="dash-empty !py-8">No data this month.</p>
@@ -233,7 +236,8 @@ export default function ClinicAdminHome() {
         id: 'upcoming',
         title: 'Upcoming appointments',
         icon: 'fa-calendar-check',
-        span: '3',
+        span: 'half',
+        bodyClassName: 'admin-widget-body',
         action: (
           <Link to="/clinic-portal/appointments" className="dash-widget-link">
             Open →
@@ -259,7 +263,8 @@ export default function ClinicAdminHome() {
         id: 'package_alerts',
         title: 'Package expiry alerts',
         icon: 'fa-box-open',
-        span: '3',
+        span: 'half',
+        bodyClassName: 'admin-widget-body',
         action: (
           <Link to="/clinic-portal/packages" className="dash-widget-link">
             Packages →
@@ -283,15 +288,21 @@ export default function ClinicAdminHome() {
         id: 'team',
         title: 'Team availability',
         icon: 'fa-users',
-        span: '3',
+        span: 'half',
+        bodyClassName: 'admin-widget-body',
         render: () => <TeamAvailabilityWidget clinicId={clinicId} />,
       },
       {
         id: 'calendar',
         title: 'Calendar',
         icon: 'fa-calendar-days',
-        span: '3',
-        render: () => <MiniMonthCalendar markedDates={markedDates} />,
+        span: 'full',
+        bodyClassName: 'admin-widget-body',
+        render: () => (
+          <div className="admin-calendar-wrap">
+            <MiniMonthCalendar markedDates={markedDates} />
+          </div>
+        ),
       },
     ],
     [
@@ -328,9 +339,9 @@ export default function ClinicAdminHome() {
         <div className="glass-card text-center py-12 text-slate-500">No analytics access in this mode.</div>
       ) : loading || boot ? (
         <div className="space-y-4">
-          <div className="portal-kpi-grid md:!grid-cols-3 xl:!grid-cols-4">
+          <div className="portal-kpi-grid">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="dash-kpi h-24 animate-pulse" />
+              <div key={i} className="dash-kpi h-20 animate-pulse" />
             ))}
           </div>
         </div>
@@ -357,7 +368,7 @@ export default function ClinicAdminHome() {
             </div>
           </div>
 
-          <div className="portal-kpi-grid md:!grid-cols-3 xl:!grid-cols-4">
+          <div className="portal-kpi-grid">
             <DashboardKpiCard icon="fa-calendar-check" label="Today's appointments" value={k.today_appointments ?? 0} />
             <DashboardKpiCard icon="fa-person-walking" label="Today's walk-ins" value={k.today_walkins ?? 0} tint="sky" />
             <DashboardKpiCard icon="fa-user-plus" label="New patients (month)" value={k.new_patients ?? 0} tint="emerald" />
@@ -379,6 +390,7 @@ export default function ClinicAdminHome() {
             isHidden={layout.isHidden}
             onReorder={layout.reorder}
             onToggleHidden={layout.toggleHidden}
+            boardClassName="admin-dash-board"
           />
         </div>
       )}
