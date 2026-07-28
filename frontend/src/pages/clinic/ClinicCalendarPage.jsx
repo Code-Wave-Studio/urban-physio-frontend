@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import FaIcon from '../../components/FaIcon';
 import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
+import ClinicBookingModal from '../../components/clinic/ClinicBookingModal';
 import CalendarBoard from '../../components/calendar/CalendarBoard';
 import useClinicPortal from '../../hooks/useClinicPortal';
 import { calendar } from '../../services/api';
@@ -12,9 +13,14 @@ export default function ClinicCalendarPage() {
   const navigate = useNavigate();
   const [rooms, setRooms] = useState([]);
   const [roomsLoading, setRoomsLoading] = useState(false);
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const [bookingSeed, setBookingSeed] = useState({});
+  const [boardKey, setBoardKey] = useState(0);
 
-  const canManage = isAdminMode || can('calendar.manage') || can('appointments.manage') || can('availability.manage');
+  const canManage =
+    isAdminMode || can('calendar.manage') || can('appointments.manage') || can('availability.manage');
   const canManageRooms = isAdminMode || can('calendar.manage') || can('settings.manage');
+  const canBook = can('appointments.manage');
 
   useEffect(() => {
     if (loading) return;
@@ -23,7 +29,7 @@ export default function ClinicCalendarPage() {
     }
   }, [loading, can, navigate]);
 
-  useEffect(() => {
+  const loadRooms = useCallback(() => {
     if (!clinicId) return;
     setRoomsLoading(true);
     calendar
@@ -33,12 +39,29 @@ export default function ClinicCalendarPage() {
       .finally(() => setRoomsLoading(false));
   }, [clinicId]);
 
+  useEffect(() => {
+    loadRooms();
+  }, [loadRooms]);
+
+  const openBooking = (seed = {}) => {
+    setBookingSeed(seed || {});
+    setBookingOpen(true);
+  };
+
   const clinicName = me?.clinic?.name || 'Your clinic';
 
   return (
     <ClinicPortalShell
-      title="Availability"
-      subtitle="Working hours, doctor schedules, rooms/beds, holidays and leave for your clinic."
+      title="Calendar"
+      subtitle="Day · Week · Month · Agenda — appointments, team schedule, leave, holidays and rooms"
+      actions={
+        canBook ? (
+          <button type="button" className="btn-primary text-sm" onClick={() => openBooking()}>
+            <FaIcon icon="fa-calendar-plus" className="mr-1.5" />
+            Book
+          </button>
+        ) : null
+      }
     >
       <div className="space-y-4">
         <div className="portal-kpi-grid md:!grid-cols-3">
@@ -49,7 +72,7 @@ export default function ClinicCalendarPage() {
             <div className="min-w-0">
               <p className="text-[11px] uppercase tracking-wide text-slate-400 font-semibold">Clinic</p>
               <p className="font-semibold text-slate-900 truncate">{clinicName}</p>
-              <p className="text-xs text-slate-500 mt-0.5">Calendar is locked to this clinic</p>
+              <p className="text-xs text-slate-500 mt-0.5">Appointments + availability in one board</p>
             </div>
           </div>
           <div className="glass-card !p-3 sm:!p-4 flex items-start gap-3">
@@ -62,19 +85,19 @@ export default function ClinicCalendarPage() {
                 {roomsLoading ? '…' : `${rooms.length} room${rooms.length === 1 ? '' : 's'}`}
               </p>
               <p className="text-xs text-slate-500 mt-0.5">
-                {canManageRooms ? 'Use + Add → New room to create one' : 'Managed by Clinic Admin'}
+                {canManageRooms ? 'Add → New room on the toolbar' : 'Managed by Clinic Admin'}
               </p>
             </div>
           </div>
           <div className="glass-card !p-3 sm:!p-4 flex items-start gap-3">
             <span className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
-              <FaIcon icon="fa-calendar-plus" />
+              <FaIcon icon="fa-layer-group" />
             </span>
             <div className="min-w-0">
-              <p className="text-[11px] uppercase tracking-wide text-slate-400 font-semibold">Quick actions</p>
-              <p className="font-semibold text-slate-900">{canManage ? 'Leave · Holiday · Rooms' : 'View only'}</p>
+              <p className="text-[11px] uppercase tracking-wide text-slate-400 font-semibold">Views</p>
+              <p className="font-semibold text-slate-900">Day · Week · Month · Agenda</p>
               <p className="text-xs text-slate-500 mt-0.5">
-                {canManage ? 'Use the Add button on the calendar toolbar' : 'Switch to Clinic Admin to edit'}
+                Filter appointments, leave, holidays, rooms & availability
               </p>
             </div>
           </div>
@@ -90,12 +113,15 @@ export default function ClinicCalendarPage() {
           </div>
         ) : (
           <CalendarBoard
+            key={boardKey}
             lockedClinicId={clinicId}
             hideClinicFilter
             canManage={canManage}
             canManageRooms={canManageRooms}
             showDoctorFilter
             roleLabel={isAdminMode ? 'Clinic Admin' : 'Reception'}
+            canBook={canBook}
+            onBookAppointment={openBooking}
           />
         )}
 
@@ -112,6 +138,20 @@ export default function ClinicCalendarPage() {
           </div>
         )}
       </div>
+
+      <ClinicBookingModal
+        clinicId={clinicId}
+        open={bookingOpen}
+        initialDate={bookingSeed.date}
+        initialDoctorId={bookingSeed.doctor_id}
+        initialStartTime={bookingSeed.start_time}
+        initialEndTime={bookingSeed.end_time}
+        onClose={() => setBookingOpen(false)}
+        onBooked={() => {
+          setBoardKey((k) => k + 1);
+          loadRooms();
+        }}
+      />
     </ClinicPortalShell>
   );
 }

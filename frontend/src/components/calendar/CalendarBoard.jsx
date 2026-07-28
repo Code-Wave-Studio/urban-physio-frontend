@@ -1,16 +1,34 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import FaIcon from '../FaIcon';
 import { calendar } from '../../services/api';
+import CalendarDayView from './CalendarDayView';
+import CalendarAgendaView from './CalendarAgendaView';
 
 const TYPE_META = {
-  schedule: { label: 'Schedule', color: 'bg-sky-100 text-sky-800 border-sky-200', dot: 'bg-sky-500', icon: 'fa-clock' },
+  schedule: { label: 'Available', color: 'bg-sky-100 text-sky-800 border-sky-200', dot: 'bg-sky-500', icon: 'fa-clock' },
   appointment: { label: 'Appointment', color: 'bg-teal-100 text-teal-800 border-teal-200', dot: 'bg-teal-500', icon: 'fa-calendar-check' },
-  room: { label: 'Room booking', color: 'bg-indigo-100 text-indigo-800 border-indigo-200', dot: 'bg-indigo-500', icon: 'fa-door-open' },
+  room: { label: 'Room / bed', color: 'bg-indigo-100 text-indigo-800 border-indigo-200', dot: 'bg-indigo-500', icon: 'fa-door-open' },
   holiday: { label: 'Holiday', color: 'bg-amber-100 text-amber-800 border-amber-200', dot: 'bg-amber-500', icon: 'fa-umbrella-beach' },
   leave: { label: 'Leave', color: 'bg-rose-100 text-rose-800 border-rose-200', dot: 'bg-rose-500', icon: 'fa-plane-departure' },
   custom_slot: { label: 'Custom slot', color: 'bg-violet-100 text-violet-800 border-violet-200', dot: 'bg-violet-500', icon: 'fa-calendar-plus' },
 };
+
+const APPT_STATUS_COLOR = {
+  pending: 'bg-amber-100 text-amber-900 border-amber-200',
+  confirmed: 'bg-emerald-100 text-emerald-900 border-emerald-200',
+  completed: 'bg-slate-100 text-slate-700 border-slate-200',
+  cancelled: 'bg-rose-100 text-rose-800 border-rose-200',
+  no_show: 'bg-orange-100 text-orange-900 border-orange-200',
+};
+
+const VIEWS = [
+  { id: 'day', label: 'Day' },
+  { id: 'week', label: 'Week' },
+  { id: 'month', label: 'Month' },
+  { id: 'agenda', label: 'Agenda' },
+];
 
 const ALL_TYPES = Object.keys(TYPE_META);
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -48,8 +66,10 @@ function weekLabel(from, to) {
   return `${from.toLocaleDateString(undefined, opts)} – ${to.toLocaleDateString(undefined, { ...opts, year: 'numeric' })}`;
 }
 
-function EventChip({ ev, onClick }) {
+function EventChip({ ev, onClick, dense }) {
   const meta = TYPE_META[ev.type] || TYPE_META.appointment;
+  const statusColor = ev.type === 'appointment' && ev.status ? APPT_STATUS_COLOR[ev.status] : null;
+  const color = statusColor || meta.color;
   return (
     <button
       type="button"
@@ -57,11 +77,14 @@ function EventChip({ ev, onClick }) {
         e.stopPropagation();
         onClick?.(ev);
       }}
-      className={`w-full text-left rounded-md border px-1.5 py-0.5 text-[10px] sm:text-[11px] font-medium leading-tight truncate hover:opacity-90 transition ${meta.color}`}
-      title={`${ev.title}${ev.start_time ? ` · ${ev.start_time}` : ''}`}
+      className={`w-full text-left rounded-md border px-1.5 ${dense ? 'py-1 h-full' : 'py-0.5'} text-[10px] sm:text-[11px] font-medium leading-tight truncate hover:opacity-90 transition ${color}`}
+      title={`${ev.title}${ev.start_time ? ` · ${ev.start_time}` : ''}${ev.status ? ` · ${ev.status}` : ''}`}
     >
       {!ev.all_day && ev.start_time && <span className="opacity-70 mr-1">{ev.start_time}</span>}
       {ev.title}
+      {ev.type === 'appointment' && ev.status && (
+        <span className="ml-1 opacity-70 capitalize">· {ev.status}</span>
+      )}
     </button>
   );
 }
@@ -99,6 +122,7 @@ const inputCls =
  *  - roleLabel: subtitle hint
  *  - lockedClinicId: lock feed + forms to one clinic (clinic portal)
  *  - hideClinicFilter: hide the All clinics dropdown
+ *  - canBook / onBookAppointment: open clinic booking modal from calendar
  */
 export default function CalendarBoard({
   canManage = true,
@@ -107,8 +131,10 @@ export default function CalendarBoard({
   roleLabel = '',
   lockedClinicId = null,
   hideClinicFilter = false,
+  canBook = false,
+  onBookAppointment,
 }) {
-  const [view, setView] = useState('week'); // week | month
+  const [view, setView] = useState('week'); // day | week | month | agenda
   const [anchor, setAnchor] = useState(() => new Date());
   const [types, setTypes] = useState(() => [...ALL_TYPES]);
   const [doctorId, setDoctorId] = useState('');
@@ -145,6 +171,17 @@ export default function CalendarBoard({
   }, [addOpen]);
 
   const range = useMemo(() => {
+    if (view === 'day') {
+      const day = new Date(anchor);
+      day.setHours(0, 0, 0, 0);
+      return { from: toYmd(day), to: toYmd(day), fromDate: day, toDate: day };
+    }
+    if (view === 'agenda') {
+      const from = new Date(anchor);
+      from.setHours(0, 0, 0, 0);
+      const to = addDays(from, 13);
+      return { from: toYmd(from), to: toYmd(to), fromDate: from, toDate: to };
+    }
     if (view === 'week') {
       const from = startOfWeek(anchor);
       const to = addDays(from, 6);
@@ -209,20 +246,42 @@ export default function CalendarBoard({
   };
 
   const goPrev = () => {
-    if (view === 'week') setAnchor(addDays(anchor, -7));
+    if (view === 'day') setAnchor(addDays(anchor, -1));
+    else if (view === 'week' || view === 'agenda') setAnchor(addDays(anchor, view === 'agenda' ? -14 : -7));
     else setAnchor(new Date(anchor.getFullYear(), anchor.getMonth() - 1, 1));
   };
   const goNext = () => {
-    if (view === 'week') setAnchor(addDays(anchor, 7));
+    if (view === 'day') setAnchor(addDays(anchor, 1));
+    else if (view === 'week' || view === 'agenda') setAnchor(addDays(anchor, view === 'agenda' ? 14 : 7));
     else setAnchor(new Date(anchor.getFullYear(), anchor.getMonth() + 1, 1));
   };
   const goToday = () => setAnchor(new Date());
 
+  const requestBook = (dateObj, extras = {}) => {
+    if (!canBook || !onBookAppointment) return;
+    onBookAppointment({
+      date: toYmd(dateObj instanceof Date ? dateObj : anchor),
+      doctor_id: doctorId || extras.doctor_id || '',
+      start_time: extras.start_time || '10:00',
+      end_time: extras.end_time || '10:30',
+    });
+  };
+
   const weekDays = useMemo(() => {
-    const start = view === 'week' ? range.fromDate : null;
-    if (!start) return [];
-    return Array.from({ length: 7 }, (_, i) => addDays(start, i));
+    if (view !== 'week') return [];
+    return Array.from({ length: 7 }, (_, i) => addDays(range.fromDate, i));
   }, [view, range.fromDate]);
+
+  const agendaDays = useMemo(() => {
+    if (view !== 'agenda') return [];
+    const cells = [];
+    let cursor = new Date(range.fromDate);
+    while (cursor <= range.toDate) {
+      cells.push(new Date(cursor));
+      cursor = addDays(cursor, 1);
+    }
+    return cells;
+  }, [view, range.fromDate, range.toDate]);
 
   const monthCells = useMemo(() => {
     if (view !== 'month') return [];
@@ -234,6 +293,19 @@ export default function CalendarBoard({
     }
     return cells;
   }, [view, range.fromDate, range.toDate]);
+
+  const rangeTitle = useMemo(() => {
+    if (view === 'day') {
+      return range.fromDate.toLocaleDateString(undefined, {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+    }
+    if (view === 'week' || view === 'agenda') return weekLabel(range.fromDate, range.toDate);
+    return monthLabel(anchor);
+  }, [view, range.fromDate, range.toDate, anchor]);
 
   const submitLeave = async (e) => {
     e.preventDefault();
@@ -368,21 +440,19 @@ export default function CalendarBoard({
       <div className={`glass-card !p-3 sm:!p-4 !bg-white relative ${addOpen ? 'z-50' : 'z-10'}`}>
         <div className="flex flex-col lg:flex-row lg:items-center gap-3 justify-between">
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="inline-flex rounded-lg border border-slate-200 overflow-hidden">
-              <button
-                type="button"
-                onClick={() => setView('week')}
-                className={`px-3 py-1.5 text-sm font-semibold ${view === 'week' ? 'bg-teal-600 text-white' : 'bg-white text-slate-700 hover:bg-slate-50'}`}
-              >
-                Weekly
-              </button>
-              <button
-                type="button"
-                onClick={() => setView('month')}
-                className={`px-3 py-1.5 text-sm font-semibold ${view === 'month' ? 'bg-teal-600 text-white' : 'bg-white text-slate-700 hover:bg-slate-50'}`}
-              >
-                Monthly
-              </button>
+            <div className="inline-flex rounded-lg border border-slate-200 overflow-x-auto max-w-full">
+              {VIEWS.map((v) => (
+                <button
+                  key={v.id}
+                  type="button"
+                  onClick={() => setView(v.id)}
+                  className={`px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold shrink-0 ${
+                    view === v.id ? 'bg-teal-600 text-white' : 'bg-white text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  {v.label}
+                </button>
+              ))}
             </div>
             <button type="button" onClick={goPrev} className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50" aria-label="Previous">
               <FaIcon icon="fa-chevron-left" />
@@ -394,7 +464,7 @@ export default function CalendarBoard({
               <FaIcon icon="fa-chevron-right" />
             </button>
             <p className="text-sm sm:text-base font-bold text-slate-900 ml-1">
-              {view === 'week' ? weekLabel(range.fromDate, range.toDate) : monthLabel(anchor)}
+              {rangeTitle}
             </p>
             {roleLabel && <span className="text-xs text-slate-400 hidden sm:inline">· {roleLabel}</span>}
           </div>
@@ -420,7 +490,7 @@ export default function CalendarBoard({
                 ))}
               </select>
             )}
-            {canManage && (
+            {(canManage || canBook) && (
               <div className="relative" ref={addMenuRef}>
                 <button
                   type="button"
@@ -437,6 +507,17 @@ export default function CalendarBoard({
                     className="absolute right-0 top-full mt-1 z-[100] min-w-[200px] rounded-xl border border-slate-200 bg-white shadow-2xl py-1"
                     style={{ backgroundColor: '#ffffff' }}
                   >
+                    {canBook && (
+                      <button
+                        type="button"
+                        onClick={() => { requestBook(anchor); setAddOpen(false); }}
+                        className="w-full text-left px-3 py-2.5 text-sm hover:bg-slate-50 flex items-center gap-2"
+                      >
+                        <FaIcon icon="fa-calendar-plus" className="text-teal-600 w-4" /> Book appointment
+                      </button>
+                    )}
+                    {canManage && (
+                      <>
                     <button
                       type="button"
                       onClick={() => { setForm('leave'); setAddOpen(false); }}
@@ -466,6 +547,8 @@ export default function CalendarBoard({
                       >
                         <FaIcon icon="fa-hospital" className="text-slate-500 w-4" /> New room
                       </button>
+                    )}
+                      </>
                     )}
                   </div>
                 )}
@@ -504,6 +587,36 @@ export default function CalendarBoard({
         </div>
       </div>
 
+      {/* Day view */}
+      {view === 'day' && (
+        <CalendarDayView
+          date={range.fromDate}
+          events={byDate[toYmd(range.fromDate)] || []}
+          today={today}
+          sameDay={sameDay}
+          EventChip={EventChip}
+          onSelect={setSelected}
+          onBook={requestBook}
+          canBook={canBook}
+          loading={loading}
+        />
+      )}
+
+      {/* Agenda view */}
+      {view === 'agenda' && (
+        <CalendarAgendaView
+          days={agendaDays}
+          byDate={byDate}
+          today={today}
+          sameDay={sameDay}
+          toYmd={toYmd}
+          onSelect={setSelected}
+          onBook={requestBook}
+          canBook={canBook}
+          loading={loading}
+        />
+      )}
+
       {/* Week view */}
       {view === 'week' && (
         <div className={`glass-card !p-0 overflow-hidden relative ${addOpen ? 'z-0' : 'z-[1]'}`}>
@@ -531,7 +644,15 @@ export default function CalendarBoard({
                   return (
                     <div
                       key={key}
-                      className={`border-r border-slate-50 last:border-0 p-1 sm:p-1.5 space-y-1 overflow-y-auto max-h-[520px] ${isToday ? 'bg-teal-50/30' : ''}`}
+                      role={canBook ? 'button' : undefined}
+                      tabIndex={canBook ? 0 : undefined}
+                      onClick={() => {
+                        if (canBook) requestBook(d);
+                      }}
+                      onKeyDown={(e) => {
+                        if (canBook && (e.key === 'Enter' || e.key === ' ')) requestBook(d);
+                      }}
+                      className={`border-r border-slate-50 last:border-0 p-1 sm:p-1.5 space-y-1 overflow-y-auto max-h-[520px] ${isToday ? 'bg-teal-50/30' : ''} ${canBook ? 'cursor-pointer hover:bg-teal-50/50' : ''}`}
                     >
                       {dayEvents.length === 0 && (
                         <p className="text-[10px] text-slate-400 text-center pt-8 px-1 leading-snug">
@@ -581,7 +702,25 @@ export default function CalendarBoard({
                   return (
                     <div
                       key={key}
-                      className={`min-h-[88px] sm:min-h-[110px] border-r border-b border-slate-50 last:border-r-0 p-1 ${
+                      role={canBook ? 'button' : undefined}
+                      tabIndex={canBook ? 0 : undefined}
+                      onClick={() => {
+                        if (canBook) {
+                          setAnchor(d);
+                          requestBook(d);
+                        } else {
+                          setView('day');
+                          setAnchor(d);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          setAnchor(d);
+                          if (canBook) requestBook(d);
+                          else setView('day');
+                        }
+                      }}
+                      className={`min-h-[88px] sm:min-h-[110px] border-r border-b border-slate-50 last:border-r-0 p-1 cursor-pointer hover:bg-teal-50/40 ${
                         !inMonth ? 'bg-slate-50/40' : isToday ? 'bg-teal-50/40' : 'bg-white'
                       }`}
                     >
@@ -655,7 +794,44 @@ export default function CalendarBoard({
             {selected.meta?.reason && <p className="text-slate-600"><span className="text-slate-400">Reason:</span> {selected.meta.reason}</p>}
             {selected.meta?.notes && <p className="text-slate-600"><span className="text-slate-400">Notes:</span> {selected.meta.notes}</p>}
             {selected.meta?.booking_id && <p className="text-slate-600"><span className="text-slate-400">Booking:</span> {selected.meta.booking_id}</p>}
+            {selected.meta?.consultation_type && (
+              <p className="text-slate-600 capitalize">
+                <span className="text-slate-400">Mode:</span> {String(selected.meta.consultation_type).replace(/_/g, ' ')}
+              </p>
+            )}
+            {selected.meta?.pain_type && (
+              <p className="text-slate-600"><span className="text-slate-400">Reason:</span> {selected.meta.pain_type}</p>
+            )}
             {selected.meta?.room_name && <p className="text-slate-600"><span className="text-slate-400">Room:</span> {selected.meta.room_name}</p>}
+
+            {selected.type === 'appointment' && (
+              <div className="flex flex-col gap-2 pt-1">
+                <Link
+                  to="/clinic-portal/appointments"
+                  className="w-full text-center rounded-lg bg-teal-600 text-white font-semibold py-2 hover:bg-teal-700"
+                  onClick={() => setSelected(null)}
+                >
+                  Open appointments
+                </Link>
+                {canBook && (
+                  <button
+                    type="button"
+                    className="w-full rounded-lg border border-slate-200 font-semibold py-2 hover:bg-slate-50"
+                    onClick={() => {
+                      const d = parseYmd(selected.date);
+                      setSelected(null);
+                      requestBook(d, {
+                        doctor_id: selected.doctor_id ? String(selected.doctor_id) : '',
+                        start_time: selected.start_time || '10:00',
+                        end_time: selected.end_time || '10:30',
+                      });
+                    }}
+                  >
+                    Book another on this day
+                  </button>
+                )}
+              </div>
+            )}
 
             {canManage && ['leave', 'holiday', 'room'].includes(selected.type) && (
               <button

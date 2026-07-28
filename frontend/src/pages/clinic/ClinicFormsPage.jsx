@@ -1,73 +1,91 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import FaIcon from '../../components/FaIcon';
 import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
+import IntakeFormBuilder from '../../components/clinic/IntakeFormBuilder';
+import { IntakeFieldPreview } from '../../components/clinic/IntakePublicField';
 import useClinicPortal from '../../hooks/useClinicPortal';
 import { clinicPortal } from '../../services/api';
+import { getShowIf, parseOptions, parseValidation } from '../../utils/intakeFields';
+
+function normalizeFields(list) {
+  return (list || []).map((field) => {
+    const validation = parseValidation(field);
+    return {
+      ...field,
+      is_enabled: Boolean(Number(field.is_enabled)),
+      is_required: Boolean(Number(field.is_required)),
+      is_locked: Boolean(Number(field.is_locked)),
+      options: parseOptions(field.options ?? field.options_json),
+      show_if: getShowIf(field),
+      rating_max: validation.rating_max || 5,
+      validation,
+    };
+  });
+}
 
 export default function ClinicFormsPage() {
   const { clinicId, isAdminMode, can, loading: boot } = useClinicPortal();
   const [fields, setFields] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showPreview, setShowPreview] = useState(true);
 
   const load = useCallback(async () => {
     if (!clinicId) return;
     setLoading(true);
     try {
       const res = await clinicPortal.registrationFields(clinicId);
-      setFields((res.data || res || []).map((field) => ({ ...field, is_enabled: Boolean(Number(field.is_enabled)), is_required: Boolean(Number(field.is_required)) })));
-    } catch (error) { toast.error(error.message || 'Could not load form fields'); }
-    finally { setLoading(false); }
-  }, [clinicId]);
-  useEffect(() => { if (clinicId) load(); }, [clinicId, load]);
-
-  if (!boot && (!isAdminMode || !can('forms.manage'))) return <Navigate to="/clinic-portal" replace />;
-
-  const update = (index, values) => setFields((old) => old.map((field, i) => i === index ? { ...field, ...values } : field));
-  const move = (index, direction) => setFields((old) => {
-    const target = index + direction;
-    if (target < 0 || target >= old.length) return old;
-    const next = [...old];
-    [next[index], next[target]] = [next[target], next[index]];
-    return next;
-  });
-  const add = () => setFields((old) => [...old, { field_key: `custom_${Date.now()}`, label: 'Custom field', field_type: 'text', is_enabled: true, is_required: false, is_locked: false }]);
-  const remove = (index) => {
-    const field = fields[index];
-    if (Number(field.is_locked)) return;
-    setFields((old) => old.filter((_, i) => i !== index));
-  };
-  const parseOptions = (raw) => {
-    if (Array.isArray(raw)) return raw;
-    if (raw == null || raw === '') return [];
-    if (typeof raw === 'string') {
-      const trimmed = raw.trim();
-      if (trimmed.startsWith('[')) {
-        try {
-          const parsed = JSON.parse(trimmed);
-          return Array.isArray(parsed) ? parsed : [];
-        } catch {
-          /* fall through */
-        }
-      }
-      return trimmed.split(',').map((s) => s.trim()).filter(Boolean);
+      setFields(normalizeFields(res.data || res || []));
+    } catch (error) {
+      toast.error(error.message || 'Could not load form fields');
+    } finally {
+      setLoading(false);
     }
-    return [];
-  };
+  }, [clinicId]);
+
+  useEffect(() => {
+    if (clinicId) load();
+  }, [clinicId, load]);
+
+  const enabledCount = useMemo(() => fields.filter((f) => f.is_enabled).length, [fields]);
+  const conditionalCount = useMemo(() => fields.filter((f) => getShowIf(f)).length, [fields]);
+
+  if (!boot && (!isAdminMode || !can('forms.manage'))) {
+    return <Navigate to="/clinic-portal" replace />;
+  }
 
   const save = async () => {
     setSaving(true);
     try {
       await clinicPortal.saveRegistrationFields(clinicId, {
-        fields: fields.map((field, index) => ({
-          ...field,
-          sort_order: index,
-          options: parseOptions(field.options ?? field.options_json),
-        })),
+        fields: fields.map((field, index) => {
+          const showIf = getShowIf(field);
+          const validation = { ...parseValidation(field) };
+          if (field.field_type === 'rating') {
+            validation.rating_max = Math.max(2, Math.min(10, Number(field.rating_max || validation.rating_max || 5)));
+          } else {
+            delete validation.rating_max;
+          }
+          if (showIf?.field_key) validation.show_if = showIf;
+          else delete validation.show_if;
+          return {
+            id: field.id,
+            field_key: field.field_key,
+            label: field.label,
+            field_type: field.field_type || 'text',
+            is_enabled: field.is_enabled,
+            is_required: field.is_required,
+            sort_order: index,
+            options: parseOptions(field.options ?? field.options_json),
+            show_if: showIf,
+            validation,
+            ...(field.field_type === 'rating' ? { rating_max: validation.rating_max } : {}),
+          };
+        }),
       });
-      toast.success('Registration form saved');
+      toast.success('Intake form saved');
       load();
     } catch (error) {
       toast.error(error.message || 'Could not save form');
@@ -78,10 +96,18 @@ export default function ClinicFormsPage() {
 
   return (
     <ClinicPortalShell
-      title="Registration Forms"
-      subtitle="Choose the details patients provide through your intake QR"
+      title="Intake Form Builder"
+      subtitle="Drag fields, set types, and add show-if rules for your QR intake"
       actions={(
         <div className="portal-page-actions">
+          <button
+            type="button"
+            className="btn-outline inline-flex items-center gap-2 text-xs"
+            onClick={() => setShowPreview((v) => !v)}
+          >
+            <FaIcon icon={showPreview ? 'fa-eye-slash' : 'fa-eye'} />
+            <span className="hidden sm:inline">{showPreview ? 'Hide preview' : 'Show preview'}</span>
+          </button>
           <Link to="/clinic-portal/clinical-library" className="btn-outline inline-flex items-center gap-2">
             <FaIcon icon="fa-clipboard-list" />
             <span className="hidden sm:inline">Assessment templates</span>
@@ -90,55 +116,55 @@ export default function ClinicFormsPage() {
         </div>
       )}
     >
-      <div className="glass-card !p-0 overflow-hidden">
-        <div className="p-3 sm:p-4 border-b flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-          <div className="min-w-0">
-            <h2 className="font-bold">Intake fields</h2>
-            <p className="text-xs text-slate-500">Locked system fields remain enabled and required.</p>
-          </div>
-          <button type="button" className="btn-primary text-xs !py-2 w-full sm:w-auto" onClick={add}>
-            <FaIcon icon="fa-plus" className="mr-1" />Custom field
-          </button>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+        <div className="glass-card !p-3">
+          <p className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold">Fields</p>
+          <p className="text-xl font-bold text-slate-800 mt-0.5">{fields.length}</p>
         </div>
-        {boot || loading ? <div className="h-64 m-4 rounded-xl bg-slate-100 animate-pulse" /> : (
-          <div className="divide-y divide-slate-100">
-            {fields.map((field, index) => (
-              <div key={field.id || field.field_key} className="p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_150px_auto_auto_auto] gap-3 items-stretch sm:items-center">
-                <input className="input-field sm:col-span-2 lg:col-span-1" value={field.label || ''} disabled={Boolean(Number(field.is_locked))} onChange={(e) => update(index, { label: e.target.value })} />
-                <select className="input-field text-sm" disabled={Boolean(field.id)} value={field.field_type || 'text'} onChange={(e) => update(index, { field_type: e.target.value })}>
-                  <option value="text">Text</option>
-                  <option value="textarea">Long text</option>
-                  <option value="email">Email</option>
-                  <option value="phone">Phone</option>
-                  <option value="date">Date</option>
-                  <option value="number">Number</option>
-                  <option value="dropdown">Dropdown</option>
-                  <option value="yesno">Yes / No</option>
-                </select>
-                <div className="flex flex-wrap gap-3 sm:contents">
-                  <label className="text-xs flex items-center gap-1.5"><input type="checkbox" disabled={Boolean(Number(field.is_locked))} checked={field.is_enabled} onChange={(e) => update(index, { is_enabled: e.target.checked })} />Enabled</label>
-                  <label className="text-xs flex items-center gap-1.5"><input type="checkbox" disabled={Boolean(Number(field.is_locked))} checked={field.is_required} onChange={(e) => update(index, { is_required: e.target.checked })} />Required</label>
-                </div>
-                <div className="flex justify-start sm:justify-end gap-1">
-                  <button type="button" aria-label="Move up" disabled={index === 0} className="w-9 h-9 rounded bg-slate-100 disabled:opacity-30" onClick={() => move(index, -1)}><FaIcon icon="fa-arrow-up" /></button>
-                  <button type="button" aria-label="Move down" disabled={index === fields.length - 1} className="w-9 h-9 rounded bg-slate-100 disabled:opacity-30" onClick={() => move(index, 1)}><FaIcon icon="fa-arrow-down" /></button>
-                  <button type="button" aria-label="Delete" disabled={Boolean(Number(field.is_locked))} className="w-9 h-9 rounded bg-rose-50 text-rose-600 disabled:opacity-30" onClick={() => remove(index)}><FaIcon icon="fa-trash" /></button>
-                </div>
-                {['dropdown', 'multiselect'].includes(field.field_type) && (
-                  <input
-                    className="input-field sm:col-span-2 lg:col-span-5 text-sm"
-                    placeholder="Options, separated by commas"
-                    value={Array.isArray(parseOptions(field.options_json)) ? parseOptions(field.options_json).join(', ') : (field.options_json || '')}
-                    onChange={(e) => update(index, { options_json: e.target.value, options: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })}
-                  />
-                )}
-              </div>
-            ))}
+        <div className="glass-card !p-3">
+          <p className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold">Enabled</p>
+          <p className="text-xl font-bold text-teal-700 mt-0.5">{enabledCount}</p>
+        </div>
+        <div className="glass-card !p-3 col-span-2 sm:col-span-1">
+          <p className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold">Conditionals</p>
+          <p className="text-xl font-bold text-slate-800 mt-0.5">{conditionalCount}</p>
+        </div>
+      </div>
+
+      <div className={`grid gap-4 ${showPreview ? 'lg:grid-cols-[1.2fr_0.8fr]' : ''}`}>
+        <div className="glass-card !p-0 overflow-hidden">
+          {boot || loading ? (
+            <div className="h-64 m-4 rounded-xl bg-slate-100 animate-pulse" />
+          ) : (
+            <IntakeFormBuilder fields={fields} onChange={setFields} />
+          )}
+          <div className="p-3 sm:p-4 border-t bg-slate-50 flex justify-stretch sm:justify-end">
+            <button
+              type="button"
+              className="btn-primary w-full sm:w-auto"
+              disabled={saving || loading}
+              onClick={save}
+            >
+              {saving ? 'Saving…' : 'Save form'}
+            </button>
+          </div>
+        </div>
+
+        {showPreview && (
+          <div className="glass-card !p-0 overflow-hidden h-fit lg:sticky lg:top-20">
+            <div className="p-3 sm:p-4 border-b">
+              <h2 className="font-bold">Live preview</h2>
+              <p className="text-xs text-slate-500">How patients see enabled fields on QR intake</p>
+            </div>
+            <div className="p-3 sm:p-4">
+              {boot || loading ? (
+                <div className="h-40 rounded-xl bg-slate-100 animate-pulse" />
+              ) : (
+                <IntakeFieldPreview fields={fields} />
+              )}
+            </div>
           </div>
         )}
-        <div className="p-3 sm:p-4 border-t bg-slate-50 flex justify-stretch sm:justify-end">
-          <button type="button" className="btn-primary w-full sm:w-auto" disabled={saving || loading} onClick={save}>{saving ? 'Saving…' : 'Save form'}</button>
-        </div>
       </div>
     </ClinicPortalShell>
   );

@@ -10,6 +10,7 @@ const empty = () => ({
   email: '',
   notes: '',
   doctor_id: '',
+  template_id: '',
   package_name: '',
   total_sessions: '10',
   duration_days: '30',
@@ -24,6 +25,7 @@ const empty = () => ({
 export default function ClinicOfflinePatientForm({ clinicId, onCreated }) {
   const [form, setForm] = useState(empty);
   const [doctors, setDoctors] = useState([]);
+  const [templates, setTemplates] = useState([]);
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState(true);
 
@@ -33,9 +35,31 @@ export default function ClinicOfflinePatientForm({ clinicId, onCreated }) {
       .doctors(clinicId)
       .then((res) => setDoctors(res.data || res || []))
       .catch(() => setDoctors([]));
+    clinicPortal
+      .packageTemplates(clinicId)
+      .then((res) => {
+        const rows = res.data || res || [];
+        setTemplates(rows.filter((t) => Number(t.is_active) !== 0));
+      })
+      .catch(() => setTemplates([]));
   }, [clinicId]);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
+  const applyTemplate = (templateId) => {
+    set('template_id', templateId);
+    if (!templateId) return;
+    const t = templates.find((x) => String(x.id) === String(templateId));
+    if (!t) return;
+    setForm((f) => ({
+      ...f,
+      template_id: String(t.id),
+      package_name: t.name || '',
+      total_sessions: String(t.total_sessions || 10),
+      duration_days: String(t.duration_days || 30),
+      price: String(t.price ?? ''),
+    }));
+  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -158,13 +182,33 @@ export default function ClinicOfflinePatientForm({ clinicId, onCreated }) {
               Session package
             </h3>
             <div className="grid sm:grid-cols-2 gap-3">
+              {templates.length > 0 && (
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">From package catalog</label>
+                  <select
+                    className="input-field"
+                    value={form.template_id}
+                    onChange={(e) => applyTemplate(e.target.value)}
+                  >
+                    <option value="">Custom package (enter below)</option>
+                    {templates.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name} · {t.total_sessions} sess · ₹{Number(t.price || 0).toLocaleString('en-IN')}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-slate-700 mb-1">Package name</label>
                 <input
                   className="input-field"
                   placeholder="e.g. 10-Session Rehab Pack"
                   value={form.package_name}
-                  onChange={(e) => set('package_name', e.target.value)}
+                  onChange={(e) => {
+                    set('package_name', e.target.value);
+                    set('template_id', '');
+                  }}
                 />
               </div>
               <div>
