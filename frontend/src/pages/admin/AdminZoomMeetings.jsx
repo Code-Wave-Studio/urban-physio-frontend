@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import DashboardLayout from '../../layouts/DashboardLayout';
+import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import FaIcon from '../../components/FaIcon';
-import { ADMIN_NAV } from '../../constants/adminNav';
 import { admin } from '../../services/api';
 
 function fmtWhen(date, time) {
@@ -72,7 +71,7 @@ export default function AdminZoomMeetings() {
   };
 
   return (
-    <DashboardLayout links={ADMIN_NAV} variant="admin">
+    <AdminDashboardLayout>
       <div className="mb-5 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Zoom Meetings</h1>
@@ -231,6 +230,6 @@ export default function AdminZoomMeetings() {
           )}
         </div>
       )}
-    </DashboardLayout>
+    </AdminDashboardLayout>
   );
 }

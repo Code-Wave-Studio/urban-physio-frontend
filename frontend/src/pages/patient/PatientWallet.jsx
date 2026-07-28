@@ -186,7 +186,7 @@ export default function PatientWallet() {
                   <div>Lifetime credits<br /><strong className={dark ? 'text-white' : 'text-slate-800'}>{inr(w.lifetime_credits)}</strong></div>
                   <div>Lifetime debits<br /><strong className={dark ? 'text-white' : 'text-slate-800'}>{inr(w.lifetime_debits)}</strong></div>
                   <div>Refunds<br /><strong className={dark ? 'text-white' : 'text-slate-800'}>{inr(w.total_refunds)}</strong></div>
-                  <div>Cashback<br /><strong className={dark ? 'text-white' : 'text-slate-800'}>{inr(w.cashback_earned)}</strong></div>
+                  <div>Promo credits<br /><strong className={dark ? 'text-white' : 'text-slate-800'}>{inr(w.promotional_credits)}</strong></div>
                 </div>
               </div>
 
@@ -227,16 +227,10 @@ export default function PatientWallet() {
                 <p className={`text-xs mt-2 ${muted}`}>
                   Min {inr(settings.min_recharge)} · Max {inr(settings.max_recharge)}
                 </p>
-                {balance?.referral_code && (
-                  <p className={`text-xs mt-3 ${muted}`}>
-                    Referral code: <strong className={dark ? 'text-teal-300' : 'text-teal-700'}>{balance.referral_code}</strong>
-                    {' '}(reward {inr(settings.referral_reward_amount)})
-                  </p>
-                )}
               </div>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-4 mb-6">
+            <div className="grid md:grid-cols-2 gap-4 mb-6">
               <div className={`rounded-xl border p-4 ${card}`}>
                 <p className={`text-xs uppercase tracking-wide ${muted}`}>This month spent</p>
                 <p className="text-xl font-semibold mt-1">{inr(analytics?.month_spent)}</p>
@@ -244,10 +238,6 @@ export default function PatientWallet() {
               <div className={`rounded-xl border p-4 ${card}`}>
                 <p className={`text-xs uppercase tracking-wide ${muted}`}>This month received</p>
                 <p className="text-xl font-semibold mt-1">{inr(analytics?.month_received)}</p>
-              </div>
-              <div className={`rounded-xl border p-4 ${card}`}>
-                <p className={`text-xs uppercase tracking-wide ${muted}`}>Referral earnings</p>
-                <p className="text-xl font-semibold mt-1">{inr(w.referral_earnings)}</p>
               </div>
             </div>
 

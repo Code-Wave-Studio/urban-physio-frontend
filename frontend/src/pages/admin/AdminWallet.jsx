@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import DashboardLayout from '../../layouts/DashboardLayout';
-import { ADMIN_NAV } from '../../constants/adminNav';
+import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import { admin } from '../../services/api';
 
 function inr(n) {
@@ -15,11 +14,9 @@ export default function AdminWallet() {
   const [overview, setOverview] = useState(null);
   const [settings, setSettings] = useState({});
   const [ledger, setLedger] = useState([]);
-  const [rules, setRules] = useState([]);
   const [q, setQ] = useState('');
   const [tab, setTab] = useState('overview');
   const [op, setOp] = useState(emptyOp);
-  const [ruleForm, setRuleForm] = useState({ name: '', rule_type: 'percent', value: '5', applies_to: 'all' });
 
   const load = useCallback(() => {
     setLoading(true);
@@ -27,13 +24,11 @@ export default function AdminWallet() {
       admin.walletOverview(),
       admin.walletSettings(),
       admin.walletLedger({ q }),
-      admin.walletCashbackRules(),
     ])
-      .then(([o, s, l, r]) => {
+      .then(([o, s, l]) => {
         setOverview(o.data);
         setSettings(s.data || {});
         setLedger(l.data?.transactions || []);
-        setRules(r.data?.rules || []);
       })
       .catch((e) => toast.error(e.message || 'Failed to load wallet admin'))
       .finally(() => setLoading(false));
@@ -91,29 +86,19 @@ export default function AdminWallet() {
     }
   };
 
-  const createRule = async () => {
-    try {
-      await admin.createWalletCashbackRule({
-        ...ruleForm,
-        value: Number(ruleForm.value),
-      });
-      toast.success('Rule created');
-      setRuleForm({ name: '', rule_type: 'percent', value: '5', applies_to: 'all' });
-      load();
-    } catch (e) {
-      toast.error(e.message || 'Could not create rule');
-    }
-  };
-
   const t = overview?.totals || {};
   const top = overview?.top_users || [];
   const daily = overview?.daily_30d || [];
 
   return (
-    <DashboardLayout links={ADMIN_NAV} variant="admin">
+    <AdminDashboardLayout>
       <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Wallet</h1>
+          <p className="text-sm text-slate-500 mt-1">Balances, ledger, manual credit/debit, and wallet settings.</p>
+        </div>
         <div className="flex flex-wrap items-center gap-2">
-          {['overview', 'operations', 'ledger', 'cashback', 'settings'].map((k) => (
+          {['overview', 'operations', 'ledger', 'settings'].map((k) => (
             <button
               key={k}
               type="button"
@@ -141,8 +126,6 @@ export default function AdminWallet() {
                 ['Lifetime credits', inr(t.total_credits)],
                 ['Lifetime debits', inr(t.total_debits)],
                 ['Refunds to wallet', inr(t.total_refunds)],
-                ['Cashback paid', inr(t.total_cashback)],
-                ['Referral paid', inr(t.total_referral)],
                 ['Recharge volume', inr(overview?.recharge_volume)],
               ].map(([label, val]) => (
                 <div key={label} className="rounded-xl border border-slate-200 bg-white p-4">
@@ -249,69 +232,15 @@ export default function AdminWallet() {
                   </tr>
                 </thead>
                 <tbody>
-                  {ledger.map((t) => (
-                    <tr key={t.id} className="border-t">
-                      <td className="px-3 py-2 whitespace-nowrap">{String(t.created_at || '').slice(0, 16)}</td>
-                      <td className="px-3 py-2">{t.user_name}<div className="text-xs text-slate-500">{t.email}</div></td>
-                      <td className="px-3 py-2 capitalize">{String(t.type).replace(/_/g, ' ')}</td>
-                      <td className={`px-3 py-2 ${t.direction === 'credit' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        {t.direction === 'credit' ? '+' : '-'}{inr(t.amount)}
+                  {ledger.map((row) => (
+                    <tr key={row.id} className="border-t">
+                      <td className="px-3 py-2 whitespace-nowrap">{String(row.created_at || '').slice(0, 16)}</td>
+                      <td className="px-3 py-2">{row.user_name}<div className="text-xs text-slate-500">{row.email}</div></td>
+                      <td className="px-3 py-2 capitalize">{String(row.type).replace(/_/g, ' ')}</td>
+                      <td className={`px-3 py-2 ${row.direction === 'credit' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        {row.direction === 'credit' ? '+' : '-'}{inr(row.amount)}
                       </td>
-                      <td className="px-3 py-2 font-mono text-xs">{t.txn_ref}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {!loading && tab === 'cashback' && (
-          <div className="space-y-4">
-            <div className="rounded-xl border border-slate-200 bg-white p-4 max-w-lg space-y-2">
-              <h3 className="font-semibold">New cashback rule</h3>
-              <input className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Name" value={ruleForm.name} onChange={(e) => setRuleForm({ ...ruleForm, name: e.target.value })} />
-              <div className="flex gap-2">
-                <select className="border rounded-lg px-3 py-2 text-sm" value={ruleForm.rule_type} onChange={(e) => setRuleForm({ ...ruleForm, rule_type: e.target.value })}>
-                  <option value="percent">Percent</option>
-                  <option value="flat">Flat ₹</option>
-                </select>
-                <input className="border rounded-lg px-3 py-2 text-sm flex-1" placeholder="Value" value={ruleForm.value} onChange={(e) => setRuleForm({ ...ruleForm, value: e.target.value })} />
-              </div>
-              <select className="w-full border rounded-lg px-3 py-2 text-sm" value={ruleForm.applies_to} onChange={(e) => setRuleForm({ ...ruleForm, applies_to: e.target.value })}>
-                <option value="all">All appointments</option>
-                <option value="first_appointment">First appointment</option>
-                <option value="festival">Festival</option>
-              </select>
-              <button type="button" onClick={createRule} className="px-4 py-2 rounded-lg bg-slate-900 text-white text-sm">Create rule</button>
-            </div>
-            <div className="rounded-xl border border-slate-200 bg-white overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-50 text-left">
-                  <tr>
-                    <th className="px-3 py-2">Name</th>
-                    <th className="px-3 py-2">Type</th>
-                    <th className="px-3 py-2">Value</th>
-                    <th className="px-3 py-2">Applies</th>
-                    <th className="px-3 py-2">Active</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rules.map((r) => (
-                    <tr key={r.id} className="border-t">
-                      <td className="px-3 py-2">{r.name}</td>
-                      <td className="px-3 py-2">{r.rule_type}</td>
-                      <td className="px-3 py-2">{r.rule_type === 'flat' ? inr(r.value) : `${r.value}%`}</td>
-                      <td className="px-3 py-2">{r.applies_to}</td>
-                      <td className="px-3 py-2">
-                        <button
-                          type="button"
-                          className="text-teal-700 underline"
-                          onClick={() => admin.toggleWalletCashbackRule(r.id, !Number(r.is_active)).then(load)}
-                        >
-                          {Number(r.is_active) ? 'On' : 'Off'}
-                        </button>
-                      </td>
+                      <td className="px-3 py-2 font-mono text-xs">{row.txn_ref}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -341,8 +270,6 @@ export default function AdminWallet() {
               ['min_recharge', 'Min recharge'],
               ['max_recharge', 'Max recharge'],
               ['signup_bonus', 'Signup bonus'],
-              ['referral_reward_amount', 'Referral reward'],
-              ['default_cashback_percent', 'Default cashback %'],
             ].map(([key, label]) => (
               <label key={key} className="block text-sm">
                 <span className="text-slate-600">{label}</span>
@@ -360,6 +287,6 @@ export default function AdminWallet() {
           </div>
         )}
       </div>
-    </DashboardLayout>
+    </AdminDashboardLayout>
   );
 }
