@@ -1199,6 +1199,44 @@
     @apply grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3;
   }
 
+  .reception-dash-board {
+    @apply xl:grid-cols-6;
+  }
+
+  .reception-dash-board .dash-span-full,
+  .reception-dash-board .dash-span-4 {
+    @apply xl:col-span-6;
+  }
+
+  .reception-dash-board .dash-span-half,
+  .reception-dash-board .dash-span-2,
+  .reception-dash-board .dash-span-3 {
+    @apply xl:col-span-3;
+  }
+
+  .reception-widget-body {
+    @apply p-4 sm:p-5;
+  }
+
+  .reception-widget-body--flush {
+    @apply p-3 sm:p-4;
+  }
+
+  .reception-stat-row {
+    @apply rounded-2xl border border-slate-100/90 px-3.5 py-3;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 247, 237, 0.55) 100%);
+  }
+
+  .reception-payment-item,
+  .reception-followup-item {
+    @apply flex items-center justify-between gap-3 rounded-2xl border border-slate-100/90 px-3.5 py-3 text-sm;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.94) 100%);
+  }
+
+  .reception-followup-item {
+    @apply items-start justify-start;
+  }
+
   .dash-quick-action {
     @apply relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-white/90
            text-center min-w-0 px-3 py-4 sm:py-5 overflow-hidden;

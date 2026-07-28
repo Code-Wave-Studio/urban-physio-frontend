@@ -13,6 +13,7 @@ export default function DashboardWidgetBoard({
   onReorder,
   onToggleHidden,
   toolbar,
+  boardClassName = '',
 }) {
   const dragId = useRef(null);
   const [dragging, setDragging] = useState(null);
@@ -73,7 +74,7 @@ export default function DashboardWidgetBoard({
         </div>
       )}
 
-      <div className="dash-board">
+      <div className={`dash-board ${boardClassName}`.trim()}>
         {ordered.map((widget) => {
           const hidden = isHidden?.(widget.id);
           if (hidden && !customize) return null;

@@ -100,9 +100,10 @@ export default function ClinicPortalHome() {
     () => [
       {
         id: 'quick_actions',
-        title: 'Quick actions',
+        title: 'Front-desk shortcuts',
         icon: 'fa-bolt',
         span: 'full',
+        bodyClassName: 'reception-widget-body reception-widget-body--flush',
         render: () => <ClinicQuickActions />,
       },
       {
@@ -110,6 +111,7 @@ export default function ClinicPortalHome() {
         title: "Today's appointment mix",
         icon: 'fa-chart-pie',
         span: '2',
+        bodyClassName: 'reception-widget-body',
         render: () => {
           const total = Number(m.today_total || 0) || 1;
           const rows = [
@@ -118,12 +120,17 @@ export default function ClinicPortalHome() {
             { label: 'Completed', value: m.today_completed ?? 0, color: 'bg-primary-500' },
           ];
           return (
-            <div className="space-y-3">
+            <div className="space-y-3.5">
               {rows.map((r) => (
-                <div key={r.label}>
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="font-medium text-slate-600">{r.label}</span>
-                    <span className="font-semibold text-slate-800">{r.value}</span>
+                <div key={r.label} className="reception-stat-row">
+                  <div className="flex justify-between items-center gap-3 text-xs mb-2">
+                    <span className="font-semibold text-slate-700">{r.label}</span>
+                    <span className="text-right">
+                      <span className="block text-sm font-bold text-slate-900">{r.value}</span>
+                      <span className="text-[11px] text-slate-400">
+                        {Math.round((Number(r.value) / total) * 100)}%
+                      </span>
+                    </span>
                   </div>
                   <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
                     <div
@@ -145,6 +152,7 @@ export default function ClinicPortalHome() {
         title: "Today's queue",
         icon: 'fa-list-ol',
         span: '4',
+        bodyClassName: 'reception-widget-body reception-widget-body--flush',
         action: (
           <Link to="/clinic-portal/appointments" className="dash-widget-link">
             View all
@@ -210,6 +218,7 @@ export default function ClinicPortalHome() {
         title: 'Pending payments',
         icon: 'fa-file-invoice-dollar',
         span: '2',
+        bodyClassName: 'reception-widget-body',
         action: (
           <Link to="/clinic-portal/billing" className="dash-widget-link">
             Billing
@@ -219,17 +228,17 @@ export default function ClinicPortalHome() {
           unpaidQueue.length === 0 ? (
             <p className="text-sm text-slate-500 py-6 text-center">All caught up — no unpaid bookings today.</p>
           ) : (
-            <ul className="space-y-2 max-h-56 overflow-y-auto">
+            <ul className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
               {unpaidQueue.slice(0, 8).map((a) => (
-                <li key={a.id} className="flex items-center justify-between gap-2 text-sm">
+                <li key={a.id} className="reception-payment-item">
                   <div className="min-w-0">
-                    <p className="font-medium text-slate-800 truncate">{a.patient_name}</p>
-                    <p className="text-[11px] text-slate-500">
-                      {formatTime(a.start_time)} · {a.booking_id || a.id}
+                    <p className="font-semibold text-slate-900 truncate">{a.patient_name}</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      {formatTime(a.start_time)} · Booking {a.booking_id || a.id}
                     </p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="font-semibold text-rose-700">{money(a.amount)}</p>
+                    <p className="font-bold text-rose-700">{money(a.amount)}</p>
                     {can('billing.collect') && (
                       <ClinicCollectPaymentButton
                         clinicId={clinicId}
@@ -250,20 +259,21 @@ export default function ClinicPortalHome() {
         title: 'Follow-up queue',
         icon: 'fa-rotate',
         span: '2',
+        bodyClassName: 'reception-widget-body',
         render: () => (
           <>
             {followups.length === 0 ? (
               <p className="text-sm text-slate-500 py-4">No pending follow-ups.</p>
             ) : (
-              <ul className="space-y-2 max-h-52 overflow-y-auto">
+              <ul className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
                 {followups.slice(0, 8).map((f) => (
-                  <li key={f.id} className="text-sm flex items-start gap-2">
-                    <span className="w-7 h-7 rounded-full bg-amber-50 text-amber-700 flex items-center justify-center shrink-0 text-xs">
+                  <li key={f.id} className="reception-followup-item">
+                    <span className="w-9 h-9 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0 text-xs border border-amber-100">
                       <FaIcon icon="fa-phone" />
                     </span>
                     <div className="min-w-0">
-                      <p className="font-medium text-slate-800 truncate">{f.patient_name}</p>
-                      <p className="text-xs text-slate-500">Last visit {f.appointment_date}</p>
+                      <p className="font-semibold text-slate-900 truncate">{f.patient_name}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">Last visit {f.appointment_date}</p>
                     </div>
                   </li>
                 ))}
@@ -283,6 +293,7 @@ export default function ClinicPortalHome() {
         title: 'Team availability',
         icon: 'fa-user-doctor',
         span: '3',
+        bodyClassName: 'reception-widget-body',
         render: () => <TeamAvailabilityWidget clinicId={clinicId} />,
       },
       {
@@ -290,6 +301,7 @@ export default function ClinicPortalHome() {
         title: 'Calendar',
         icon: 'fa-calendar-days',
         span: '3',
+        bodyClassName: 'reception-widget-body',
         render: () => <MiniMonthCalendar markedDates={[todayStr]} />,
       },
       {
@@ -297,8 +309,9 @@ export default function ClinicPortalHome() {
         title: 'Front-desk checklist',
         icon: 'fa-list-check',
         span: 'full',
+        bodyClassName: 'reception-widget-body',
         render: () => (
-          <ul className="grid sm:grid-cols-3 gap-2 text-sm text-slate-600">
+          <ul className="grid md:grid-cols-2 xl:grid-cols-3 gap-3 text-sm text-slate-600">
             {[
               { icon: 'fa-indian-rupee-sign', text: 'Confirm unpaid bookings before session' },
               { icon: 'fa-phone', text: 'Call follow-up patients this week' },
@@ -427,6 +440,7 @@ export default function ClinicPortalHome() {
             isHidden={layout.isHidden}
             onReorder={layout.reorder}
             onToggleHidden={layout.toggleHidden}
+            boardClassName="reception-dash-board"
           />
         </>
       )}
