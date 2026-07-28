@@ -53,6 +53,7 @@ import PatientProfile from './pages/patient/PatientProfile';
 import AdminInvoiceSettings from './pages/admin/AdminInvoiceSettings';
 import AdminBillingPage from './pages/admin/AdminBillingPage';
 import AdminZoomMeetings from './pages/admin/AdminZoomMeetings';
+import AdminWallet from './pages/admin/AdminWallet';
 import AdminNotificationSettings from './pages/admin/AdminNotificationSettings';
 import AdminSeo from './pages/admin/AdminSeo';
 import NotFoundPage from './pages/NotFoundPage';
@@ -109,6 +110,7 @@ import DoctorAdminPackagePrices from './pages/doctor/DoctorAdminPackagePrices';
 import DoctorPrescriptions from './pages/doctor/DoctorPrescriptions';
 import PatientExercises from './pages/patient/PatientExercises';
 import PatientBills from './pages/patient/PatientBills';
+import PatientWallet from './pages/patient/PatientWallet';
 import PatientProgress from './pages/patient/PatientProgress';
 import PatientVideoConsultations from './pages/patient/PatientVideoConsultations';
 import PatientPrescriptions from './pages/patient/PatientPrescriptions';
@@ -273,6 +275,7 @@ export default function App() {
       <Route path="/patient/saved" element={<ProtectedRoute roles={['patient']}><PatientSaved /></ProtectedRoute>} />
       <Route path="/patient/reports" element={<ProtectedRoute roles={['patient']}><PatientReports /></ProtectedRoute>} />
       <Route path="/patient/bills" element={<ProtectedRoute roles={['patient']}><PatientBills /></ProtectedRoute>} />
+      <Route path="/patient/wallet" element={<ProtectedRoute roles={['patient']}><PatientWallet /></ProtectedRoute>} />
       <Route path="/patient/progress" element={<ProtectedRoute roles={['patient']}><PatientProgress /></ProtectedRoute>} />
       <Route path="/patient/video-consultations" element={<ProtectedRoute roles={['patient']}><PatientVideoConsultations /></ProtectedRoute>} />
       <Route path="/patient/consultation/:appointmentId" element={<ProtectedRoute roles={['patient']}><PatientConsultationPage /></ProtectedRoute>} />
@@ -363,6 +366,7 @@ export default function App() {
       <Route path="/admin/invoice-settings" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminInvoiceSettings /></ProtectedRoute>} />
       <Route path="/admin/billing" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminBillingPage /></ProtectedRoute>} />
       <Route path="/admin/zoom" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminZoomMeetings /></ProtectedRoute>} />
+      <Route path="/admin/wallet" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminWallet /></ProtectedRoute>} />
       <Route path="/admin/search" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminAdvancedSearchPage /></ProtectedRoute>} />
       <Route path="/admin/calendar" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminCalendarPage /></ProtectedRoute>} />
       <Route path="/admin/seo" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminSeo /></ProtectedRoute>} />

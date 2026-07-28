@@ -363,9 +363,20 @@ export const uploadCmsAudio = (file) => cmsUpload('audio', file);
 export const uploadCmsVideo = (file) => cmsUpload('video', file);
 
 export const payments = {
-  createOrder: (appointmentId) => api.post('/payments/order', { appointment_id: appointmentId }),
+  createOrder: (appointmentId, opts = {}) =>
+    api.post('/payments/order', { appointment_id: appointmentId, use_wallet: opts.use_wallet !== false }),
   verify: (data) => api.post('/payments/verify', data),
   invoice: (appointmentId) => api.get(`/payments/${appointmentId}`),
+};
+
+export const wallet = {
+  balance: () => api.get('/wallet'),
+  history: (params) => api.get('/wallet/history', { params }),
+  analytics: () => api.get('/wallet/analytics'),
+  splitPreview: (amount, useWallet = true) =>
+    api.post('/wallet/split-preview', { amount, use_wallet: useWallet }),
+  recharge: (amount) => api.post('/wallet/recharge', { amount }),
+  verifyRecharge: (data) => api.post('/wallet/recharge-verify', data),
 };
 
 export const patients = {
@@ -520,6 +531,18 @@ export const admin = {
   zoomLogs: () => api.get('/admin/zoom/logs'),
   zoomRegenerate: (appointmentId) => api.post(`/admin/zoom/meetings/${appointmentId}/regenerate`, {}),
   zoomCancel: (appointmentId) => api.post(`/admin/zoom/meetings/${appointmentId}/cancel`, {}),
+  walletOverview: () => api.get('/admin/wallet'),
+  walletSettings: () => api.get('/admin/wallet/settings'),
+  updateWalletSettings: (data) => api.put('/admin/wallet/settings', data),
+  walletLedger: (params) => api.get('/admin/wallet/ledger', { params }),
+  walletCredit: (data) => api.post('/admin/wallet/credit', data),
+  walletDebit: (data) => api.post('/admin/wallet/debit', data),
+  walletSetStatus: (data) => api.post('/admin/wallet/status', data),
+  walletRefund: (data) => api.post('/admin/wallet/refund', data),
+  walletUser: (userId) => api.get(`/admin/wallet/users/${userId}`),
+  walletCashbackRules: () => api.get('/admin/wallet/cashback-rules'),
+  createWalletCashbackRule: (data) => api.post('/admin/wallet/cashback-rules', data),
+  toggleWalletCashbackRule: (id, isActive) => api.put(`/admin/wallet/cashback-rules/${id}`, { is_active: isActive }),
   seoDashboard: () => api.get('/admin/seo/dashboard'),
   seoSettings: () => api.get('/admin/seo/settings'),
   updateSeoSettings: (data) => api.put('/admin/seo/settings', data),
@@ -859,6 +882,8 @@ export const consultation = {
   room: (appointmentId) => api.get(`/consultation/${appointmentId}`),
   exerciseDetail: (appointmentId, prescriptionId) =>
     api.get(`/consultation/${appointmentId}/exercise/${prescriptionId}`),
+  completeSession: (appointmentId) =>
+    api.post(`/consultation/${appointmentId}/complete-session`, {}),
 };
 
 /** Patient Portal — dashboard aggregates (bills, progress, prescriptions, video) */

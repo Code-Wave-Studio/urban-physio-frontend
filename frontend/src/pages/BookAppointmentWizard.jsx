@@ -955,8 +955,11 @@ export default function BookAppointmentWizard() {
 
       if (payNowAmount() > 0) {
         const orderRes = await payments.createOrder(appt.id);
+        const orderPayload = orderRes?.data ?? orderRes ?? {};
         try {
-          await openRazorpayCheckout(orderRes);
+          if (!orderPayload.paid_via_wallet) {
+            await openRazorpayCheckout(orderRes);
+          }
           setCreatedAppt(appt);
           if (isEmergency) {
             sessionStorage.removeItem('emergency_booking_context');

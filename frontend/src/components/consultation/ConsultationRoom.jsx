@@ -35,6 +35,9 @@ function youtubeEmbed(url) {
 }
 
 function StatusPill({ join, status }) {
+  if (status === 'completed') {
+    return <span className="rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold px-2.5 py-1">Completed</span>;
+  }
   if (status === 'confirmed' && join?.can_join) {
     return <span className="rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold px-2.5 py-1">Live · Ready to join</span>;
   }
@@ -48,7 +51,7 @@ function StatusPill({ join, status }) {
 }
 
 /* ---------- Video panel (Zoom — opens in Zoom app / browser) ---------- */
-function VideoPanel({ room, canStart }) {
+function VideoPanel({ room, canStart, onSessionStarted }) {
   const appt = room.appointment || {};
   const viewer = room.viewer;
   const joinUrl = appt.zoom_join_url || appt.google_meet_link;
@@ -56,7 +59,10 @@ function VideoPanel({ room, canStart }) {
   const hostUrl = startUrl || joinUrl;
   const join = room.join || {};
   const ready = Boolean(canStart && hostUrl);
-  const statusLabel = appt.zoom_status || (joinUrl ? 'scheduled' : 'pending');
+  const statusLabel = appt.status === 'completed'
+    ? 'completed'
+    : (appt.zoom_status || (joinUrl ? 'scheduled' : 'pending'));
+  const [starting, setStarting] = useState(false);
 
   let helperText = 'Open Zoom when you are ready. Waiting room is enabled — the host admits participants.';
   if (!joinUrl) {
@@ -67,6 +73,8 @@ function VideoPanel({ room, canStart }) {
     } else {
       helperText = join.reason || 'Zoom meeting is not available for this session yet.';
     }
+  } else if (appt.status === 'completed') {
+    helperText = 'Session marked completed. You can still reopen Zoom if needed. Only the doctor can change appointment status.';
   } else if (join.reason && !ready) {
     helperText = join.reason;
   }
@@ -78,6 +86,24 @@ function VideoPanel({ room, canStart }) {
       toast.success('Meeting link copied');
     } catch {
       toast.error('Could not copy link');
+    }
+  };
+
+  const openZoom = async () => {
+    if (!hostUrl || starting) return;
+    setStarting(true);
+    try {
+      if (appt.status === 'confirmed') {
+        await consultation.completeSession(appt.id);
+        toast.success('Consultation marked completed');
+        onSessionStarted?.();
+      }
+    } catch (err) {
+      // Still allow joining Zoom even if auto-complete fails
+      toast.error(err.message || 'Could not update session status');
+    } finally {
+      setStarting(false);
+      window.open(hostUrl, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -108,15 +134,15 @@ function VideoPanel({ room, canStart }) {
           <div className="flex flex-wrap gap-2 mt-5 justify-center">
             {ready ? (
               <>
-                <a
-                  href={hostUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-lg bg-primary-500 hover:bg-primary-600 text-white font-semibold text-sm px-4 py-2.5"
+                <button
+                  type="button"
+                  disabled={starting}
+                  onClick={openZoom}
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary-500 hover:bg-primary-600 text-white font-semibold text-sm px-4 py-2.5 disabled:opacity-60"
                 >
-                  <FaIcon icon="fa-play" />
+                  <FaIcon icon={starting ? 'fa-spinner' : 'fa-play'} className={starting ? 'fa-spin' : undefined} />
                   {startUrl ? 'Start Zoom meeting' : 'Join Zoom meeting'}
-                </a>
+                </button>
                 {joinUrl && (
                   <button
                     type="button"
@@ -664,7 +690,7 @@ export default function ConsultationRoom({ appointmentId, backTo, layout: Layout
       </div>
 
       <div className="glass-card !p-4 md:!p-5">
-        {tab === 'video' && <VideoPanel room={room} canStart={canStart} />}
+        {tab === 'video' && <VideoPanel room={room} canStart={canStart} onSessionStarted={softReload} />}
         {tab === 'documents' && (
           <div>
             <p className="text-sm text-slate-600 mb-3">

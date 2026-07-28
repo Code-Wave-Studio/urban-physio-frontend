@@ -103,8 +103,12 @@ export function openRazorpayCheckout(orderRes) {
 }
 
 /** Create order + checkout for an appointment awaiting payment. */
-export async function completeAppointmentPayment(appointmentId) {
-  const orderRes = await payments.createOrder(appointmentId);
+export async function completeAppointmentPayment(appointmentId, { useWallet = true } = {}) {
+  const orderRes = await payments.createOrder(appointmentId, { use_wallet: useWallet });
+  const payload = orderRes?.data ?? orderRes ?? {};
+  if (payload.paid_via_wallet) {
+    return orderRes;
+  }
   return openRazorpayCheckout(orderRes);
 }
 

@@ -15,6 +15,7 @@ export const ADMIN_NAV = [
   { to: '/admin/badges', label: 'Badges', icon: 'fa-award' },
   { to: '/admin/coupons', label: 'Coupons', icon: 'fa-tag' },
   { to: '/admin/billing', label: 'Billing', icon: 'fa-file-invoice-dollar' },
+  { to: '/admin/wallet', label: 'Wallet', icon: 'fa-wallet' },
   { to: '/admin/reviews', label: 'Reviews', icon: 'fa-star' },
   { to: '/admin/analytics', label: 'Analytics', icon: 'fa-chart-pie' },
   { to: '/admin/pain-selection', label: 'Pain map', icon: 'fa-bullseye' },

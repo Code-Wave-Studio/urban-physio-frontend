@@ -9,6 +9,7 @@ export const PATIENT_NAV = [
   { to: '/patient/treatment-journey', label: 'Treatment Journey', icon: 'fa-notes-medical' },
   { to: '/patient/reports', label: 'My Reports', icon: 'fa-file-medical' },
   { to: '/patient/bills', label: 'Bills & Payments', icon: 'fa-file-invoice-dollar' },
+  { to: '/patient/wallet', label: 'Wallet', icon: 'fa-wallet' },
   { to: '/patient/notifications', label: 'Notifications', icon: 'fa-bell', notifyKey: true },
   { to: '/patient/saved', label: 'Saved', icon: 'fa-heart' },
   { to: '/patient/documents', label: 'Documents', icon: 'fa-folder-tree' },

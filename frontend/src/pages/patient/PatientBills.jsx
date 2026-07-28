@@ -51,6 +51,11 @@ export default function PatientBills() {
     try {
       const orderRes = await payments.createOrder(bill.appointment_id);
       const order = orderRes.data;
+      if (order?.paid_via_wallet) {
+        toast.success('Paid from wallet — booking confirmed');
+        load();
+        return;
+      }
       if (!window.Razorpay) {
         toast.error('Payment SDK not loaded. Refresh and try again.');
         return;
