@@ -199,7 +199,7 @@ export default function ClinicBillingPage() {
       toast.error('Refunds require Clinic Admin');
       return;
     }
-    const reason = window.prompt('Refund reason:', 'Patient request');
+    const reason = window.prompt('Refund reason (Razorpay refund):', 'Patient request');
     if (reason === null) return;
     const amtStr = window.prompt('Refund amount (blank = full):', String(payment.amount));
     if (amtStr === null) return;
@@ -209,7 +209,7 @@ export default function ClinicBillingPage() {
         reason,
         amount: amtStr === '' ? 0 : Number(amtStr),
       });
-      toast.success('Refund processed');
+      toast.success('Refund processed via Razorpay');
       load();
     } catch (e) {
       toast.error(e.message || 'Refund failed');
@@ -649,10 +649,7 @@ export default function ClinicBillingPage() {
               </div>
               <div>
                 <label className="text-xs font-medium text-slate-600">Channel</label>
-                <select className="input-field" value={collectForm.channel} onChange={(e) => setCollectForm((f) => ({ ...f, channel: e.target.value }))}>
-                  <option value="offline">Offline</option>
-                  <option value="online">Online (recorded)</option>
-                </select>
+                <input className="input-field bg-slate-50" value="Offline collection only" disabled />
               </div>
               <div>
                 <label className="text-xs font-medium text-slate-600">Amount</label>
@@ -678,6 +675,9 @@ export default function ClinicBillingPage() {
             {settings?.show_gst && (
               <p className="text-xs text-violet-700 mt-3">GST {settings.tax_percent}% will be added on the discounted subtotal.</p>
             )}
+            <p className="text-xs text-slate-500 mt-2">
+              Online payments are received only through the platform Razorpay account. This popup is only for offline collection and receipt generation.
+            </p>
           </GlassModalBody>
           <GlassModalFooter>
             <button type="button" className="btn-outline" onClick={() => setCollectOpen(false)} disabled={busy}>Cancel</button>

@@ -116,6 +116,8 @@ export default function ClinicAdminHome() {
           hoverBackgroundColor: DASH_CHART_COLORS.bar.hover,
           borderRadius: 12,
           maxBarThickness: 40,
+          categoryPercentage: 0.7,
+          barPercentage: 0.8,
         },
       ],
     }),
@@ -167,9 +169,11 @@ export default function ClinicAdminHome() {
         icon: 'fa-chart-line',
         span: '3',
         render: () => (
-          <div className="h-48 sm:h-56 w-full min-w-0">
+          <div className="dash-chart-wrap">
             {growth.length ? (
-              <Line data={growthChart} options={dashChartOptions} />
+              <div className="dash-chart-canvas">
+                <Line data={growthChart} options={dashChartOptions} />
+              </div>
             ) : (
               <p className="dash-empty">No growth data yet</p>
             )}
@@ -182,9 +186,11 @@ export default function ClinicAdminHome() {
         icon: 'fa-chart-column',
         span: '3',
         render: () => (
-          <div className="h-48 sm:h-56 w-full min-w-0">
+          <div className="dash-chart-wrap">
             {revenue.length ? (
-              <Bar data={revenueChart} options={dashChartOptions} />
+              <div className="dash-chart-canvas">
+                <Bar data={revenueChart} options={dashChartOptions} />
+              </div>
             ) : (
               <p className="dash-empty">No revenue data yet</p>
             )}
@@ -195,7 +201,7 @@ export default function ClinicAdminHome() {
         id: 'therapist_workload',
         title: 'Therapist workload',
         icon: 'fa-user-doctor',
-        span: '2',
+        span: '3',
         render: () =>
           workload.length === 0 ? (
             <p className="dash-empty !py-8">No data this month.</p>
@@ -227,7 +233,7 @@ export default function ClinicAdminHome() {
         id: 'upcoming',
         title: 'Upcoming appointments',
         icon: 'fa-calendar-check',
-        span: '2',
+        span: '3',
         action: (
           <Link to="/clinic-portal/appointments" className="dash-widget-link">
             Open →
@@ -253,7 +259,7 @@ export default function ClinicAdminHome() {
         id: 'package_alerts',
         title: 'Package expiry alerts',
         icon: 'fa-box-open',
-        span: '2',
+        span: '3',
         action: (
           <Link to="/clinic-portal/packages" className="dash-widget-link">
             Packages →

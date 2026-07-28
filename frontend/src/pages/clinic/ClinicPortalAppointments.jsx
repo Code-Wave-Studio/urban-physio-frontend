@@ -74,6 +74,7 @@ export default function ClinicPortalAppointments() {
 
   const canManage = can('appointments.manage');
   const canBill = can('billing.collect');
+  const canUpdateStatus = can('billing.settings');
 
   const checkIn = async (a) => {
     setActing(a.id);
@@ -340,13 +341,13 @@ export default function ClinicPortalAppointments() {
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-x-3 gap-y-1.5 pt-1 border-t border-slate-100">
-                      {canManage && a.status === 'pending' && (
+                      {canUpdateStatus && a.status === 'pending' && (
                         <button type="button" disabled={acting === a.id} onClick={() => checkIn(a)} className="text-xs font-semibold text-teal-700">Check in</button>
                       )}
-                      {canManage && a.status === 'confirmed' && (
+                      {canUpdateStatus && a.status === 'confirmed' && (
                         <button type="button" disabled={acting === a.id} onClick={() => setApptStatus(a, 'completed')} className="text-xs font-semibold text-emerald-700">Complete</button>
                       )}
-                      {canManage && !['cancelled', 'completed'].includes(a.status) && (
+                      {canUpdateStatus && !['cancelled', 'completed'].includes(a.status) && (
                         <>
                           <button type="button" disabled={acting === a.id} onClick={() => cancelRollover(a)} className="text-xs font-semibold text-rose-600">Rollover</button>
                           <button type="button" disabled={acting === a.id} onClick={() => changeMode(a)} className="text-xs font-semibold text-sky-700">Mode</button>
@@ -420,13 +421,13 @@ export default function ClinicPortalAppointments() {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex flex-col gap-1 items-start">
-                            {canManage && a.status === 'pending' && (
+                            {canUpdateStatus && a.status === 'pending' && (
                               <button type="button" disabled={acting === a.id} onClick={() => checkIn(a)} className="text-[11px] font-semibold text-teal-700 hover:underline">Check in</button>
                             )}
-                            {canManage && a.status === 'confirmed' && (
+                            {canUpdateStatus && a.status === 'confirmed' && (
                               <button type="button" disabled={acting === a.id} onClick={() => setApptStatus(a, 'completed')} className="text-[11px] font-semibold text-emerald-700 hover:underline">Complete</button>
                             )}
-                            {canManage && !['cancelled', 'completed'].includes(a.status) && (
+                            {canUpdateStatus && !['cancelled', 'completed'].includes(a.status) && (
                               <>
                                 <button type="button" disabled={acting === a.id} onClick={() => cancelRollover(a)} className="text-[11px] font-semibold text-rose-600 hover:underline">Cancel + rollover</button>
                                 <button type="button" disabled={acting === a.id} onClick={() => changeMode(a)} className="text-[11px] font-semibold text-sky-700 hover:underline">Change mode</button>

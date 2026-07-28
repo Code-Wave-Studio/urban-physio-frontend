@@ -209,7 +209,7 @@ export default function ClinicPortalHome() {
         id: 'pending_payments',
         title: 'Pending payments',
         icon: 'fa-file-invoice-dollar',
-        span: '3',
+        span: '2',
         action: (
           <Link to="/clinic-portal/billing" className="dash-widget-link">
             Billing
@@ -249,7 +249,7 @@ export default function ClinicPortalHome() {
         id: 'followups',
         title: 'Follow-up queue',
         icon: 'fa-rotate',
-        span: '3',
+        span: '2',
         render: () => (
           <>
             {followups.length === 0 ? (

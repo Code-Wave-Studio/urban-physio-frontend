@@ -102,7 +102,7 @@ export default function ClinicPortalEarnings() {
     { label: 'Today', value: money(totals.revenue_today), icon: 'fa-bolt', tone: 'text-amber-600 bg-amber-100' },
     { label: 'Completed sessions', value: totals.completed_sessions ?? 0, icon: 'fa-circle-check', tone: 'text-sky-600 bg-sky-100' },
     { label: 'Refunds logged', value: money((totals.refund_amount || 0) + (totals.package_refund_amount || 0)), icon: 'fa-rotate-left', tone: 'text-rose-600 bg-rose-100' },
-    { label: 'Credits in', value: money(creditSummary.credit_in || 0), icon: 'fa-wallet', tone: 'text-primary-600 bg-primary-100' },
+    { label: 'Credits in', value: money(creditSummary.credit_in || 0), icon: 'fa-landmark', tone: 'text-primary-600 bg-primary-100' },
   ];
 
   if (!bootLoading && (!isAdminMode || !can('earnings.view'))) {
@@ -279,8 +279,8 @@ export default function ClinicPortalEarnings() {
               <div className="glass-card !p-3 sm:!p-5">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
                   <div>
-                    <h2 className="font-bold text-slate-900">Credit logs & wallet refunds</h2>
-                    <p className="text-xs text-slate-500 mt-1">Manual credits plus payment/package refund history.</p>
+                    <h2 className="font-bold text-slate-900">Credit logs & refunds</h2>
+                    <p className="text-xs text-slate-500 mt-1">Manual credits plus payment and package refund history.</p>
                   </div>
                   <div className="flex flex-wrap gap-2 text-xs">
                     <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-semibold">
@@ -298,7 +298,6 @@ export default function ClinicPortalEarnings() {
                       <option value="credit">Credit</option>
                       <option value="adjustment">Adjustment</option>
                       <option value="refund">Refund</option>
-                      <option value="wallet_refund">Wallet refund</option>
                     </select>
                     <select className="input-field" value={creditForm.direction} onChange={(e) => setCreditForm((f) => ({ ...f, direction: e.target.value }))}>
                       <option value="in">Credit in</option>

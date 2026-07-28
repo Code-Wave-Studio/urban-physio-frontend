@@ -24,7 +24,7 @@ export default function DashboardWidgetShell({
       } ${isOver ? 'dash-widget--over' : ''} ${className}`}
     >
       <header className="dash-widget-header">
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-start gap-2 min-w-0 flex-1">
           {customize && (
             <span
               className="dash-widget-handle"
@@ -39,9 +39,9 @@ export default function DashboardWidgetShell({
               <FaIcon icon={icon} />
             </span>
           )}
-          <h2 className="dash-widget-title truncate">{title}</h2>
+          <h2 className="dash-widget-title">{title}</h2>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 self-start">
           {action}
           {customize && (
             <button

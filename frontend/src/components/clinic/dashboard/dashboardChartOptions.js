@@ -3,6 +3,9 @@ export const dashChartOptions = {
   responsive: true,
   maintainAspectRatio: false,
   interaction: { mode: 'index', intersect: false },
+  layout: {
+    padding: { top: 8, right: 10, bottom: 2, left: 2 },
+  },
   plugins: {
     legend: { display: false },
     tooltip: {
@@ -18,13 +21,25 @@ export const dashChartOptions = {
   scales: {
     x: {
       grid: { display: false },
-      ticks: { color: '#94a3b8', font: { size: 10, weight: '500' } },
+      ticks: {
+        color: '#94a3b8',
+        font: { size: 10, weight: '500' },
+        maxRotation: 0,
+        autoSkip: true,
+        maxTicksLimit: 6,
+        padding: 6,
+      },
       border: { display: false },
     },
     y: {
       beginAtZero: true,
       grid: { color: 'rgba(249, 115, 22, 0.08)' },
-      ticks: { color: '#94a3b8', font: { size: 10 } },
+      ticks: {
+        color: '#94a3b8',
+        font: { size: 10 },
+        maxTicksLimit: 5,
+        padding: 8,
+      },
       border: { display: false },
     },
   },
