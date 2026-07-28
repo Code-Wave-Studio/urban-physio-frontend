@@ -55,7 +55,21 @@ function VideoPanel({ room, canStart }) {
   const startUrl = viewer === 'doctor' || viewer === 'admin' ? appt.zoom_start_url : null;
   const hostUrl = startUrl || joinUrl;
   const join = room.join || {};
+  const ready = Boolean(canStart && hostUrl);
   const statusLabel = appt.zoom_status || (joinUrl ? 'scheduled' : 'pending');
+
+  let helperText = 'Open Zoom when you are ready. Waiting room is enabled — the host admits participants.';
+  if (!joinUrl) {
+    if (appt.status === 'pending') {
+      helperText = 'Zoom link will appear after the appointment is confirmed.';
+    } else if (appt.status === 'confirmed') {
+      helperText = 'Zoom meeting is being prepared. Refresh in a moment, or ask admin to regenerate the meeting.';
+    } else {
+      helperText = join.reason || 'Zoom meeting is not available for this session yet.';
+    }
+  } else if (join.reason && !ready) {
+    helperText = join.reason;
+  }
 
   const copyLink = async () => {
     if (!joinUrl) return;
@@ -75,10 +89,7 @@ function VideoPanel({ room, canStart }) {
             <FaIcon icon="fa-video" className="text-2xl text-primary-300" />
           </div>
           <h3 className="text-lg font-bold">Zoom Video Consultation</h3>
-          <p className="text-sm text-slate-300 mt-1 max-w-md">
-            {join.reason
-              || 'Open Zoom when you are ready. Waiting room is enabled — the host admits participants.'}
-          </p>
+          <p className="text-sm text-slate-300 mt-1 max-w-md">{helperText}</p>
           <div className="flex flex-wrap gap-2 mt-3 justify-center text-[11px]">
             <span className="px-2.5 py-1 rounded-full bg-white/10 border border-white/15 capitalize">
               Status · {statusLabel}
@@ -95,7 +106,7 @@ function VideoPanel({ room, canStart }) {
             )}
           </div>
           <div className="flex flex-wrap gap-2 mt-5 justify-center">
-            {canStart && hostUrl ? (
+            {ready ? (
               <>
                 <a
                   href={hostUrl}
@@ -116,9 +127,7 @@ function VideoPanel({ room, canStart }) {
                   </button>
                 )}
               </>
-            ) : (
-              <span className="text-sm text-slate-400">{join.reason || 'Zoom meeting not available yet'}</span>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
