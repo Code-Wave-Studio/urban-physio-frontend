@@ -28,17 +28,22 @@ export default function ClinicPortalEarnings() {
   const [loading, setLoading] = useState(true);
   const [modePrices, setModePrices] = useState({ clinic: 0, home_visit: 0, online: 0 });
   const [savingPrices, setSavingPrices] = useState(false);
+  const [creditData, setCreditData] = useState({ summary: {}, rows: [] });
+  const [creditForm, setCreditForm] = useState({ entry_type: 'credit', direction: 'in', amount: '', note: '' });
+  const [savingCredit, setSavingCredit] = useState(false);
 
   const load = useCallback(async () => {
     if (!clinicId) return;
     setLoading(true);
     try {
-      const [res, priceRes] = await Promise.all([
+      const [res, priceRes, creditRes] = await Promise.all([
         clinicPortal.earnings(clinicId),
         clinicPortal.getModePrices(clinicId),
+        clinicPortal.financeCredits(clinicId),
       ]);
       setData(res.data || res);
       setModePrices((old) => ({ ...old, ...(priceRes.data || priceRes || {}) }));
+      setCreditData(creditRes.data || creditRes || { summary: {}, rows: [] });
     } catch (e) {
       toast.error(e.message || 'Failed to load earnings');
       setData(null);
@@ -55,6 +60,8 @@ export default function ClinicPortalEarnings() {
   const byMonth = data?.by_month || [];
   const byType = data?.by_type || [];
   const byDoctor = data?.by_doctor || [];
+  const creditRows = creditData?.rows || [];
+  const creditSummary = creditData?.summary || {};
 
   const monthChart = useMemo(() => {
     const labels = byMonth.map((r) => {
@@ -94,6 +101,8 @@ export default function ClinicPortalEarnings() {
     { label: 'This month', value: money(totals.revenue_month), icon: 'fa-calendar-check', tone: 'text-teal-600 bg-teal-100' },
     { label: 'Today', value: money(totals.revenue_today), icon: 'fa-bolt', tone: 'text-amber-600 bg-amber-100' },
     { label: 'Completed sessions', value: totals.completed_sessions ?? 0, icon: 'fa-circle-check', tone: 'text-sky-600 bg-sky-100' },
+    { label: 'Refunds logged', value: money((totals.refund_amount || 0) + (totals.package_refund_amount || 0)), icon: 'fa-rotate-left', tone: 'text-rose-600 bg-rose-100' },
+    { label: 'Credits in', value: money(creditSummary.credit_in || 0), icon: 'fa-wallet', tone: 'text-primary-600 bg-primary-100' },
   ];
 
   if (!bootLoading && (!isAdminMode || !can('earnings.view'))) {
@@ -109,6 +118,24 @@ export default function ClinicPortalEarnings() {
       toast.error(error.message || 'Could not save mode prices');
     } finally {
       setSavingPrices(false);
+    }
+  };
+
+  const saveCredit = async (e) => {
+    e.preventDefault();
+    setSavingCredit(true);
+    try {
+      await clinicPortal.createFinanceCredit(clinicId, {
+        ...creditForm,
+        amount: Number(creditForm.amount),
+      });
+      toast.success('Finance credit log added');
+      setCreditForm({ entry_type: 'credit', direction: 'in', amount: '', note: '' });
+      load();
+    } catch (error) {
+      toast.error(error.message || 'Could not save credit log');
+    } finally {
+      setSavingCredit(false);
     }
   };
 
@@ -129,13 +156,13 @@ export default function ClinicPortalEarnings() {
       <div className="space-y-4 sm:space-y-6">
         {bootLoading || loading ? (
           <div className="portal-kpi-grid">
-            {[1, 2, 3, 4].map((i) => (
+            {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="glass-card h-24 animate-pulse" />
             ))}
           </div>
         ) : (
           <>
-            <div className="portal-kpi-grid">
+            <div className="portal-kpi-grid xl:!grid-cols-6">
               {cards.map((c) => (
                 <div key={c.label} className="glass-card !p-3 sm:!p-4 min-w-0">
                   <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center mb-2 ${c.tone}`}>
@@ -220,32 +247,102 @@ export default function ClinicPortalEarnings() {
               </div>
             </div>
 
-            <div className="glass-card !p-3 sm:!p-5 max-w-md w-full">
-              <h2 className="font-bold text-slate-900">Session mode prices</h2>
-              <p className="text-xs text-slate-500 mt-1 mb-4">Default price used for clinic-created bookings and mode changes.</p>
-              <div className="space-y-3">
-                {['clinic', 'home_visit', 'online'].map((mode) => (
-                  <label key={mode} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm font-medium capitalize">
-                    {mode === 'clinic' ? 'At clinic' : mode.replace('_', ' ')}
-                    <div className="relative w-full sm:w-auto">
-                      <span className="absolute left-3 top-2.5 text-slate-400">₹</span>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        className="input-field w-full sm:!w-36 !pl-7"
-                        value={modePrices[mode] ?? ''}
-                        onChange={(e) => setModePrices((old) => ({ ...old, [mode]: e.target.value }))}
-                      />
-                    </div>
-                  </label>
-                ))}
+            <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)] gap-4">
+              <div className="glass-card !p-3 sm:!p-5 w-full">
+                <h2 className="font-bold text-slate-900">Session mode prices</h2>
+                <p className="text-xs text-slate-500 mt-1 mb-4">Default price used for clinic-created bookings and mode changes.</p>
+                <div className="space-y-3">
+                  {['clinic', 'home_visit', 'online'].map((mode) => (
+                    <label key={mode} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm font-medium capitalize">
+                      {mode === 'clinic' ? 'At clinic' : mode.replace('_', ' ')}
+                      <div className="relative w-full sm:w-auto">
+                        <span className="absolute left-3 top-2.5 text-slate-400">₹</span>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          className="input-field w-full sm:!w-36 !pl-7"
+                          value={modePrices[mode] ?? ''}
+                          onChange={(e) => setModePrices((old) => ({ ...old, [mode]: e.target.value }))}
+                        />
+                      </div>
+                    </label>
+                  ))}
+                </div>
+                {can('billing.settings') && (
+                  <button type="button" className="btn-primary w-full justify-center mt-4" disabled={savingPrices} onClick={savePrices}>
+                    {savingPrices ? 'Saving…' : 'Save prices'}
+                  </button>
+                )}
               </div>
-              {can('billing.settings') && (
-                <button type="button" className="btn-primary w-full justify-center mt-4" disabled={savingPrices} onClick={savePrices}>
-                  {savingPrices ? 'Saving…' : 'Save prices'}
-                </button>
-              )}
+
+              <div className="glass-card !p-3 sm:!p-5">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                  <div>
+                    <h2 className="font-bold text-slate-900">Credit logs & wallet refunds</h2>
+                    <p className="text-xs text-slate-500 mt-1">Manual credits plus payment/package refund history.</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-semibold">
+                      In {money(creditSummary.credit_in || 0)}
+                    </span>
+                    <span className="px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 font-semibold">
+                      Out {money(creditSummary.credit_out || 0)}
+                    </span>
+                  </div>
+                </div>
+
+                {can('billing.settings') && (
+                  <form onSubmit={saveCredit} className="grid sm:grid-cols-4 gap-3 mb-4">
+                    <select className="input-field" value={creditForm.entry_type} onChange={(e) => setCreditForm((f) => ({ ...f, entry_type: e.target.value }))}>
+                      <option value="credit">Credit</option>
+                      <option value="adjustment">Adjustment</option>
+                      <option value="refund">Refund</option>
+                      <option value="wallet_refund">Wallet refund</option>
+                    </select>
+                    <select className="input-field" value={creditForm.direction} onChange={(e) => setCreditForm((f) => ({ ...f, direction: e.target.value }))}>
+                      <option value="in">Credit in</option>
+                      <option value="out">Credit out</option>
+                    </select>
+                    <input className="input-field" type="number" min="0" step="0.01" placeholder="Amount" value={creditForm.amount} onChange={(e) => setCreditForm((f) => ({ ...f, amount: e.target.value }))} />
+                    <button type="submit" className="btn-primary justify-center" disabled={savingCredit}>
+                      {savingCredit ? 'Saving…' : 'Add log'}
+                    </button>
+                    <textarea className="input-field sm:col-span-4" rows={2} placeholder="Reason / note" value={creditForm.note} onChange={(e) => setCreditForm((f) => ({ ...f, note: e.target.value }))} />
+                  </form>
+                )}
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="text-[11px] uppercase tracking-wide text-slate-500">
+                      <tr>
+                        <th className="text-left py-2">Type</th>
+                        <th className="text-left py-2">Note</th>
+                        <th className="text-left py-2">When</th>
+                        <th className="text-right py-2">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {creditRows.slice(0, 20).map((row) => (
+                        <tr key={row.row_key || row.id} className="border-t border-slate-100">
+                          <td className="py-2.5 capitalize">{String(row.entry_type || 'credit').replace('_', ' ')}</td>
+                          <td className="py-2.5">
+                            <p className="text-slate-800">{row.note || '—'}</p>
+                            {row.created_by_name ? <p className="text-[11px] text-slate-500 mt-0.5">{row.created_by_name}</p> : null}
+                          </td>
+                          <td className="py-2.5 text-xs text-slate-500">{row.created_at || '—'}</td>
+                          <td className={`py-2.5 text-right font-semibold ${row.direction === 'in' ? 'text-emerald-700' : 'text-rose-700'}`}>
+                            {row.direction === 'in' ? '+' : '-'}{money(row.amount)}
+                          </td>
+                        </tr>
+                      ))}
+                      {!creditRows.length && (
+                        <tr><td colSpan={4} className="py-8 text-center text-slate-500">No credit or refund logs yet.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </>
         )}

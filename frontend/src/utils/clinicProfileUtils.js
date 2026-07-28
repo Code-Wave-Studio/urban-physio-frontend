@@ -192,6 +192,7 @@ export function emptyClinicForm() {
     stats_staff_count: '',
     stats_satisfaction_rate: '',
     image_urls: [],
+    default_slot_duration_minutes: 30,
   };
 }
 
@@ -222,6 +223,7 @@ export function clinicRecordToForm(c) {
     image_urls: c.image_urls?.length
       ? c.image_urls
       : (c.gallery || []).map((g) => g.image_url).filter(Boolean),
+    default_slot_duration_minutes: c.default_slot_duration_minutes ?? 30,
   };
 }
 
@@ -250,6 +252,7 @@ export function buildClinicPayload(form) {
     stats_staff_count: form.stats_staff_count === '' ? 0 : parseInt(form.stats_staff_count, 10),
     stats_satisfaction_rate: Number.isFinite(satisfaction) ? satisfaction : null,
     image_urls: form.image_urls,
+    default_slot_duration_minutes: Math.max(15, Math.min(45, parseInt(form.default_slot_duration_minutes, 10) || 30)),
   };
 }
 

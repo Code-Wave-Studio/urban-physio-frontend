@@ -48,22 +48,66 @@ export function ClinicProfileDetailsFields({ form, set, setHours, clinicId = nul
   );
 }
 
-export function ClinicOpeningHoursFields({ form, setHours }) {
+export function ClinicOpeningHoursFields({ form, setHours, set }) {
   return (
-    <div className="space-y-2">
-      <FieldLabel hint="e.g. 09:00-18:00 · leave empty for closed">Opening & closing hours</FieldLabel>
+    <div className="space-y-4">
+      <div className="grid sm:grid-cols-[minmax(0,1fr)_180px] gap-3 items-end">
+        <div>
+          <FieldLabel hint="Dedicated schedule editor for the public clinic profile and booking context">
+            Opening & closing hours
+          </FieldLabel>
+        </div>
+        <div>
+          <FieldLabel hint="Default slot length used for clinic booking suggestions">Slot duration</FieldLabel>
+          <select
+            className="input-field"
+            value={form.default_slot_duration_minutes ?? 30}
+            onChange={(e) => set('default_slot_duration_minutes', Number(e.target.value))}
+          >
+            {[15, 20, 30, 45].map((mins) => (
+              <option key={mins} value={mins}>{mins} minutes</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       <div className="rounded-xl border border-slate-200 divide-y divide-slate-100 overflow-hidden">
-        {WEEKDAYS.map(({ key, label }) => (
-          <div key={key} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 px-3 py-2.5 bg-white/80">
-            <span className="text-sm font-medium text-slate-700 w-28 shrink-0">{label}</span>
-            <input
-              className="input-field !py-2 text-sm flex-1"
-              value={(form.opening_hours?.[key] || []).join(', ')}
-              onChange={(e) => setHours(key, e.target.value)}
-              placeholder="09:00-18:00 or closed"
-            />
-          </div>
-        ))}
+        {WEEKDAYS.map(({ key, label }) => {
+          const firstSlot = String(form.opening_hours?.[key]?.[0] || '');
+          const [start = '', end = ''] = firstSlot.split('-');
+          const closed = !start || !end;
+          return (
+            <div key={key} className="grid grid-cols-1 sm:grid-cols-[120px_110px_1fr_24px_1fr] gap-2 sm:gap-3 px-3 py-3 bg-white/80 items-center">
+              <span className="text-sm font-medium text-slate-700">{label}</span>
+              <label className="inline-flex items-center gap-2 text-xs font-medium text-slate-600">
+                <input
+                  type="checkbox"
+                  checked={!closed}
+                  onChange={(e) => {
+                    if (!e.target.checked) setHours(key, '');
+                    else setHours(key, `${start || '09:00'}-${end || '18:00'}`);
+                  }}
+                />
+                Open
+              </label>
+              <input
+                type="time"
+                className="input-field !py-2 text-sm"
+                value={closed ? '' : start}
+                disabled={closed}
+                onChange={(e) => setHours(key, `${e.target.value}-${end || '18:00'}`)}
+              />
+              <span className="hidden sm:block text-center text-slate-400">to</span>
+              <input
+                type="time"
+                className="input-field !py-2 text-sm"
+                value={closed ? '' : end}
+                disabled={closed}
+                onChange={(e) => setHours(key, `${start || '09:00'}-${e.target.value}`)}
+              />
+            </div>
+          );
+        })}
       </div>
     </div>
   );

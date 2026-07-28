@@ -778,6 +778,8 @@ export const clinicPortal = {
   saveBranding: (clinicId, data) => api.put(`/clinic-portal/${clinicId}/branding`, data),
   getModePrices: (clinicId) => api.get(`/clinic-portal/${clinicId}/mode-prices`),
   saveModePrices: (clinicId, data) => api.put(`/clinic-portal/${clinicId}/mode-prices`, data),
+  financeCredits: (clinicId) => api.get(`/clinic-portal/${clinicId}/finance/credits`),
+  createFinanceCredit: (clinicId, data) => api.post(`/clinic-portal/${clinicId}/finance/credits`, data),
   exportReports: (clinicId, params) =>
     api.get(`/clinic-portal/${clinicId}/reports/export`, {
       params,

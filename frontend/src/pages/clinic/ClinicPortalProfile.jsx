@@ -380,7 +380,7 @@ export default function ClinicPortalProfile() {
             </FormSection>
 
             <FormSection title="Opening hours" icon="fa-clock">
-              <ClinicOpeningHoursFields form={form} setHours={setHours} />
+              <ClinicOpeningHoursFields form={form} setHours={setHours} set={set} />
             </FormSection>
 
             <FormSection title="Social media" icon="fa-share-nodes" defaultOpen={false}>

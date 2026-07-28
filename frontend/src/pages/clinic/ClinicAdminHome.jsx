@@ -22,7 +22,7 @@ import DashboardWidgetBoard, {
 import MiniMonthCalendar from '../../components/clinic/dashboard/MiniMonthCalendar';
 import TeamAvailabilityWidget from '../../components/clinic/dashboard/TeamAvailabilityWidget';
 import useDashboardLayout from '../../components/clinic/dashboard/useDashboardLayout';
-import { dashChartOptions } from '../../components/clinic/dashboard/dashboardChartOptions';
+import { dashChartOptions, DASH_CHART_COLORS } from '../../components/clinic/dashboard/dashboardChartOptions';
 import { clinicPortal } from '../../services/api';
 import useClinicPortal from '../../hooks/useClinicPortal';
 import { formatTime } from '../../utils/appointmentListUtils';
@@ -90,12 +90,15 @@ export default function ClinicAdminHome() {
         {
           label: 'Patients',
           data: growth.map((r) => Number(r.patients || 0)),
-          borderColor: '#0d9488',
-          backgroundColor: 'rgba(13,148,136,0.14)',
+          borderColor: DASH_CHART_COLORS.line.border,
+          backgroundColor: DASH_CHART_COLORS.line.fill,
           fill: true,
           tension: 0.4,
           pointRadius: 3,
-          pointHoverRadius: 5,
+          pointHoverRadius: 6,
+          pointBackgroundColor: DASH_CHART_COLORS.line.point,
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
         },
       ],
     }),
@@ -109,9 +112,10 @@ export default function ClinicAdminHome() {
         {
           label: 'Revenue',
           data: revenue.map((r) => Number(r.total || 0)),
-          backgroundColor: 'rgba(124, 58, 237, 0.85)',
-          borderRadius: 10,
-          maxBarThickness: 36,
+          backgroundColor: DASH_CHART_COLORS.bar.fill,
+          hoverBackgroundColor: DASH_CHART_COLORS.bar.hover,
+          borderRadius: 12,
+          maxBarThickness: 40,
         },
       ],
     }),
@@ -138,15 +142,15 @@ export default function ClinicAdminHome() {
         icon: 'fa-sack-dollar',
         span: 'full',
         action: (
-          <Link to="/clinic-portal/earnings" className="text-xs text-teal-700 font-semibold hover:underline">
+          <Link to="/clinic-portal/earnings" className="dash-widget-link">
             Finance →
           </Link>
         ),
         render: () => (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <DashboardKpiCard icon="fa-indian-rupee-sign" label="Today" value={inr(k.today_revenue)} tint="emerald" />
-            <DashboardKpiCard icon="fa-calendar" label="This month" value={inr(k.month_revenue)} tint="violet" />
-            <DashboardKpiCard icon="fa-chart-column" label="All time" value={inr(k.total_revenue)} tint="sky" />
+            <DashboardKpiCard icon="fa-calendar" label="This month" value={inr(k.month_revenue)} tint="primary" />
+            <DashboardKpiCard icon="fa-chart-column" label="All time" value={inr(k.total_revenue)} tint="orange" />
             <DashboardKpiCard
               icon="fa-file-invoice-dollar"
               label="Pending payments"
@@ -167,7 +171,7 @@ export default function ClinicAdminHome() {
             {growth.length ? (
               <Line data={growthChart} options={dashChartOptions} />
             ) : (
-              <p className="text-sm text-slate-500 py-16 text-center">No growth data yet</p>
+              <p className="dash-empty">No growth data yet</p>
             )}
           </div>
         ),
@@ -182,7 +186,7 @@ export default function ClinicAdminHome() {
             {revenue.length ? (
               <Bar data={revenueChart} options={dashChartOptions} />
             ) : (
-              <p className="text-sm text-slate-500 py-16 text-center">No revenue data yet</p>
+              <p className="dash-empty">No revenue data yet</p>
             )}
           </div>
         ),
@@ -194,7 +198,7 @@ export default function ClinicAdminHome() {
         span: '2',
         render: () =>
           workload.length === 0 ? (
-            <p className="text-sm text-slate-500">No data this month.</p>
+            <p className="dash-empty !py-8">No data this month.</p>
           ) : (
             <ul className="space-y-2.5 max-h-56 overflow-y-auto">
               {workload.map((w) => {
@@ -210,8 +214,8 @@ export default function ClinicAdminHome() {
                         {w.completed}/{w.appointments}
                       </span>
                     </div>
-                    <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                      <div className="h-full rounded-full bg-teal-500" style={{ width: `${pct}%` }} />
+                    <div className="dash-progress-track">
+                      <div className="dash-progress-fill" style={{ width: `${pct}%` }} />
                     </div>
                   </li>
                 );
@@ -225,13 +229,13 @@ export default function ClinicAdminHome() {
         icon: 'fa-calendar-check',
         span: '2',
         action: (
-          <Link to="/clinic-portal/appointments" className="text-xs text-teal-700 font-semibold hover:underline">
+          <Link to="/clinic-portal/appointments" className="dash-widget-link">
             Open →
           </Link>
         ),
         render: () =>
           upcoming.length === 0 ? (
-            <p className="text-sm text-slate-500">Nothing upcoming.</p>
+            <p className="dash-empty !py-8">Nothing upcoming.</p>
           ) : (
             <ul className="space-y-2 max-h-56 overflow-y-auto">
               {upcoming.map((a) => (
@@ -251,13 +255,13 @@ export default function ClinicAdminHome() {
         icon: 'fa-box-open',
         span: '2',
         action: (
-          <Link to="/clinic-portal/packages" className="text-xs text-teal-700 font-semibold hover:underline">
+          <Link to="/clinic-portal/packages" className="dash-widget-link">
             Packages →
           </Link>
         ),
         render: () =>
           packages.length === 0 ? (
-            <p className="text-sm text-slate-500">No packages expiring this week.</p>
+            <p className="dash-empty !py-8">No packages expiring this week.</p>
           ) : (
             <ul className="space-y-2">
               {packages.map((p, i) => (
@@ -327,17 +331,20 @@ export default function ClinicAdminHome() {
       ) : (
         <div className="space-y-4 sm:space-y-5">
           <div className="dash-hero">
-            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">Clinic Admin</p>
-                <h2 className="text-lg sm:text-xl font-bold text-slate-900 mt-0.5">
+                <span className="dash-hero-badge">
+                  <FaIcon icon="fa-shield-halved" />
+                  Clinic Admin
+                </span>
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-3">
                   {clinic?.name || 'Operations overview'}
                 </h2>
-                <p className="text-sm text-slate-500 mt-1">
+                <p className="text-sm text-slate-600 mt-1.5 max-w-lg">
                   Customize widgets anytime — layout is saved on this device.
                 </p>
               </div>
-              <button type="button" className="btn-outline text-xs !py-1.5 w-full sm:w-auto" onClick={load}>
+              <button type="button" className="btn-outline text-xs !py-2 w-full sm:w-auto shrink-0" onClick={load}>
                 <FaIcon icon="fa-rotate" className="mr-1.5" />
                 Refresh analytics
               </button>
@@ -348,7 +355,7 @@ export default function ClinicAdminHome() {
             <DashboardKpiCard icon="fa-calendar-check" label="Today's appointments" value={k.today_appointments ?? 0} />
             <DashboardKpiCard icon="fa-person-walking" label="Today's walk-ins" value={k.today_walkins ?? 0} tint="sky" />
             <DashboardKpiCard icon="fa-user-plus" label="New patients (month)" value={k.new_patients ?? 0} tint="emerald" />
-            <DashboardKpiCard icon="fa-users" label="Active patients" value={k.active_patients ?? 0} tint="violet" />
+            <DashboardKpiCard icon="fa-users" label="Active patients" value={k.active_patients ?? 0} tint="orange" />
             <DashboardKpiCard icon="fa-rotate" label="Pending follow-ups" value={k.pending_followups ?? 0} tint="amber" />
             <DashboardKpiCard icon="fa-calendar-xmark" label="Missed / cancelled" value={k.missed_appointments ?? 0} tint="rose" />
             <DashboardKpiCard icon="fa-circle-check" label="Sessions completed" value={k.sessions_completed ?? 0} />
@@ -356,7 +363,7 @@ export default function ClinicAdminHome() {
             <DashboardKpiCard icon="fa-star" label="Avg rating" value={k.avg_rating ?? '—'} tint="amber" />
             <DashboardKpiCard icon="fa-arrow-trend-up" label="Monthly growth" value={`${k.monthly_growth ?? 0}%`} tint="emerald" />
             <DashboardKpiCard icon="fa-calendar-week" label="Weekly appointments" value={k.weekly_appointments ?? 0} />
-            <DashboardKpiCard icon="fa-user-doctor" label="Top therapist" value={k.top_therapist?.name || '—'} tint="sky" />
+            <DashboardKpiCard icon="fa-user-doctor" label="Top therapist" value={k.top_therapist?.name || '—'} tint="primary" />
           </div>
 
           <DashboardWidgetBoard

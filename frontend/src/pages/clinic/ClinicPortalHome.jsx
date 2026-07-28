@@ -115,7 +115,7 @@ export default function ClinicPortalHome() {
           const rows = [
             { label: 'Pending', value: m.today_pending ?? 0, color: 'bg-amber-400' },
             { label: 'Confirmed', value: m.today_confirmed ?? 0, color: 'bg-emerald-500' },
-            { label: 'Completed', value: m.today_completed ?? 0, color: 'bg-teal-600' },
+            { label: 'Completed', value: m.today_completed ?? 0, color: 'bg-primary-500' },
           ];
           return (
             <div className="space-y-3">
@@ -133,7 +133,7 @@ export default function ClinicPortalHome() {
                   </div>
                 </div>
               ))}
-              <Link to="/clinic-portal/appointments" className="text-xs font-semibold text-teal-700 hover:underline inline-block">
+              <Link to="/clinic-portal/appointments" className="dash-widget-link inline-block">
                 Open appointments →
               </Link>
             </div>
@@ -146,7 +146,7 @@ export default function ClinicPortalHome() {
         icon: 'fa-list-ol',
         span: '4',
         action: (
-          <Link to="/clinic-portal/appointments" className="text-xs text-teal-700 font-semibold hover:underline">
+          <Link to="/clinic-portal/appointments" className="dash-widget-link">
             View all
           </Link>
         ),
@@ -185,7 +185,7 @@ export default function ClinicPortalHome() {
                           type="button"
                           disabled={acting === a.id}
                           onClick={() => checkIn(a)}
-                          className="text-[11px] font-semibold text-teal-700 hover:underline"
+                          className="text-[11px] font-semibold dash-widget-link"
                         >
                           Check in
                         </button>
@@ -211,7 +211,7 @@ export default function ClinicPortalHome() {
         icon: 'fa-file-invoice-dollar',
         span: '3',
         action: (
-          <Link to="/clinic-portal/billing" className="text-xs text-teal-700 font-semibold hover:underline">
+          <Link to="/clinic-portal/billing" className="dash-widget-link">
             Billing
           </Link>
         ),
@@ -306,9 +306,9 @@ export default function ClinicPortalHome() {
             ].map((t) => (
               <li
                 key={t.text}
-                className="flex items-start gap-2 rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5"
+                className="flex items-start gap-2.5 rounded-xl border border-primary-100/80 bg-primary-50/40 px-3.5 py-3"
               >
-                <FaIcon icon={t.icon} className="text-teal-600 mt-0.5" />
+                <FaIcon icon={t.icon} className="text-primary-600 mt-0.5" />
                 <span>{t.text}</span>
               </li>
             ))}
@@ -338,13 +338,16 @@ export default function ClinicPortalHome() {
       <PasswordSetupAlert className="mb-4" />
 
       <div className="dash-hero">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wide text-teal-700">Today at a glance</p>
-            <h2 className="text-lg sm:text-xl font-bold text-slate-900 mt-0.5 truncate">
+            <span className="dash-hero-badge">
+              <FaIcon icon="fa-sun" />
+              Today at a glance
+            </span>
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-3 truncate">
               {clinic?.name || 'Your clinic'}
             </h2>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-sm text-slate-600 mt-1.5">
               {new Date().toLocaleDateString('en-IN', {
                 weekday: 'long',
                 day: 'numeric',
@@ -352,7 +355,7 @@ export default function ClinicPortalHome() {
               })}
             </p>
           </div>
-          <div className="dash-live-pill">
+          <div className="dash-live-pill shrink-0">
             <span
               className={`w-2 h-2 rounded-full ${liveConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`}
             />

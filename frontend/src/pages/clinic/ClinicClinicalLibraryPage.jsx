@@ -45,7 +45,7 @@ function groupAssessments(rows) {
 }
 
 export default function ClinicClinicalLibraryPage() {
-  const { clinicId, isAdminMode, can, loading: boot } = useClinicPortal();
+  const { clinicId, can, loading: boot } = useClinicPortal();
   const [tab, setTab] = useState('diagnosis');
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -218,7 +218,10 @@ export default function ClinicClinicalLibraryPage() {
 
   const readOnly = Boolean(viewingVersion);
 
-  if (!boot && (!isAdminMode || !(can('clinical_library.manage') || can('clinical_library.view') || can('assessments.manage') || can('profile.manage')))) {
+  const canManageLibrary = can('clinical_library.manage');
+  const canManageAssessments = can('assessments.manage');
+
+  if (!boot && !(canManageLibrary || can('clinical_library.view') || canManageAssessments || can('profile.manage'))) {
     return <Navigate to="/clinic-portal" replace />;
   }
 
@@ -302,12 +305,12 @@ export default function ClinicClinicalLibraryPage() {
                       )}
                     </div>
                     <div className="flex flex-col gap-1 shrink-0">
-                      {group.active && (
+                      {group.active && canManageAssessments && (
                         <button type="button" className="text-xs font-semibold text-teal-700" onClick={() => editActive(group)}>
                           Edit active
                         </button>
                       )}
-                      {group.active && (
+                      {group.active && canManageAssessments && (
                         <button type="button" className="text-xs font-semibold text-rose-600" onClick={() => remove(group.active)}>
                           Archive
                         </button>
@@ -332,8 +335,8 @@ export default function ClinicClinicalLibraryPage() {
                     <p className="text-xs text-slate-500 mt-1">{row.description || 'Clinic library entry'}</p>
                   </div>
                   <div className="flex gap-3 shrink-0">
-                    <button type="button" className="text-xs font-semibold text-teal-700" onClick={() => editLibrary(row)}>Edit</button>
-                    <button type="button" className="text-xs font-semibold text-rose-600" onClick={() => remove(row)}>Delete</button>
+                    {canManageLibrary && <button type="button" className="text-xs font-semibold text-teal-700" onClick={() => editLibrary(row)}>Edit</button>}
+                    {canManageLibrary && <button type="button" className="text-xs font-semibold text-rose-600" onClick={() => remove(row)}>Delete</button>}
                   </div>
                 </div>
               ))}
@@ -373,7 +376,7 @@ export default function ClinicClinicalLibraryPage() {
             <input
               className="input-field mt-1"
               required
-              disabled={readOnly}
+              disabled={readOnly || (tab === 'assessment' ? !canManageAssessments : !canManageLibrary)}
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -382,14 +385,14 @@ export default function ClinicClinicalLibraryPage() {
           {tab !== 'assessment' ? (
             <label className="block text-sm font-medium">
               Description
-              <textarea className="input-field mt-1" rows={4} value={description} onChange={(e) => setDescription(e.target.value)} />
+              <textarea className="input-field mt-1" rows={4} value={description} disabled={!canManageLibrary} onChange={(e) => setDescription(e.target.value)} />
             </label>
           ) : (
             <>
               <AssessmentQuestionsEditor
                 fields={fields}
                 onChange={setFields}
-                readOnly={readOnly}
+                readOnly={readOnly || !canManageAssessments}
               />
               {showHistory && editing && !viewingVersion && (
                 <p className="text-[11px] text-slate-400">
@@ -399,7 +402,7 @@ export default function ClinicClinicalLibraryPage() {
             </>
           )}
 
-          {!readOnly ? (
+          {!readOnly && (tab === 'assessment' ? canManageAssessments : canManageLibrary) ? (
             <button type="submit" className="btn-primary w-full justify-center" disabled={saving}>
               {saving
                 ? 'Saving…'

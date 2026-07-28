@@ -61,12 +61,12 @@ export default function DashboardWidgetBoard({
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="text-xs text-slate-500">
             {customize ? (
-              <span className="inline-flex items-center gap-1.5 text-teal-700 font-medium">
+              <span className="inline-flex items-center gap-1.5 text-primary-700 font-semibold">
                 <FaIcon icon="fa-up-down-left-right" />
                 Customize mode — drag widgets to rearrange, hide what you don’t need
               </span>
             ) : (
-              <span>Your dashboard layout</span>
+              <span className="text-slate-500">Your dashboard layout</span>
             )}
           </div>
           {toolbar}

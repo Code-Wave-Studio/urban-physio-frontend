@@ -1,4 +1,4 @@
-/** Shared Chart.js options — light/dark-friendly via CSS color tokens where possible */
+/** Shared Chart.js options — aligned with site primary orange */
 export const dashChartOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -6,24 +6,38 @@ export const dashChartOptions = {
   plugins: {
     legend: { display: false },
     tooltip: {
-      backgroundColor: 'rgba(15, 23, 42, 0.92)',
+      backgroundColor: 'rgba(124, 45, 18, 0.94)',
       titleFont: { size: 12, weight: '600' },
       bodyFont: { size: 11 },
-      padding: 10,
-      cornerRadius: 10,
+      padding: 12,
+      cornerRadius: 12,
+      borderColor: 'rgba(249, 115, 22, 0.35)',
+      borderWidth: 1,
     },
   },
   scales: {
     x: {
       grid: { display: false },
-      ticks: { color: '#94a3b8', font: { size: 10 } },
+      ticks: { color: '#94a3b8', font: { size: 10, weight: '500' } },
       border: { display: false },
     },
     y: {
       beginAtZero: true,
-      grid: { color: 'rgba(148, 163, 184, 0.18)' },
+      grid: { color: 'rgba(249, 115, 22, 0.08)' },
       ticks: { color: '#94a3b8', font: { size: 10 } },
       border: { display: false },
     },
+  },
+};
+
+export const DASH_CHART_COLORS = {
+  line: {
+    border: '#ea580c',
+    fill: 'rgba(249, 115, 22, 0.12)',
+    point: '#f97316',
+  },
+  bar: {
+    fill: 'rgba(249, 115, 22, 0.88)',
+    hover: 'rgba(234, 88, 12, 1)',
   },
 };

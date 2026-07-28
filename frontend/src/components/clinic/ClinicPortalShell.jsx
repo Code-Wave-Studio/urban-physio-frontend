@@ -61,8 +61,8 @@ function ClinicPortalShellInner({ children, title, subtitle, actions }) {
             onClick={() => setSwitchOpen(true)}
             className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition shrink-0 ${
               isAdminMode
-                ? 'bg-violet-50 text-violet-800 border-violet-200'
-                : 'bg-teal-50 text-teal-800 border-teal-200'
+                ? 'bg-primary-50 text-primary-800 border-primary-200'
+                : 'bg-orange-50 text-orange-900 border-orange-200'
             }`}
             title="Switch portal role"
           >
@@ -140,15 +140,13 @@ export function ClinicQuickActions({ isAdmin }) {
   ];
   const items = isAdmin ? [...reception, ...admin] : reception;
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+    <div className="dash-quick-grid">
       {items.map((a) => (
-        <Link
-          key={a.label}
-          to={a.to}
-          className="glass-card !p-3 text-center hover:border-teal-300 transition min-w-0"
-        >
-          <FaIcon icon={a.icon} className="text-teal-600 mb-1" />
-          <p className="text-xs font-medium text-slate-700 leading-snug">{a.label}</p>
+        <Link key={a.label} to={a.to} className="dash-quick-action group">
+          <span className="dash-quick-action-icon">
+            <FaIcon icon={a.icon} />
+          </span>
+          <p className="dash-quick-action-label">{a.label}</p>
         </Link>
       ))}
     </div>

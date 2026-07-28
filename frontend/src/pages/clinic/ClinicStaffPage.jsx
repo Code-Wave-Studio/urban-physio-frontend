@@ -13,6 +13,12 @@ const ROLE_OPTIONS = [
   { value: 'other', label: 'Other' },
 ];
 
+const EXTRA_PERMISSION_OPTIONS = [
+  { value: 'clinical_library.manage', label: 'Edit clinical library' },
+  { value: 'forms.manage', label: 'Manage intake form builder' },
+  { value: 'assessments.manage', label: 'Manage assessment templates' },
+];
+
 export default function ClinicStaffPage() {
   const { clinicId, isAdminMode, can, loading: boot } = useClinicPortal();
   const [staff, setStaff] = useState([]);
@@ -23,6 +29,7 @@ export default function ClinicStaffPage() {
     email: '',
     phone: '',
     staff_role: 'receptionist',
+    permissions: [],
   });
 
   const load = useCallback(async () => {
@@ -59,7 +66,7 @@ export default function ClinicStaffPage() {
       } else {
         toast.success(data?.email_sent === false ? 'Staff saved (email may have failed)' : 'Staff saved');
       }
-      setForm({ full_name: '', email: '', phone: '', staff_role: 'receptionist' });
+      setForm({ full_name: '', email: '', phone: '', staff_role: 'receptionist', permissions: [] });
       load();
     } catch (err) {
       toast.error(err.message || 'Could not save staff');
@@ -86,6 +93,20 @@ export default function ClinicStaffPage() {
       load();
     } catch (e) {
       toast.error(e.message || 'Update failed');
+    }
+  };
+
+  const togglePermission = async (row, permission) => {
+    const current = Array.isArray(row.permissions) ? row.permissions : [];
+    const next = current.includes(permission)
+      ? current.filter((p) => p !== permission)
+      : [...current, permission];
+    try {
+      await clinicPortal.updateStaff(clinicId, row.id, { permissions: next });
+      toast.success('Staff permissions updated');
+      load();
+    } catch (e) {
+      toast.error(e.message || 'Permission update failed');
     }
   };
 
@@ -135,6 +156,26 @@ export default function ClinicStaffPage() {
               <option key={o.value} value={o.value}>{o.label}</option>
             ))}
           </select>
+          <div className="sm:col-span-2 rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+            <p className="text-sm font-semibold text-slate-800 mb-2">Optional extra permissions</p>
+            <div className="grid sm:grid-cols-3 gap-2">
+              {EXTRA_PERMISSION_OPTIONS.map((opt) => (
+                <label key={opt.value} className="text-xs flex items-center gap-2 rounded-lg bg-white border border-slate-200 px-3 py-2">
+                  <input
+                    type="checkbox"
+                    checked={form.permissions.includes(opt.value)}
+                    onChange={() => setForm((f) => ({
+                      ...f,
+                      permissions: f.permissions.includes(opt.value)
+                        ? f.permissions.filter((p) => p !== opt.value)
+                        : [...f.permissions, opt.value],
+                    }))}
+                  />
+                  {opt.label}
+                </label>
+              ))}
+            </div>
+          </div>
           <button type="submit" className="btn-primary sm:col-span-2 w-full" disabled={saving || !clinicId}>
             {saving ? 'Saving…' : 'Create / invite staff'}
           </button>
@@ -171,6 +212,18 @@ export default function ClinicStaffPage() {
                         <option key={o.value} value={o.value}>{o.label}</option>
                       ))}
                     </select>
+                    <div className="flex flex-wrap gap-2">
+                      {EXTRA_PERMISSION_OPTIONS.map((opt) => (
+                        <label key={opt.value} className="text-[11px] flex items-center gap-1.5">
+                          <input
+                            type="checkbox"
+                            checked={(s.permissions || []).includes(opt.value)}
+                            onChange={() => togglePermission(s, opt.value)}
+                          />
+                          {opt.label}
+                        </label>
+                      ))}
+                    </div>
                     {Number(s.is_active) ? (
                       <button type="button" className="text-xs font-semibold text-rose-600" onClick={() => deactivate(s)}>
                         Deactivate
@@ -186,6 +239,7 @@ export default function ClinicStaffPage() {
                       <th className="px-4 py-3">Name</th>
                       <th className="px-4 py-3">Email</th>
                       <th className="px-4 py-3">Role</th>
+                      <th className="px-4 py-3">Extra permissions</th>
                       <th className="px-4 py-3">Status</th>
                       <th className="px-4 py-3" />
                     </tr>
@@ -205,6 +259,20 @@ export default function ClinicStaffPage() {
                               <option key={o.value} value={o.value}>{o.label}</option>
                             ))}
                           </select>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex flex-col gap-1">
+                            {EXTRA_PERMISSION_OPTIONS.map((opt) => (
+                              <label key={opt.value} className="text-[11px] flex items-center gap-1.5 text-slate-600">
+                                <input
+                                  type="checkbox"
+                                  checked={(s.permissions || []).includes(opt.value)}
+                                  onChange={() => togglePermission(s, opt.value)}
+                                />
+                                {opt.label}
+                              </label>
+                            ))}
+                          </div>
                         </td>
                         <td className="px-4 py-3">
                           <span className={`text-xs px-2 py-0.5 rounded-full ${Number(s.is_active) ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
