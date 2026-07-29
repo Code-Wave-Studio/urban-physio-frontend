@@ -9,7 +9,7 @@ import useClinicPortal from '../../hooks/useClinicPortal';
 import { clinicPortal, exercisePrescriptions } from '../../services/api';
 import PatientOverviewTab from '../../components/erp/PatientOverviewTab';
 import PatientTimelineTab from '../../components/erp/PatientTimelineTab';
-import PackageCard from '../../components/erp/PackageCard';
+import PackageCard from '../../components/clinic/PackageCard';
 
 const TABS = ['Overview', 'Timeline', 'Assessments', 'Packages', 'Protocols', 'Payments', 'SOAP', 'Documents', 'Reports'];
 const money = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
@@ -231,16 +231,26 @@ export default function ClinicPatientDetailPage() {
             )}
 
             {tab === 'Packages' && (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {data.packages?.map((p) => (
                   <PackageCard
                     key={p.id}
                     pkg={p}
+                    canManage={can('packages.manage')}
                     onTerminate={can('packages.manage') ? terminate : null}
-                    onRefresh={load}
+                    onReturnCredit={can('packages.manage') ? async (pkg) => {
+                      if (!window.confirm(`Return one session credit to "${pkg.package_name || 'this package'}"?`)) return;
+                      try {
+                        await clinicPortal.returnCredit(clinicId, pkg.id);
+                        toast.success('Session credit returned');
+                        load();
+                      } catch (e) {
+                        toast.error(e.message || 'Could not return credit');
+                      }
+                    } : null}
                   />
                 ))}
-                {!data.packages?.length && <Empty>No packages.</Empty>}
+                {!data.packages?.length && <Empty>No packages. Assign a catalog package or create a custom bulk session from the Packages page.</Empty>}
               </div>
             )}
 

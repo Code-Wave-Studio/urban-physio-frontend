@@ -5,6 +5,8 @@ import FaIcon from '../FaIcon';
 import { calendar } from '../../services/api';
 import CalendarDayView from './CalendarDayView';
 import CalendarAgendaView from './CalendarAgendaView';
+import { to12Hour } from '../../utils/timeFormat';
+import SlotCapacityBadge from './SlotCapacityBadge';
 
 const TYPE_META = {
   schedule: { label: 'Available', color: 'bg-sky-100 text-sky-800 border-sky-200', dot: 'bg-sky-500', icon: 'fa-clock' },
@@ -78,9 +80,9 @@ function EventChip({ ev, onClick, dense }) {
         onClick?.(ev);
       }}
       className={`w-full text-left rounded-md border px-1.5 ${dense ? 'py-1 h-full' : 'py-0.5'} text-[10px] sm:text-[11px] font-medium leading-tight truncate hover:opacity-90 transition ${color}`}
-      title={`${ev.title}${ev.start_time ? ` · ${ev.start_time}` : ''}${ev.status ? ` · ${ev.status}` : ''}`}
+      title={`${ev.title}${ev.start_time ? ` · ${to12Hour(ev.start_time) ?? ev.start_time}` : ''}${ev.status ? ` · ${ev.status}` : ''}`}
     >
-      {!ev.all_day && ev.start_time && <span className="opacity-70 mr-1">{ev.start_time}</span>}
+      {!ev.all_day && ev.start_time && <span className="opacity-70 mr-1">{to12Hour(ev.start_time) ?? ev.start_time}</span>}
       {ev.title}
       {ev.type === 'appointment' && ev.status && (
         <span className="ml-1 opacity-70 capitalize">· {ev.status}</span>
@@ -775,7 +777,9 @@ export default function CalendarBoard({
               <div>
                 <dt className="text-[11px] uppercase text-slate-400">Time</dt>
                 <dd className="font-medium">
-                  {selected.all_day ? 'All day' : `${selected.start_time || '—'} – ${selected.end_time || '—'}`}
+                  {selected.all_day
+                    ? 'All day'
+                    : `${to12Hour(selected.start_time) || '—'} – ${to12Hour(selected.end_time) || '—'}`}
                 </dd>
               </div>
               {selected.doctor_name && (
@@ -803,6 +807,15 @@ export default function CalendarBoard({
               <p className="text-slate-600"><span className="text-slate-400">Reason:</span> {selected.meta.pain_type}</p>
             )}
             {selected.meta?.room_name && <p className="text-slate-600"><span className="text-slate-400">Room:</span> {selected.meta.room_name}</p>}
+
+            {selected.type === 'appointment' && selected.meta?.cap_enabled && (
+              <SlotCapacityBadge
+                booked={selected.meta.slot_booked ?? 0}
+                capacity={selected.meta.slot_capacity ?? 1}
+                status={selected.meta.slot_status ?? 'open'}
+                enabled={!!selected.meta.cap_enabled}
+              />
+            )}
 
             {selected.type === 'appointment' && (
               <div className="flex flex-col gap-2 pt-1">

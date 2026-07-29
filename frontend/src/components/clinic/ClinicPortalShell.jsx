@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../FaIcon';
 import ClinicRoleSwitch from './ClinicRoleSwitch';
+import HelpFeedbackFab from './HelpFeedbackFab';
 import { clinicNavFor } from '../../constants/clinicNav';
 import useClinicPortal from '../../hooks/useClinicPortal';
 import { ClinicPortalProvider } from '../../contexts/ClinicPortalContext';
@@ -113,6 +114,7 @@ function ClinicPortalShellInner({ children, title, subtitle, actions }) {
           window.dispatchEvent(new Event('clinic-role-changed'));
         }}
       />
+      <HelpFeedbackFab />
     </DashboardLayout>
   );
 }

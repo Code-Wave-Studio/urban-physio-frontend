@@ -369,6 +369,15 @@ export const payments = {
   invoice: (appointmentId) => api.get(`/payments/${appointmentId}`),
 };
 
+export const supportTickets = {
+  create: (data) => api.post('/support/tickets', data),
+  list: (params) => api.get('/support/tickets', { params }),
+  get: (id) => api.get(`/support/tickets/${id}`),
+  updateStatus: (id, data) => api.put(`/support/tickets/${id}/status`, data),
+  addNote: (id, data) => api.post(`/support/tickets/${id}/notes`, data),
+  analytics: (params) => api.get('/support/analytics', { params }),
+};
+
 export const wallet = {
   balance: () => api.get('/wallet'),
   history: (params) => api.get('/wallet/history', { params }),
@@ -774,6 +783,58 @@ export const clinicPortal = {
     api.post(`/clinic-portal/${clinicId}/packages/${packageId}/terminate`, data),
   assignPackageTemplate: (clinicId, data) =>
     api.post(`/clinic-portal/${clinicId}/packages/assign`, data),
+  // Advanced Package Management
+  packagesList: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/packages/list`, { params }),
+  packageDetail: (clinicId, pkgId) =>
+    api.get(`/clinic-portal/${clinicId}/packages/${pkgId}/detail`),
+  packagePatientSearch: (clinicId, q) =>
+    api.get(`/clinic-portal/${clinicId}/packages/patient-search`, { params: { q } }),
+  createCustomBulk: (clinicId, data) =>
+    api.post(`/clinic-portal/${clinicId}/packages/create-custom`, data),
+  returnCredit: (clinicId, pkgId) =>
+    api.post(`/clinic-portal/${clinicId}/packages/${pkgId}/return-credit`, {}),
+  completeSession: (clinicId, pkgId, data = {}) =>
+    api.post(`/clinic-portal/${clinicId}/packages/${pkgId}/complete-session`, data),
+  serviceTypes: (clinicId) =>
+    api.get(`/clinic-portal/${clinicId}/service-types`),
+  // Booking Engine
+  bookingBootstrap: (clinicId) =>
+    api.get(`/clinic-portal/${clinicId}/booking-engine/bootstrap`),
+  bookingCapacitySlots: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/booking-engine/slots`, { params }),
+  bookingServices: (clinicId) =>
+    api.get(`/clinic-portal/${clinicId}/booking-engine/services`),
+  // Notes
+  notesList: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/notes`, { params }),
+  notesGet: (clinicId, id) =>
+    api.get(`/clinic-portal/${clinicId}/notes/${id}`),
+  notesCreate: (clinicId, data) =>
+    api.post(`/clinic-portal/${clinicId}/notes`, data),
+  notesUpdate: (clinicId, id, data) =>
+    api.put(`/clinic-portal/${clinicId}/notes/${id}`, data),
+  notesDelete: (clinicId, id) =>
+    api.delete(`/clinic-portal/${clinicId}/notes/${id}`),
+  notesFolders: (clinicId) =>
+    api.get(`/clinic-portal/${clinicId}/notes/folders`),
+  notesCreateFolder: (clinicId, data) =>
+    api.post(`/clinic-portal/${clinicId}/notes/folders`, data),
+  // Advanced Invoices
+  invoicesList: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/invoices`, { params }),
+  invoicesGet: (clinicId, id) =>
+    api.get(`/clinic-portal/${clinicId}/invoices/${id}`),
+  invoicesCreate: (clinicId, data) =>
+    api.post(`/clinic-portal/${clinicId}/invoices`, data),
+  invoicesFromSource: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/invoices/from-source`, { params }),
+  invoicesSettings: (clinicId) =>
+    api.get(`/clinic-portal/${clinicId}/invoices/settings`),
+  invoicesSaveSettings: (clinicId, data) =>
+    api.put(`/clinic-portal/${clinicId}/invoices/settings`, data),
+  invoicesPay: (clinicId, id, data) =>
+    api.post(`/clinic-portal/${clinicId}/invoices/${id}/pay`, data),
   clinicalLibrary: (clinicId, params) =>
     api.get(`/clinic-portal/${clinicId}/clinical-library`, { params }),
   createLibraryEntry: (clinicId, data) => api.post(`/clinic-portal/${clinicId}/clinical-library`, data),
@@ -908,6 +969,12 @@ export const calendar = {
   createRoom: (data) => api.post('/calendar/rooms', data),
   bookRoom: (data) => api.post('/calendar/room-bookings', data),
   cancelRoomBooking: (id) => api.delete(`/calendar/room-bookings/${id}`),
+  // Slot Capacity APIs (Feature 4-14)
+  capacityCheck: (params) => api.get('/calendar/capacity/check', { params }),
+  capacityAvailability: (params) => api.get('/calendar/capacity/availability', { params }),
+  capacitySettings: (params) => api.get('/calendar/capacity/settings', { params }),
+  saveCapacitySettings: (data) => api.post('/calendar/capacity/settings', data),
+  syncSlot: (data) => api.post('/calendar/capacity/sync', data),
 };
 
 export const customSlots = {

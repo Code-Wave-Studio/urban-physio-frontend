@@ -27,12 +27,12 @@ function StatusBadge({ status }) {
   const styles = {
     offline: 'bg-slate-100 text-slate-700',
     invited: 'bg-amber-100 text-amber-800',
-    online: 'bg-emerald-100 text-emerald-800',
+    online:  'bg-emerald-100 text-emerald-800',
   };
   const labels = {
     offline: 'Offline',
     invited: 'Invited',
-    online: 'Online',
+    online:  'Online',
   };
   return (
     <span className={`text-[10px] uppercase font-bold tracking-wide px-2 py-0.5 rounded ${styles[s] || styles.online}`}>
@@ -41,12 +41,36 @@ function StatusBadge({ status }) {
   );
 }
 
+/** Shared centered modal wrapper */
+function Modal({ open, onClose, children, maxWidth = 'max-w-lg' }) {
+  if (!open) return null;
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className={`w-full ${maxWidth} bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-slate-200 overflow-hidden max-h-[92vh] overflow-y-auto`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-5">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ClinicPortalPatients() {
   const { clinicId, loading: bootLoading } = useClinicPortal();
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [q, setQ] = useState('');
+  const [rows,        setRows]        = useState([]);
+  const [loading,     setLoading]     = useState(true);
+  const [q,           setQ]           = useState('');
   const [resendingId, setResendingId] = useState(null);
+
+  // Modal state
+  const [newPatientOpen,  setNewPatientOpen]  = useState(false);
+  const [bulkInviteOpen,  setBulkInviteOpen]  = useState(false);
 
   const load = useCallback(async () => {
     if (!clinicId) return;
@@ -69,20 +93,16 @@ export default function ClinicPortalPatients() {
   }, [clinicId, load, q]);
 
   const totalVisits = rows.reduce((s, r) => s + (Number(r.visit_count) || 0), 0);
-  const invited = rows.filter((r) => r.portal_status === 'invited' || r.portal_status === 'offline').length;
-  const online = rows.filter((r) => (r.portal_status || 'online') === 'online').length;
+  const invited     = rows.filter((r) => r.portal_status === 'invited' || r.portal_status === 'offline').length;
+  const online      = rows.filter((r) => (r.portal_status || 'online') === 'online').length;
 
   const resend = async (clinicPatientId) => {
     if (!clinicId || !clinicPatientId) return;
     setResendingId(clinicPatientId);
     try {
-      const res = await clinicPortal.resendOfflinePatientInvite(clinicId, clinicPatientId);
-      const n = res?.data ?? res ?? {};
-      const channels = [
-        n.email_sent && 'email',
-        n.sms_sent && 'SMS',
-        n.whatsapp_sent && 'WhatsApp',
-      ].filter(Boolean);
+      const res      = await clinicPortal.resendOfflinePatientInvite(clinicId, clinicPatientId);
+      const n        = res?.data ?? res ?? {};
+      const channels = [n.email_sent && 'email', n.sms_sent && 'SMS', n.whatsapp_sent && 'WhatsApp'].filter(Boolean);
       toast.success(channels.length ? `Resent via ${channels.join(', ')}` : 'Resend attempted');
     } catch (e) {
       toast.error(e.message || 'Resend failed');
@@ -91,13 +111,42 @@ export default function ClinicPortalPatients() {
     }
   };
 
+  const handlePatientCreated = (data) => {
+    setNewPatientOpen(false);
+    load();
+  };
+
   return (
     <ClinicPortalShell
       title="Patients"
       subtitle="Walk-in (offline) patients, invites, and people who booked at your clinic"
       actions={
         <div className="portal-page-actions">
-          <Link to="/clinic-portal/search" className="btn-outline inline-flex items-center gap-2">
+          {/* New Patient button */}
+          <button
+            type="button"
+            className="btn-primary text-sm"
+            onClick={() => setNewPatientOpen(true)}
+          >
+            <FaIcon icon="fa-user-plus" className="mr-1.5" />
+            <span className="hidden sm:inline">New Patient</span>
+            <span className="sm:hidden">New</span>
+          </button>
+
+          {/* Bulk Invite button */}
+          <button
+            type="button"
+            className="btn-outline text-sm"
+            onClick={() => setBulkInviteOpen(true)}
+            disabled={!clinicId || bootLoading}
+          >
+            <FaIcon icon="fa-envelope-open-text" className="mr-1.5" />
+            <span className="hidden sm:inline">Bulk Invite</span>
+            <span className="sm:hidden">Invite</span>
+          </button>
+
+          {/* Advanced Search */}
+          <Link to="/clinic-portal/search" className="btn-outline text-sm inline-flex items-center gap-2">
             <FaIcon icon="fa-magnifying-glass-plus" />
             <span className="hidden sm:inline">Advanced search</span>
             <span className="sm:hidden">Search</span>
@@ -106,6 +155,8 @@ export default function ClinicPortalPatients() {
       }
     >
       <div className="space-y-4 sm:space-y-5">
+
+        {/* KPI cards */}
         <div className="portal-kpi-grid">
           <div className="glass-card !p-3 sm:!p-4 min-w-0">
             <p className="text-xs text-slate-500">On roster</p>
@@ -125,16 +176,7 @@ export default function ClinicPortalPatients() {
           </div>
         </div>
 
-        <ClinicOfflinePatientForm clinicId={clinicId} onCreated={() => load()} />
-
-        <BulkInvitePanel
-          title="Bulk invite patients"
-          description="Paste up to 50 contacts. New patients get an account + temporary password by email and SMS; existing patients get a sign-in reminder."
-          roleLabel="patient"
-          disabled={!clinicId || bootLoading}
-          onSubmit={(contacts) => clinicPortal.bulkInvitePatients(clinicId, { contacts })}
-        />
-
+        {/* Search */}
         <div className="glass-card !p-3 sm:!p-4">
           <div className="portal-toolbar">
             <input
@@ -149,16 +191,26 @@ export default function ClinicPortalPatients() {
           </div>
         </div>
 
+        {/* Patient table */}
         <div className="glass-card !p-0 overflow-hidden">
           {bootLoading || loading ? (
             <div className="h-40 animate-pulse bg-slate-100 m-4 rounded-xl" />
           ) : !rows.length ? (
-            <div className="px-4 py-12 text-center text-slate-500">
+            <div className="px-4 py-12 text-center">
               <FaIcon icon="fa-users" className="text-3xl text-slate-300 mb-2" />
-              <p>No patients yet — add a walk-in or wait for bookings.</p>
+              <p className="text-slate-500">No patients yet.</p>
+              <button
+                type="button"
+                className="btn-primary mt-4 text-sm"
+                onClick={() => setNewPatientOpen(true)}
+              >
+                <FaIcon icon="fa-user-plus" className="mr-1.5" />
+                Add first patient
+              </button>
             </div>
           ) : (
             <>
+              {/* Mobile cards */}
               <div className="portal-mobile-list">
                 {rows.map((p) => {
                   const key = p.clinic_patient_id ? `cp-${p.clinic_patient_id}` : `p-${p.patient_id}`;
@@ -170,10 +222,15 @@ export default function ClinicPortalPatients() {
                             {(p.patient_name || 'P').slice(0, 1).toUpperCase()}
                           </div>
                           <div className="min-w-0">
-                            <Link to={`/clinic-portal/patients/${key}`} className="font-semibold text-slate-900 hover:text-teal-700 truncate block">
+                            <Link
+                              to={`/clinic-portal/patients/${key}`}
+                              className="font-semibold text-slate-900 hover:text-teal-700 truncate block"
+                            >
                               {p.patient_name || 'Patient'}
                             </Link>
-                            {p.last_visit && <p className="text-[11px] text-slate-400">Last visit {formatDate(p.last_visit)}</p>}
+                            {p.last_visit && (
+                              <p className="text-[11px] text-slate-400">Last visit {formatDate(p.last_visit)}</p>
+                            )}
                           </div>
                         </div>
                         <StatusBadge status={p.portal_status} />
@@ -207,6 +264,8 @@ export default function ClinicPortalPatients() {
                   );
                 })}
               </div>
+
+              {/* Desktop table */}
               <div className="portal-desktop-table portal-table-wrap">
                 <table className="w-full text-sm">
                   <thead className="text-[11px] uppercase tracking-wide text-slate-500 bg-slate-50/80 text-left">
@@ -227,11 +286,14 @@ export default function ClinicPortalPatients() {
                         <tr key={key} className="border-t border-slate-100 hover:bg-teal-50/30">
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
-                              <div className="w-9 h-9 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold">
+                              <div className="w-9 h-9 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold shrink-0">
                                 {(p.patient_name || 'P').slice(0, 1).toUpperCase()}
                               </div>
                               <div>
-                                <Link to={`/clinic-portal/patients/${key}`} className="font-medium text-slate-900 hover:text-teal-700 hover:underline">
+                                <Link
+                                  to={`/clinic-portal/patients/${key}`}
+                                  className="font-medium text-slate-900 hover:text-teal-700 hover:underline"
+                                >
                                   {p.patient_name || 'Patient'}
                                 </Link>
                                 {p.last_visit && (
@@ -251,13 +313,9 @@ export default function ClinicPortalPatients() {
                             {p.package_name ? (
                               <>
                                 <p className="font-medium text-slate-800">{p.package_name}</p>
-                                <p>
-                                  {Number(p.package_completed || 0)}/{Number(p.package_sessions || 0)} sessions
-                                </p>
+                                <p>{Number(p.package_completed || 0)}/{Number(p.package_sessions || 0)} sessions</p>
                               </>
-                            ) : (
-                              '—'
-                            )}
+                            ) : '—'}
                           </td>
                           <td className="px-4 py-3 font-semibold">{p.visit_count || 0}</td>
                           <td className="px-4 py-3 font-medium text-emerald-700">{money(p.total_spent)}</td>
@@ -286,6 +344,47 @@ export default function ClinicPortalPatients() {
           )}
         </div>
       </div>
+
+      {/* ── New Patient Modal ── */}
+      <Modal open={newPatientOpen} onClose={() => setNewPatientOpen(false)}>
+        <ClinicOfflinePatientForm
+          clinicId={clinicId}
+          onCreated={handlePatientCreated}
+          onClose={() => setNewPatientOpen(false)}
+        />
+      </Modal>
+
+      {/* ── Bulk Invite Modal ── */}
+      <Modal open={bulkInviteOpen} onClose={() => setBulkInviteOpen(false)} maxWidth="max-w-xl">
+        {/* Modal header */}
+        <div className="flex items-center justify-between gap-2 pb-3 mb-4 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <span className="w-9 h-9 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0">
+              <FaIcon icon="fa-envelope-open-text" />
+            </span>
+            <div>
+              <h2 className="font-bold text-slate-900 text-sm">Bulk Invite Patients</h2>
+              <p className="text-xs text-slate-500">Paste up to 50 contacts to invite at once</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setBulkInviteOpen(false)}
+            className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 shrink-0"
+            aria-label="Close"
+          >
+            <FaIcon icon="fa-xmark" />
+          </button>
+        </div>
+
+        <BulkInvitePanel
+          title=""
+          description="New patients get an account + temporary password by email and SMS; existing patients get a sign-in reminder."
+          roleLabel="patient"
+          disabled={!clinicId || bootLoading}
+          onSubmit={(contacts) => clinicPortal.bulkInvitePatients(clinicId, { contacts })}
+        />
+      </Modal>
     </ClinicPortalShell>
   );
 }

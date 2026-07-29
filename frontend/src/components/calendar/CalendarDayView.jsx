@@ -1,4 +1,5 @@
 import FaIcon from '../FaIcon';
+import { to12Hour } from '../../utils/timeFormat';
 
 const HOURS = Array.from({ length: 15 }, (_, i) => i + 7); // 7:00 – 21:00
 
@@ -7,6 +8,13 @@ function parseMinutes(t) {
   const [h, m] = String(t).slice(0, 5).split(':').map(Number);
   if (Number.isNaN(h)) return null;
   return h * 60 + (m || 0);
+}
+
+/** Format hour number (7-21) to 12h label e.g. 7 → "7 AM", 13 → "1 PM" */
+function hourLabel(h) {
+  const period = h < 12 ? 'AM' : 'PM';
+  const h12    = h % 12 === 0 ? 12 : h % 12;
+  return `${h12} ${period}`;
 }
 
 /**
@@ -77,7 +85,7 @@ export default function CalendarDayView({
               style={{ top: (h - 7) * 56, height: 56 }}
             >
               <span className="w-14 shrink-0 text-[10px] text-slate-400 font-semibold pl-2 pt-1">
-                {String(h).padStart(2, '0')}:00
+                {hourLabel(h)}
               </span>
               <div className="flex-1 border-l border-slate-50" />
             </div>

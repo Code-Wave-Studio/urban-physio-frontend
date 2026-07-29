@@ -1,4 +1,24 @@
 import FaIcon from '../FaIcon';
+import { to12Hour } from '../../utils/timeFormat';
+import SlotCapacityBadge from './SlotCapacityBadge';
+
+const STATUS_COLORS = {
+  available:  'bg-emerald-100 text-emerald-800',
+  confirmed:  'bg-teal-100 text-teal-800',
+  completed:  'bg-slate-100 text-slate-700',
+  cancelled:  'bg-rose-100 text-rose-700',
+  no_show:    'bg-orange-100 text-orange-800',
+  full:       'bg-red-100 text-red-700',
+};
+
+function StatusBadge({ status }) {
+  const cls = STATUS_COLORS[status] || 'bg-slate-100 text-slate-600';
+  return (
+    <span className={`text-[10px] font-bold uppercase rounded-full px-2 py-0.5 ${cls}`}>
+      {status?.replace(/_/g, ' ')}
+    </span>
+  );
+}
 
 const TYPE_DOT = {
   schedule: 'bg-sky-500',
@@ -88,15 +108,27 @@ export default function CalendarAgendaView({
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                           <p className="text-sm font-semibold text-slate-900 truncate">{ev.title}</p>
                           {ev.status && (
-                            <span className="text-[10px] uppercase font-bold text-slate-500 capitalize">{ev.status}</span>
+                            <StatusBadge status={ev.status} />
                           )}
                         </div>
                         <p className="text-xs text-slate-500 mt-0.5">
-                          {ev.all_day ? 'All day' : `${ev.start_time || '—'} – ${ev.end_time || '—'}`}
+                          {ev.all_day
+                            ? 'All day'
+                            : `${to12Hour(ev.start_time) || '—'} – ${to12Hour(ev.end_time) || '—'}`}
                           {ev.doctor_name ? ` · ${ev.doctor_name}` : ''}
                           {ev.meta?.consultation_type ? ` · ${String(ev.meta.consultation_type).replace(/_/g, ' ')}` : ''}
-                          {ev.meta?.room_name ? ` · ${ev.meta.room_name}` : ''}
                         </p>
+                        {ev.type === 'appointment' && ev.meta?.cap_enabled && (
+                          <div className="mt-1.5">
+                            <SlotCapacityBadge
+                              booked={ev.meta.slot_booked ?? 0}
+                              capacity={ev.meta.slot_capacity ?? 1}
+                              status={ev.meta.slot_status ?? 'open'}
+                              enabled={!!ev.meta.cap_enabled}
+                              compact
+                            />
+                          </div>
+                        )}
                       </div>
                       <FaIcon icon="fa-chevron-right" className="text-slate-300 text-xs mt-1 shrink-0" />
                     </button>
