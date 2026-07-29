@@ -966,6 +966,55 @@ export const exercises = {
   get: (slug) => api.get(`/exercises/${slug}`),
 };
 
+// ─── ERP APIs ────────────────────────────────────────────────────────────────
+
+export const erpPatient = {
+  getOverview: (patientKey) => api.get(`/erp/patients/${patientKey}/overview`),
+  updateOverview: (patientKey, data) => api.put(`/erp/patients/${patientKey}/overview`, data),
+  getTimeline: (patientKey, params) => api.get(`/erp/patients/${patientKey}/timeline`, { params }),
+  addTimelineEvent: (patientKey, data) => api.post(`/erp/patients/${patientKey}/timeline`, data),
+  updateTimelineEvent: (patientKey, id, data) => api.put(`/erp/patients/${patientKey}/timeline/${id}`, data),
+  deleteTimelineEvent: (patientKey, id) => api.delete(`/erp/patients/${patientKey}/timeline/${id}`),
+};
+
+export const erpAssessments = {
+  listTemplates: (params) => api.get('/erp/assessments/templates', { params }),
+  createTemplate: (data) => api.post('/erp/assessments/templates', data),
+  getTemplate: (id) => api.get(`/erp/assessments/templates/${id}`),
+  updateTemplate: (id, data) => api.put(`/erp/assessments/templates/${id}`, data),
+  deleteTemplate: (id) => api.delete(`/erp/assessments/templates/${id}`),
+  duplicateTemplate: (id) => api.post(`/erp/assessments/templates/${id}/duplicate`),
+  getVersionHistory: (id) => api.get(`/erp/assessments/templates/${id}/versions`),
+  restoreVersion: (templateId, versionId) => api.post(`/erp/assessments/templates/${templateId}/versions/${versionId}/restore`),
+  listResponses: (params) => api.get('/erp/assessments/responses', { params }),
+  createResponse: (data) => api.post('/erp/assessments/responses', data),
+  getResponse: (id) => api.get(`/erp/assessments/responses/${id}`),
+  updateResponse: (id, data) => api.put(`/erp/assessments/responses/${id}`, data),
+  sendOtp: (id, data) => api.post(`/erp/assessments/responses/${id}/otp/send`, data),
+  verifyOtp: (id, data) => api.post(`/erp/assessments/responses/${id}/otp/verify`, data),
+  listChips: (params) => api.get('/erp/assessments/chips', { params }),
+  createChip: (data) => api.post('/erp/assessments/chips', data),
+  updateChip: (id, data) => api.put(`/erp/assessments/chips/${id}`, data),
+  deleteChip: (id) => api.delete(`/erp/assessments/chips/${id}`),
+};
+
+export const erpProtocols = {
+  listTemplates: (params) => api.get('/erp/protocols/templates', { params }),
+  createTemplate: (data) => api.post('/erp/protocols/templates', data),
+  getTemplate: (id) => api.get(`/erp/protocols/templates/${id}`),
+  updateTemplate: (id, data) => api.put(`/erp/protocols/templates/${id}`, data),
+  deleteTemplate: (id) => api.delete(`/erp/protocols/templates/${id}`),
+  duplicateTemplate: (id) => api.post(`/erp/protocols/templates/${id}/duplicate`),
+  getVersionHistory: (id) => api.get(`/erp/protocols/templates/${id}/versions`),
+  listPatientProtocols: (params) => api.get('/erp/protocols/patient', { params }),
+  createPatientProtocol: (data) => api.post('/erp/protocols/patient', data),
+  getPatientProtocol: (id) => api.get(`/erp/protocols/patient/${id}`),
+  updatePatientProtocol: (id, data) => api.put(`/erp/protocols/patient/${id}`, data),
+  shareProtocol: (id, data) => api.post(`/erp/protocols/patient/${id}/share`, data),
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const exercisePrescriptions = {
   list: (params) => api.get('/exercise-prescriptions', { params }),
   get: (id) => api.get(`/exercise-prescriptions/${id}`),

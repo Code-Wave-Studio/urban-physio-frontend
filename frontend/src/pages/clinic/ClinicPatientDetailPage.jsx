@@ -7,6 +7,9 @@ import ClinicBookingModal from '../../components/clinic/ClinicBookingModal';
 import RichSessionCard from '../../components/RichSessionCard';
 import useClinicPortal from '../../hooks/useClinicPortal';
 import { clinicPortal, exercisePrescriptions } from '../../services/api';
+import PatientOverviewTab from '../../components/erp/PatientOverviewTab';
+import PatientTimelineTab from '../../components/erp/PatientTimelineTab';
+import PackageCard from '../../components/erp/PackageCard';
 
 const TABS = ['Overview', 'Timeline', 'Assessments', 'Packages', 'Protocols', 'Payments', 'SOAP', 'Documents', 'Reports'];
 const money = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
@@ -195,48 +198,11 @@ export default function ClinicPatientDetailPage() {
 
           <section className="glass-card !p-3 sm:!p-4 md:!p-5 min-w-0">
             {tab === 'Overview' && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                <div>
-                  <h2 className="font-bold mb-3">Patient details</h2>
-                  <KeyValues
-                    data={{
-                      phone: profile.phone,
-                      email: profile.email,
-                      gender: profile.gender,
-                      date_of_birth: profile.date_of_birth,
-                      blood_group: profile.blood_group,
-                      address: profile.address,
-                    }}
-                  />
-                </div>
-                <div>
-                  <h2 className="font-bold mb-3">Care team</h2>
-                  {data.assigned_doctors?.length
-                    ? data.assigned_doctors.map((d) => (
-                      <div key={d.id} className="border-b py-2">
-                        <p className="font-medium">{d.name}</p>
-                        <p className="text-xs text-slate-500">{d.specialization}</p>
-                      </div>
-                    ))
-                    : <Empty>No assigned doctors.</Empty>}
-                </div>
-              </div>
+              <PatientOverviewTab patientKey={data.patient_key || patientKey} initialData={data._erpOverview} />
             )}
 
             {tab === 'Timeline' && (
-              <div className="space-y-3">
-                {timeline.map((event, index) => (
-                  <div key={`${event.appointment?.id}-${index}`} className="border-l-2 border-teal-200 pl-4 py-1">
-                    <p className="text-sm font-semibold capitalize">
-                      {String(event.type || event.event || 'appointment').replace(/_/g, ' ')}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {event.at || event.created_at || event.appointment?.appointment_date} · {event.appointment?.booking_id}
-                    </p>
-                  </div>
-                ))}
-                {!timeline.length && <Empty>No timeline events.</Empty>}
-              </div>
+              <PatientTimelineTab patientKey={data.patient_key || patientKey} />
             )}
 
             {tab === 'Assessments' && (
@@ -267,30 +233,12 @@ export default function ClinicPatientDetailPage() {
             {tab === 'Packages' && (
               <div className="space-y-4">
                 {data.packages?.map((p) => (
-                  <div key={p.id} className="rounded-2xl border border-slate-100 p-4 space-y-3">
-                    <div className="flex justify-between gap-3">
-                      <div>
-                        <p className="font-semibold">{p.package_name || p.name || 'Package'}</p>
-                        <p className="text-xs text-slate-500">
-                          {p.completed_sessions || 0}/{p.total_sessions || 0} sessions · <span className="capitalize">{p.status}</span>
-                        </p>
-                      </div>
-                      {can('packages.manage') && !['terminated', 'completed'].includes(p.status) && (
-                        <button type="button" className="text-xs text-rose-600 font-semibold" onClick={() => terminate(p)}>
-                          Terminate
-                        </button>
-                      )}
-                    </div>
-                    {(p.sessions || []).length > 0 ? (
-                      <div className="space-y-3">
-                        {p.sessions.map((s, idx) => (
-                          <RichSessionCard key={s.id || idx} session={s} index={idx} />
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-slate-400">No linked session appointments yet.</p>
-                    )}
-                  </div>
+                  <PackageCard
+                    key={p.id}
+                    pkg={p}
+                    onTerminate={can('packages.manage') ? terminate : null}
+                    onRefresh={load}
+                  />
                 ))}
                 {!data.packages?.length && <Empty>No packages.</Empty>}
               </div>

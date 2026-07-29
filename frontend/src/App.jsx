@@ -46,6 +46,9 @@ import ClinicAvailabilityPage from './pages/clinic/ClinicAvailabilityPage';
 import ClinicQrPage from './pages/clinic/ClinicQrPage';
 import ClinicFormsPage from './pages/clinic/ClinicFormsPage';
 import ClinicPatientDetailPage from './pages/clinic/ClinicPatientDetailPage';
+import ClinicAssessmentBuilderPage from './pages/clinic/ClinicAssessmentBuilderPage';
+import ClinicProtocolBuilderPage from './pages/clinic/ClinicProtocolBuilderPage';
+import ClinicSuggestionChipsPage from './pages/clinic/ClinicSuggestionChipsPage';
 import ClinicNotificationsManagePage from './pages/clinic/ClinicNotificationsManagePage';
 import ClinicQrIntakePage from './pages/public/ClinicQrIntakePage';
 import ClinicProgressPublicPage from './pages/public/ClinicProgressPublicPage';
@@ -317,6 +320,11 @@ export default function App() {
       <Route path="/clinic-portal/clinical-library" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicClinicalLibraryPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/qr" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicQrPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/forms" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicFormsPage /></ProtectedRoute>} />
+      <Route path="/clinic-portal/settings/assessments" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicAssessmentBuilderPage /></ProtectedRoute>} />
+      <Route path="/clinic-portal/settings/assessments/:templateId" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicAssessmentBuilderPage /></ProtectedRoute>} />
+      <Route path="/clinic-portal/settings/protocols" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicProtocolBuilderPage /></ProtectedRoute>} />
+      <Route path="/clinic-portal/settings/protocols/:templateId" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicProtocolBuilderPage /></ProtectedRoute>} />
+      <Route path="/clinic-portal/settings/suggestion-chips" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicSuggestionChipsPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/profile" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicPortalProfile /></ProtectedRoute>} />
       <Route path="/clinic-portal/notifications" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><NotificationsPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/notifications/manage" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicNotificationsManagePage /></ProtectedRoute>} />

@@ -43,6 +43,9 @@ export const CLINIC_ADMIN_NAV = [
   { to: '/clinic-portal/earnings', label: 'Finance', icon: 'fa-sack-dollar', perm: 'earnings.view', section: 'settings' },
   { to: '/clinic-portal/clinical-library', label: 'Clinical Library', icon: 'fa-book-medical', anyPerm: ['clinical_library.view', 'clinical_library.manage', 'profile.manage'], section: 'settings' },
   { to: '/clinic-portal/forms', label: 'Intake Form Builder', icon: 'fa-list-check', perm: 'forms.manage', section: 'settings' },
+  { to: '/clinic-portal/settings/assessments', label: 'Digital Assessment', icon: 'fa-clipboard-list', perm: 'forms.manage', section: 'settings' },
+  { to: '/clinic-portal/settings/protocols', label: 'Treatment Protocols', icon: 'fa-notes-medical', perm: 'forms.manage', section: 'settings' },
+  { to: '/clinic-portal/settings/suggestion-chips', label: 'Suggestion Chips', icon: 'fa-tags', perm: 'forms.manage', section: 'settings' },
   { to: '/clinic-portal/qr', label: 'Clinic QR', icon: 'fa-qrcode', perm: 'qr.view', section: 'settings' },
   { to: '/clinic-portal/notifications/manage', label: 'Notification Setup', icon: 'fa-bullhorn', perm: 'notifications.manage', section: 'settings' },
 ];
