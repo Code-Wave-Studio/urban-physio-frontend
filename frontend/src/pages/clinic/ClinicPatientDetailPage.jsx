@@ -35,8 +35,17 @@ function KeyValues({ data }) {
   );
 }
 
+/** Normalize cp_1 / p_2 → cp-1 / p-2 (hyphen is the canonical key). */
+function normalizePatientKey(raw) {
+  const key = String(raw || '').trim();
+  const m = key.match(/^(cp|p)[_-](\d+)$/i);
+  if (m) return `${m[1].toLowerCase()}-${m[2]}`;
+  return key;
+}
+
 export default function ClinicPatientDetailPage() {
-  const { patientKey } = useParams();
+  const { patientKey: rawPatientKey } = useParams();
+  const patientKey = normalizePatientKey(rawPatientKey);
   const { clinicId, can, loading: boot } = useClinicPortal();
   const [data, setData] = useState(null);
   const [templates, setTemplates] = useState([]);
