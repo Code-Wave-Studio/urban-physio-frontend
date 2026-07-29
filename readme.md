@@ -34,7 +34,7 @@ The app communicates with a REST API backend and is optimized for performance, a
 | 🩺 **Doctor Dashboard** | Appointments, patients, clinics, availability, earnings, emergency queue, and prescriptions |
 | 🏥 **Clinic Profiles** | Rich clinic pages with gallery, reviews, facilities, doctors, and quick actions |
 | 📅 **Appointment Booking** | Multi-step booking wizard with slot selection, coupons, and policy acceptance |
-| 💻 **Online Consultation** | Book virtual physiotherapy sessions with verified providers |
+| 💻 **Online Consultation** | Zoom Server-to-Server OAuth video meetings with join/start links |
 | 🏠 **Home Visit Booking** | Schedule home-based physiotherapy with location and condition details |
 | 🏨 **Clinic Visit Booking** | In-clinic appointments with real-time slot previews |
 | 🔐 **Google Login** | OAuth sign-in via `@react-oauth/google` |
@@ -200,6 +200,32 @@ The production site is served globally via Cloudflare’s CDN for low latency an
 - Lazy-friendly route structure and lightweight API client patterns
 - Image and media URL helpers for optimized asset loading
 - Cloudflare edge caching for HTML, JS, CSS, and static files
+
+---
+
+## Zoom video consultations (backend)
+
+Online appointments use **Zoom Server-to-Server OAuth** (no frontend secrets).
+
+1. Create a Server-to-Server OAuth app in the [Zoom Marketplace](https://marketplace.zoom.us/).
+2. Add meeting scopes (e.g. `meeting:write:admin`, `meeting:read:admin`).
+3. Copy Account ID, Client ID, and Client Secret into `backend/.env`:
+
+```env
+ZOOM_ENABLED=true
+ZOOM_ACCOUNT_ID=...
+ZOOM_CLIENT_ID=...
+ZOOM_CLIENT_SECRET=...
+```
+
+4. Optional SQL migration: `backend/api/migrations/2026_07_28_zoom_meetings.sql`  
+   (columns are also auto-created by `ZoomMeetingHelper::ensureSchema`.)
+
+5. Flow: patient books → doctor/admin confirms (or payment confirms) → backend creates Zoom meeting → join/start URLs saved → emails sent → Join/Start buttons appear.
+
+Admin UI: `/admin/zoom` (meetings + API logs).
+
+See also `backend/.env.example`.
 
 ---
 

@@ -38,18 +38,36 @@ export default function ClinicTeamPage() {
     if (!clinicId) return;
     setLoading(true);
     try {
-      const [a, p, o] = await Promise.all([
+      const [a, p, o] = await Promise.allSettled([
         clinicPortal.doctorAvailability(clinicId),
         clinicPortal.payouts(clinicId),
         clinicPortal.overview(clinicId),
       ]);
-      setAvailability(a.data || a || []);
-      setPayouts(p.data || p || []);
-      const overview = o.data || o || {};
-      setClosed(Boolean(Number(overview.clinic?.is_closed ?? overview.is_closed)));
-      setReason(overview.clinic?.closure_reason || overview.closure_reason || '');
-    } catch (error) { toast.error(error.message || 'Could not load team settings'); }
-    finally { setLoading(false); }
+      if (a.status === 'fulfilled') {
+        const av = a.value;
+        setAvailability(av.data || av || []);
+      } else {
+        setAvailability([]);
+      }
+      if (p.status === 'fulfilled') {
+        const pv = p.value;
+        setPayouts(pv.data || pv || []);
+      } else {
+        setPayouts([]);
+      }
+      if (o.status === 'fulfilled') {
+        const overview = o.value.data || o.value || {};
+        setClosed(Boolean(Number(overview.clinic?.is_closed ?? overview.is_closed)));
+        setReason(overview.clinic?.closure_reason || overview.closure_reason || '');
+      }
+      if (a.status === 'rejected' && p.status === 'rejected' && o.status === 'rejected') {
+        toast.error('Could not load team settings');
+      }
+    } catch (error) {
+      toast.error(error.message || 'Could not load team settings');
+    } finally {
+      setLoading(false);
+    }
   }, [clinicId]);
 
   useEffect(() => { if (clinicId && isAdminMode) load(); }, [clinicId, isAdminMode, load]);

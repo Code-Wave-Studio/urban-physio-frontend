@@ -36,14 +36,28 @@ export default function ClinicPortalEarnings() {
     if (!clinicId) return;
     setLoading(true);
     try {
-      const [res, priceRes, creditRes] = await Promise.all([
+      const [earningsSettled, priceSettled, creditSettled] = await Promise.allSettled([
         clinicPortal.earnings(clinicId),
         clinicPortal.getModePrices(clinicId),
         clinicPortal.financeCredits(clinicId),
       ]);
-      setData(res.data || res);
-      setModePrices((old) => ({ ...old, ...(priceRes.data || priceRes || {}) }));
-      setCreditData(creditRes.data || creditRes || { summary: {}, rows: [] });
+      if (earningsSettled.status === 'fulfilled') {
+        const res = earningsSettled.value;
+        setData(res.data || res);
+      } else {
+        toast.error(earningsSettled.reason?.message || 'Failed to load earnings');
+        setData(null);
+      }
+      if (priceSettled.status === 'fulfilled') {
+        const priceRes = priceSettled.value;
+        setModePrices((old) => ({ ...old, ...(priceRes.data || priceRes || {}) }));
+      }
+      if (creditSettled.status === 'fulfilled') {
+        const creditRes = creditSettled.value;
+        setCreditData(creditRes.data || creditRes || { summary: {}, rows: [] });
+      } else {
+        setCreditData({ summary: {}, rows: [] });
+      }
     } catch (e) {
       toast.error(e.message || 'Failed to load earnings');
       setData(null);
