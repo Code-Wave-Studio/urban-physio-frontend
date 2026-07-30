@@ -46,6 +46,7 @@ export const CLINIC_ADMIN_NAV = [
   { to: '/clinic-portal/team', label: 'My Team', icon: 'fa-user-group', anyPerm: ['doctors.manage', 'staff.manage'], section: 'settings' },
   { to: '/clinic-portal/create-package', label: 'Package Catalog', icon: 'fa-boxes-stacked', perm: 'packages.manage', section: 'settings' },
   { to: '/clinic-portal/earnings', label: 'Finance', icon: 'fa-sack-dollar', perm: 'earnings.view', section: 'settings' },
+  { to: '/clinic-portal/settings/support', label: 'Support Center', icon: 'fa-life-ring', perm: 'dashboard.admin', section: 'settings' },
   { to: '/clinic-portal/clinical-library', label: 'Clinical Library', icon: 'fa-book-medical', anyPerm: ['clinical_library.view', 'clinical_library.manage', 'profile.manage'], section: 'settings' },
   { to: '/clinic-portal/forms', label: 'Intake Form Builder', icon: 'fa-list-check', perm: 'forms.manage', section: 'settings' },
   { to: '/clinic-portal/settings/assessments', label: 'Digital Assessment', icon: 'fa-clipboard-list', perm: 'forms.manage', section: 'settings' },

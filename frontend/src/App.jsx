@@ -52,6 +52,7 @@ import ClinicProtocolBuilderPage from './pages/clinic/ClinicProtocolBuilderPage'
 import ClinicSuggestionChipsPage from './pages/clinic/ClinicSuggestionChipsPage';
 import ClinicNotificationsManagePage from './pages/clinic/ClinicNotificationsManagePage';
 import ClinicNotesPage from './pages/clinic/ClinicNotesPage';
+import ClinicSupportCenterPage from './pages/clinic/ClinicSupportCenterPage';
 import AdminSupportCenterPage from './pages/admin/AdminSupportCenterPage';
 import ClinicInvoiceGeneratorPage from './pages/clinic/ClinicInvoiceGeneratorPage';
 import ClinicQrIntakePage from './pages/public/ClinicQrIntakePage';
@@ -317,6 +318,7 @@ export default function App() {
       <Route path="/clinic-portal/billing" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicBillingPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/invoices" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicInvoiceGeneratorPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/notes" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicNotesPage /></ProtectedRoute>} />
+      <Route path="/clinic-portal/settings/support" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicSupportCenterPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/search" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicAdvancedSearchPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/calendar" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicCalendarPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/availability" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicAvailabilityPage /></ProtectedRoute>} />
