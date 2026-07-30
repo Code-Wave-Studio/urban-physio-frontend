@@ -386,8 +386,8 @@ export default function AdminUserDetailPanel({
       {recent.length > 0 && (
         <div>
           <h4 className="text-sm font-semibold text-slate-800 mb-2">Recent appointments</h4>
-          <div className="rounded-xl border border-slate-200 overflow-hidden bg-white">
-            <table className="w-full text-sm">
+          <div className="rounded-xl border border-slate-200 overflow-x-auto bg-white">
+            <table className="w-full text-sm min-w-[34rem]">
               <thead className="bg-slate-50 text-slate-500 text-left">
                 <tr>
                   <th className="px-3 py-2 font-medium">Booking</th>

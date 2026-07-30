@@ -11,9 +11,15 @@ export default function AdminBadges() {
   const [clinics, setClinics] = useState([]);
   const [form, setForm] = useState({ name: '', description: '', icon: 'fa-award', color: 'orange', entity_type: 'both' });
   const [assign, setAssign] = useState({ doctor_id: '', clinic_id: '', badge_id: '' });
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(() => {
-    admin.badgesList().then((r) => setList(r.data || [])).catch((e) => toast.error(e.message));
+    setLoading(true);
+    admin
+      .badgesList()
+      .then((r) => setList(r.data || []))
+      .catch((e) => toast.error(e.message || 'Failed to load badges'))
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -159,15 +165,21 @@ export default function AdminBadges() {
         </div>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-        {list.map((b) => (
-          <article key={b.id} className="glass-card p-4">
-            <p className="font-bold">{b.name}</p>
-            <p className="text-xs text-slate-500 capitalize mt-1">{b.entity_type} · {b.color}</p>
-            <p className="text-sm text-slate-600 mt-2">{b.description}</p>
-          </article>
-        ))}
-      </div>
+      {loading && <p className="glass-card p-4 mt-6 text-sm text-slate-500">Loading badges…</p>}
+      {!loading && list.length === 0 && (
+        <p className="glass-card p-4 mt-6 text-sm text-slate-500">No badges created yet.</p>
+      )}
+      {!loading && list.length > 0 && (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+          {list.map((b) => (
+            <article key={b.id} className="glass-card p-4">
+              <p className="font-bold">{b.name}</p>
+              <p className="text-xs text-slate-500 capitalize mt-1">{b.entity_type} · {b.color}</p>
+              <p className="text-sm text-slate-600 mt-2">{b.description}</p>
+            </article>
+          ))}
+        </div>
+      )}
     </AdminDashboardLayout>
   );
 }

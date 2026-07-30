@@ -137,6 +137,7 @@ export default function SessionTypesManager() {
         <div className="h-32 animate-pulse bg-white/40 rounded-2xl" />
       ) : (
         <div className="space-y-2">
+          {sorted.length === 0 && <p className="text-sm text-slate-500 px-1 py-3">No session types yet.</p>}
           {sorted.map((r) => (
             <div key={r.id} className="rounded-2xl bg-white/50 border border-white/70 p-3">
               <div className="grid md:grid-cols-[1fr_1fr_10rem_10rem_8rem_auto] gap-2 items-center">

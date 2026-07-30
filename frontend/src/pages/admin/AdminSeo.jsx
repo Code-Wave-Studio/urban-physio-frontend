@@ -204,7 +204,10 @@ export default function AdminSeo() {
 
   useEffect(() => {
     if (tab === 'redirects') {
-      admin.seoRedirects().then((r) => setRedirects(r.data || r || [])).catch(() => {});
+      admin
+        .seoRedirects()
+        .then((r) => setRedirects(r.data || r || []))
+        .catch((err) => toast.error(err.message || 'Failed to load redirects'));
     }
     if (tab === 'monitor') {
       Promise.all([admin.seo404Logs({ limit: 100 }), admin.seoBrokenLinks()])
@@ -212,10 +215,13 @@ export default function AdminSeo() {
           setLogs404(a.data || a || []);
           setBroken(b.data || b || []);
         })
-        .catch(() => {});
+        .catch((err) => toast.error(err.message || 'Failed to load monitoring data'));
     }
     if (tab === 'checklist') {
-      admin.seoChecklist().then((r) => setChecklist(r.data || r)).catch(() => {});
+      admin
+        .seoChecklist()
+        .then((r) => setChecklist(r.data || r))
+        .catch((err) => toast.error(err.message || 'Failed to load checklist'));
     }
     if (tab === 'robots') {
       admin.seoSitemapStatus().then((r) => setSitemapStatus(r.data || r)).catch(() => {});
@@ -879,8 +885,13 @@ export default function AdminSeo() {
                               type="button"
                               className="text-rose-600 text-xs font-semibold"
                               onClick={async () => {
-                                await admin.seoRedirectDelete(r.id);
-                                setRedirects((list) => list.filter((x) => x.id !== r.id));
+                                try {
+                                  await admin.seoRedirectDelete(r.id);
+                                  setRedirects((list) => list.filter((x) => x.id !== r.id));
+                                  toast.success('Redirect deleted');
+                                } catch (err) {
+                                  toast.error(err.message || 'Failed to delete redirect');
+                                }
                               }}
                             >
                               Delete
@@ -924,9 +935,13 @@ export default function AdminSeo() {
                     type="button"
                     className="btn-outline"
                     onClick={async () => {
-                      await admin.seoClear404({});
-                      setLogs404([]);
-                      toast.success('404 logs cleared');
+                      try {
+                        await admin.seoClear404({});
+                        setLogs404([]);
+                        toast.success('404 logs cleared');
+                      } catch (err) {
+                        toast.error(err.message || 'Failed to clear 404 logs');
+                      }
                     }}
                   >
                     Clear 404 logs
@@ -971,8 +986,12 @@ export default function AdminSeo() {
                                 type="button"
                                 className="text-xs text-rose-600 font-semibold"
                                 onClick={async () => {
-                                  await admin.seoClear404({ id: row.id });
-                                  setLogs404((list) => list.filter((x) => x.id !== row.id));
+                                  try {
+                                    await admin.seoClear404({ id: row.id });
+                                    setLogs404((list) => list.filter((x) => x.id !== row.id));
+                                  } catch (err) {
+                                    toast.error(err.message || 'Failed to remove log entry');
+                                  }
                                 }}
                               >
                                 Remove
@@ -1007,8 +1026,12 @@ export default function AdminSeo() {
                           type="button"
                           className="text-xs font-semibold text-emerald-700"
                           onClick={async () => {
-                            await admin.seoResolveBrokenLink(b.id);
-                            setBroken((list) => list.filter((x) => x.id !== b.id));
+                            try {
+                              await admin.seoResolveBrokenLink(b.id);
+                              setBroken((list) => list.filter((x) => x.id !== b.id));
+                            } catch (err) {
+                              toast.error(err.message || 'Failed to resolve link');
+                            }
                           }}
                         >
                           Resolve

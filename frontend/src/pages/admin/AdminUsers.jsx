@@ -62,12 +62,11 @@ export default function AdminUsers() {
   }, [load, search]);
 
   useEffect(() => {
-    if (roleFilter) {
-      setSearchParams(roleFilter ? { role: roleFilter } : {});
-    } else {
-      setSearchParams({});
-    }
-  }, [roleFilter, setSearchParams]);
+    const next = {};
+    if (roleFilter) next.role = roleFilter;
+    if (search.trim()) next.search = search.trim();
+    setSearchParams(next, { replace: true });
+  }, [roleFilter, search, setSearchParams]);
 
   const stats = useMemo(() => {
     const doctors = users.filter((u) => u.role_slug === 'doctor');

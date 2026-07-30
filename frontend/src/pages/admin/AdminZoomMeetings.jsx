@@ -39,8 +39,9 @@ export default function AdminZoomMeetings() {
   }, [q]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    const t = setTimeout(load, q ? 350 : 0);
+    return () => clearTimeout(t);
+  }, [load, q]);
 
   const regenerate = async (id) => {
     if (!window.confirm('Regenerate Zoom meeting for this appointment?')) return;

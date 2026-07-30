@@ -49,8 +49,9 @@ export default function AdminConditions() {
   }, [filter, search]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    const t = setTimeout(load, search ? 350 : 0);
+    return () => clearTimeout(t);
+  }, [load, search]);
 
   const openCreate = () => {
     setEditingId(null);

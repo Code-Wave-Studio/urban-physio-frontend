@@ -128,8 +128,9 @@ export default function AdminSeoEntityPanel({ entityType, title, defaultOg = '' 
   }, [entityType, q]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    const t = setTimeout(load, q ? 350 : 0);
+    return () => clearTimeout(t);
+  }, [load, q]);
 
   const setField = (key, value) => setForm((f) => ({ ...f, [key]: value }));
 

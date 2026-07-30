@@ -244,6 +244,7 @@ export default function AdminSupportCenterPage() {
               </div>
               <button
                 type="button"
+                aria-label="Close ticket details"
                 onClick={() => {
                   setDetail(null);
                   setSelected(null);

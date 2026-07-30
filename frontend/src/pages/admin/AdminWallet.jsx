@@ -34,7 +34,10 @@ export default function AdminWallet() {
       .finally(() => setLoading(false));
   }, [q]);
 
-  useEffect(load, [load]);
+  useEffect(() => {
+    const t = setTimeout(load, q ? 350 : 0);
+    return () => clearTimeout(t);
+  }, [load, q]);
 
   const saveSettings = async () => {
     try {
@@ -243,6 +246,13 @@ export default function AdminWallet() {
                       <td className="px-3 py-2 font-mono text-xs">{row.txn_ref}</td>
                     </tr>
                   ))}
+                  {ledger.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-3 py-8 text-center text-slate-500">
+                        No transactions found
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

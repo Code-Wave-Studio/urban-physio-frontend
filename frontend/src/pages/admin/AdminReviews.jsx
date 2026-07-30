@@ -7,10 +7,21 @@ export default function AdminReviews() {
   const [tab, setTab] = useState('doctors');
   const [doctorReviews, setDoctorReviews] = useState([]);
   const [clinicReviews, setClinicReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   const load = () => {
-    admin.doctorReviewsList().then((r) => setDoctorReviews(r.data || [])).catch((e) => toast.error(e.message));
-    admin.clinicReviewsList().then((r) => setClinicReviews(r.data || [])).catch((e) => toast.error(e.message));
+    setLoading(true);
+    setLoadError(false);
+    Promise.all([
+      admin.doctorReviewsList().then((r) => setDoctorReviews(r.data || [])),
+      admin.clinicReviewsList().then((r) => setClinicReviews(r.data || [])),
+    ])
+      .catch((e) => {
+        setLoadError(true);
+        toast.error(e.message || 'Failed to load reviews');
+      })
+      .finally(() => setLoading(false));
   };
   useEffect(() => { load(); }, []);
 
@@ -33,7 +44,17 @@ export default function AdminReviews() {
         <button type="button" onClick={() => setTab('clinics')} className={tab === 'clinics' ? 'btn-primary text-sm' : 'btn-outline text-sm'}>Clinic reviews</button>
       </div>
       <div className="space-y-3">
-        {rows.map((r) => (
+        {loading && <p className="glass-card p-4 text-sm text-slate-500">Loading reviews…</p>}
+        {!loading && loadError && (
+          <div className="glass-card p-4 text-sm text-red-600 flex items-center justify-between gap-3">
+            <span>Could not load reviews.</span>
+            <button type="button" onClick={load} className="btn-outline text-xs">Retry</button>
+          </div>
+        )}
+        {!loading && !loadError && rows.length === 0 && (
+          <p className="glass-card p-4 text-sm text-slate-500">No reviews to moderate.</p>
+        )}
+        {!loading && !loadError && rows.map((r) => (
           <article key={r.id} className="glass-card p-4">
             <div className="flex flex-wrap justify-between gap-2">
               <div>
