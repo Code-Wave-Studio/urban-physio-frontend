@@ -5,6 +5,7 @@ import FaIcon from '../../components/FaIcon';
 import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
 import PackageCard from '../../components/clinic/PackageCard';
 import CustomBulkSessionModal from '../../components/clinic/CustomBulkSessionModal';
+import ClinicBookingModal from '../../components/clinic/ClinicBookingModal';
 import { clinicPortal } from '../../services/api';
 import useClinicPortal from '../../hooks/useClinicPortal';
 
@@ -39,6 +40,25 @@ export default function ClinicPackagesPage() {
   const [typeFilter, setTypeFilter]     = useState('all');
   const [q, setQ]                       = useState('');
   const [showBulkModal, setShowBulkModal] = useState(false);
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const [bookingSeed, setBookingSeed] = useState({});
+
+  const openSchedule = (pkg) => {
+    const patient =
+      pkg.clinic_patient_id ? `cp-${pkg.clinic_patient_id}`
+        : pkg.patient_id ? `p-${pkg.patient_id}`
+          : '';
+    if (!patient) {
+      toast.error('This package has no linked patient');
+      return;
+    }
+    setBookingSeed({
+      patient,
+      packageAssignmentId: pkg.id,
+      mode: ['clinic', 'home_visit', 'online'].includes(pkg.service_mode) ? pkg.service_mode : 'clinic',
+    });
+    setBookingOpen(true);
+  };
 
   const load = useCallback(async () => {
     if (!clinicId) return;
@@ -264,11 +284,25 @@ export default function ClinicPackagesPage() {
                 canManage={can('packages.manage') || can('billing.collect')}
                 onTerminate={acting === p.id ? null : terminate}
                 onReturnCredit={acting === p.id ? null : returnCredit}
+                onSchedule={can('appointments.manage') ? openSchedule : undefined}
               />
             ))}
           </div>
         )}
       </div>
+
+      <ClinicBookingModal
+        clinicId={clinicId}
+        open={bookingOpen}
+        initialPatient={bookingSeed.patient}
+        initialPackageAssignmentId={bookingSeed.packageAssignmentId}
+        initialMode={bookingSeed.mode}
+        onClose={() => setBookingOpen(false)}
+        onBooked={() => {
+          setBookingOpen(false);
+          load();
+        }}
+      />
 
       {/* Custom Bulk Session wizard modal */}
       {showBulkModal && (

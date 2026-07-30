@@ -12,6 +12,8 @@ export default function ClinicBrandingPage() {
     primary_color: '#0d9488',
     secondary_color: '#0f172a',
     accent_color: '#14b8a6',
+    tagline: '',
+    branch_name: '',
     pdf_header_text: '',
     pdf_footer_text: '',
     show_logo_on_pdf: true,
@@ -55,6 +57,8 @@ export default function ClinicBrandingPage() {
         primary_color: form.primary_color,
         secondary_color: form.secondary_color,
         accent_color: form.accent_color,
+        tagline: form.tagline || '',
+        branch_name: form.branch_name || '',
         pdf_header_text: form.pdf_header_text || '',
         pdf_footer_text: form.pdf_footer_text || '',
         show_logo_on_pdf: form.show_logo_on_pdf,
@@ -94,6 +98,28 @@ export default function ClinicBrandingPage() {
                 </div>
               </label>
             ))}
+            <div className="border-t border-slate-100 pt-5 space-y-4">
+              <h2 className="font-bold">Intake form header</h2>
+              <p className="text-xs text-slate-500 -mt-2">Shown on the public QR intake form. Logo is managed in Clinic Profile.</p>
+              <label className="block text-sm font-medium">
+                Tagline
+                <input
+                  className="input-field mt-1"
+                  value={form.tagline || ''}
+                  onChange={(e) => setForm({ ...form, tagline: e.target.value })}
+                  placeholder="e.g. Expert physio care near you"
+                />
+              </label>
+              <label className="block text-sm font-medium">
+                Branch name / location
+                <input
+                  className="input-field mt-1"
+                  value={form.branch_name || ''}
+                  onChange={(e) => setForm({ ...form, branch_name: e.target.value })}
+                  placeholder="e.g. Andheri West · Mumbai"
+                />
+              </label>
+            </div>
             <div className="border-t border-slate-100 pt-5 space-y-4">
               <h2 className="font-bold">PDF text</h2>
               <label className="block text-sm font-medium">

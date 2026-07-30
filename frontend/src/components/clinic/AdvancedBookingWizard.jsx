@@ -40,6 +40,9 @@ export default function AdvancedBookingWizard({
   initialDoctorId,
   initialStartTime,
   initialEndTime,
+  /** Existing clinic_patient_packages.id — schedule against this package (no new assign) */
+  initialPackageAssignmentId,
+  initialMode,
 }) {
   const [step, setStep] = useState(0); // 0 = splash
   const [boot, setBoot] = useState(null);
@@ -52,6 +55,7 @@ export default function AdvancedBookingWizard({
   const [selectedServices, setSelectedServices] = useState([]);
   const [skipPackage, setSkipPackage] = useState(false);
   const [assignTemplateId, setAssignTemplateId] = useState('');
+  const [existingPackageId, setExistingPackageId] = useState(null);
   const [doctorId, setDoctorId] = useState('');
   const [anyDoctor, setAnyDoctor] = useState(false);
   const [date, setDate] = useState('');
@@ -70,6 +74,7 @@ export default function AdvancedBookingWizard({
     setSelectedServices([]);
     setSkipPackage(false);
     setAssignTemplateId('');
+    setExistingPackageId(null);
     setDoctorId('');
     setAnyDoctor(false);
     setSlot(null);
@@ -91,6 +96,13 @@ export default function AdvancedBookingWizard({
         start_time: String(initialStartTime).slice(0, 5),
         end_time: String(initialEndTime || '').slice(0, 5) || undefined,
       });
+    }
+    if (initialMode && ['clinic', 'home_visit', 'online'].includes(initialMode)) {
+      setMode(initialMode);
+    }
+    if (initialPackageAssignmentId) {
+      setExistingPackageId(Number(initialPackageAssignmentId));
+      setSkipPackage(true);
     }
 
     let cancelled = false;
@@ -200,8 +212,8 @@ export default function AdvancedBookingWizard({
 
     setSaving(true);
     try {
-      let packageAssignmentId;
-      if (assignTemplateId && !skipPackage) {
+      let packageAssignmentId = existingPackageId ? Number(existingPackageId) : undefined;
+      if (!packageAssignmentId && assignTemplateId && !skipPackage) {
         const assigned = await clinicPortal.assignPackageTemplate(clinicId, {
           template_id: Number(assignTemplateId),
           patient_id: selectedPatient.patient_id || undefined,
@@ -405,6 +417,20 @@ export default function AdvancedBookingWizard({
           {/* STEP 2: Package upsell */}
           {step === 2 && (
             <div className="space-y-4">
+              {existingPackageId ? (
+                <>
+                  <div className="rounded-xl border border-teal-200 bg-teal-50 p-4">
+                    <p className="text-sm font-semibold text-teal-900">Using existing package</p>
+                    <p className="text-xs text-teal-800 mt-1">
+                      This booking will deduct one session from the selected package (#{existingPackageId}).
+                    </p>
+                  </div>
+                  <button type="button" className="btn-primary text-sm w-full" onClick={() => setStep(3)}>
+                    Continue to physiotherapist
+                  </button>
+                </>
+              ) : (
+                <>
               <p className="text-sm text-slate-600">Save more with a multi-session package before booking a single visit.</p>
               <div className="space-y-2">
                 {packages.slice(0, 5).map((p) => (
@@ -445,6 +471,8 @@ export default function AdvancedBookingWizard({
                   Continue Single Session
                 </button>
               </div>
+                </>
+              )}
             </div>
           )}
 
@@ -615,7 +643,7 @@ export default function AdvancedBookingWizard({
                 <p className="pt-2 border-t font-bold text-lg text-teal-700">
                   Total: {hasTbd && totalPrice === 0 ? 'Price TBD' : money(totalPrice)}
                   {hasTbd && totalPrice > 0 ? ' + TBD' : ''}
-                  {assignTemplateId && !skipPackage ? ' (covered by package)' : ''}
+                  {existingPackageId || (assignTemplateId && !skipPackage) ? ' (covered by package)' : ''}
                 </p>
               </div>
 

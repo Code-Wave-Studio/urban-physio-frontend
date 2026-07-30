@@ -2,9 +2,63 @@ import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import FaIcon from '../FaIcon';
 import SuggestionChips from './SuggestionChips';
+import AssessmentFormChrome, { defaultLetterhead } from './AssessmentFormChrome';
 import { erpAssessments } from '../../services/api';
 
-function renderField({ field, value, onChange, chips = [] }) {
+function ImageField({ value, onChange, disabled }) {
+  const urls = Array.isArray(value) ? value : value ? [value] : [];
+
+  const onFile = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    files.forEach((file) => {
+      if (!file.type.startsWith('image/')) {
+        toast.error('Only image files allowed');
+        return;
+      }
+      if (file.size > 4 * 1024 * 1024) {
+        toast.error('Image must be under 4 MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        onChange([...urls, reader.result]);
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = '';
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        {urls.map((src, i) => (
+          <div key={i} className="relative group rounded-xl overflow-hidden border border-slate-200 bg-slate-50 aspect-square">
+            <img src={src} alt={`Upload ${i + 1}`} className="w-full h-full object-cover" />
+            {!disabled && (
+              <button
+                type="button"
+                className="absolute top-1 right-1 bg-white/90 text-red-500 rounded-full w-6 h-6 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => onChange(urls.filter((_, idx) => idx !== i))}
+              >
+                ×
+              </button>
+            )}
+          </div>
+        ))}
+        {!disabled && (
+          <label className="aspect-square rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center gap-1 text-xs text-slate-400 cursor-pointer hover:border-teal-400 hover:text-teal-600 transition-colors">
+            <FaIcon icon="fa-solid fa-cloud-arrow-up" className="text-lg" />
+            Upload image
+            <input type="file" accept="image/*" multiple className="hidden" onChange={onFile} />
+          </label>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function renderField({ field, value, onChange, chips = [], disabled }) {
   const id  = `afield_${field.id}`;
   const cls = 'w-full text-sm border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-400';
 
@@ -23,6 +77,9 @@ function renderField({ field, value, onChange, chips = [] }) {
   if (field.type === 'display') {
     return <p className="text-sm text-slate-600 italic">{field.label}</p>;
   }
+  if (field.type === 'image') {
+    return <ImageField value={value} onChange={onChange} disabled={disabled} />;
+  }
   if (field.type === 'signature') {
     return (
       <div className="rounded-xl border-2 border-dashed border-slate-300 p-4 text-center text-sm text-slate-400">
@@ -39,21 +96,34 @@ function renderField({ field, value, onChange, chips = [] }) {
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
         required={field.required}
+        disabled={disabled}
       />
     );
   }
   if (field.type === 'select') {
     return (
-      <select id={id} className={cls} value={value || ''} onChange={(e) => onChange(e.target.value)} required={field.required}>
+      <select id={id} className={cls} value={value || ''} onChange={(e) => onChange(e.target.value)} required={field.required} disabled={disabled}>
         <option value="">— Select —</option>
         {(field.options || []).map((o) => <option key={o} value={o}>{o}</option>)}
       </select>
     );
   }
+  if (field.type === 'radio') {
+    return (
+      <div className="flex flex-wrap gap-3">
+        {(field.options || []).map((o) => (
+          <label key={o} className="flex items-center gap-2 text-sm cursor-pointer">
+            <input type="radio" name={id} checked={value === o} onChange={() => onChange(o)} disabled={disabled} />
+            {o}
+          </label>
+        ))}
+      </div>
+    );
+  }
   if (field.type === 'checkbox') {
     return (
       <label className="flex items-center gap-2 text-sm cursor-pointer">
-        <input type="checkbox" checked={!!value} onChange={(e) => onChange(e.target.checked)} />
+        <input type="checkbox" checked={!!value} onChange={(e) => onChange(e.target.checked)} disabled={disabled} />
         {field.label}
       </label>
     );
@@ -68,6 +138,7 @@ function renderField({ field, value, onChange, chips = [] }) {
         max={field.max}
         onChange={(e) => onChange(e.target.value === '' ? '' : Number(e.target.value))}
         required={field.required}
+        disabled={disabled}
       />
     );
   }
@@ -79,14 +150,17 @@ function renderField({ field, value, onChange, chips = [] }) {
       value={value || ''}
       onChange={(e) => onChange(e.target.value)}
       required={field.required}
+      disabled={disabled}
     />
   );
 }
 
-export default function AssessmentResponseForm({ clinicId, responseId, patientKey, templateId, onSaved }) {
+export default function AssessmentResponseForm({ clinicId, responseId, patientKey, templateId, patient, onSaved }) {
   const [response, setResponse]     = useState(null);
   const [schema, setSchema]         = useState([]);
+  const [letterhead, setLetterhead] = useState(() => defaultLetterhead());
   const [answers, setAnswers]       = useState({});
+  const [checklist, setChecklist]   = useState({});
   const [chips, setChips]           = useState([]);
   const [saving, setSaving]         = useState(false);
   const [loading, setLoading]       = useState(true);
@@ -97,35 +171,51 @@ export default function AssessmentResponseForm({ clinicId, responseId, patientKe
   const load = useCallback(async () => {
     setLoading(true);
     try {
+      const q = clinicId ? { clinic_id: clinicId } : undefined;
       if (responseId) {
-        const r   = await erpAssessments.getResponse(responseId);
+        const r   = await erpAssessments.getResponse(responseId, q);
         const d   = r.data || r;
         setResponse(d);
-        setAnswers(d.responses || {});
+        const rawAnswers = d.responses || {};
+        const { _checklist: savedChecklist, ...fieldAnswers } = rawAnswers;
+        setAnswers(fieldAnswers);
+        setChecklist(savedChecklist || {});
         setSchema(d.template_schema || []);
+        if (d.letterhead && Object.keys(d.letterhead).length) {
+          setLetterhead(defaultLetterhead(d.letterhead));
+        } else if (d.template_id) {
+          const t = await erpAssessments.getTemplate(d.template_id, q);
+          const td = t.data || t;
+          if (!d.template_schema?.length) setSchema(Array.isArray(td.schema) ? td.schema : []);
+          setLetterhead(defaultLetterhead(td.letterhead || {}));
+        }
       } else if (templateId) {
-        const t   = await erpAssessments.getTemplate(templateId);
+        const t   = await erpAssessments.getTemplate(templateId, q);
         const d   = t.data || t;
         setSchema(Array.isArray(d.schema) ? d.schema : []);
+        setLetterhead(defaultLetterhead(d.letterhead || {}));
       }
-      const chipRes = await erpAssessments.listChips({});
+      const chipRes = await erpAssessments.listChips(q || {});
       setChips(chipRes.data || chipRes || []);
     } catch { toast.error('Could not load assessment'); }
     finally { setLoading(false); }
-  }, [responseId, templateId]);
+  }, [responseId, templateId, clinicId]);
 
   useEffect(() => { load(); }, [load]);
 
   const setAnswer = (fieldId, value) => setAnswers((prev) => ({ ...prev, [fieldId]: value }));
 
+  const clinicParams = clinicId ? { clinic_id: clinicId } : undefined;
+
   const save = async (newStatus = 'draft') => {
     setSaving(true);
     try {
+      const payloadAnswers = { ...answers, _checklist: checklist };
       if (responseId) {
-        await erpAssessments.updateResponse(responseId, { responses: answers, status: newStatus });
+        await erpAssessments.updateResponse(responseId, { responses: payloadAnswers, status: newStatus }, clinicParams);
         toast.success(newStatus === 'completed' ? 'Assessment completed' : 'Saved');
       } else {
-        const r = await erpAssessments.createResponse({ template_id: templateId, responses: answers, ...resolvePatientIds(patientKey) });
+        const r = await erpAssessments.createResponse({ template_id: templateId, responses: payloadAnswers, ...resolvePatientIds(patientKey) }, clinicParams);
         toast.success('Assessment created');
         onSaved?.(r.id);
       }
@@ -136,7 +226,7 @@ export default function AssessmentResponseForm({ clinicId, responseId, patientKe
   const sendOtp = async () => {
     if (!otpPhone) return toast.error('Enter phone number');
     try {
-      await erpAssessments.sendOtp(responseId, { phone: otpPhone, method: 'sms' });
+      await erpAssessments.sendOtp(responseId, { phone: otpPhone, method: 'sms' }, clinicParams);
       toast.success('OTP sent');
       setOtpPhase('verify');
     } catch (e) { toast.error(e.message || 'Failed'); }
@@ -145,7 +235,7 @@ export default function AssessmentResponseForm({ clinicId, responseId, patientKe
   const verifyOtp = async () => {
     if (!otp) return toast.error('Enter OTP');
     try {
-      await erpAssessments.verifyOtp(responseId, { otp });
+      await erpAssessments.verifyOtp(responseId, { otp }, clinicParams);
       toast.success('Assessment signed!');
       setOtpPhase(null);
       load();
@@ -156,12 +246,14 @@ export default function AssessmentResponseForm({ clinicId, responseId, patientKe
 
   const isSigned   = response?.status === 'signed' || response?.status === 'locked';
   const isComplete = response?.status === 'completed' || isSigned;
+  const digitalUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/clinic-portal/patients/${patientKey || ''}`
+    : '';
 
   return (
-    <div className="space-y-5">
-      {/* Status badge */}
+    <div className="space-y-4">
       {response && (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2" data-print-hide>
           <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
             isSigned ? 'bg-green-100 text-green-700' :
             isComplete ? 'bg-blue-100 text-blue-700' :
@@ -171,43 +263,63 @@ export default function AssessmentResponseForm({ clinicId, responseId, patientKe
           </span>
           {response.otp_verified && (
             <span className="text-xs bg-teal-100 text-teal-700 px-2 py-1 rounded-full font-semibold flex items-center gap-1">
-              <FaIcon icon="fa-solid fa-shield-check" className="text-[10px]" /> OTP Verified
+              <FaIcon icon="fa-solid fa-shield-halved" className="text-[10px]" /> OTP Verified
             </span>
           )}
           {isSigned && (
             <span className="text-xs text-slate-400">Signed {String(response.signed_at || '').slice(0, 10)}</span>
           )}
+          <button type="button" className="btn-outline text-xs !py-1.5 ml-auto inline-flex items-center gap-1.5" onClick={() => window.print()}>
+            <FaIcon icon="fa-solid fa-print" /> Print
+          </button>
         </div>
       )}
 
-      {/* Sections */}
-      {schema.filter((s) => s.visible !== false).map((section) => (
-        <div key={section.id} className="glass-card !p-4 space-y-3">
-          <h3 className="font-semibold text-slate-900 text-sm border-b border-slate-100 pb-2">{section.title}</h3>
-          <div className="space-y-3">
-            {(section.fields || []).map((field) => (
-              <div key={field.id}>
-                {field.type !== 'checkbox' && (
-                  <label htmlFor={`afield_${field.id}`} className="text-xs font-medium text-slate-600 mb-1 flex items-center gap-1">
-                    {field.label}
-                    {field.required && <span className="text-red-500">*</span>}
-                  </label>
-                )}
-                {renderField({
-                  field,
-                  value: answers[field.id],
-                  onChange: (v) => !isSigned && setAnswer(field.id, v),
-                  chips,
-                })}
+      <div className="rounded-2xl border border-slate-200 overflow-hidden bg-white">
+        <AssessmentFormChrome
+          letterhead={letterhead}
+          patient={patient || {}}
+          visit={{
+            type: letterhead.subtitle?.includes('Re-') ? 'Follow-up' : 'New',
+            mode: 'Clinic',
+            assessment_date: response?.created_at || new Date().toISOString(),
+          }}
+          checklist={checklist}
+          onChecklistChange={!isSigned ? setChecklist : undefined}
+          digitalRecordUrl={digitalUrl}
+          mode="screen"
+        >
+          <div className="space-y-5">
+            {schema.filter((s) => s.visible !== false).map((section) => (
+              <div key={section.id} className="space-y-3 border-b border-slate-100 pb-4 last:border-0">
+                <h3 className="font-semibold text-slate-900 text-sm">{section.title}</h3>
+                <div className="space-y-3">
+                  {(section.fields || []).map((field) => (
+                    <div key={field.id}>
+                      {field.type !== 'checkbox' && (
+                        <label htmlFor={`afield_${field.id}`} className="text-xs font-medium text-slate-600 mb-1 flex items-center gap-1">
+                          {field.label}
+                          {field.required && <span className="text-red-500">*</span>}
+                        </label>
+                      )}
+                      {renderField({
+                        field,
+                        value: answers[field.id],
+                        onChange: (v) => !isSigned && setAnswer(field.id, v),
+                        chips,
+                        disabled: isSigned,
+                      })}
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
-        </div>
-      ))}
+        </AssessmentFormChrome>
+      </div>
 
-      {/* Actions */}
       {!isSigned && (
-        <div className="flex flex-wrap gap-2 items-center">
+        <div className="flex flex-wrap gap-2 items-center" data-print-hide>
           <button type="button" onClick={() => save('draft')} disabled={saving} className="btn-outline text-sm">
             {saving ? 'Saving…' : 'Save Draft'}
           </button>
@@ -224,9 +336,8 @@ export default function AssessmentResponseForm({ clinicId, responseId, patientKe
         </div>
       )}
 
-      {/* OTP signing flow */}
       {otpPhase === 'input' && (
-        <div className="glass-card !p-4 space-y-3">
+        <div className="glass-card !p-4 space-y-3" data-print-hide>
           <h3 className="font-semibold text-sm">Send OTP for Digital Signature</h3>
           <input
             type="tel"
@@ -245,7 +356,7 @@ export default function AssessmentResponseForm({ clinicId, responseId, patientKe
       )}
 
       {otpPhase === 'verify' && (
-        <div className="glass-card !p-4 space-y-3">
+        <div className="glass-card !p-4 space-y-3" data-print-hide>
           <h3 className="font-semibold text-sm">Enter OTP to Sign Assessment</h3>
           <input
             type="text"

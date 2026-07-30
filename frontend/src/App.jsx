@@ -52,10 +52,11 @@ import ClinicProtocolBuilderPage from './pages/clinic/ClinicProtocolBuilderPage'
 import ClinicSuggestionChipsPage from './pages/clinic/ClinicSuggestionChipsPage';
 import ClinicNotificationsManagePage from './pages/clinic/ClinicNotificationsManagePage';
 import ClinicNotesPage from './pages/clinic/ClinicNotesPage';
-import ClinicSupportCenterPage from './pages/clinic/ClinicSupportCenterPage';
+import AdminSupportCenterPage from './pages/admin/AdminSupportCenterPage';
 import ClinicInvoiceGeneratorPage from './pages/clinic/ClinicInvoiceGeneratorPage';
 import ClinicQrIntakePage from './pages/public/ClinicQrIntakePage';
 import ClinicProgressPublicPage from './pages/public/ClinicProgressPublicPage';
+import PayInvoicePage from './pages/public/PayInvoicePage';
 import PatientProfile from './pages/patient/PatientProfile';
 import AdminInvoiceSettings from './pages/admin/AdminInvoiceSettings';
 import AdminBillingPage from './pages/admin/AdminBillingPage';
@@ -196,6 +197,7 @@ export default function App() {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/c/:token" element={<ClinicQrIntakePage />} />
       <Route path="/clinic-intake/:token" element={<ClinicQrIntakePage />} />
+      <Route path="/pay/invoice/:token" element={<PayInvoicePage />} />
       <Route path="/clinic-report/:token" element={<ClinicProgressPublicPage />} />
       <Route path="/doctors" element={<Doctors />} />
       <Route path="/clinics" element={<Clinics />} />
@@ -315,7 +317,6 @@ export default function App() {
       <Route path="/clinic-portal/billing" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicBillingPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/invoices" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicInvoiceGeneratorPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/notes" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicNotesPage /></ProtectedRoute>} />
-      <Route path="/clinic-portal/settings/support" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicSupportCenterPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/search" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicAdvancedSearchPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/calendar" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicCalendarPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/availability" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicAvailabilityPage /></ProtectedRoute>} />
@@ -376,6 +377,7 @@ export default function App() {
       <Route path="/admin/analytics" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminAnalytics /></ProtectedRoute>} />
       <Route path="/admin/pain-selection" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminPainSelection /></ProtectedRoute>} />
       <Route path="/admin/emergency" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminEmergency /></ProtectedRoute>} />
+      <Route path="/admin/support" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminSupportCenterPage /></ProtectedRoute>} />
       <Route path="/admin/appointments" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminAppointments /></ProtectedRoute>} />
       <Route path="/admin/appointment-requests" element={<ProtectedRoute roles={['admin', 'super_admin']}><AppointmentRequestsPage navItems={ADMIN_NAV} title="Doctor change requests" scope="admin" /></ProtectedRoute>} />
       <Route path="/admin/contact" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminContact /></ProtectedRoute>} />

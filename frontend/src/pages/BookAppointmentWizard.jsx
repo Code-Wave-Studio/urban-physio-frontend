@@ -378,6 +378,22 @@ export default function BookAppointmentWizard() {
     }
   }, [searchParams, doctorIdParam]);
 
+  // Smart routing: intake-linked preferred clinic when URL has no clinic_id
+  useEffect(() => {
+    if (searchParams.get('clinic_id') || doctorIdParam || isEmergency) return undefined;
+    let cancelled = false;
+    patients.preferredClinic()
+      .then((res) => {
+        if (cancelled) return;
+        const pref = res.data || res;
+        if (pref?.preferred_clinic_id && pref?.preferred_clinic_locked) {
+          patch({ clinic_id: String(pref.preferred_clinic_id), consultation_type: 'clinic' });
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [searchParams, doctorIdParam, isEmergency]);
+
   useEffect(() => {
     const t = searchParams.get('type');
     if (!doctorIdParam || isEmergency) return;

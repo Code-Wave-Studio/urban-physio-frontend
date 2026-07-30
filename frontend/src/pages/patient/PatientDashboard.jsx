@@ -78,10 +78,12 @@ export default function PatientDashboard() {
   const [recent, setRecent] = useState([]);
   const [packageCredits, setPackageCredits] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [preferred, setPreferred] = useState(null);
+  const [changingClinic, setChangingClinic] = useState(false);
 
   useEffect(() => {
-    Promise.all([appointments.list(), patientReports.list(), patients.visitCredits()])
-      .then(([apptRes, repRes, creditsRes]) => {
+    Promise.all([appointments.list(), patientReports.list(), patients.visitCredits(), patients.preferredClinic().catch(() => null)])
+      .then(([apptRes, repRes, creditsRes, prefRes]) => {
         const list = apptRes.data || [];
         setPackageCredits(creditsRes.data || []);
         setStats({
@@ -95,17 +97,61 @@ export default function PatientDashboard() {
             .slice(0, 4)
         );
         setReportCount((repRes.data || []).length);
+        const pref = prefRes?.data || prefRes;
+        if (pref?.preferred_clinic_id && pref?.clinic) setPreferred(pref);
+        else setPreferred(null);
       })
       .catch((e) => toast.error(e.message || 'Could not load dashboard'))
       .finally(() => setLoading(false));
   }, []);
 
+  const changeClinic = async () => {
+    setChangingClinic(true);
+    try {
+      await patients.clearPreferredClinic();
+      setPreferred(null);
+      toast.success('Clinic unlocked — browse any Urban Physio clinic');
+    } catch (e) {
+      toast.error(e.message || 'Could not change clinic');
+    } finally {
+      setChangingClinic(false);
+    }
+  };
+
   const name = user?.first_name || 'there';
   const statValues = { ...stats, reports: reportCount };
+  const bookTo = preferred?.preferred_clinic_id
+    ? `/book?type=clinic&clinic_id=${preferred.preferred_clinic_id}`
+    : '/book';
 
   return (
     <DashboardLayout links={PATIENT_NAV} variant="patient">
       <PasswordSetupAlert profilePath="/patient/profile" />
+
+      {preferred?.clinic && (
+        <div className="mb-4 rounded-2xl border border-teal-200 bg-teal-50 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <p className="text-sm text-teal-900 font-medium">
+            <FaIcon icon="fa-hospital" className="mr-2 text-teal-700" />
+            Your Clinic: <strong>{preferred.clinic.name}</strong>
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              to={bookTo}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-teal-700 text-white text-xs font-semibold px-3 py-1.5"
+            >
+              Book here
+            </Link>
+            <button
+              type="button"
+              disabled={changingClinic}
+              onClick={changeClinic}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-teal-300 bg-white text-teal-800 text-xs font-semibold px-3 py-1.5"
+            >
+              Change
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="mb-6 md:mb-8 flex flex-col sm:flex-row sm:items-center gap-4">
         <PatientAvatar
@@ -155,7 +201,7 @@ export default function PatientDashboard() {
         {QUICK.map((q) => (
           <Link
             key={q.to}
-            to={q.to}
+            to={q.to === '/book' ? bookTo : q.to}
             className="group relative overflow-hidden rounded-2xl border border-white/80 bg-white/70 p-4 md:p-5 shadow-sm hover:shadow-lg hover:border-primary-200/60 transition"
           >
             <div

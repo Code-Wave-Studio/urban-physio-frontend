@@ -115,7 +115,7 @@ export default function IntakeFormBuilder({ fields = [], onChange }) {
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 px-3 sm:px-4 pt-3 sm:pt-4">
         <div className="min-w-0">
           <h2 className="font-bold">Intake fields</h2>
-          <p className="text-xs text-slate-500">Drag handles to reorder · locked system fields stay required</p>
+          <p className="text-xs text-slate-500">Drag handles to reorder · name & mobile stay required · email is optional</p>
         </div>
         <button type="button" className="btn-primary text-xs !py-2 w-full sm:w-auto" onClick={addField}>
           <FaIcon icon="fa-plus" className="mr-1" />
@@ -225,11 +225,14 @@ export default function IntakeFormBuilder({ fields = [], onChange }) {
                       <label className="text-xs flex items-center gap-1.5">
                         <input
                           type="checkbox"
-                          disabled={locked}
-                          checked={Boolean(field.is_required)}
-                          onChange={(e) => updateField(index, { is_required: e.target.checked })}
+                          disabled={locked && field.field_key !== 'email'}
+                          checked={field.field_key === 'email' ? false : Boolean(field.is_required)}
+                          onChange={(e) => {
+                            if (field.field_key === 'email') return;
+                            updateField(index, { is_required: e.target.checked });
+                          }}
                         />
-                        Required
+                        {field.field_key === 'email' ? 'Optional' : 'Required'}
                       </label>
                       {locked && (
                         <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 self-center">

@@ -10,8 +10,8 @@ export const EXPLORE_LINKS = [
 
 export const PROVIDER_LINKS = [
   { to: '/careers', label: 'Careers', icon: 'fa-briefcase' },
-  { to: '/doctor/login', label: 'Clinic Portal', icon: 'fa-hospital-user' },
-  { to: '/doctor/register', label: 'Physiotherapist Portal', icon: 'fa-user-doctor' },
+  { to: '/clinic/login', label: 'Clinic Portal', icon: 'fa-hospital-user' },
+  { to: '/doctor/login', label: 'Physiotherapist Portal', icon: 'fa-user-doctor' },
 ];
 
 export const MORE_LINKS = [

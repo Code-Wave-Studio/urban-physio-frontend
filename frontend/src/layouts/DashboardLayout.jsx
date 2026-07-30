@@ -32,7 +32,7 @@ function NavLink({ link, pathname, unreadCount }) {
   );
 }
 
-export default function DashboardLayout({ children, links = [], variant }) {
+export default function DashboardLayout({ children, links = [], variant, sidebarFooter = null }) {
   const { pathname } = useLocation();
   const { user } = useAuth();
   const isPatient = variant === 'patient';
@@ -128,6 +128,7 @@ export default function DashboardLayout({ children, links = [], variant }) {
           title={portalMeta.title}
           subtitle={portalMeta.subtitle}
           accent={portalMeta.accent}
+          footerExtra={sidebarFooter}
         />
 
         <div

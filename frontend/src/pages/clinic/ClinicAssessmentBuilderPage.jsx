@@ -48,7 +48,7 @@ export default function ClinicAssessmentBuilderPage() {
     if (!clinicId) return;
     setLoading(true);
     try {
-      const res = await erpAssessments.listTemplates({});
+      const res = await erpAssessments.listTemplates({ clinic_id: clinicId });
       setTemplates(res.data || res || []);
     } catch { toast.error('Could not load templates'); }
     finally { setLoading(false); }
@@ -58,7 +58,7 @@ export default function ClinicAssessmentBuilderPage() {
 
   const duplicate = async (id) => {
     try {
-      const res = await erpAssessments.duplicateTemplate(id);
+      const res = await erpAssessments.duplicateTemplate(id, { clinic_id: clinicId });
       toast.success('Template duplicated');
       loadTemplates();
       navigate(`/clinic-portal/settings/assessments/${res.id}`);
@@ -68,7 +68,7 @@ export default function ClinicAssessmentBuilderPage() {
   const remove = async (id) => {
     if (!window.confirm('Delete this template?')) return;
     try {
-      await erpAssessments.deleteTemplate(id);
+      await erpAssessments.deleteTemplate(id, { clinic_id: clinicId });
       toast.success('Deleted');
       loadTemplates();
       if (String(templateId) === String(id)) navigate('/clinic-portal/settings/assessments');
@@ -117,7 +117,12 @@ export default function ClinicAssessmentBuilderPage() {
             <AssessmentBuilder
               clinicId={clinicId}
               templateId={templateId === 'new' ? null : Number(templateId)}
-              onSaved={(newId) => { loadTemplates(); navigate(`/clinic-portal/settings/assessments/${newId}`); }}
+              onSaved={(newId) => {
+                loadTemplates();
+                if (newId && String(newId) !== String(templateId)) {
+                  navigate(`/clinic-portal/settings/assessments/${newId}`);
+                }
+              }}
             />
           ) : (
             <div className="glass-card !p-8 flex flex-col items-center justify-center gap-3 text-center min-h-[300px]">

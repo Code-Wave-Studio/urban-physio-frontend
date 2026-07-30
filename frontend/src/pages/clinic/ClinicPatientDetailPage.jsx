@@ -6,9 +6,10 @@ import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
 import ClinicBookingModal from '../../components/clinic/ClinicBookingModal';
 import RichSessionCard from '../../components/RichSessionCard';
 import useClinicPortal from '../../hooks/useClinicPortal';
-import { clinicPortal, exercisePrescriptions } from '../../services/api';
+import { clinicPortal, erpAssessments, exercisePrescriptions } from '../../services/api';
 import PatientOverviewTab from '../../components/erp/PatientOverviewTab';
 import PatientTimelineTab from '../../components/erp/PatientTimelineTab';
+import AssessmentResponseForm from '../../components/erp/AssessmentResponseForm';
 import PackageCard from '../../components/clinic/PackageCard';
 
 const TABS = ['Overview', 'Timeline', 'Assessments', 'Packages', 'Protocols', 'Payments', 'SOAP', 'Documents', 'Reports'];
@@ -49,9 +50,14 @@ export default function ClinicPatientDetailPage() {
   const { clinicId, can, loading: boot } = useClinicPortal();
   const [data, setData] = useState(null);
   const [templates, setTemplates] = useState([]);
+  const [erpResponses, setErpResponses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('Overview');
   const [booking, setBooking] = useState(false);
+  const [bookingSeed, setBookingSeed] = useState({});
+  const [activeAssessment, setActiveAssessment] = useState(null); // { responseId?, templateId? }
+  const [pickTemplate, setPickTemplate] = useState(false);
+  const [triggering, setTriggering] = useState(false);
 
   const load = useCallback(async () => {
     if (!clinicId || !patientKey) return;
@@ -67,44 +73,86 @@ export default function ClinicPatientDetailPage() {
     }
   }, [clinicId, patientKey]);
 
+  const loadErpAssessments = useCallback(async () => {
+    if (!clinicId || !patientKey) return;
+    try {
+      const [tplRes, respRes] = await Promise.all([
+        erpAssessments.listTemplates({ status: 'published', clinic_id: clinicId }),
+        erpAssessments.listResponses({ patient_key: patientKey, clinic_id: clinicId }),
+      ]);
+      setTemplates(tplRes.data || tplRes || []);
+      setErpResponses(respRes.data || respRes || []);
+    } catch (error) {
+      setTemplates([]);
+      setErpResponses([]);
+      toast.error(error.message || 'Could not load assessments');
+    }
+  }, [clinicId, patientKey]);
+
   useEffect(() => {
     if (clinicId) load();
   }, [clinicId, load]);
 
   useEffect(() => {
-    if (!clinicId || !can('assessments.manage')) return;
-    clinicPortal.assessmentTemplates(clinicId)
-      .then((res) => setTemplates(res.data || res || []))
-      .catch(() => {});
-  }, [clinicId, can]);
+    if (clinicId) loadErpAssessments();
+  }, [clinicId, loadErpAssessments]);
 
   const profile = data?.profile || {};
   const name = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.name || 'Patient';
-  const patientIds = useMemo(() => ({
-    patient_id: data?.patient_key?.startsWith('p-') ? Number(data.patient_key.slice(2)) : undefined,
-    clinic_patient_id: data?.patient_key?.startsWith('cp-') ? Number(data.patient_key.slice(3)) : undefined,
-  }), [data]);
-
-  const triggerAssessment = async () => {
-    if (!templates.length) return toast.error('Create an assessment template first');
-    const templateId = Number(
-      window.prompt(
-        `Template ID:\n${templates.filter((t) => Number(t.is_active)).map((t) => `${t.id}: ${t.name}`).join('\n')}`,
-        templates[0]?.id
-      )
-    );
-    if (!templateId) return;
-    try {
-      await clinicPortal.submitAssessment(clinicId, {
-        template_id: templateId,
-        responses: { status: 'requested' },
-        ...patientIds,
-      });
-      toast.success('Reassessment added');
-      load();
-    } catch (error) {
-      toast.error(error.message || 'Could not trigger reassessment');
+  const patientIds = useMemo(() => {
+    const key = data?.patient_key || patientKey;
+    if (String(key).startsWith('p-')) {
+      return { patient_id: Number(String(key).slice(2)) || undefined };
     }
+    if (String(key).startsWith('cp-')) {
+      return { clinic_patient_id: Number(String(key).slice(3)) || undefined };
+    }
+    return {};
+  }, [data, patientKey]);
+
+  const assessmentPatient = useMemo(() => ({
+    ...profile,
+    name,
+    id_code: data?.patient_key || patientKey,
+    patient_id_display: data?.patient_key || patientKey,
+    dob: profile.date_of_birth || profile.dob || null,
+    photo_url: profile.avatar || profile.photo_url || null,
+  }), [profile, name, data, patientKey]);
+
+  const startAssessment = async (templateId) => {
+    if (!templateId) return;
+    if (!patientIds.patient_id && !patientIds.clinic_patient_id) {
+      return toast.error('Patient identity missing — reload the page and try again');
+    }
+    setTriggering(true);
+    try {
+      const res = await erpAssessments.createResponse({
+        template_id: Number(templateId),
+        responses: {},
+        ...patientIds,
+      }, { clinic_id: clinicId });
+      const id = res.id || res.data?.id;
+      if (!id) throw new Error('Assessment created but no id returned');
+      toast.success('Assessment started');
+      setPickTemplate(false);
+      setActiveAssessment({ responseId: id, templateId: Number(templateId) });
+      await loadErpAssessments();
+    } catch (error) {
+      toast.error(error.message || 'Could not start assessment');
+    } finally {
+      setTriggering(false);
+    }
+  };
+
+  const triggerAssessment = () => {
+    if (!templates.length) {
+      return toast.error('Publish an Assessment Builder template first (Settings → Assessment Builder)');
+    }
+    if (templates.length === 1) {
+      startAssessment(templates[0].id);
+      return;
+    }
+    setPickTemplate(true);
   };
 
   const terminate = async (pkg) => {
@@ -148,7 +196,10 @@ export default function ClinicPatientDetailPage() {
             <span className="sm:hidden">Back</span>
           </Link>
           {can('appointments.manage') && (
-            <button type="button" className="btn-primary inline-flex items-center gap-2" onClick={() => setBooking(true)}>
+            <button type="button" className="btn-primary inline-flex items-center gap-2" onClick={() => {
+              setBookingSeed({});
+              setBooking(true);
+            }}>
               <FaIcon icon="fa-calendar-plus" />
               Book
             </button>
@@ -159,9 +210,18 @@ export default function ClinicPatientDetailPage() {
       <ClinicBookingModal
         clinicId={clinicId}
         open={booking}
-        initialPatient={data?.patient_key || patientKey}
-        onClose={() => setBooking(false)}
-        onBooked={load}
+        initialPatient={bookingSeed.patient || data?.patient_key || patientKey}
+        initialPackageAssignmentId={bookingSeed.packageAssignmentId}
+        initialMode={bookingSeed.mode}
+        onClose={() => {
+          setBooking(false);
+          setBookingSeed({});
+        }}
+        onBooked={() => {
+          setBooking(false);
+          setBookingSeed({});
+          load();
+        }}
       />
       {boot || loading ? (
         <div className="glass-card h-72 animate-pulse" />
@@ -216,26 +276,121 @@ export default function ClinicPatientDetailPage() {
 
             {tab === 'Assessments' && (
               <>
-                <div className="flex justify-between mb-3">
-                  <h2 className="font-bold">Assessments</h2>
-                  {can('assessments.manage') && (
-                    <button className="btn-primary text-xs !py-2" type="button" onClick={triggerAssessment}>
-                      Trigger reassessment
-                    </button>
-                  )}
-                </div>
-                <div className="space-y-3">
-                  {data.assessments?.map((a) => (
-                    <details key={a.id} className="rounded-xl border border-slate-100 p-3">
-                      <summary className="font-semibold text-sm cursor-pointer">
-                        {a.template_name} · v{a.template_version}
-                        <span className="float-right text-xs text-slate-400">{String(a.created_at || '').slice(0, 10)}</span>
-                      </summary>
-                      <div className="mt-3"><KeyValues data={parse(a.responses_json)} /></div>
-                    </details>
-                  ))}
-                  {!data.assessments?.length && <Empty>No assessments.</Empty>}
-                </div>
+                {activeAssessment ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <h2 className="font-bold">Fill assessment</h2>
+                      <button
+                        type="button"
+                        className="btn-outline text-xs !py-2"
+                        onClick={() => {
+                          setActiveAssessment(null);
+                          loadErpAssessments();
+                        }}
+                      >
+                        ← Back to list
+                      </button>
+                    </div>
+                    <AssessmentResponseForm
+                      clinicId={clinicId}
+                      responseId={activeAssessment.responseId}
+                      templateId={activeAssessment.templateId}
+                      patientKey={data.patient_key || patientKey}
+                      patient={assessmentPatient}
+                      onSaved={() => {
+                        loadErpAssessments();
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex flex-wrap justify-between gap-2 mb-3">
+                      <h2 className="font-bold">Assessments</h2>
+                      {can('assessments.manage') && (
+                        <button className="btn-primary text-xs !py-2" type="button" onClick={triggerAssessment} disabled={triggering}>
+                          {triggering ? 'Starting…' : 'Trigger reassessment'}
+                        </button>
+                      )}
+                    </div>
+
+                    {pickTemplate && (
+                      <div className="mb-4 rounded-xl border border-teal-200 bg-teal-50/50 p-3 space-y-2">
+                        <p className="text-sm font-semibold text-slate-800">Choose a published template</p>
+                        {templates.map((t) => (
+                          <button
+                            key={t.id}
+                            type="button"
+                            disabled={triggering}
+                            onClick={() => startAssessment(t.id)}
+                            className="w-full text-left rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm hover:border-teal-400 transition-colors"
+                          >
+                            <span className="font-medium">{t.name}</span>
+                            <span className="text-xs text-slate-400 ml-2">v{t.version}</span>
+                          </button>
+                        ))}
+                        <button type="button" className="text-xs text-slate-500 hover:underline" onClick={() => setPickTemplate(false)}>
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+
+                    {templates.length > 0 && (
+                      <div className="mb-4">
+                        <p className="text-[11px] uppercase tracking-wide text-slate-400 mb-2">Available templates</p>
+                        <div className="flex flex-wrap gap-2">
+                          {templates.map((t) => (
+                            <button
+                              key={t.id}
+                              type="button"
+                              onClick={() => can('assessments.manage') && startAssessment(t.id)}
+                              className="inline-flex items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-medium text-teal-800 hover:bg-teal-100"
+                            >
+                              <FaIcon icon="fa-solid fa-clipboard-list" className="text-[10px]" />
+                              {t.name}
+                              <span className="text-teal-500">v{t.version}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-3">
+                      {erpResponses.map((a) => (
+                        <div key={`erp-${a.id}`} className="rounded-xl border border-slate-100 p-3 flex items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="font-semibold text-sm truncate">{a.template_name || 'Assessment'}</p>
+                            <p className="text-xs text-slate-400">
+                              v{a.template_version} · {a.status} · {String(a.created_at || '').slice(0, 10)}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            className="btn-outline text-xs !py-1.5 shrink-0"
+                            onClick={() => setActiveAssessment({ responseId: a.id, templateId: a.template_id })}
+                          >
+                            {a.status === 'signed' || a.status === 'locked' ? 'View' : 'Continue'}
+                          </button>
+                        </div>
+                      ))}
+                      {(data.assessments || []).map((a) => (
+                        <details key={`legacy-${a.id}`} className="rounded-xl border border-slate-100 p-3">
+                          <summary className="font-semibold text-sm cursor-pointer">
+                            {a.template_name} · v{a.template_version}
+                            <span className="float-right text-xs text-slate-400">{String(a.created_at || '').slice(0, 10)}</span>
+                          </summary>
+                          <div className="mt-3"><KeyValues data={parse(a.responses_json)} /></div>
+                        </details>
+                      ))}
+                      {!erpResponses.length && !data.assessments?.length && (
+                        <Empty>
+                          {templates.length
+                            ? 'No assessments yet — pick a template above to start.'
+                            : 'No assessments. Publish a template in Assessment Builder first.'}
+                        </Empty>
+                      )}
+                    </div>
+                  </>
+                )}
               </>
             )}
 
@@ -247,6 +402,14 @@ export default function ClinicPatientDetailPage() {
                     pkg={p}
                     canManage={can('packages.manage')}
                     onTerminate={can('packages.manage') ? terminate : null}
+                    onSchedule={can('appointments.manage') ? (pkg) => {
+                      setBookingSeed({
+                        patient: data.patient_key || patientKey,
+                        packageAssignmentId: pkg.id,
+                        mode: ['clinic', 'home_visit', 'online'].includes(pkg.service_mode) ? pkg.service_mode : 'clinic',
+                      });
+                      setBooking(true);
+                    } : undefined}
                     onReturnCredit={can('packages.manage') ? async (pkg) => {
                       if (!window.confirm(`Return one session credit to "${pkg.package_name || 'this package'}"?`)) return;
                       try {

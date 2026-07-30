@@ -29,7 +29,7 @@ function detectBrowser() {
  * Floating Help & Feedback action button for the clinic portal.
  */
 export default function HelpFeedbackFab() {
-  const { clinicId, me, portalRole } = useClinicPortal();
+  const { clinicId, clinic, me, portalRole } = useClinicPortal();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState(null); // 'feedback' | 'support'
   const [saving, setSaving] = useState(false);
@@ -54,8 +54,9 @@ export default function HelpFeedbackFab() {
       requester_phone: me?.phone || '',
       requester_role: portalRole || me?.role_slug || '',
       clinic_id: clinicId || undefined,
+      clinic_name: clinic?.name || undefined,
     }),
-    [me, portalRole, clinicId]
+    [me, portalRole, clinicId, clinic?.name]
   );
 
   const suggestions = useMemo(() => {
@@ -261,7 +262,9 @@ export default function HelpFeedbackFab() {
                   </label>
 
                   <div className="rounded-xl bg-slate-50 p-3 text-[11px] text-slate-500 space-y-0.5">
-                    <p>Auto-captured: {context.page_url?.slice(0, 60)}…</p>
+                    <p>Clinic: <span className="font-medium text-slate-700">{context.clinic_name || 'Current clinic'}</span></p>
+                    <p>Submitted at: {new Date().toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</p>
+                    <p>Page: {context.page_url?.slice(0, 60)}…</p>
                     <p>{context.browser} · {context.device} · {context.screen_res}</p>
                     <p>{context.requester_name} · {context.requester_email}</p>
                   </div>

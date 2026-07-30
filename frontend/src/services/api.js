@@ -407,6 +407,9 @@ export const patients = {
   favouriteClinics: () => api.get('/patients/favourite-clinics'),
   addFavouriteClinic: (clinicId) => api.post(`/patients/favourite-clinics/${clinicId}`),
   removeFavouriteClinic: (clinicId) => api.delete(`/patients/favourite-clinics/${clinicId}`),
+  preferredClinic: () => api.get('/patients/preferred-clinic'),
+  updatePreferredClinic: (data) => api.put('/patients/preferred-clinic', data),
+  clearPreferredClinic: () => api.delete('/patients/preferred-clinic'),
   savedExercises: () => api.get('/patients/saved-exercises'),
   addSavedExercise: (exerciseId) => api.post(`/patients/saved-exercises/${exerciseId}`),
   removeSavedExercise: (exerciseId) => api.delete(`/patients/saved-exercises/${exerciseId}`),
@@ -790,6 +793,8 @@ export const clinicPortal = {
     api.get(`/clinic-portal/${clinicId}/packages/${pkgId}/detail`),
   packagePatientSearch: (clinicId, q) =>
     api.get(`/clinic-portal/${clinicId}/packages/patient-search`, { params: { q } }),
+  patientSearch: (clinicId, q) =>
+    api.get(`/clinic-portal/${clinicId}/packages/patient-search`, { params: { q } }),
   createCustomBulk: (clinicId, data) =>
     api.post(`/clinic-portal/${clinicId}/packages/create-custom`, data),
   returnCredit: (clinicId, pkgId) =>
@@ -820,6 +825,10 @@ export const clinicPortal = {
     api.get(`/clinic-portal/${clinicId}/notes/folders`),
   notesCreateFolder: (clinicId, data) =>
     api.post(`/clinic-portal/${clinicId}/notes/folders`, data),
+  notesUpdateFolder: (clinicId, folderId, data) =>
+    api.put(`/clinic-portal/${clinicId}/notes/folders/${folderId}`, data),
+  notesDeleteFolder: (clinicId, folderId) =>
+    api.delete(`/clinic-portal/${clinicId}/notes/folders/${folderId}`),
   // Advanced Invoices
   invoicesList: (clinicId, params) =>
     api.get(`/clinic-portal/${clinicId}/invoices`, { params }),
@@ -835,6 +844,8 @@ export const clinicPortal = {
     api.put(`/clinic-portal/${clinicId}/invoices/settings`, data),
   invoicesPay: (clinicId, id, data) =>
     api.post(`/clinic-portal/${clinicId}/invoices/${id}/pay`, data),
+  invoicesFinalizeShare: (clinicId, id) =>
+    api.post(`/clinic-portal/${clinicId}/invoices/${id}/finalize-share`),
   clinicalLibrary: (clinicId, params) =>
     api.get(`/clinic-portal/${clinicId}/clinical-library`, { params }),
   createLibraryEntry: (clinicId, data) => api.post(`/clinic-portal/${clinicId}/clinical-library`, data),
@@ -879,6 +890,7 @@ export const clinicPortal = {
 
 export const clinicQr = {
   resolve: (token) => api.get('/clinic-qr/resolve', { params: { token } }),
+  sendOtp: (data) => api.post('/clinic-qr/send-otp', data),
   register: (data) => api.post('/clinic-qr/register', data),
   google: (data) => api.post('/clinic-qr/google', data),
   bind: (data) => api.post('/clinic-qr/bind', data),
@@ -942,6 +954,12 @@ export const consultation = {
     api.get(`/consultation/${appointmentId}/exercise/${prescriptionId}`),
   completeSession: (appointmentId) =>
     api.post(`/consultation/${appointmentId}/complete-session`, {}),
+};
+
+/** Public magic payment links for clinic invoices (no auth) */
+export const publicInvoicePay = {
+  info: (token) => api.get(`/public/invoice-pay/${token}`),
+  order: (token) => api.post(`/public/invoice-pay/${token}/order`, {}),
 };
 
 /** Patient Portal — dashboard aggregates (bills, progress, prescriptions, video) */
@@ -1046,23 +1064,23 @@ export const erpPatient = {
 
 export const erpAssessments = {
   listTemplates: (params) => api.get('/erp/assessments/templates', { params }),
-  createTemplate: (data) => api.post('/erp/assessments/templates', data),
-  getTemplate: (id) => api.get(`/erp/assessments/templates/${id}`),
-  updateTemplate: (id, data) => api.put(`/erp/assessments/templates/${id}`, data),
-  deleteTemplate: (id) => api.delete(`/erp/assessments/templates/${id}`),
-  duplicateTemplate: (id) => api.post(`/erp/assessments/templates/${id}/duplicate`),
-  getVersionHistory: (id) => api.get(`/erp/assessments/templates/${id}/versions`),
-  restoreVersion: (templateId, versionId) => api.post(`/erp/assessments/templates/${templateId}/versions/${versionId}/restore`),
+  createTemplate: (data, params) => api.post('/erp/assessments/templates', data, { params }),
+  getTemplate: (id, params) => api.get(`/erp/assessments/templates/${id}`, { params }),
+  updateTemplate: (id, data, params) => api.put(`/erp/assessments/templates/${id}`, data, { params }),
+  deleteTemplate: (id, params) => api.delete(`/erp/assessments/templates/${id}`, { params }),
+  duplicateTemplate: (id, params) => api.post(`/erp/assessments/templates/${id}/duplicate`, {}, { params }),
+  getVersionHistory: (id, params) => api.get(`/erp/assessments/templates/${id}/versions`, { params }),
+  restoreVersion: (templateId, versionId, params) => api.post(`/erp/assessments/templates/${templateId}/versions/${versionId}/restore`, {}, { params }),
   listResponses: (params) => api.get('/erp/assessments/responses', { params }),
-  createResponse: (data) => api.post('/erp/assessments/responses', data),
-  getResponse: (id) => api.get(`/erp/assessments/responses/${id}`),
-  updateResponse: (id, data) => api.put(`/erp/assessments/responses/${id}`, data),
-  sendOtp: (id, data) => api.post(`/erp/assessments/responses/${id}/otp/send`, data),
-  verifyOtp: (id, data) => api.post(`/erp/assessments/responses/${id}/otp/verify`, data),
+  createResponse: (data, params) => api.post('/erp/assessments/responses', data, { params }),
+  getResponse: (id, params) => api.get(`/erp/assessments/responses/${id}`, { params }),
+  updateResponse: (id, data, params) => api.put(`/erp/assessments/responses/${id}`, data, { params }),
+  sendOtp: (id, data, params) => api.post(`/erp/assessments/responses/${id}/otp/send`, data, { params }),
+  verifyOtp: (id, data, params) => api.post(`/erp/assessments/responses/${id}/otp/verify`, data, { params }),
   listChips: (params) => api.get('/erp/assessments/chips', { params }),
-  createChip: (data) => api.post('/erp/assessments/chips', data),
-  updateChip: (id, data) => api.put(`/erp/assessments/chips/${id}`, data),
-  deleteChip: (id) => api.delete(`/erp/assessments/chips/${id}`),
+  createChip: (data, params) => api.post('/erp/assessments/chips', data, { params }),
+  updateChip: (id, data, params) => api.put(`/erp/assessments/chips/${id}`, data, { params }),
+  deleteChip: (id, params) => api.delete(`/erp/assessments/chips/${id}`, { params }),
 };
 
 export const erpProtocols = {

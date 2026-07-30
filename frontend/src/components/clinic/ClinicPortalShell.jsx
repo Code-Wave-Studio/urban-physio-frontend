@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../FaIcon';
 import ClinicRoleSwitch from './ClinicRoleSwitch';
@@ -8,17 +8,8 @@ import { clinicNavFor } from '../../constants/clinicNav';
 import useClinicPortal from '../../hooks/useClinicPortal';
 import { ClinicPortalProvider } from '../../contexts/ClinicPortalContext';
 
-const MOBILE_OPS = [
-  { to: '/clinic-portal', adminTo: '/clinic-portal/admin', label: 'Home', icon: 'fa-gauge-high', match: 'home' },
-  { to: '/clinic-portal/appointments', label: 'Appts', icon: 'fa-calendar-check' },
-  { to: '/clinic-portal/patients', label: 'Patients', icon: 'fa-users', prefix: true },
-  { to: '/clinic-portal/billing', label: 'Billing', icon: 'fa-file-invoice-dollar' },
-  { to: '/clinic-portal/packages', label: 'Packages', icon: 'fa-box-open' },
-  { to: '/clinic-portal/qr', label: 'QR', icon: 'fa-qrcode' },
-];
-
 /**
- * Shared clinic portal chrome: role-aware nav + mode switcher badge.
+ * Shared clinic portal chrome: role-aware nav + mode switcher in sidebar footer.
  */
 function ClinicPortalShellInner({ children, title, subtitle, actions }) {
   const {
@@ -32,18 +23,33 @@ function ClinicPortalShellInner({ children, title, subtitle, actions }) {
   } = useClinicPortal();
   const [switchOpen, setSwitchOpen] = useState(false);
   const links = clinicNavFor(portalRole, permissions);
-  const { pathname } = useLocation();
 
-  const isOpsActive = (item) => {
-    if (item.match === 'home') {
-      return pathname === '/clinic-portal' || pathname === '/clinic-portal/admin';
-    }
-    if (item.prefix) return pathname.startsWith(item.to);
-    return pathname === item.to || pathname.startsWith(`${item.to}/`);
-  };
+  const modeSwitch = (
+    <button
+      type="button"
+      onClick={() => setSwitchOpen(true)}
+      className={`w-full inline-flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold border transition ${
+        isAdminMode
+          ? 'bg-primary-50 text-primary-800 border-primary-200 hover:bg-primary-100'
+          : 'bg-orange-50 text-orange-900 border-orange-200 hover:bg-orange-100'
+      }`}
+      title="Switch portal role"
+    >
+      <FaIcon icon={isAdminMode ? 'fa-user-shield' : 'fa-desktop'} className="shrink-0" />
+      <span className="flex-1 text-left truncate">
+        {isAdminMode ? 'Clinic Admin' : 'Receptionist'}
+      </span>
+      {(canSwitchAdmin || isAdminMode) && (
+        <span className="text-[10px] uppercase tracking-wide opacity-70 shrink-0 inline-flex items-center gap-1">
+          Switch
+          <FaIcon icon="fa-right-left" />
+        </span>
+      )}
+    </button>
+  );
 
   return (
-    <DashboardLayout links={links} variant="clinic">
+    <DashboardLayout links={links} variant="clinic" sidebarFooter={modeSwitch}>
       <div className="mb-3 sm:mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           {title && (
@@ -55,44 +61,10 @@ function ClinicPortalShellInner({ children, title, subtitle, actions }) {
             <p className="text-sm text-slate-500 mt-1 break-words">{subtitle}</p>
           )}
         </div>
-        <div className="portal-page-actions shrink-0">
-          {actions}
-          <button
-            type="button"
-            onClick={() => setSwitchOpen(true)}
-            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition shrink-0 ${
-              isAdminMode
-                ? 'bg-primary-50 text-primary-800 border-primary-200'
-                : 'bg-orange-50 text-orange-900 border-orange-200'
-            }`}
-            title="Switch portal role"
-          >
-            <FaIcon icon={isAdminMode ? 'fa-user-shield' : 'fa-desktop'} />
-            <span className="hidden sm:inline">{isAdminMode ? 'Clinic Admin' : 'Receptionist'}</span>
-            <span className="sm:hidden">{isAdminMode ? 'Admin' : 'Front desk'}</span>
-            {(canSwitchAdmin || isAdminMode) && (
-              <FaIcon icon="fa-right-left" className="opacity-60" />
-            )}
-          </button>
-        </div>
+        {actions ? (
+          <div className="portal-page-actions shrink-0">{actions}</div>
+        ) : null}
       </div>
-
-      <nav className="portal-mobile-ops" aria-label="Clinic quick links">
-        {MOBILE_OPS.map((item) => {
-          const to = item.match === 'home' && isAdminMode ? (item.adminTo || item.to) : item.to;
-          const active = isOpsActive(item);
-          return (
-            <Link
-              key={item.label}
-              to={to}
-              className={active ? 'portal-mobile-ops--active' : undefined}
-            >
-              <FaIcon icon={item.icon} />
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
 
       {!loading && !clinic && (
         <div className="glass-card text-center py-10 mb-4">

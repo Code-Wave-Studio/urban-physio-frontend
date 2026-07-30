@@ -48,6 +48,15 @@ export default function PatientBills() {
   const bills = (data?.bills || []).filter((b) => (filter === 'all' ? true : b.status === filter));
 
   const payNow = async (bill) => {
+    // Clinic invoices: use magic payment link (no appointment Razorpay order)
+    if (bill.source === 'clinic_invoice') {
+      if (bill.payment_link) {
+        window.open(bill.payment_link, '_blank', 'noopener,noreferrer');
+        return;
+      }
+      toast.error('Payment link not available yet — contact the clinic');
+      return;
+    }
     try {
       const orderRes = await payments.createOrder(bill.appointment_id);
       const order = orderRes.data;
@@ -153,15 +162,20 @@ export default function PatientBills() {
               </thead>
               <tbody>
                 {bills.map((b) => (
-                  <tr key={b.id} className="border-b border-slate-50 hover:bg-slate-50/50">
+                  <tr key={`${b.source || 'payment'}-${b.id}`} className="border-b border-slate-50 hover:bg-slate-50/50">
                     <td className="px-4 py-3">
                       <p className="font-semibold text-slate-800">{b.invoice_number || `#${b.id}`}</p>
-                      <p className="text-xs text-slate-400">{b.booking_id}</p>
+                      <p className="text-xs text-slate-400">{b.clinic_name || b.booking_id}</p>
                     </td>
                     <td className="px-3 py-3 text-slate-600 whitespace-nowrap">{fmtDate(b.paid_at || b.created_at)}</td>
-                    <td className="px-3 py-3 text-slate-600">Dr. {b.doctor_name}</td>
+                    <td className="px-3 py-3 text-slate-600">
+                      {b.source === 'clinic_invoice' ? (b.clinic_name || 'Clinic') : `Dr. ${b.doctor_name}`}
+                    </td>
                     <td className="px-3 py-3 font-semibold text-slate-800 whitespace-nowrap">
                       {inr(b.amount)}
+                      {Number(b.amount_due) > 0 && b.status === 'pending' && (
+                        <span className="block text-[11px] text-amber-600">Due {inr(b.amount_due)}</span>
+                      )}
                       {Number(b.refund_amount) > 0 && (
                         <span className="block text-[11px] text-violet-600">-{inr(b.refund_amount)} refunded</span>
                       )}
@@ -172,7 +186,7 @@ export default function PatientBills() {
                       </span>
                     </td>
                     <td className="px-3 py-3 whitespace-nowrap">
-                      {b.status === 'paid' ? (
+                      {b.status === 'paid' && b.source !== 'clinic_invoice' && b.appointment_id ? (
                         <button
                           type="button"
                           onClick={() => setInvoiceId(b.appointment_id)}
@@ -188,6 +202,15 @@ export default function PatientBills() {
                         >
                           <FaIcon icon="fa-credit-card" /> Pay now
                         </button>
+                      ) : b.source === 'clinic_invoice' && b.payment_link ? (
+                        <a
+                          href={b.payment_link}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 text-primary-600 hover:text-primary-800 font-semibold text-xs"
+                        >
+                          <FaIcon icon="fa-arrow-up-right-from-square" /> Open
+                        </a>
                       ) : (
                         <span className="text-slate-300">—</span>
                       )}

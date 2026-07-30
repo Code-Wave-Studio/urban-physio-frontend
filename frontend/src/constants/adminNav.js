@@ -24,6 +24,7 @@ export const ADMIN_NAV = [
   { to: '/admin/calendar', label: 'Doctor Calendar', icon: 'fa-calendar-days' },
   { to: '/admin/appointment-requests', label: 'Doctor changes', icon: 'fa-user-doctor' },
   { to: '/admin/emergency', label: 'Emergency', icon: 'fa-truck-medical' },
+  { to: '/admin/support', label: 'Support Centre', icon: 'fa-life-ring' },
   { to: '/admin/booking-settings', label: 'Booking', icon: 'fa-puzzle-piece' },
   { to: '/admin/notifications', label: 'Notifications', icon: 'fa-bell', notifyKey: true },
   { to: '/admin/notification-settings', label: 'Notification rules', icon: 'fa-bell-concierge' },

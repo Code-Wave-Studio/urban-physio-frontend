@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import FaIcon from '../FaIcon';
 
 const STATUS_STYLES = {
@@ -56,11 +55,18 @@ function ProgressBar({ pct }) {
  *   canManage     – bool (show manage actions)
  *   onTerminate   – (pkg) callback
  *   onReturnCredit – (pkg) callback
+ *   onSchedule    – (pkg) callback — opens booking for next session
  *   defaultExpanded – bool
  */
-export default function PackageCard({ pkg, canManage = false, onTerminate, onReturnCredit, defaultExpanded = false }) {
+export default function PackageCard({
+  pkg,
+  canManage = false,
+  onTerminate,
+  onReturnCredit,
+  onSchedule,
+  defaultExpanded = false,
+}) {
   const [open, setOpen] = useState(defaultExpanded);
-  const navigate = useNavigate();
 
   const total      = Number(pkg.total_sessions || 0);
   const completed  = Number(pkg.completed_sessions || 0);
@@ -68,23 +74,15 @@ export default function PackageCard({ pkg, canManage = false, onTerminate, onRet
   const pct        = total ? Math.round((completed / total) * 100) : 0;
   const status     = String(pkg.effective_status || pkg.status || 'active').toLowerCase();
   const pkgType    = String(pkg.package_type || 'catalog').toLowerCase();
-  const canSchedule = status === 'active' && remaining > 0;
+  const canSchedule = status === 'active' && remaining > 0 && typeof onSchedule === 'function';
 
   const appointments = pkg.appointments || [];
   const completedAppts = appointments.filter((a) => a.status === 'completed');
-  const pendingAppts   = appointments.filter((a) => ['scheduled', 'confirmed'].includes(a.status));
+  const pendingAppts   = appointments.filter((a) => ['scheduled', 'confirmed', 'pending'].includes(a.status));
 
-  const handleSchedule = () => {
-    const params = new URLSearchParams({
-      pkg_id:       pkg.id,
-      patient_id:   pkg.patient_id || '',
-      cp_id:        pkg.clinic_patient_id || '',
-      service_type: pkg.service_type || '',
-      service_mode: pkg.service_mode || '',
-      pkg_name:     pkg.package_name || '',
-      remaining:    remaining,
-    });
-    navigate(`/clinic-portal/appointments/new?${params.toString()}`);
+  const handleSchedule = (e) => {
+    e.stopPropagation();
+    onSchedule?.(pkg);
   };
 
   return (

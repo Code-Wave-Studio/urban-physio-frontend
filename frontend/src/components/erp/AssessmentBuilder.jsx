@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import FaIcon from '../FaIcon';
-import { erpAssessments } from '../../services/api';
+import { clinicPortal, erpAssessments } from '../../services/api';
+import AssessmentFormChrome, { defaultLetterhead } from './AssessmentFormChrome';
 
 // ─── Default Clinical Sections ─────────────────────────────────────────────
 const DEFAULT_SECTIONS = [
@@ -46,6 +47,7 @@ const DEFAULT_SECTIONS = [
   ]},
   { id: 'investigations', title: 'Investigations', fields: [
     { id: 'investigation_text', label: 'Investigations / Reports', type: 'textarea', required: false },
+    { id: 'clinical_images', label: 'Clinical Images / Body Chart / X-ray', type: 'image', required: false },
   ]},
   { id: 'diagnosis', title: 'Diagnosis', fields: [
     { id: 'diagnosis', label: 'Clinical Diagnosis', type: 'textarea', required: true },
@@ -63,7 +65,17 @@ const DEFAULT_SECTIONS = [
   ]},
 ];
 
-const FIELD_TYPES = ['text','textarea','number','date','select','checkbox','radio','display','signature'];
+const FIELD_TYPES = ['text','textarea','number','date','select','checkbox','radio','display','signature','image'];
+
+const SUBTITLE_OPTIONS = ['Initial Evaluation', 'Re-assessment', 'Discharge Assessment'];
+const DEPT_OPTIONS = [
+  'Orthopaedic Physiotherapy',
+  'Neurological Physiotherapy',
+  'Sports Physiotherapy',
+  'Paediatric Physiotherapy',
+  'Cardiopulmonary Physiotherapy',
+  'Geriatric Physiotherapy',
+];
 
 // ─── FieldEditor ───────────────────────────────────────────────────────────
 function FieldEditor({ field, onChange, onDelete }) {
@@ -92,13 +104,16 @@ function FieldEditor({ field, onChange, onDelete }) {
           <FaIcon icon="fa-solid fa-trash" className="text-xs" />
         </button>
       </div>
-      {field.type === 'select' && (
+      {(field.type === 'select' || field.type === 'radio') && (
         <input
           className="w-full text-xs border rounded-lg px-2 py-1"
           placeholder="Options (comma separated)"
           value={Array.isArray(field.options) ? field.options.join(',') : ''}
           onChange={(e) => onChange({ ...field, options: e.target.value.split(',').map((s) => s.trim()) })}
         />
+      )}
+      {field.type === 'image' && (
+        <p className="text-[11px] text-slate-400">Clinicians can upload body charts, X-rays, or clinical photos when filling this form.</p>
       )}
     </div>
   );
@@ -149,46 +164,216 @@ function SectionEditor({ section, onChange, onDelete }) {
   );
 }
 
+function LetterheadEditor({ letterhead, onChange }) {
+  const set = (key, value) => onChange({ ...letterhead, [key]: value });
+  return (
+    <div className="space-y-4">
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
+        <h3 className="font-semibold text-sm text-slate-800">Brand & clinic identity</h3>
+        <div className="grid sm:grid-cols-2 gap-3">
+          <label className="text-xs space-y-1">
+            <span className="text-slate-500">Primary brand colour</span>
+            <div className="flex gap-2">
+              <input type="color" value={letterhead.primary_color || '#0d9488'} onChange={(e) => set('primary_color', e.target.value)} className="h-9 w-12 rounded border" />
+              <input className="flex-1 border rounded-lg px-2 py-1.5 text-sm" value={letterhead.primary_color || ''} onChange={(e) => set('primary_color', e.target.value)} />
+            </div>
+          </label>
+          <label className="text-xs space-y-1">
+            <span className="text-slate-500">Logo URL</span>
+            <input className="w-full border rounded-lg px-2 py-1.5 text-sm" value={letterhead.logo_url || ''} onChange={(e) => set('logo_url', e.target.value)} placeholder="https://… or clinic branding logo" />
+          </label>
+          <label className="text-xs space-y-1 sm:col-span-2">
+            <span className="text-slate-500">Clinic name</span>
+            <input className="w-full border rounded-lg px-2 py-1.5 text-sm font-semibold" value={letterhead.clinic_name || ''} onChange={(e) => set('clinic_name', e.target.value)} />
+          </label>
+          <label className="text-xs space-y-1">
+            <span className="text-slate-500">Tagline</span>
+            <input className="w-full border rounded-lg px-2 py-1.5 text-sm" value={letterhead.tagline || ''} onChange={(e) => set('tagline', e.target.value)} />
+          </label>
+          <label className="text-xs space-y-1">
+            <span className="text-slate-500">Branch / location</span>
+            <input className="w-full border rounded-lg px-2 py-1.5 text-sm" value={letterhead.branch_name || ''} onChange={(e) => set('branch_name', e.target.value)} />
+          </label>
+          <label className="text-xs space-y-1 sm:col-span-2">
+            <span className="text-slate-500">Full address</span>
+            <textarea rows={2} className="w-full border rounded-lg px-2 py-1.5 text-sm" value={letterhead.address || ''} onChange={(e) => set('address', e.target.value)} />
+          </label>
+          {[['phone','Phone'],['whatsapp','WhatsApp'],['email','Email'],['website','Website'],['registration_no','Registration No'],['gstin','GST No']].map(([k, label]) => (
+            <label key={k} className="text-xs space-y-1">
+              <span className="text-slate-500">{label}</span>
+              <input className="w-full border rounded-lg px-2 py-1.5 text-sm" value={letterhead[k] || ''} onChange={(e) => set(k, e.target.value)} />
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
+        <h3 className="font-semibold text-sm text-slate-800">Form identity</h3>
+        <div className="grid sm:grid-cols-2 gap-3">
+          <label className="text-xs space-y-1 sm:col-span-2">
+            <span className="text-slate-500">Form title</span>
+            <input className="w-full border rounded-lg px-2 py-1.5 text-sm font-semibold" value={letterhead.form_title || ''} onChange={(e) => set('form_title', e.target.value)} />
+          </label>
+          <label className="text-xs space-y-1">
+            <span className="text-slate-500">Subtitle</span>
+            <select className="w-full border rounded-lg px-2 py-1.5 text-sm" value={letterhead.subtitle || 'Initial Evaluation'} onChange={(e) => set('subtitle', e.target.value)}>
+              {SUBTITLE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </label>
+          <label className="text-xs space-y-1">
+            <span className="text-slate-500">Department</span>
+            <select className="w-full border rounded-lg px-2 py-1.5 text-sm" value={letterhead.department || DEPT_OPTIONS[0]} onChange={(e) => set('department', e.target.value)}>
+              {DEPT_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </label>
+          <label className="text-xs space-y-1">
+            <span className="text-slate-500">Form code</span>
+            <input className="w-full border rounded-lg px-2 py-1.5 text-sm" value={letterhead.form_code || ''} onChange={(e) => set('form_code', e.target.value)} />
+          </label>
+          <label className="text-xs space-y-1">
+            <span className="text-slate-500">Version</span>
+            <input className="w-full border rounded-lg px-2 py-1.5 text-sm" value={letterhead.form_version || ''} onChange={(e) => set('form_version', e.target.value)} />
+          </label>
+          <label className="text-xs space-y-1">
+            <span className="text-slate-500">Revision date</span>
+            <input className="w-full border rounded-lg px-2 py-1.5 text-sm" value={letterhead.revision_date || ''} onChange={(e) => set('revision_date', e.target.value)} />
+          </label>
+          <label className="text-xs space-y-1">
+            <span className="text-slate-500">Language</span>
+            <select className="w-full border rounded-lg px-2 py-1.5 text-sm" value={letterhead.language || 'English'} onChange={(e) => set('language', e.target.value)}>
+              <option>English</option>
+              <option>Hindi</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
+        <h3 className="font-semibold text-sm text-slate-800">Consent & disclaimer</h3>
+        <label className="text-xs space-y-1 block">
+          <span className="text-slate-500">Patient consent text</span>
+          <textarea rows={3} className="w-full border rounded-lg px-2 py-1.5 text-sm" value={letterhead.consent_text || ''} onChange={(e) => set('consent_text', e.target.value)} />
+        </label>
+        <label className="text-xs space-y-1 block">
+          <span className="text-slate-500">DPDP disclaimer</span>
+          <textarea rows={2} className="w-full border rounded-lg px-2 py-1.5 text-sm" value={letterhead.disclaimer || ''} onChange={(e) => set('disclaimer', e.target.value)} />
+        </label>
+      </div>
+    </div>
+  );
+}
+
+function PreviewBody({ schema }) {
+  return (
+    <div className="space-y-4">
+      {schema.filter((s) => s.visible !== false).map((section) => (
+        <section key={section.id} className="border-b border-slate-100 pb-4">
+          <h3 className="font-semibold text-sm text-slate-900 mb-2">{section.title}</h3>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {(section.fields || []).map((field) => (
+              <div key={field.id} className={field.type === 'textarea' || field.type === 'image' || field.type === 'display' ? 'sm:col-span-2' : ''}>
+                {field.type !== 'checkbox' && (
+                  <p className="text-[11px] font-medium text-slate-500 mb-1">
+                    {field.label}{field.required ? ' *' : ''}
+                  </p>
+                )}
+                {field.type === 'display' && <p className="text-sm italic text-slate-600">{field.label}</p>}
+                {field.type === 'textarea' && <div className="h-16 rounded-lg border border-dashed border-slate-200 bg-slate-50" />}
+                {field.type === 'image' && (
+                  <div className="h-28 rounded-lg border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center text-slate-400 text-xs gap-1">
+                    <FaIcon icon="fa-solid fa-image" className="text-lg" />
+                    Image upload
+                  </div>
+                )}
+                {field.type === 'signature' && (
+                  <div className="h-14 rounded-lg border-2 border-dashed border-slate-200 text-center text-xs text-slate-400 flex items-center justify-center">
+                    Signature pad
+                  </div>
+                )}
+                {field.type === 'checkbox' && (
+                  <label className="text-sm flex items-center gap-2"><span className="inline-block w-3.5 h-3.5 border rounded" />{field.label}</label>
+                )}
+                {!['display','textarea','image','signature','checkbox'].includes(field.type) && (
+                  <div className="h-9 rounded-lg border border-dashed border-slate-200 bg-slate-50" />
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
 // ─── Main AssessmentBuilder ─────────────────────────────────────────────────
 export default function AssessmentBuilder({ clinicId, templateId, onSaved }) {
-  const [template, setTemplate] = useState(null);
   const [schema, setSchema]     = useState(DEFAULT_SECTIONS);
   const [name, setName]         = useState('New Assessment');
   const [status, setStatus]     = useState('draft');
+  const [letterhead, setLetterhead] = useState(() => defaultLetterhead());
   const [saving, setSaving]     = useState(false);
   const [loading, setLoading]   = useState(!!templateId);
-  const [tab, setTab]           = useState('builder'); // builder | preview | versions
+  const [tab, setTab]           = useState('builder'); // builder | letterhead | preview | versions
 
   const load = useCallback(async () => {
     if (!templateId) return;
     setLoading(true);
     try {
-      const res = await erpAssessments.getTemplate(templateId);
+      const res = await erpAssessments.getTemplate(templateId, clinicId ? { clinic_id: clinicId } : undefined);
       const d   = res.data || res;
-      setTemplate(d);
       setName(d.name);
       setStatus(d.status);
       setSchema(Array.isArray(d.schema) ? d.schema : DEFAULT_SECTIONS);
+      setLetterhead(defaultLetterhead(d.letterhead || {}));
     } catch { toast.error('Could not load template'); }
     finally { setLoading(false); }
-  }, [templateId]);
+  }, [templateId, clinicId]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    if (!clinicId || templateId) return;
+    clinicPortal.getBranding(clinicId)
+      .then((res) => {
+        const b = res.data || res || {};
+        setLetterhead((prev) => defaultLetterhead({
+          ...prev,
+          clinic_name: b.clinic_name || b.name || prev.clinic_name,
+          tagline: b.tagline || prev.tagline,
+          branch_name: b.branch_name || prev.branch_name,
+          logo_url: b.logo_url || prev.logo_url,
+          primary_color: b.primary_color || prev.primary_color,
+          phone: b.phone || prev.phone,
+          email: b.email || prev.email,
+          address: b.address || prev.address,
+          website: b.website || prev.website,
+          gstin: b.gstin || prev.gstin,
+        }));
+      })
+      .catch(() => {});
+  }, [clinicId, templateId]);
+
+  const clinicParams = clinicId ? { clinic_id: clinicId } : undefined;
 
   const save = async (newStatus) => {
     const s = newStatus || status;
     setSaving(true);
     try {
-      const payload = { name, status: s, schema };
+      const payload = { name, status: s, schema, letterhead };
       if (templateId) {
-        await erpAssessments.updateTemplate(templateId, payload);
+        await erpAssessments.updateTemplate(templateId, payload, clinicParams);
         toast.success(s === 'published' ? 'Published!' : 'Saved');
+        onSaved?.(templateId);
+        if (s === 'published') setStatus('published');
+        else if (newStatus) setStatus(newStatus);
+        await load();
       } else {
-        const res = await erpAssessments.createTemplate(payload);
+        const res = await erpAssessments.createTemplate(payload, clinicParams);
+        const newId = res.id || res.data?.id;
         toast.success('Template created');
-        onSaved?.(res.id);
+        onSaved?.(newId);
+        if (newStatus) setStatus(newStatus);
       }
-      if (newStatus) setStatus(newStatus);
     } catch (e) {
       toast.error(e.message || 'Save failed');
     } finally { setSaving(false); }
@@ -208,6 +393,13 @@ export default function AssessmentBuilder({ clinicId, templateId, onSaved }) {
 
   if (loading) return <div className="h-40 rounded-2xl bg-slate-100 animate-pulse" />;
 
+  const TABS = [
+    { id: 'builder', label: 'Builder' },
+    { id: 'letterhead', label: 'Header / Footer' },
+    { id: 'preview', label: 'Preview Form' },
+    ...(templateId ? [{ id: 'versions', label: 'Versions' }] : []),
+  ];
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -218,10 +410,14 @@ export default function AssessmentBuilder({ clinicId, templateId, onSaved }) {
           onChange={(e) => setName(e.target.value)}
           placeholder="Assessment Name"
         />
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className={`text-xs px-2 py-1 rounded-full font-semibold ${status === 'published' ? 'bg-green-100 text-green-700' : status === 'archived' ? 'bg-slate-100 text-slate-500' : 'bg-amber-100 text-amber-700'}`}>
             {status}
           </span>
+          <button type="button" onClick={() => setTab('preview')} className="btn-outline text-sm !py-1.5 inline-flex items-center gap-1.5">
+            <FaIcon icon="fa-solid fa-eye" className="text-xs" />
+            Preview Form
+          </button>
           <button type="button" onClick={() => save()} disabled={saving} className="btn-outline text-sm !py-1.5">
             {saving ? 'Saving…' : 'Save Draft'}
           </button>
@@ -239,15 +435,15 @@ export default function AssessmentBuilder({ clinicId, templateId, onSaved }) {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-slate-100 pb-1">
-        {['builder', 'versions'].map((t) => (
+      <div className="flex flex-wrap gap-2 border-b border-slate-100 pb-1">
+        {TABS.map((t) => (
           <button
-            key={t}
+            key={t.id}
             type="button"
-            onClick={() => setTab(t)}
-            className={`text-sm px-3 py-1.5 rounded-t-lg font-medium transition-colors ${tab === t ? 'bg-white border border-b-0 border-slate-200 text-teal-700' : 'text-slate-500 hover:text-slate-700'}`}
+            onClick={() => setTab(t.id)}
+            className={`text-sm px-3 py-1.5 rounded-t-lg font-medium transition-colors ${tab === t.id ? 'bg-white border border-b-0 border-slate-200 text-teal-700' : 'text-slate-500 hover:text-slate-700'}`}
           >
-            {t.charAt(0).toUpperCase() + t.slice(1)}
+            {t.label}
           </button>
         ))}
       </div>
@@ -273,28 +469,66 @@ export default function AssessmentBuilder({ clinicId, templateId, onSaved }) {
         </div>
       )}
 
+      {tab === 'letterhead' && (
+        <LetterheadEditor letterhead={letterhead} onChange={setLetterhead} />
+      )}
+
+      {tab === 'preview' && (
+        <div className="space-y-3">
+          <div className="flex justify-end gap-2" data-print-hide>
+            <button
+              type="button"
+              className="btn-outline text-sm !py-1.5 inline-flex items-center gap-1.5"
+              onClick={() => window.print()}
+            >
+              <FaIcon icon="fa-solid fa-print" className="text-xs" />
+              Print preview
+            </button>
+          </div>
+          <div className="rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-sm">
+            <AssessmentFormChrome
+              letterhead={letterhead}
+              mode="preview"
+              patient={{
+                name: 'Rahul Sharma',
+                id_code: 'TUP-2026-00847',
+                dob: '1990-03-12',
+                gender: 'Male',
+                blood_group: 'B+',
+              }}
+              visit={{ type: 'New', mode: 'Clinic', number: '1 of 18', assessment_date: new Date().toISOString() }}
+              physio={{ name: 'Dr. Priya Menon', qualification: 'MPT', specialization: 'Ortho' }}
+              digitalRecordUrl="https://theurbanphysio.com"
+            >
+              <PreviewBody schema={schema} />
+            </AssessmentFormChrome>
+          </div>
+        </div>
+      )}
+
       {tab === 'versions' && templateId && (
-        <VersionHistory templateId={templateId} />
+        <VersionHistory templateId={templateId} clinicId={clinicId} />
       )}
     </div>
   );
 }
 
-function VersionHistory({ templateId }) {
+function VersionHistory({ templateId, clinicId }) {
   const [versions, setVersions] = useState([]);
   const [loading, setLoading]   = useState(true);
+  const clinicParams = clinicId ? { clinic_id: clinicId } : undefined;
 
   useEffect(() => {
-    erpAssessments.getVersionHistory(templateId)
+    erpAssessments.getVersionHistory(templateId, clinicParams)
       .then((r) => setVersions(r.data || r || []))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [templateId]);
+  }, [templateId, clinicId]);
 
   const restore = async (versionId) => {
     if (!window.confirm('Restore this version?')) return;
     try {
-      await erpAssessments.restoreVersion(templateId, versionId);
+      await erpAssessments.restoreVersion(templateId, versionId, clinicParams);
       toast.success('Version restored');
     } catch (e) { toast.error(e.message || 'Failed'); }
   };

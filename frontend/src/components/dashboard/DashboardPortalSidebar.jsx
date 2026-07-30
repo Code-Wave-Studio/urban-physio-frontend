@@ -16,6 +16,7 @@ export default function DashboardPortalSidebar({
   title,
   subtitle,
   accent = 'primary',
+  footerExtra = null,
 }) {
   const { pathname } = useLocation();
   const { user } = useAuth();
@@ -122,8 +123,9 @@ export default function DashboardPortalSidebar({
           )}
         </nav>
 
-        <div className="p-4 border-t border-slate-200/80 shrink-0 text-xs text-slate-500">
-          <p className="truncate mb-2">
+        <div className="p-4 border-t border-slate-200/80 shrink-0 text-xs text-slate-500 space-y-3">
+          {footerExtra}
+          <p className="truncate">
             {user?.first_name} {user?.last_name}
           </p>
           <Link to="/" className={`${accentLabel} font-medium hover:underline inline-flex items-center gap-1`}>

@@ -26,18 +26,23 @@ function normalizeFields(list) {
 }
 
 export default function ClinicFormsPage() {
-  const { clinicId, isAdminMode, can, loading: boot } = useClinicPortal();
+  const { clinicId, clinic, isAdminMode, can, loading: boot } = useClinicPortal();
   const [fields, setFields] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
+  const [branding, setBranding] = useState(null);
 
   const load = useCallback(async () => {
     if (!clinicId) return;
     setLoading(true);
     try {
-      const res = await clinicPortal.registrationFields(clinicId);
+      const [res, brandRes] = await Promise.all([
+        clinicPortal.registrationFields(clinicId),
+        clinicPortal.getBranding(clinicId).catch(() => null),
+      ]);
       setFields(normalizeFields(res.data || res || []));
+      setBranding(brandRes?.data || brandRes || null);
     } catch (error) {
       toast.error(error.message || 'Could not load form fields');
     } finally {
@@ -156,11 +161,51 @@ export default function ClinicFormsPage() {
               <h2 className="font-bold">Live preview</h2>
               <p className="text-xs text-slate-500">How patients see enabled fields on QR intake</p>
             </div>
+            <div
+              className="p-3 sm:p-4 text-white"
+              style={{
+                background: `linear-gradient(135deg, ${branding?.primary_color || '#0d9488'}, ${branding?.secondary_color || '#0f766e'})`,
+              }}
+            >
+              <div className="flex items-start gap-3">
+                {(branding?.logo_url || clinic?.logo_url || clinic?.logo) ? (
+                  <img
+                    src={branding?.logo_url || clinic?.logo_url || clinic?.logo}
+                    alt=""
+                    className="h-11 w-11 rounded-xl object-contain bg-white/95 p-0.5"
+                  />
+                ) : null}
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-widest opacity-80">Patient intake</p>
+                  <p className="font-bold text-sm leading-tight">{clinic?.name || branding?.name || 'Clinic'}</p>
+                  {branding?.tagline ? <p className="text-[11px] opacity-90 mt-0.5">{branding.tagline}</p> : null}
+                  {branding?.branch_name ? (
+                    <p className="text-[10px] mt-1 opacity-90">📍 {branding.branch_name}</p>
+                  ) : null}
+                </div>
+              </div>
+            </div>
             <div className="p-3 sm:p-4">
               {boot || loading ? (
                 <div className="h-40 rounded-xl bg-slate-100 animate-pulse" />
               ) : (
-                <IntakeFieldPreview fields={fields} />
+                <>
+                  <IntakeFieldPreview fields={fields} />
+                  <label className="mt-4 flex items-start gap-2 text-[11px] text-slate-600 border border-slate-100 rounded-xl p-2.5 bg-slate-50">
+                    <input type="checkbox" disabled checked readOnly className="mt-0.5" />
+                    <span>
+                      I agree to the Clinic&apos;s terms of service and consent to my medical profile being securely
+                      managed via The Urban Physio platform. <span className="text-rose-500">*</span>
+                    </span>
+                  </label>
+                  <button
+                    type="button"
+                    className="mt-3 w-full rounded-xl py-2.5 text-sm font-semibold text-white"
+                    style={{ background: branding?.primary_color || '#0d9488' }}
+                  >
+                    Submit
+                  </button>
+                </>
               )}
             </div>
           </div>

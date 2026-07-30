@@ -233,13 +233,16 @@ export default function Navbar({ beforeLogo = null, headerSpacerClass = '', port
                     {dashboardLabel()}
                   </Link>
                   )}
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="inline-flex btn-outline text-sm !py-1.5 !px-2.5 sm:!py-2 sm:!px-3"
-                  >
-                    Logout
-                  </button>
+                  {/* Public site: no Logout in header (use drawer / portal). Portals keep Logout. */}
+                  {portalMode && (
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="inline-flex btn-outline text-sm !py-1.5 !px-2.5 sm:!py-2 sm:!px-3"
+                    >
+                      Logout
+                    </button>
+                  )}
                 </>
               ) : (
                 <Link
