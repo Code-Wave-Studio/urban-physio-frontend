@@ -96,7 +96,7 @@ export default function ClinicExerciseRehabPage() {
     if (!clinicId) return;
     if (section === 'dashboard') setLoading(true);
     try {
-      const r = await clinicPortal.hepDashboard(clinicId);
+      const r = await clinicPortal.hepDashboard(Number(clinicId));
       setDash(r.data || r);
     } catch (e) {
       toast.error(e.message || 'Failed to load HEP dashboard');
@@ -111,9 +111,10 @@ export default function ClinicExerciseRehabPage() {
 
   useEffect(() => {
     if (!clinicId || section !== 'library') return;
+    const cid = Number(clinicId);
     const t = setTimeout(() => {
       clinicPortal
-        .hepLibrary(clinicId, { scope: libScope, search: libQ || undefined })
+        .hepLibrary(cid, { scope: libScope, search: libQ || undefined })
         .then((r) => setLibrary((r.data || r)?.exercises || []))
         .catch((e) => toast.error(e.message || 'Library failed'));
     }, libQ ? 300 : 0);
@@ -131,7 +132,7 @@ export default function ClinicExerciseRehabPage() {
   useEffect(() => {
     if (!clinicId || section !== 'media') return;
     clinicPortal
-      .hepMedia(clinicId)
+      .hepMedia(Number(clinicId))
       .then((r) => setMedia(r.data || r || { exercises: [], assets: [] }))
       .catch((e) => toast.error(e.message || 'Media hub failed'));
   }, [clinicId, section]);
@@ -139,7 +140,7 @@ export default function ClinicExerciseRehabPage() {
   useEffect(() => {
     if (!clinicId || section !== 'analytics') return;
     clinicPortal
-      .hepAnalytics(clinicId, { days: 30 })
+      .hepAnalytics(Number(clinicId), { days: 30 })
       .then((r) => setAnalytics(r.data || r))
       .catch((e) => toast.error(e.message || 'Analytics failed'));
   }, [clinicId, section]);
@@ -236,15 +237,15 @@ export default function ClinicExerciseRehabPage() {
         default_sets: Number(exForm.default_sets) || 3,
       };
       if (editingEx) {
-        await clinicPortal.hepUpdateExercise(clinicId, editingEx.id, payload);
+        await clinicPortal.hepUpdateExercise(Number(clinicId), editingEx.id, payload);
         toast.success('Exercise updated');
       } else {
-        await clinicPortal.hepCreateExercise(clinicId, payload);
+        await clinicPortal.hepCreateExercise(Number(clinicId), payload);
         toast.success('Clinic exercise created');
       }
       setExModal(false);
       setLibScope('clinic');
-      const r = await clinicPortal.hepLibrary(clinicId, { scope: 'clinic' });
+      const r = await clinicPortal.hepLibrary(Number(clinicId), { scope: 'clinic' });
       setLibrary((r.data || r)?.exercises || []);
     } catch (err) {
       toast.error(err.message || 'Save failed');
@@ -257,7 +258,7 @@ export default function ClinicExerciseRehabPage() {
     if (!(Number(ex.clinic_id) > 0)) return;
     if (!window.confirm(`Archive "${ex.name}"?`)) return;
     try {
-      await clinicPortal.hepArchiveExercise(clinicId, ex.id);
+      await clinicPortal.hepArchiveExercise(Number(clinicId), ex.id);
       toast.success('Archived');
       setLibrary((prev) => prev.filter((x) => x.id !== ex.id));
     } catch (err) {
@@ -284,10 +285,10 @@ export default function ClinicExerciseRehabPage() {
     }
     setSaving(true);
     try {
-      await clinicPortal.hepRegisterMedia(clinicId, mediaForm);
+      await clinicPortal.hepRegisterMedia(Number(clinicId), mediaForm);
       toast.success('Media registered (CDN / S3 / Cloudinary URL)');
       setMediaForm({ title: '', url: '', kind: 'video', provider: 'cdn' });
-      const r = await clinicPortal.hepMedia(clinicId);
+      const r = await clinicPortal.hepMedia(Number(clinicId));
       setMedia(r.data || r);
     } catch (err) {
       toast.error(err.message);
@@ -633,58 +634,118 @@ export default function ClinicExerciseRehabPage() {
           icon="fa-dumbbell"
           onClose={() => setExModal(false)}
         />
-        <form onSubmit={saveExercise}>
-          <GlassModalBody>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="sm:col-span-2 text-sm">
+        <form onSubmit={saveExercise} className="flex flex-col flex-1 min-h-0">
+          <GlassModalBody className="!px-4 !py-3 sm:!px-6 sm:!py-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <label className="sm:col-span-2 block text-sm font-medium text-slate-700">
                 Name
-                <input className="input-field mt-1" value={exForm.name} onChange={(e) => setExForm((f) => ({ ...f, name: e.target.value }))} required />
+                <input
+                  className="input-field mt-1.5 w-full"
+                  value={exForm.name}
+                  onChange={(e) => setExForm((f) => ({ ...f, name: e.target.value }))}
+                  required
+                  placeholder="e.g. Ankle dorsiflexion stretch"
+                />
               </label>
-              <label className="text-sm">
+              <label className="block text-sm font-medium text-slate-700">
                 Body region
-                <input className="input-field mt-1" value={exForm.body_area} onChange={(e) => setExForm((f) => ({ ...f, body_area: e.target.value }))} />
+                <input
+                  className="input-field mt-1.5 w-full"
+                  value={exForm.body_area}
+                  onChange={(e) => setExForm((f) => ({ ...f, body_area: e.target.value }))}
+                  placeholder="Knee, Shoulder…"
+                />
               </label>
-              <label className="text-sm">
+              <label className="block text-sm font-medium text-slate-700">
                 Difficulty
-                <select className="input-field mt-1" value={exForm.difficulty} onChange={(e) => setExForm((f) => ({ ...f, difficulty: e.target.value }))}>
+                <select
+                  className="input-field mt-1.5 w-full"
+                  value={exForm.difficulty}
+                  onChange={(e) => setExForm((f) => ({ ...f, difficulty: e.target.value }))}
+                >
                   <option value="beginner">Beginner</option>
                   <option value="intermediate">Intermediate</option>
                   <option value="advanced">Advanced</option>
                 </select>
               </label>
-              <label className="text-sm">
+              <label className="block text-sm font-medium text-slate-700">
                 Sets
-                <input type="number" className="input-field mt-1" value={exForm.default_sets} onChange={(e) => setExForm((f) => ({ ...f, default_sets: e.target.value }))} />
+                <input
+                  type="number"
+                  min={1}
+                  className="input-field mt-1.5 w-full"
+                  value={exForm.default_sets}
+                  onChange={(e) => setExForm((f) => ({ ...f, default_sets: e.target.value }))}
+                />
               </label>
-              <label className="text-sm">
+              <label className="block text-sm font-medium text-slate-700">
                 Reps
-                <input className="input-field mt-1" value={exForm.default_reps} onChange={(e) => setExForm((f) => ({ ...f, default_reps: e.target.value }))} />
+                <input
+                  className="input-field mt-1.5 w-full"
+                  value={exForm.default_reps}
+                  onChange={(e) => setExForm((f) => ({ ...f, default_reps: e.target.value }))}
+                />
               </label>
-              <label className="sm:col-span-2 text-sm">
+              <label className="sm:col-span-2 block text-sm font-medium text-slate-700">
                 Instructions
-                <textarea className="input-field mt-1 min-h-[88px]" value={exForm.instructions} onChange={(e) => setExForm((f) => ({ ...f, instructions: e.target.value }))} required />
+                <textarea
+                  className="input-field mt-1.5 w-full min-h-[88px] resize-y"
+                  value={exForm.instructions}
+                  onChange={(e) => setExForm((f) => ({ ...f, instructions: e.target.value }))}
+                  required
+                  placeholder="Step-by-step instructions for the patient"
+                />
               </label>
-              <label className="sm:col-span-2 text-sm">
+              <label className="sm:col-span-2 block text-sm font-medium text-slate-700">
                 Precautions
-                <textarea className="input-field mt-1" value={exForm.precautions} onChange={(e) => setExForm((f) => ({ ...f, precautions: e.target.value }))} />
+                <textarea
+                  className="input-field mt-1.5 w-full min-h-[64px] resize-y"
+                  value={exForm.precautions}
+                  onChange={(e) => setExForm((f) => ({ ...f, precautions: e.target.value }))}
+                  placeholder="Stop if pain increases…"
+                />
               </label>
-              <label className="text-sm">
+              <label className="block text-sm font-medium text-slate-700">
                 Video URL (CDN/S3)
-                <input className="input-field mt-1" value={exForm.video_url} onChange={(e) => setExForm((f) => ({ ...f, video_url: e.target.value }))} />
+                <input
+                  className="input-field mt-1.5 w-full"
+                  value={exForm.video_url}
+                  onChange={(e) => setExForm((f) => ({ ...f, video_url: e.target.value }))}
+                  placeholder="https://"
+                  inputMode="url"
+                />
               </label>
-              <label className="text-sm">
+              <label className="block text-sm font-medium text-slate-700">
                 Image URL
-                <input className="input-field mt-1" value={exForm.image_url} onChange={(e) => setExForm((f) => ({ ...f, image_url: e.target.value }))} />
+                <input
+                  className="input-field mt-1.5 w-full"
+                  value={exForm.image_url}
+                  onChange={(e) => setExForm((f) => ({ ...f, image_url: e.target.value }))}
+                  placeholder="https://"
+                  inputMode="url"
+                />
               </label>
-              <label className="sm:col-span-2 text-sm">
+              <label className="sm:col-span-2 block text-sm font-medium text-slate-700">
                 PDF URL
-                <input className="input-field mt-1" value={exForm.pdf_url} onChange={(e) => setExForm((f) => ({ ...f, pdf_url: e.target.value }))} />
+                <input
+                  className="input-field mt-1.5 w-full"
+                  value={exForm.pdf_url}
+                  onChange={(e) => setExForm((f) => ({ ...f, pdf_url: e.target.value }))}
+                  placeholder="https://"
+                  inputMode="url"
+                />
               </label>
             </div>
           </GlassModalBody>
           <GlassModalFooter>
-            <button type="button" className="btn-outline" onClick={() => setExModal(false)}>Cancel</button>
-            <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
+            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end w-full">
+              <button type="button" className="btn-outline w-full sm:w-auto" onClick={() => setExModal(false)}>
+                Cancel
+              </button>
+              <button type="submit" className="btn-primary w-full sm:w-auto" disabled={saving}>
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
           </GlassModalFooter>
         </form>
       </GlassModal>
