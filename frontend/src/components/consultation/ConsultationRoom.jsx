@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import FaIcon from '../FaIcon';
 import DocumentsManager from '../documents/DocumentsManager';
+import ConsultationChatPanel from './ConsultationChatPanel';
 import {
   consultation,
   exercisePrescriptions,
@@ -13,6 +14,7 @@ import { formatTime } from '../../utils/appointmentListUtils';
 
 const TABS = [
   { id: 'video', label: 'Video Call', icon: 'fa-video' },
+  { id: 'chat', label: 'Chat', icon: 'fa-comments' },
   { id: 'documents', label: 'Documents', icon: 'fa-folder-open' },
   { id: 'exercises', label: 'Exercise Explain', icon: 'fa-dumbbell' },
   { id: 'prescription', label: 'Prescription', icon: 'fa-file-prescription' },
@@ -689,8 +691,9 @@ export default function ConsultationRoom({ appointmentId, backTo, layout: Layout
         ))}
       </div>
 
-      <div className="glass-card !p-4 md:!p-5">
+      <div className={`glass-card ${tab === 'chat' ? '!p-0 overflow-hidden' : '!p-4 md:!p-5'}`}>
         {tab === 'video' && <VideoPanel room={room} canStart={canStart} onSessionStarted={softReload} />}
+        {tab === 'chat' && <ConsultationChatPanel room={room} active={tab === 'chat'} />}
         {tab === 'documents' && (
           <div>
             <p className="text-sm text-slate-600 mb-3">

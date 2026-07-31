@@ -1098,6 +1098,20 @@ export const consultation = {
     api.get(`/consultation/${appointmentId}/exercise/${prescriptionId}`),
   completeSession: (appointmentId) =>
     api.post(`/consultation/${appointmentId}/complete-session`, {}),
+  chatPoll: (appointmentId, params) =>
+    api.get(`/consultation/${appointmentId}/chat`, { params }),
+  chatSend: (appointmentId, data) =>
+    api.post(`/consultation/${appointmentId}/chat`, data),
+  chatSendFile: (appointmentId, formData) =>
+    api.post(`/consultation/${appointmentId}/chat`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  chatTyping: (appointmentId, typing) =>
+    api.post(`/consultation/${appointmentId}/chat/typing`, { typing: Boolean(typing) }),
+  chatRead: (appointmentId, messageId) =>
+    api.post(`/consultation/${appointmentId}/chat/read`, { message_id: messageId || 0 }),
+  chatDelete: (appointmentId, messageId) =>
+    api.delete(`/consultation/${appointmentId}/chat/${messageId}`),
 };
 
 /** Public magic payment links for clinic invoices (no auth) */

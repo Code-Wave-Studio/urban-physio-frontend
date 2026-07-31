@@ -107,6 +107,12 @@ export function getNotificationPath(notification, roleSlug) {
     return '/admin/documents';
   }
 
+  if (type === 'consultation_chat' && data.appointment_id) {
+    if (role === 'patient') return `/patient/consultation/${data.appointment_id}`;
+    if (role === 'doctor') return `/doctor/consultation/${data.appointment_id}`;
+    return `/doctor/consultation/${data.appointment_id}`;
+  }
+
   if (type === 'user_registered') return '/admin/users';
 
   if (type === 'exercise_reminder' || type === 'exercise_assigned' || type === 'exercise_plan_updated' || type === 'exercise_missed') {
