@@ -351,7 +351,6 @@ export default function ClinicCommunicationPage() {
           canSend={can('notifications.send')}
           canManage={can('notifications.manage')}
           onSent={() => {
-            setSection('history');
             loadCore();
           }}
         />

@@ -179,8 +179,12 @@ export default function CampaignBuilderPanel({
   };
 
   const saveCampaign = async (sendNow) => {
-    if (!validateStep(1) || !validateStep(2)) {
-      setStep(form.title.trim() && form.message.trim() ? 1 : 2);
+    if (!validateStep(1)) {
+      setStep(1);
+      return;
+    }
+    if (!validateStep(2)) {
+      setStep(2);
       return;
     }
     if (sendNow && !canSend) {
@@ -192,47 +196,75 @@ export default function CampaignBuilderPanel({
       return;
     }
     setSaving(true);
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timer = setTimeout(() => controller?.abort(), 75000);
     try {
-      const res = await clinicPortal.createCampaign(clinicId, {
-        ...form,
+      const payload = {
+        title: form.title.trim(),
+        subject: (form.subject || form.title).trim(),
+        message: form.message.trim(),
+        audience_key: form.audience_key,
+        channels: form.channels?.length ? form.channels : ['in_app'],
+        smart_route: Boolean(form.smart_route),
+        campaign_type: form.campaign_type || 'broadcast',
+        media_url: form.media_url || undefined,
         template_id: form.template_id || undefined,
         scheduled_at: form.scheduled_at || undefined,
         send_now: Boolean(sendNow),
-      });
-      const data = res.data || res;
-      const sent = data?.sent_count ?? 0;
-      const failed = data?.failed_count ?? 0;
-      const dispatched = data?.dispatched?.sent ?? 0;
+        filters: { audience: form.audience_key },
+      };
+      const res = await clinicPortal.createCampaign(clinicId, payload, { signal: controller?.signal, timeout: 70000 });
+      const data = res?.data ?? res ?? {};
+      const sent = Number(data.sent_count ?? 0);
+      const failed = Number(data.failed_count ?? 0);
+      const dispatched = Number(data?.dispatched?.sent ?? 0);
+      const status = data.status || (sendNow ? 'sent' : 'draft');
       if (sendNow) {
         toast.success(
-          `Sent to ${sent} patient${sent === 1 ? '' : 's'}` +
-            (failed ? ` · ${failed} skipped` : '') +
-            (dispatched ? ` · ${dispatched} delivered` : '')
+          status === 'sent'
+            ? `Campaign sent · ${sent} patient${sent === 1 ? '' : 's'}` +
+                (failed ? ` · ${failed} skipped` : '') +
+                (dispatched ? ` · ${dispatched} delivered` : '')
+            : `Campaign queued · ${sent} patient${sent === 1 ? '' : 's'}`
         );
+        // Stay on builder; refresh list so status is visible (don't jump away mid-feedback)
+        resetForm();
+        await loadCampaigns();
         onSent?.();
       } else {
-        toast.success(form.scheduled_at ? 'Campaign scheduled' : 'Draft saved');
+        toast.success(form.scheduled_at ? 'Campaign scheduled' : 'Draft saved — use Send now in the list below');
+        resetForm();
+        await loadCampaigns();
       }
-      resetForm();
-      loadCampaigns();
     } catch (e) {
-      toast.error(e.message || 'Campaign failed');
+      const aborted = e?.code === 'ERR_CANCELED' || e?.name === 'CanceledError' || e?.message?.includes?.('abort');
+      toast.error(
+        aborted
+          ? 'Send timed out — check Recent campaigns / History. Cron may still deliver pending messages.'
+          : e.message || 'Campaign failed'
+      );
+      loadCampaigns();
     } finally {
+      clearTimeout(timer);
       setSaving(false);
     }
   };
 
   const sendExisting = async (row) => {
-    if (!canSend) return;
+    if (!canSend) {
+      toast.error('You do not have permission to send');
+      return;
+    }
     setSendingId(row.id);
     try {
-      const res = await clinicPortal.sendCampaign(clinicId, row.id);
-      const data = res.data || res;
+      const res = await clinicPortal.sendCampaign(clinicId, row.id, { timeout: 70000 });
+      const data = res?.data ?? res ?? {};
       toast.success(`Sent to ${data?.sent_count ?? 0} patients`);
-      loadCampaigns();
+      await loadCampaigns();
       onSent?.();
     } catch (e) {
       toast.error(e.message || 'Send failed');
+      loadCampaigns();
     } finally {
       setSendingId(null);
     }
@@ -499,13 +531,16 @@ export default function CampaignBuilderPanel({
                   {canSend && (
                     <button
                       type="button"
-                      className="btn-primary text-sm w-full sm:w-auto justify-center"
+                      className="btn-primary text-sm w-full sm:w-auto justify-center min-w-[9rem]"
                       disabled={saving || Boolean(form.scheduled_at)}
                       onClick={() => saveCampaign(true)}
                       title={form.scheduled_at ? 'Clear schedule to send now' : 'Send immediately'}
                     >
                       {saving ? (
-                        'Sending…'
+                        <>
+                          <FaIcon icon="fa-spinner" className="mr-2 fa-spin" />
+                          Sending…
+                        </>
                       ) : (
                         <>
                           <FaIcon icon="fa-paper-plane" className="mr-2" />

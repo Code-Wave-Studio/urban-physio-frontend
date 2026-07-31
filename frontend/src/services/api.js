@@ -874,10 +874,10 @@ export const clinicPortal = {
     api.get(`/clinic-portal/${clinicId}/notification-campaigns`),
   listCampaigns: (clinicId) =>
     api.get(`/clinic-portal/${clinicId}/notification-campaigns`),
-  createCampaign: (clinicId, data) =>
-    api.post(`/clinic-portal/${clinicId}/notification-campaigns`, data),
-  sendCampaign: (clinicId, id) =>
-    api.post(`/clinic-portal/${clinicId}/notification-campaigns/${id}/send`),
+  createCampaign: (clinicId, data, config = {}) =>
+    api.post(`/clinic-portal/${clinicId}/notification-campaigns`, data, config),
+  sendCampaign: (clinicId, id, config = {}) =>
+    api.post(`/clinic-portal/${clinicId}/notification-campaigns/${id}/send`, {}, config),
   // Smart Communication Engine
   commDashboard: (clinicId) =>
     api.get(`/clinic-portal/${clinicId}/communication/dashboard`),
