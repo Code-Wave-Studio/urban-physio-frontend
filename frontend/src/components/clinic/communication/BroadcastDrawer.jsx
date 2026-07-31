@@ -16,8 +16,7 @@ export default function BroadcastDrawer({ open, onClose, clinicId, audiences = {
     title: '',
     message: '',
     audience_key: 'appointments_today',
-    channels: ['whatsapp', 'sms'],
-    smart_route: true,
+    channels: ['whatsapp', 'sms', 'email', 'in_app'],
   });
   const [previewCount, setPreviewCount] = useState(null);
   const [sending, setSending] = useState(false);
@@ -84,6 +83,7 @@ export default function BroadcastDrawer({ open, onClose, clinicId, audiences = {
     try {
       const res = await clinicPortal.createCampaign(clinicId, {
         ...form,
+        smart_route: false,
         campaign_type: 'broadcast',
         send_now: true,
       });
@@ -93,8 +93,7 @@ export default function BroadcastDrawer({ open, onClose, clinicId, audiences = {
         title: '',
         message: '',
         audience_key: 'appointments_today',
-        channels: ['whatsapp', 'sms'],
-        smart_route: true,
+        channels: ['whatsapp', 'sms', 'email', 'in_app'],
       });
     } catch (e) {
       toast.error(e.message || 'Broadcast failed');
@@ -121,7 +120,7 @@ export default function BroadcastDrawer({ open, onClose, clinicId, audiences = {
             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
               <FaIcon icon="fa-bullhorn" className="text-emerald-600" /> Urgent Broadcast
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">Send an announcement now via smart routing</p>
+            <p className="text-xs text-slate-500 mt-0.5">Send on every selected channel</p>
           </div>
           <button type="button" onClick={onClose} className="w-9 h-9 rounded-full hover:bg-white/80" aria-label="Close">
             <FaIcon icon="fa-xmark" />
@@ -148,6 +147,7 @@ export default function BroadcastDrawer({ open, onClose, clinicId, audiences = {
 
             <div>
               <span className="text-xs font-semibold text-slate-500 uppercase">Channels</span>
+              <p className="text-[11px] text-slate-500 mt-1">All selected by default — tap to unselect.</p>
               <div className="flex flex-wrap gap-2 mt-2">
                 {CHANNELS.map((ch) => (
                   <button
@@ -165,15 +165,6 @@ export default function BroadcastDrawer({ open, onClose, clinicId, audiences = {
                 ))}
               </div>
             </div>
-
-            <label className="inline-flex items-center gap-2 text-sm text-slate-700">
-              <input
-                type="checkbox"
-                checked={form.smart_route}
-                onChange={(e) => setForm((f) => ({ ...f, smart_route: e.target.checked }))}
-              />
-              Smart routing (WhatsApp → SMS → Email → In-App)
-            </label>
 
             <label className="block">
               <span className="text-xs font-semibold text-slate-500 uppercase">Title</span>

@@ -17,13 +17,14 @@ const STEPS = [
   { id: 3, label: 'Review & send' },
 ];
 
+const ALL_CHANNELS = ['whatsapp', 'sms', 'email', 'in_app'];
+
 const EMPTY = {
   title: '',
   subject: '',
   message: '',
   audience_key: 'all',
-  channels: ['whatsapp', 'sms', 'email'],
-  smart_route: true,
+  channels: [...ALL_CHANNELS],
   scheduled_at: '',
   template_id: '',
   media_url: '',
@@ -39,16 +40,16 @@ const STATUS_STYLE = {
 };
 
 function parseChannels(raw) {
-  if (Array.isArray(raw)) return raw;
+  if (Array.isArray(raw)) return raw.length ? raw : [...ALL_CHANNELS];
   if (typeof raw === 'string') {
     try {
       const j = JSON.parse(raw);
-      return Array.isArray(j) ? j : ['whatsapp', 'sms', 'email'];
+      return Array.isArray(j) && j.length ? j : [...ALL_CHANNELS];
     } catch {
-      return ['whatsapp', 'sms', 'email'];
+      return [...ALL_CHANNELS];
     }
   }
-  return ['whatsapp', 'sms', 'email'];
+  return [...ALL_CHANNELS];
 }
 
 function maskPhone(phone) {
@@ -265,8 +266,8 @@ export default function CampaignBuilderPanel({
         subject: (form.subject || form.title).trim(),
         message: form.message.trim(),
         audience_key: form.audience_key,
-        channels: form.channels?.length ? form.channels : ['in_app'],
-        smart_route: Boolean(form.smart_route),
+        channels: form.channels?.length ? form.channels : [...ALL_CHANNELS],
+        smart_route: false,
         campaign_type: form.campaign_type || 'broadcast',
         media_url: form.media_url || undefined,
         template_id: form.template_id || undefined,
@@ -421,6 +422,9 @@ export default function CampaignBuilderPanel({
 
               <div>
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Channels</span>
+                <p className="text-[11px] text-slate-500 mt-1">
+                  All selected by default — message goes on every selected channel. Tap to unselect any you don’t want.
+                </p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
                   {CHANNELS.map((ch) => {
                     const on = form.channels.includes(ch.id);
@@ -442,19 +446,6 @@ export default function CampaignBuilderPanel({
                   })}
                 </div>
               </div>
-
-              <label className="inline-flex items-start gap-2.5 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  className="mt-1"
-                  checked={form.smart_route}
-                  onChange={(e) => set({ smart_route: e.target.checked })}
-                />
-                <span>
-                  <span className="font-semibold">Smart routing</span>
-                  <span className="block text-xs text-slate-500">Try WhatsApp first, then SMS / email / in-app if needed.</span>
-                </span>
-              </label>
 
               <label className="block">
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Schedule (optional)</span>

@@ -97,7 +97,7 @@ export default function ClinicNotificationsManagePage() {
         filters: { audience },
         subject: campaign.subject || '',
         scheduled_at: campaign.scheduled_at || undefined,
-        smart_route: true,
+        smart_route: false,
       });
       toast.success(campaign.scheduled_at ? 'Campaign scheduled' : 'Draft saved — open Send now from the list');
       setCampaign({
