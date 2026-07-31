@@ -872,6 +872,8 @@ export const clinicPortal = {
     api.get(`/clinic-portal/${clinicId}/notification-templates/${id}/versions`),
   notificationCampaigns: (clinicId) =>
     api.get(`/clinic-portal/${clinicId}/notification-campaigns`),
+  listCampaigns: (clinicId) =>
+    api.get(`/clinic-portal/${clinicId}/notification-campaigns`),
   createCampaign: (clinicId, data) =>
     api.post(`/clinic-portal/${clinicId}/notification-campaigns`, data),
   sendCampaign: (clinicId, id) =>

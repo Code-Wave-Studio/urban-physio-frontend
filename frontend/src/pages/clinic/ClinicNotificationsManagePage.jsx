@@ -86,16 +86,20 @@ export default function ClinicNotificationsManagePage() {
   const createCampaign = async (event) => {
     event.preventDefault();
     try {
+      const audienceMap = { due: 'pending_payments', inactive: 'no_visit_30' };
+      const audience = audienceMap[campaign.audience] || campaign.audience || 'all';
       await clinicPortal.createCampaign(clinicId, {
         title: campaign.name,
         message: campaign.message,
         campaign_type: campaign.campaign_type || 'broadcast',
         channels: [campaign.channel === 'push' ? 'in_app' : campaign.channel],
-        filters: { audience: campaign.audience },
+        audience_key: audience,
+        filters: { audience },
         subject: campaign.subject || '',
         scheduled_at: campaign.scheduled_at || undefined,
+        smart_route: true,
       });
-      toast.success(campaign.scheduled_at ? 'Campaign scheduled' : 'Campaign created');
+      toast.success(campaign.scheduled_at ? 'Campaign scheduled' : 'Draft saved — open Send now from the list');
       setCampaign({
         name: '',
         channel: 'email',
@@ -114,8 +118,12 @@ export default function ClinicNotificationsManagePage() {
   const send = async (row) => {
     if (!window.confirm(`Send "${row.title || row.name}" now?`)) return;
     try {
-      await clinicPortal.sendCampaign(clinicId, row.id);
-      toast.success('Campaign sent');
+      const res = await clinicPortal.sendCampaign(clinicId, row.id);
+      const data = res.data || res;
+      toast.success(
+        `Sent to ${data?.sent_count ?? 0} patients` +
+          (data?.failed_count ? ` · ${data.failed_count} skipped` : '')
+      );
       load();
     } catch (error) {
       toast.error(error.message || 'Could not send campaign');
@@ -271,9 +279,11 @@ export default function ClinicNotificationsManagePage() {
               </select>
               <select className="input-field" value={campaign.audience} onChange={(e) => setCampaign({ ...campaign, audience: e.target.value })}>
                 <option value="all">All patients</option>
+                <option value="active_patients">Active patients</option>
                 <option value="active_packages">Active packages</option>
-                <option value="due">Payment due</option>
-                <option value="inactive">Inactive patients</option>
+                <option value="pending_payments">Payment due</option>
+                <option value="no_visit_30">Inactive (30 days)</option>
+                <option value="appointments_today">Appointments today</option>
               </select>
             </div>
             <label className="block text-xs text-slate-500">

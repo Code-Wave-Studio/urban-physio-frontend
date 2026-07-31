@@ -17,6 +17,7 @@ import { Line, Doughnut } from 'react-chartjs-2';
 import FaIcon from '../../components/FaIcon';
 import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
 import MessagePreview from '../../components/clinic/communication/MessagePreview';
+import CampaignBuilderPanel from '../../components/clinic/communication/CampaignBuilderPanel';
 import useClinicPortal from '../../hooks/useClinicPortal';
 import { clinicPortal } from '../../services/api';
 
@@ -74,21 +75,6 @@ export default function ClinicCommunicationPage() {
   const [audiences, setAudiences] = useState({});
   const [automationEvents, setAutomationEvents] = useState({});
   const [histFilter, setHistFilter] = useState({ channel: '', status: '', q: '' });
-  const [campaign, setCampaign] = useState({
-    title: '',
-    subject: '',
-    message: '',
-    audience_key: 'active_patients',
-    channels: ['whatsapp', 'sms', 'email'],
-    smart_route: true,
-    scheduled_at: '',
-    template_id: '',
-    media_url: '',
-    campaign_type: 'broadcast',
-  });
-  const [audienceCount, setAudienceCount] = useState(null);
-  const [previewCh, setPreviewCh] = useState('whatsapp');
-  const [saving, setSaving] = useState(false);
   const [tplQ, setTplQ] = useState('');
   const [providers, setProviders] = useState([]);
 
@@ -155,17 +141,6 @@ export default function ClinicCommunicationPage() {
       .catch(() => {});
   }, [clinicId, section, can]);
 
-  useEffect(() => {
-    if (!clinicId || section !== 'campaigns') return;
-    clinicPortal
-      .commAudiencePreview(clinicId, { audience: campaign.audience_key })
-      .then((r) => {
-        setAudienceCount(r.data?.count ?? 0);
-        if (r.data?.presets) setAudiences(r.data.presets);
-      })
-      .catch(() => setAudienceCount(null));
-  }, [clinicId, section, campaign.audience_key]);
-
   const kpis = dash?.kpis || analytics?.kpis || {};
 
   const lineData = useMemo(() => {
@@ -207,60 +182,11 @@ export default function ClinicCommunicationPage() {
   }
 
   const autoRules = templates.filter((t) => (t.mode || 'auto') === 'auto');
-  const manualTpls = templates.filter((t) => (t.mode || '') === 'manual' || t.event_key === 'custom_manual');
   const filteredTpls = templates.filter((t) => {
     if (!tplQ.trim()) return true;
     const q = tplQ.toLowerCase();
     return [t.name, t.event_key, t.category, t.body_template].join(' ').toLowerCase().includes(q);
   });
-
-  const toggleCampaignChannel = (id) => {
-    setCampaign((f) => {
-      const has = f.channels.includes(id);
-      const next = has ? f.channels.filter((c) => c !== id) : [...f.channels, id];
-      return { ...f, channels: next.length ? next : ['in_app'] };
-    });
-  };
-
-  const applyTemplate = (id) => {
-    const tpl = templates.find((t) => String(t.id) === String(id));
-    if (!tpl) {
-      setCampaign((c) => ({ ...c, template_id: id }));
-      return;
-    }
-    setCampaign((c) => ({
-      ...c,
-      template_id: id,
-      title: tpl.name || c.title,
-      subject: tpl.subject || tpl.name || c.subject,
-      message: tpl.body_template || c.message,
-      channels: parseChannels(tpl.channels_json),
-      media_url: tpl.media_url || '',
-    }));
-  };
-
-  const saveCampaign = async (sendNow = false) => {
-    if (!campaign.title.trim() || !campaign.message.trim()) {
-      toast.error('Title and message required');
-      return;
-    }
-    setSaving(true);
-    try {
-      const res = await clinicPortal.createCampaign(clinicId, {
-        ...campaign,
-        template_id: campaign.template_id || undefined,
-        scheduled_at: campaign.scheduled_at || undefined,
-        send_now: sendNow,
-      });
-      toast.success(sendNow ? `Sent to ${res.data?.sent_count ?? 0} patients` : 'Campaign saved');
-      if (sendNow) setSection('history');
-      loadCore();
-    } catch (e) {
-      toast.error(e.message || 'Campaign failed');
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const saveRule = async (tpl) => {
     try {
@@ -418,98 +344,17 @@ export default function ClinicCommunicationPage() {
       )}
 
       {!loading && section === 'campaigns' && (
-        <div className="grid lg:grid-cols-2 gap-5">
-          <div className="glass-card p-5 space-y-4">
-            <h3 className="font-bold text-lg text-slate-900">Campaign Builder</h3>
-
-            <label className="block">
-              <span className="text-xs font-semibold text-slate-500 uppercase">Audience</span>
-              <select className="input-field mt-1" value={campaign.audience_key} onChange={(e) => setCampaign((c) => ({ ...c, audience_key: e.target.value }))}>
-                {Object.entries(audiences).map(([k, label]) => (
-                  <option key={k} value={k}>{label}</option>
-                ))}
-              </select>
-              {audienceCount != null && <p className="text-xs text-emerald-700 mt-1 font-medium">{audienceCount} patients</p>}
-            </label>
-
-            <div>
-              <span className="text-xs font-semibold text-slate-500 uppercase">Channels</span>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {CHANNEL_LIST.map((ch) => (
-                  <button
-                    key={ch}
-                    type="button"
-                    onClick={() => toggleCampaignChannel(ch)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold border capitalize ${
-                      campaign.channels.includes(ch) ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white border-slate-200 text-slate-600'
-                    }`}
-                  >
-                    {ch.replace('_', ' ')}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <label className="block">
-              <span className="text-xs font-semibold text-slate-500 uppercase">Template</span>
-              <select className="input-field mt-1" value={campaign.template_id} onChange={(e) => applyTemplate(e.target.value)}>
-                <option value="">Custom message</option>
-                {[...manualTpls, ...autoRules].map((t) => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
-                ))}
-              </select>
-            </label>
-
-            <label className="block">
-              <span className="text-xs font-semibold text-slate-500 uppercase">Title</span>
-              <input className="input-field mt-1" value={campaign.title} onChange={(e) => setCampaign((c) => ({ ...c, title: e.target.value }))} />
-            </label>
-            <label className="block">
-              <span className="text-xs font-semibold text-slate-500 uppercase">Email subject</span>
-              <input className="input-field mt-1" value={campaign.subject} onChange={(e) => setCampaign((c) => ({ ...c, subject: e.target.value }))} />
-            </label>
-            <label className="block">
-              <span className="text-xs font-semibold text-slate-500 uppercase">Message</span>
-              <textarea className="input-field mt-1 min-h-[160px]" value={campaign.message} onChange={(e) => setCampaign((c) => ({ ...c, message: e.target.value }))} />
-            </label>
-            <label className="block">
-              <span className="text-xs font-semibold text-slate-500 uppercase">Media URL (optional)</span>
-              <input className="input-field mt-1" value={campaign.media_url} onChange={(e) => setCampaign((c) => ({ ...c, media_url: e.target.value }))} placeholder="https://…" />
-            </label>
-            <label className="block">
-              <span className="text-xs font-semibold text-slate-500 uppercase">Schedule (optional)</span>
-              <input type="datetime-local" className="input-field mt-1" value={campaign.scheduled_at} onChange={(e) => setCampaign((c) => ({ ...c, scheduled_at: e.target.value }))} />
-            </label>
-            <label className="inline-flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={campaign.smart_route} onChange={(e) => setCampaign((c) => ({ ...c, smart_route: e.target.checked }))} />
-              Smart channel routing
-            </label>
-            <div className="flex flex-wrap gap-2 pt-2">
-              {can('notifications.manage') && (
-                <button type="button" className="btn-outline" disabled={saving} onClick={() => saveCampaign(false)}>Save draft</button>
-              )}
-              {can('notifications.send') && (
-                <button type="button" className="btn-primary" disabled={saving} onClick={() => saveCampaign(true)}>
-                  <FaIcon icon="fa-paper-plane" className="mr-2" /> Send now
-                </button>
-              )}
-              {!can('notifications.send') && !can('notifications.manage') && (
-                <p className="text-xs text-slate-500">You do not have permission to create campaigns.</p>
-              )}
-            </div>
-          </div>
-          <div className="glass-card p-5">
-            <div className="flex gap-1 mb-4">
-              {['whatsapp', 'sms', 'email'].map((ch) => (
-                <button key={ch} type="button" onClick={() => setPreviewCh(ch)} className={`text-xs px-3 py-1.5 rounded-lg capitalize ${previewCh === ch ? 'bg-slate-900 text-white' : 'bg-slate-100'}`}>
-                  {ch}
-                </button>
-              ))}
-            </div>
-            <MessagePreview channel={previewCh} subject={campaign.subject || campaign.title} body={campaign.message} mediaUrl={campaign.media_url} />
-            <p className="text-center text-xs text-slate-400 mt-4">Live mobile preview · updates as you type</p>
-          </div>
-        </div>
+        <CampaignBuilderPanel
+          clinicId={clinicId}
+          audiences={audiences}
+          templates={templates}
+          canSend={can('notifications.send')}
+          canManage={can('notifications.manage')}
+          onSent={() => {
+            setSection('history');
+            loadCore();
+          }}
+        />
       )}
 
       {!loading && section === 'rules' && (
