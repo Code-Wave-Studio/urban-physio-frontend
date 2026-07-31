@@ -15,6 +15,7 @@ import { Line, Bar } from 'react-chartjs-2';
 import toast from 'react-hot-toast';
 import FaIcon from '../../components/FaIcon';
 import ClinicPortalShell, { ClinicQuickActions } from '../../components/clinic/ClinicPortalShell';
+import ClinicQuickWork from '../../components/clinic/ClinicQuickWork';
 import DashboardKpiCard from '../../components/clinic/dashboard/DashboardKpiCard';
 import DashboardWidgetBoard, {
   DashboardCustomizeToolbar,
@@ -392,6 +393,8 @@ export default function ClinicAdminHome() {
             onToggleHidden={layout.toggleHidden}
             boardClassName="admin-dash-board"
           />
+
+          <ClinicQuickWork variant="admin" />
         </div>
       )}
     </ClinicPortalShell>

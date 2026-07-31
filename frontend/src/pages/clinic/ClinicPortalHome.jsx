@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import FaIcon from '../../components/FaIcon';
 import PasswordSetupAlert from '../../components/PasswordSetupAlert';
 import ClinicPortalShell, { ClinicQuickActions } from '../../components/clinic/ClinicPortalShell';
+import ClinicQuickWork from '../../components/clinic/ClinicQuickWork';
 import ClinicCollectPaymentButton from '../../components/clinic/ClinicCollectPaymentButton';
 import DashboardKpiCard from '../../components/clinic/dashboard/DashboardKpiCard';
 import DashboardWidgetBoard, {
@@ -442,6 +443,8 @@ export default function ClinicPortalHome() {
             onToggleHidden={layout.toggleHidden}
             boardClassName="reception-dash-board"
           />
+
+          <ClinicQuickWork variant="reception" />
         </>
       )}
     </ClinicPortalShell>

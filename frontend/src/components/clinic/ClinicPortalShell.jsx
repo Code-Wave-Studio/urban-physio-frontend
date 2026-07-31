@@ -4,13 +4,13 @@ import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../FaIcon';
 import ClinicRoleSwitch from './ClinicRoleSwitch';
 import HelpFeedbackFab from './HelpFeedbackFab';
-import BroadcastDrawer from './communication/BroadcastDrawer';
 import { clinicNavFor } from '../../constants/clinicNav';
 import useClinicPortal from '../../hooks/useClinicPortal';
 import { ClinicPortalProvider } from '../../contexts/ClinicPortalContext';
 
 /**
  * Shared clinic portal chrome: role-aware nav + mode switcher in sidebar footer.
+ * Broadcast lives on Communication / Notification Setup — not on every page header.
  */
 function ClinicPortalShellInner({ children, title, subtitle, actions }) {
   const {
@@ -21,13 +21,9 @@ function ClinicPortalShellInner({ children, title, subtitle, actions }) {
     loading,
     reload,
     clinic,
-    clinicId,
-    can,
   } = useClinicPortal();
   const [switchOpen, setSwitchOpen] = useState(false);
-  const [broadcastOpen, setBroadcastOpen] = useState(false);
   const links = clinicNavFor(portalRole, permissions);
-  const showBroadcast = can('notifications.send');
 
   const modeSwitch = (
     <button
@@ -53,22 +49,6 @@ function ClinicPortalShellInner({ children, title, subtitle, actions }) {
     </button>
   );
 
-  const headerActions = (
-    <div className="portal-page-actions shrink-0 flex flex-wrap items-center gap-2">
-      {showBroadcast && (
-        <button
-          type="button"
-          onClick={() => setBroadcastOpen(true)}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20 transition"
-        >
-          <FaIcon icon="fa-plus" />
-          Broadcast
-        </button>
-      )}
-      {actions}
-    </div>
-  );
-
   return (
     <DashboardLayout links={links} variant="clinic" sidebarFooter={modeSwitch}>
       <div className="mb-3 sm:mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -82,7 +62,9 @@ function ClinicPortalShellInner({ children, title, subtitle, actions }) {
             <p className="text-sm text-slate-500 mt-1 break-words">{subtitle}</p>
           )}
         </div>
-        {(showBroadcast || actions) ? headerActions : null}
+        {actions ? (
+          <div className="portal-page-actions shrink-0 flex flex-wrap items-center gap-2">{actions}</div>
+        ) : null}
       </div>
 
       {!loading && !clinic && (
@@ -106,13 +88,6 @@ function ClinicPortalShellInner({ children, title, subtitle, actions }) {
         }}
       />
       <HelpFeedbackFab />
-      {showBroadcast && (
-        <BroadcastDrawer
-          open={broadcastOpen}
-          onClose={() => setBroadcastOpen(false)}
-          clinicId={clinicId}
-        />
-      )}
     </DashboardLayout>
   );
 }
