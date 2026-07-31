@@ -33,7 +33,7 @@ function cwApiLicenseGuard() {
 cwApiLicenseGuard();
 
 /** Fallback when VITE_API_URL is missing from the production build */
-const LIVE_API_FALLBACK = 'https://mediumorchid-monkey-387815.hostingersite.com/backend/api';
+const LIVE_API_FALLBACK = 'https://api.theurbanphysio.com/backend/api';
 
 function resolveApiBase() {
   const envUrl = import.meta.env.VITE_API_URL;

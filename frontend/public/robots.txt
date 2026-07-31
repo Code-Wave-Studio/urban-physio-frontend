@@ -42,5 +42,5 @@ Disallow: /book/
 Disallow: /c/
 Disallow: /pay/
 
-# XML sitemap lives on Hostinger API (frontend is Cloudflare Pages — no PHP under /backend)
-Sitemap: https://mediumorchid-monkey-387815.hostingersite.com/backend/api/sitemap.php
+# XML sitemap on API subdomain (frontend is Cloudflare Pages — no PHP under /backend)
+Sitemap: https://api.theurbanphysio.com/backend/api/sitemap.php
