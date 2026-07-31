@@ -184,11 +184,16 @@ export default function ClinicBackOfficePage() {
   const [eqModal, setEqModal] = useState(false);
   const [eqForm, setEqForm] = useState(EMPTY_EQUIP);
   const [poModal, setPoModal] = useState(false);
+  const [poInventory, setPoInventory] = useState([]);
+  const [poLoading, setPoLoading] = useState(false);
   const [poForm, setPoForm] = useState({
     supplier_id: '',
+    order_date: new Date().toISOString().slice(0, 10),
     expected_date: '',
     notes: '',
-    items: [{ inventory_item_id: '', quantity: 1, unit_cost: 0 }],
+    tax_amount: 0,
+    status: 'pending',
+    items: [{ inventory_item_id: '', quantity: 1, unit_cost: '' }],
   });
   const [catName, setCatName] = useState('');
   const [supName, setSupName] = useState('');
@@ -369,6 +374,15 @@ export default function ClinicBackOfficePage() {
     };
   }, [analytics]);
 
+  const poSubtotal = useMemo(() => {
+    return (poForm.items || []).reduce((sum, l) => {
+      const q = Number(l.quantity) || 0;
+      const c = Number(l.unit_cost) || 0;
+      return sum + q * c;
+    }, 0);
+  }, [poForm.items]);
+  const poGrand = poSubtotal + (Number(poForm.tax_amount) || 0);
+
   if (!boot && !can('backoffice.view')) {
     return <Navigate to="/clinic-portal" replace />;
   }
@@ -522,34 +536,66 @@ export default function ClinicBackOfficePage() {
   };
 
   const savePo = async () => {
+    const catalog = poInventory.length ? poInventory : invList;
     const lines = (poForm.items || []).filter((l) => Number(l.inventory_item_id) > 0 && Number(l.quantity) > 0);
     if (!lines.length) {
-      toast.error('Add at least one line item');
+      toast.error('Select an inventory item and enter quantity');
       return;
     }
     setSaving(true);
     try {
-      await clinicPortal.boCreatePurchaseOrder(cid, {
+      const res = await clinicPortal.boCreatePurchaseOrder(cid, {
         supplier_id: poForm.supplier_id || null,
+        order_date: poForm.order_date || new Date().toISOString().slice(0, 10),
         expected_date: poForm.expected_date || null,
-        notes: poForm.notes,
+        notes: poForm.notes || '',
+        tax_amount: Number(poForm.tax_amount) || 0,
+        status: poForm.status || 'pending',
         items: lines.map((l) => {
-          const found = invList.find((x) => String(x.id) === String(l.inventory_item_id));
+          const found = catalog.find((x) => String(x.id) === String(l.inventory_item_id));
           return {
             item_id: Number(l.inventory_item_id),
             qty: Number(l.quantity),
-            unit_cost: Number(l.unit_cost) || 0,
+            unit_cost: Number(l.unit_cost) || Number(found?.purchase_price) || 0,
             description: found?.name || 'Item',
           };
         }),
       });
-      toast.success('Purchase order created');
+      const created = res.data || res;
+      toast.success(created?.po_number ? `Created ${created.po_number}` : 'Purchase order created');
       setPoModal(false);
-      clinicPortal.boPurchaseOrders(cid).then((r) => setPos((r.data || r)?.orders || []));
+      const r = await clinicPortal.boPurchaseOrders(cid);
+      setPos((r.data || r)?.orders || []);
     } catch (e) {
       toast.error(e.message || 'PO failed');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const openPoModal = async () => {
+    setPoForm({
+      supplier_id: '',
+      order_date: new Date().toISOString().slice(0, 10),
+      expected_date: '',
+      notes: '',
+      tax_amount: 0,
+      status: 'pending',
+      items: [{ inventory_item_id: '', quantity: 1, unit_cost: '' }],
+    });
+    setPoModal(true);
+    setPoLoading(true);
+    try {
+      const [invRes] = await Promise.all([
+        clinicPortal.boInventory(cid),
+        loadMeta(),
+      ]);
+      setPoInventory((invRes.data || invRes)?.items || []);
+    } catch (e) {
+      toast.error(e.message || 'Could not load inventory for PO');
+      setPoInventory([]);
+    } finally {
+      setPoLoading(false);
     }
   };
 
@@ -857,16 +903,7 @@ export default function ClinicBackOfficePage() {
                 <button
                   type="button"
                   className="btn-primary text-xs"
-                  onClick={() => {
-                    loadInventory();
-                    setPoForm({
-                      supplier_id: '',
-                      expected_date: '',
-                      notes: '',
-                      items: [{ inventory_item_id: '', quantity: 1, unit_cost: 0 }],
-                    });
-                    setPoModal(true);
-                  }}
+                  onClick={openPoModal}
                 >
                   New PO
                 </button>
@@ -1541,86 +1578,226 @@ export default function ClinicBackOfficePage() {
       </GlassModal>
 
       {/* PO modal */}
-      <GlassModal open={poModal} onClose={() => setPoModal(false)} size="lg">
-        <GlassModalHeader title="New purchase order" onClose={() => setPoModal(false)} />
-        <GlassModalBody className="space-y-3 overflow-y-auto">
-          <select className="input-field" value={poForm.supplier_id} onChange={(e) => setPoForm({ ...poForm, supplier_id: e.target.value })}>
-            <option value="">Supplier (optional)</option>
-            {suppliers.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-          <input
-            type="date"
-            className="input-field"
-            value={poForm.expected_date}
-            onChange={(e) => setPoForm({ ...poForm, expected_date: e.target.value })}
-          />
-          {(poForm.items || []).map((line, i) => (
-            <div key={i} className="grid grid-cols-3 gap-2">
-              <select
-                className="input-field col-span-3 sm:col-span-1"
-                value={line.inventory_item_id}
-                onChange={(e) => {
-                  const items = [...poForm.items];
-                  items[i] = { ...items[i], inventory_item_id: e.target.value };
-                  const found = invList.find((x) => String(x.id) === e.target.value);
-                  if (found) items[i].unit_cost = found.purchase_price || 0;
-                  setPoForm({ ...poForm, items });
-                }}
-              >
-                <option value="">Item…</option>
-                {invList.map((it) => (
-                  <option key={it.id} value={it.id}>
-                    {it.name}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="number"
-                className="input-field"
-                placeholder="Qty"
-                value={line.quantity}
-                onChange={(e) => {
-                  const items = [...poForm.items];
-                  items[i] = { ...items[i], quantity: e.target.value };
-                  setPoForm({ ...poForm, items });
-                }}
-              />
-              <input
-                type="number"
-                className="input-field"
-                placeholder="Unit cost"
-                value={line.unit_cost}
-                onChange={(e) => {
-                  const items = [...poForm.items];
-                  items[i] = { ...items[i], unit_cost: e.target.value };
-                  setPoForm({ ...poForm, items });
-                }}
-              />
-            </div>
-          ))}
-          <button
-            type="button"
-            className="btn-outline text-xs"
-            onClick={() =>
-              setPoForm({
-                ...poForm,
-                items: [...poForm.items, { inventory_item_id: '', quantity: 1, unit_cost: 0 }],
-              })
-            }
-          >
-            + Line
-          </button>
+      <GlassModal open={poModal} onClose={() => !saving && setPoModal(false)} size="lg">
+        <GlassModalHeader
+          title="New purchase order"
+          subtitle="Select supplier, delivery date, and inventory lines"
+          icon="fa-cart-shopping"
+          onClose={() => !saving && setPoModal(false)}
+          disabledClose={saving}
+        />
+        <GlassModalBody className="!px-4 !py-3 sm:!px-6 sm:!py-5 flex flex-col flex-1 min-h-0 overflow-y-auto space-y-4">
+          {poLoading ? (
+            <p className="text-sm text-slate-500 py-8 text-center">Loading inventory &amp; suppliers…</p>
+          ) : (
+            <>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <label className="text-xs font-medium text-slate-600">
+                  Supplier
+                  <select
+                    className="input-field mt-1"
+                    value={poForm.supplier_id}
+                    onChange={(e) => setPoForm({ ...poForm, supplier_id: e.target.value })}
+                  >
+                    <option value="">Optional — choose supplier</option>
+                    {suppliers.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-xs font-medium text-slate-600">
+                  Status
+                  <select
+                    className="input-field mt-1"
+                    value={poForm.status}
+                    onChange={(e) => setPoForm({ ...poForm, status: e.target.value })}
+                  >
+                    <option value="draft">Draft</option>
+                    <option value="pending">Pending approval</option>
+                    <option value="ordered">Ordered</option>
+                  </select>
+                </label>
+                <label className="text-xs font-medium text-slate-600">
+                  Order date
+                  <input
+                    type="date"
+                    className="input-field mt-1"
+                    value={poForm.order_date}
+                    onChange={(e) => setPoForm({ ...poForm, order_date: e.target.value })}
+                  />
+                </label>
+                <label className="text-xs font-medium text-slate-600">
+                  Expected delivery
+                  <input
+                    type="date"
+                    className="input-field mt-1"
+                    value={poForm.expected_date}
+                    onChange={(e) => setPoForm({ ...poForm, expected_date: e.target.value })}
+                  />
+                </label>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Line items</p>
+                  <button
+                    type="button"
+                    className="text-xs font-semibold text-teal-700"
+                    onClick={() =>
+                      setPoForm({
+                        ...poForm,
+                        items: [...poForm.items, { inventory_item_id: '', quantity: 1, unit_cost: '' }],
+                      })
+                    }
+                  >
+                    + Add line
+                  </button>
+                </div>
+                {!(poInventory.length || invList.length) && (
+                  <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2 mb-2">
+                    No inventory items yet. Add a product under Inventory first, then create a PO.
+                  </p>
+                )}
+                <div className="space-y-3">
+                  {(poForm.items || []).map((line, i) => {
+                    const catalog = poInventory.length ? poInventory : invList;
+                    const found = catalog.find((x) => String(x.id) === String(line.inventory_item_id));
+                    const lineTotal = (Number(line.quantity) || 0) * (Number(line.unit_cost) || 0);
+                    return (
+                      <div key={i} className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <label className="text-xs font-medium text-slate-600 flex-1">
+                            Product *
+                            <select
+                              className="input-field mt-1"
+                              value={line.inventory_item_id}
+                              onChange={(e) => {
+                                const items = [...poForm.items];
+                                const id = e.target.value;
+                                const hit = catalog.find((x) => String(x.id) === id);
+                                items[i] = {
+                                  ...items[i],
+                                  inventory_item_id: id,
+                                  unit_cost:
+                                    hit && (hit.purchase_price !== null && hit.purchase_price !== undefined)
+                                      ? Number(hit.purchase_price)
+                                      : items[i].unit_cost,
+                                };
+                                setPoForm({ ...poForm, items });
+                              }}
+                            >
+                              <option value="">Select inventory item…</option>
+                              {catalog.map((it) => (
+                                <option key={it.id} value={it.id}>
+                                  {it.name}
+                                  {it.sku ? ` (${it.sku})` : ''} · stock {it.qty_on_hand ?? 0}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          {(poForm.items || []).length > 1 && (
+                            <button
+                              type="button"
+                              className="text-xs text-rose-600 mt-6 shrink-0"
+                              onClick={() =>
+                                setPoForm({
+                                  ...poForm,
+                                  items: poForm.items.filter((_, j) => j !== i),
+                                })
+                              }
+                            >
+                              Remove
+                            </button>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          <label className="text-xs font-medium text-slate-600">
+                            Qty *
+                            <input
+                              type="number"
+                              min="0.001"
+                              step="any"
+                              className="input-field mt-1"
+                              value={line.quantity}
+                              onChange={(e) => {
+                                const items = [...poForm.items];
+                                items[i] = { ...items[i], quantity: e.target.value };
+                                setPoForm({ ...poForm, items });
+                              }}
+                            />
+                          </label>
+                          <label className="text-xs font-medium text-slate-600">
+                            Unit cost (₹)
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              className="input-field mt-1"
+                              value={line.unit_cost}
+                              onChange={(e) => {
+                                const items = [...poForm.items];
+                                items[i] = { ...items[i], unit_cost: e.target.value };
+                                setPoForm({ ...poForm, items });
+                              }}
+                            />
+                          </label>
+                          <label className="text-xs font-medium text-slate-600">
+                            Line total
+                            <input className="input-field mt-1 bg-white" value={money(lineTotal)} readOnly />
+                          </label>
+                        </div>
+                        {found ? (
+                          <p className="text-[10px] text-slate-500">
+                            Purchase price on file: {money(found.purchase_price)} · Unit: {found.unit || 'pcs'}
+                          </p>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-3">
+                <label className="text-xs font-medium text-slate-600 sm:col-span-2">
+                  Notes
+                  <textarea
+                    className="input-field mt-1"
+                    rows={2}
+                    placeholder="Delivery instructions, reference, etc."
+                    value={poForm.notes}
+                    onChange={(e) => setPoForm({ ...poForm, notes: e.target.value })}
+                  />
+                </label>
+                <label className="text-xs font-medium text-slate-600">
+                  Tax (₹)
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="input-field mt-1"
+                    value={poForm.tax_amount}
+                    onChange={(e) => setPoForm({ ...poForm, tax_amount: e.target.value })}
+                  />
+                </label>
+                <div className="rounded-xl border border-teal-100 bg-teal-50/50 px-3 py-2 text-sm">
+                  <p className="text-[11px] uppercase text-teal-700/70 font-semibold">Order total</p>
+                  <p className="font-bold text-teal-900 text-lg">{money(poGrand)}</p>
+                  <p className="text-[10px] text-teal-800/70">
+                    Subtotal {money(poSubtotal)} + tax {money(poForm.tax_amount)}
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
         </GlassModalBody>
         <GlassModalFooter>
-          <button type="button" className="btn-outline" onClick={() => setPoModal(false)}>
+          <button type="button" className="btn-outline" disabled={saving} onClick={() => setPoModal(false)}>
             Cancel
           </button>
-          <button type="button" className="btn-primary" disabled={saving} onClick={savePo}>
-            Create PO
+          <button type="button" className="btn-primary" disabled={saving || poLoading} onClick={savePo}>
+            {saving ? 'Creating…' : 'Create PO'}
           </button>
         </GlassModalFooter>
       </GlassModal>
