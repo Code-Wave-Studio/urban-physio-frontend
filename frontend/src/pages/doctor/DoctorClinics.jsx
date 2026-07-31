@@ -5,6 +5,7 @@ import FaIcon from '../../components/FaIcon';
 import ClinicLogo from '../../components/ClinicLogo';
 import { doctors } from '../../services/api';
 import { DOCTOR_NAV } from '../../constants/doctorNav';
+import { clinicProfileUrl } from '../../utils/profileUrls';
 import toast from 'react-hot-toast';
 
 const STATUS_STYLE = {
@@ -285,8 +286,8 @@ export default function DoctorClinics() {
                       <FaIcon icon="fa-calendar-days" />
                       Set availability
                     </Link>
-                    {c.slug && (
-                      <Link to={`/clinics/${c.slug}`} className="btn-outline text-sm inline-flex items-center gap-2">
+                    {(c.slug || c.id) && (
+                      <Link to={clinicProfileUrl(c)} className="btn-outline text-sm inline-flex items-center gap-2">
                         <FaIcon icon="fa-eye" />
                         View public page
                       </Link>

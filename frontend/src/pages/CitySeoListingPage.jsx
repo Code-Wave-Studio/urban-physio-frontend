@@ -103,13 +103,10 @@ export default function CitySeoListingPage({ type, legacy = false }) {
   const sorted = useMemo(() => config.sortItems(list), [list, config]);
   const seo = city?.seo?.[type] || {};
   const canonical = city?.canonical?.[type] || '';
-  if (!loading && city && legacy && canonical) {
-    return <Navigate to={canonical} replace />;
-  }
-
   const canonicalUrl = typeof window !== 'undefined' && canonical ? `${window.location.origin}${canonical}` : canonical;
   const introText = (seo.intro_content || seo.description || '').trim();
 
+  // All hooks must run before any early return (React #310)
   const faqItems = useMemo(() => {
     try {
       const raw = seo.faq_json;
@@ -153,6 +150,10 @@ export default function CitySeoListingPage({ type, legacy = false }) {
     }
     return { '@context': 'https://schema.org', '@graph': graph };
   }, [city, type, sorted, canonicalUrl, breadcrumbItems, faqItems]);
+
+  if (!loading && city && legacy && canonical) {
+    return <Navigate to={canonical} replace />;
+  }
 
   if (loading) {
     return (

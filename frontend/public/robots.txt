@@ -11,10 +11,10 @@ Disallow: /doctor/register
 Disallow: /doctor/profile
 Disallow: /doctor/appointments
 Disallow: /doctor/clinics
-Disallow: /doctor/dashboard
+Disallow: /doctor
 Disallow: /doctor/notifications
 Disallow: /clinic-manage
 Disallow: /login
 Disallow: /register
 
-Sitemap: https://theurbanphysio.com/backend/api/sitemap
+Sitemap: https://mediumorchid-monkey-387815.hostingersite.com/backend/api/sitemap

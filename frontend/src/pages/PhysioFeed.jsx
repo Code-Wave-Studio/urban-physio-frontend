@@ -27,7 +27,11 @@ export default function PhysioFeed({ mode = 'all', legacy = false }) {
   const { categorySlug } = useParams();
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [type, setType] = useState(() => (mode === 'podcast' ? 'podcast' : ''));
+  const [type, setType] = useState(() => {
+    if (mode === 'podcast') return 'podcast';
+    if (mode === 'blog') return 'blog';
+    return '';
+  });
   const [search, setSearch] = useState('');
 
   useEffect(() => {
@@ -35,6 +39,8 @@ export default function PhysioFeed({ mode = 'all', legacy = false }) {
     const params = {};
     if (mode === 'podcast') {
       params.type = 'podcast';
+    } else if (mode === 'blog') {
+      params.type = type || 'blog';
     } else if (type) {
       params.type = type;
     }

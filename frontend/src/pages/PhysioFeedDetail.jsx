@@ -42,44 +42,31 @@ export default function PhysioFeedDetail({ mode = 'blog', legacy = false }) {
       .finally(() => setRelatedLoading(false));
   }, [slug]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full" />
-      </div>
-    );
-  }
+  // Hooks must run unconditionally (before any early return) — React #310
+  const audioSrc = post ? mediaSrc(post.audio_url) : '';
+  const videoSrc = post ? mediaSrc(post.video_url) : '';
+  const isPodcast = post?.type === 'podcast';
+  const featuredSrc = post?.featured_image ? mediaSrc(post.featured_image) : null;
+  const canonical = post
+    ? post.canonical_path || (isPodcast ? `/podcast/${slug}` : `/blog/${slug}`)
+    : mode === 'podcast'
+      ? `/podcast/${slug || ''}`
+      : `/blog/${slug || ''}`;
 
-  if (!post) {
-    return (
-      <>
-        <Navbar />
-        <div className="max-w-3xl mx-auto px-4 py-24 text-center">
-          <p className="text-slate-600">Article not found.</p>
-          <Link to="/blog" className="btn-primary mt-4 inline-block">
-            Back to Blog
-          </Link>
-        </div>
-        <Footer />
-      </>
-    );
-  }
-
-  const audioSrc = mediaSrc(post.audio_url);
-  const videoSrc = mediaSrc(post.video_url);
-  const isPodcast = post.type === 'podcast';
-  const featuredSrc = post.featured_image ? mediaSrc(post.featured_image) : null;
-  const canonical = post.canonical_path || (isPodcast ? `/podcast/${slug}` : `/blog/${slug}`);
-  const breadcrumbItems = useMemo(
-    () => [
+  const breadcrumbItems = useMemo(() => {
+    if (!post) return [{ label: 'Home', href: '/' }, { label: 'Blog', href: '/blog' }];
+    return [
       { label: 'Home', href: '/' },
       { label: isPodcast ? 'Podcast' : 'Blog', href: isPodcast ? '/podcast' : '/blog' },
-      ...(post.category_slug && !isPodcast ? [{ label: post.category_slug.replace(/-/g, ' '), href: post.category_path }] : []),
+      ...(post.category_slug && !isPodcast
+        ? [{ label: String(post.category_slug).replace(/-/g, ' '), href: post.category_path }]
+        : []),
       { label: post.title },
-    ],
-    [isPodcast, post.category_slug, post.category_path, post.title]
-  );
+    ];
+  }, [isPodcast, post]);
+
   const jsonLd = useMemo(() => {
+    if (!post) return null;
     const graph = [
       breadcrumbSchema(breadcrumbItems, `${window.location.origin}${canonical}`),
       isPodcast
@@ -110,6 +97,29 @@ export default function PhysioFeedDetail({ mode = 'blog', legacy = false }) {
     ].filter(Boolean);
     return { '@context': 'https://schema.org', '@graph': graph };
   }, [audioSrc, breadcrumbItems, canonical, featuredSrc, isPodcast, post, videoSrc]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!post) {
+    return (
+      <>
+        <Navbar />
+        <div className="max-w-3xl mx-auto px-4 py-24 text-center">
+          <p className="text-slate-600">Article not found.</p>
+          <Link to="/blog" className="btn-primary mt-4 inline-block">
+            Back to Blog
+          </Link>
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
   if (legacy && post?.canonical_path) {
     return <Navigate to={post.canonical_path} replace />;

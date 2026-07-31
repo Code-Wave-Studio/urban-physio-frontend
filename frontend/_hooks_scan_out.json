@@ -1,0 +1,10 @@
+﻿[]
+node : 
+At C:\Users\azazk\AppData\Local\Temp\ps-script-cca23396-a491-4c21-8b04-c5aa4705a306.ps1:105 char:50
++ ... oks_scan.js _hooks_scan.cjs -Force; node _hooks_scan.cjs 2>&1 | Out-F ...
++                                         ~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+TOTAL_FILES_WITH_ISSUES: 0
+TOTAL_ISSUES: 0

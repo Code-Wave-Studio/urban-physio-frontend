@@ -143,7 +143,6 @@ import AdminReviews from './pages/admin/AdminReviews';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import { ADMIN_NAV } from './constants/adminNav';
 import { DOCTOR_NAV } from './constants/doctorNav';
-import { PATIENT_NAV } from './constants/patientNav';
 import CitySeoListingPage from './pages/CitySeoListingPage';
 import AuthLoginPage from './pages/auth/AuthLoginPage';
 import AuthRegisterPage from './pages/auth/AuthRegisterPage';
