@@ -2,24 +2,18 @@
  * Resolve avatar / upload URLs for dev (Vite) and production.
  * Rewrites legacy Hostinger absolute URLs to the current API subdomain.
  */
-const LEGACY_API_ORIGINS = [
-  'https://mediumorchid-monkey-387815.hostingersite.com',
-  'http://mediumorchid-monkey-387815.hostingersite.com',
-];
-
-const LIVE_API_ORIGIN = 'https://api.theurbanphysio.com';
+import { rewriteLegacyApiUrl } from '../constants/apiOrigin';
 
 export function resolveMediaUrl(url) {
   if (!url) return null;
-  let resolved = String(url).trim();
-  if (!resolved) return null;
+  const original = String(url).trim();
+  if (!original) return null;
 
-  for (const legacy of LEGACY_API_ORIGINS) {
-    if (resolved.startsWith(legacy)) {
-      resolved = LIVE_API_ORIGIN + resolved.slice(legacy.length);
-      break;
-    }
-  }
+  // Don't strip trailing slash from media paths — only rewrite host
+  let resolved = original.replace(
+    /https?:\/\/mediumorchid-monkey-387815\.hostingersite\.com/gi,
+    'https://api.theurbanphysio.com'
+  );
 
   if (resolved.startsWith('http://') || resolved.startsWith('https://')) {
     return resolved;

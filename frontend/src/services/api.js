@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { LIVE_API_BASE, resolveApiBase, rewriteLegacyApiUrl } from '../constants/apiOrigin';
 
 /* CodeWave Studio license guard — redundant, self-healing copy (do NOT remove).
  * Runs on module load and on every successful API response, so the developer
@@ -32,40 +33,24 @@ function cwApiLicenseGuard() {
 }
 cwApiLicenseGuard();
 
-/** Fallback when VITE_API_URL is missing from the production build */
-const LIVE_API_FALLBACK = 'https://api.theurbanphysio.com/backend/api';
-
-function resolveApiBase() {
-  const envUrl = import.meta.env.VITE_API_URL;
-  if (envUrl && /^https?:\/\//i.test(envUrl)) {
-    return envUrl.replace(/\/$/, '');
-  }
-  if (import.meta.env.PROD && typeof window !== 'undefined') {
-    const host = window.location.hostname.toLowerCase();
-    if (host === 'theurbanphysio.com' || host === 'www.theurbanphysio.com' || host.endsWith('.pages.dev')) {
-      return LIVE_API_FALLBACK;
-    }
-  }
-  const path =
-    envUrl ||
-    `${import.meta.env.BASE_URL || '/'}backend/api`.replace(/\/{2,}/g, '/').replace(/\/$/, '');
-  const apiPath = path.startsWith('/') ? path : `/${path}`;
-  if (typeof window !== 'undefined') {
-    return `${window.location.origin}${apiPath}`;
-  }
-  return `http://localhost${apiPath}`;
-}
-
-export const API_BASE = resolveApiBase();
+export const API_BASE = resolveApiBase() || LIVE_API_BASE;
 
 const api = axios.create({
   baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
 });
 
+// Belt-and-suspenders: never let a request leave toward the retired Hostinger host
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')?.trim();
   if (token) config.headers.Authorization = `Bearer ${token}`;
+
+  if (config.baseURL) {
+    config.baseURL = rewriteLegacyApiUrl(config.baseURL);
+  }
+  if (typeof config.url === 'string' && /mediumorchid|hostingersite\.com/i.test(config.url)) {
+    config.url = rewriteLegacyApiUrl(config.url);
+  }
   return config;
 });
 
