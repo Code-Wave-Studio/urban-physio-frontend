@@ -853,16 +853,41 @@ export const clinicPortal = {
     api.put(`/clinic-portal/${clinicId}/clinical-library/${id}`, data),
   deleteLibraryEntry: (clinicId, id) =>
     api.delete(`/clinic-portal/${clinicId}/clinical-library/${id}`),
-  notificationTemplates: (clinicId) =>
-    api.get(`/clinic-portal/${clinicId}/notification-templates`),
+  notificationTemplates: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/notification-templates`, { params }),
+  createNotificationTemplate: (clinicId, data) =>
+    api.post(`/clinic-portal/${clinicId}/notification-templates`, data),
   saveNotificationTemplate: (clinicId, id, data) =>
     api.put(`/clinic-portal/${clinicId}/notification-templates/${id}`, data),
+  duplicateNotificationTemplate: (clinicId, id) =>
+    api.post(`/clinic-portal/${clinicId}/notification-templates/${id}/duplicate`),
+  notificationTemplateVersions: (clinicId, id) =>
+    api.get(`/clinic-portal/${clinicId}/notification-templates/${id}/versions`),
   notificationCampaigns: (clinicId) =>
     api.get(`/clinic-portal/${clinicId}/notification-campaigns`),
   createCampaign: (clinicId, data) =>
     api.post(`/clinic-portal/${clinicId}/notification-campaigns`, data),
   sendCampaign: (clinicId, id) =>
     api.post(`/clinic-portal/${clinicId}/notification-campaigns/${id}/send`),
+  // Smart Communication Engine
+  commDashboard: (clinicId) =>
+    api.get(`/clinic-portal/${clinicId}/communication/dashboard`),
+  commAnalytics: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/communication/analytics`, { params }),
+  commHistory: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/communication/history`, { params }),
+  commAudiencePreview: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/communication/audience-preview`, { params }),
+  commProviders: (clinicId) =>
+    api.get(`/clinic-portal/${clinicId}/communication/providers`),
+  commSaveProvider: (clinicId, data) =>
+    api.put(`/clinic-portal/${clinicId}/communication/providers`, data),
+  commSyncWhatsAppTemplates: (clinicId) =>
+    api.post(`/clinic-portal/${clinicId}/communication/sync-whatsapp-templates`),
+  patientCommunicationLog: (clinicId, patientKey, params) =>
+    api.get(`/clinic-portal/${clinicId}/patients/${patientKey}/communication-log`, { params }),
+  markPatientCommRead: (clinicId, patientKey) =>
+    api.post(`/clinic-portal/${clinicId}/patients/${patientKey}/communication-log/read`),
   doctorAvailability: (clinicId) => api.get(`/clinic-portal/${clinicId}/doctor-availability`),
   setDoctorAvailability: (clinicId, data) =>
     api.post(`/clinic-portal/${clinicId}/doctor-availability`, data),

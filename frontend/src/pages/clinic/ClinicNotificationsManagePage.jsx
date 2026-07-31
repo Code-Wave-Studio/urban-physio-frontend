@@ -127,10 +127,16 @@ export default function ClinicNotificationsManagePage() {
       title="Notification Management"
       subtitle="Auto templates (F13) + festival / offer campaigns"
       actions={(
-        <Link to="/clinic-portal/notifications" className="btn-outline text-sm">
-          <FaIcon icon="fa-inbox" className="mr-2" />
-          Inbox
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link to="/clinic-portal/communication" className="btn-primary text-sm">
+            <FaIcon icon="fa-comments" className="mr-2" />
+            Communication Engine
+          </Link>
+          <Link to="/clinic-portal/notifications" className="btn-outline text-sm">
+            <FaIcon icon="fa-inbox" className="mr-2" />
+            Inbox
+          </Link>
+        </div>
       )}
     >
       <div className="glass-card !p-4 mb-4 text-sm text-slate-600">

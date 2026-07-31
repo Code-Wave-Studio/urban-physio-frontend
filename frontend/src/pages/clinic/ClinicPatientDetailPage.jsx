@@ -11,8 +11,9 @@ import PatientOverviewTab from '../../components/erp/PatientOverviewTab';
 import PatientTimelineTab from '../../components/erp/PatientTimelineTab';
 import AssessmentResponseForm from '../../components/erp/AssessmentResponseForm';
 import PackageCard from '../../components/clinic/PackageCard';
+import PatientCommLog from '../../components/clinic/communication/PatientCommLog';
 
-const TABS = ['Overview', 'Timeline', 'Assessments', 'Packages', 'Protocols', 'Payments', 'SOAP', 'Documents', 'Reports'];
+const TABS = ['Overview', 'Timeline', 'Assessments', 'Packages', 'Protocols', 'Payments', 'SOAP', 'Documents', 'Reports', 'Communication'];
 const money = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 const parse = (value) => {
   if (typeof value !== 'string') return value || {};
@@ -549,6 +550,10 @@ export default function ClinicPatientDetailPage() {
                   <strong>{data.patient_key}</strong>.
                 </p>
               </div>
+            )}
+
+            {tab === 'Communication' && clinicId && (
+              <PatientCommLog clinicId={clinicId} patientKey={data.patient_key || patientKey} />
             )}
           </section>
         </div>
