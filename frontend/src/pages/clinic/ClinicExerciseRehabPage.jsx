@@ -46,6 +46,53 @@ const EMPTY_EX = {
   pdf_url: '',
 };
 
+function youtubeEmbed(url) {
+  if (!url) return null;
+  const m = String(url).match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{6,})/i);
+  return m ? `https://www.youtube.com/embed/${m[1]}` : null;
+}
+
+function isDirectVideo(url) {
+  if (!url) return false;
+  return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url) || /\/video\//i.test(url);
+}
+
+/** Shared video / image preview for library + modals */
+function ExerciseMediaPreview({ exercise, className = '' }) {
+  if (!exercise) return null;
+  const yt = youtubeEmbed(exercise.video_url);
+  const direct = exercise.video_url && (isDirectVideo(exercise.video_url) || !yt);
+  return (
+    <div className={`rounded-xl overflow-hidden bg-slate-900/95 aspect-video ${className}`}>
+      {yt ? (
+        <iframe
+          title={exercise.name || 'Exercise video'}
+          src={yt}
+          className="w-full h-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      ) : exercise.video_url && direct ? (
+        <video
+          key={exercise.video_url}
+          src={exercise.video_url}
+          controls
+          playsInline
+          poster={exercise.image_url || undefined}
+          className="w-full h-full object-contain bg-black"
+        />
+      ) : exercise.image_url ? (
+        <img src={exercise.image_url} alt={exercise.name || ''} className="w-full h-full object-cover" />
+      ) : (
+        <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 gap-2">
+          <FaIcon icon="fa-dumbbell" className="text-2xl" />
+          <span className="text-xs">No video yet</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Kpi({ label, value, hint, tone = 'teal' }) {
   const tones = {
     teal: 'from-teal-500/15 to-cyan-500/5 text-teal-900',
@@ -91,6 +138,20 @@ export default function ClinicExerciseRehabPage() {
   const [editingEx, setEditingEx] = useState(null);
   const [saving, setSaving] = useState(false);
   const [mediaForm, setMediaForm] = useState({ title: '', url: '', kind: 'video', provider: 'cdn' });
+  const [previewEx, setPreviewEx] = useState(null);
+  const [assignEx, setAssignEx] = useState(null);
+  const [patients, setPatients] = useState([]);
+  const [patientsLoading, setPatientsLoading] = useState(false);
+  const [assignSaving, setAssignSaving] = useState(false);
+  const [assignForm, setAssignForm] = useState({
+    patient_id: '',
+    title: '',
+    sets: 3,
+    reps: '10',
+    hold_seconds: '',
+    frequency: 'Daily',
+    publish: true,
+  });
 
   const loadDash = useCallback(async () => {
     if (!clinicId) return;
@@ -266,6 +327,90 @@ export default function ClinicExerciseRehabPage() {
     }
   };
 
+  const openPreview = (ex) => setPreviewEx(ex);
+
+  const openAssign = async (ex) => {
+    setAssignEx(ex);
+    setAssignForm({
+      patient_id: '',
+      title: `HEP · ${ex.name}`,
+      sets: Number(ex.default_sets) || 3,
+      reps: ex.default_reps || '10',
+      hold_seconds: ex.default_hold_seconds || '',
+      frequency: 'Daily',
+      publish: true,
+    });
+    if (!clinicId) return;
+    setPatientsLoading(true);
+    try {
+      const res = await clinicPortal.patients(Number(clinicId), { page: 1, per_page: 100 });
+      const data = res.data || res || {};
+      const rows = Array.isArray(data) ? data : data.items || [];
+      setPatients(
+        rows
+          .map((p) => ({
+            id: p.patient_id || p.id,
+            name:
+              p.patient_name ||
+              [p.first_name, p.last_name].filter(Boolean).join(' ') ||
+              'Patient',
+          }))
+          .filter((p) => p.id)
+      );
+    } catch {
+      setPatients([]);
+      toast.error('Could not load patients');
+    } finally {
+      setPatientsLoading(false);
+    }
+  };
+
+  const submitAssign = async (e) => {
+    e.preventDefault();
+    if (!assignEx || !assignForm.patient_id) {
+      toast.error('Select a patient');
+      return;
+    }
+    setAssignSaving(true);
+    try {
+      const payload = {
+        clinic_id: Number(clinicId),
+        patient_id: Number(assignForm.patient_id),
+        title: assignForm.title.trim() || `HEP · ${assignEx.name}`,
+        start_date: new Date().toISOString().slice(0, 10),
+        status: 'active',
+        is_protocol: true,
+        publish_status: assignForm.publish ? 'published' : 'draft',
+        exercises: [
+          {
+            exercise_id: Number(assignEx.id),
+            sets: Number(assignForm.sets) || 3,
+            reps: String(assignForm.reps || '10'),
+            hold_seconds: assignForm.hold_seconds ? Number(assignForm.hold_seconds) : null,
+            frequency: assignForm.frequency || 'Daily',
+            is_mandatory: true,
+          },
+        ],
+      };
+      const res = await exercisePrescriptions.create(payload);
+      const id = res?.data?.id || res?.id;
+      if (assignForm.publish && id && (res?.data?.publish_status || payload.publish_status) !== 'published') {
+        await exercisePrescriptions.publish(id);
+      }
+      toast.success(
+        assignForm.publish
+          ? `Assigned “${assignEx.name}” to patient`
+          : 'Draft HEP saved — publish from Home Exercise Programs'
+      );
+      setAssignEx(null);
+      setSection('hep');
+    } catch (err) {
+      toast.error(err.message || 'Assign failed');
+    } finally {
+      setAssignSaving(false);
+    }
+  };
+
   const clonePlan = async (rx) => {
     try {
       await exercisePrescriptions.clone(rx.id);
@@ -419,43 +564,95 @@ export default function ClinicExerciseRehabPage() {
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {library.map((ex) => {
                 const isGlobal = !(Number(ex.clinic_id) > 0);
+                const hasVideo = Boolean(ex.video_url);
                 return (
                   <div
                     key={ex.id}
-                    className="group rounded-2xl border border-slate-100 bg-white/70 backdrop-blur-sm p-4 shadow-sm hover:shadow-md transition"
+                    className="group rounded-2xl border border-slate-100 bg-white/70 backdrop-blur-sm overflow-hidden shadow-sm hover:shadow-md transition flex flex-col"
                   >
-                    <div className="flex gap-3">
-                      {ex.image_url ? (
-                        <img src={ex.image_url} alt="" className="w-14 h-14 rounded-xl object-cover bg-slate-100" />
-                      ) : (
-                        <div className="w-14 h-14 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center">
-                          <FaIcon icon="fa-dumbbell" />
-                        </div>
-                      )}
-                      <div className="min-w-0 flex-1">
+                    <button
+                      type="button"
+                      className="relative block w-full text-left"
+                      onClick={() => openPreview(ex)}
+                      title="Preview"
+                    >
+                      <div className="aspect-video bg-slate-100 relative">
+                        {hasVideo && youtubeEmbed(ex.video_url) ? (
+                          <img
+                            src={`https://img.youtube.com/vi/${String(ex.video_url).match(/(?:v=|youtu\.be\/|embed\/)([\w-]{6,})/)?.[1] || ''}/hqdefault.jpg`}
+                            alt=""
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        ) : null}
+                        {ex.image_url && !youtubeEmbed(ex.video_url) ? (
+                          <img src={ex.image_url} alt="" className="w-full h-full object-cover absolute inset-0" />
+                        ) : null}
+                        {!ex.image_url && !youtubeEmbed(ex.video_url) && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-teal-50 to-slate-100 text-teal-600">
+                            <FaIcon icon="fa-dumbbell" className="text-3xl" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/50 via-transparent to-transparent" />
+                        <span className="absolute inset-0 flex items-center justify-center">
+                          <span className="w-12 h-12 rounded-full bg-white/95 text-teal-700 shadow-lg flex items-center justify-center group-hover:scale-105 transition">
+                            <FaIcon icon={hasVideo ? 'fa-play' : 'fa-eye'} className="text-sm ml-0.5" />
+                          </span>
+                        </span>
+                        {hasVideo && (
+                          <span className="absolute top-2 left-2 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-md bg-black/60 text-white">
+                            Video
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                    <div className="p-3.5 flex flex-col flex-1 gap-2">
+                      <div>
                         <p className="font-semibold text-slate-900 text-sm leading-snug">{ex.name}</p>
                         <p className="text-[11px] text-slate-500 mt-0.5 capitalize">
-                          {isGlobal ? 'Global · read-only' : 'Clinic'} · {ex.difficulty || '—'}
+                          {isGlobal ? 'TUP Global' : 'Clinic library'}
+                          {ex.difficulty ? ` · ${ex.difficulty}` : ''}
                           {ex.body_area ? ` · ${ex.body_area}` : ''}
                         </p>
                       </div>
-                    </div>
-                    {(ex.video_url || ex.pdf_url) && (
-                      <p className="text-[10px] text-slate-400 mt-2 flex gap-2">
-                        {ex.video_url && <span><FaIcon icon="fa-video" className="mr-1" />Video</span>}
-                        {ex.pdf_url && <span><FaIcon icon="fa-file-pdf" className="mr-1" />PDF</span>}
-                      </p>
-                    )}
-                    {!isGlobal && (
-                      <div className="flex gap-2 mt-3 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition">
-                        <button type="button" className="text-xs font-medium text-teal-700" onClick={() => openEditEx(ex)}>
-                          Edit
+                      <div className="mt-auto flex flex-wrap gap-2 pt-1">
+                        <button
+                          type="button"
+                          className="btn-primary !py-1.5 !px-3 text-xs flex-1 min-w-[6.5rem] justify-center"
+                          onClick={() => openAssign(ex)}
+                        >
+                          <FaIcon icon="fa-user-plus" className="mr-1.5" />
+                          Assign
                         </button>
-                        <button type="button" className="text-xs font-medium text-rose-600" onClick={() => archiveEx(ex)}>
-                          Archive
+                        <button
+                          type="button"
+                          className="btn-outline !py-1.5 !px-3 text-xs justify-center"
+                          onClick={() => openPreview(ex)}
+                        >
+                          Preview
                         </button>
+                        {!isGlobal && (
+                          <>
+                            <button
+                              type="button"
+                              className="text-xs font-medium text-teal-700 px-1"
+                              onClick={() => openEditEx(ex)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              className="text-xs font-medium text-rose-600 px-1"
+                              onClick={() => archiveEx(ex)}
+                            >
+                              Archive
+                            </button>
+                          </>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
                 );
               })}
@@ -706,12 +903,12 @@ export default function ClinicExerciseRehabPage() {
                 />
               </label>
               <label className="block text-sm font-medium text-slate-700">
-                Video URL (CDN/S3)
+                Video URL (YouTube / CDN)
                 <input
                   className="input-field mt-1.5 w-full"
                   value={exForm.video_url}
                   onChange={(e) => setExForm((f) => ({ ...f, video_url: e.target.value }))}
-                  placeholder="https://"
+                  placeholder="https://youtube.com/… or https://cdn…/clip.mp4"
                   inputMode="url"
                 />
               </label>
@@ -725,6 +922,14 @@ export default function ClinicExerciseRehabPage() {
                   inputMode="url"
                 />
               </label>
+              {(exForm.video_url || exForm.image_url) && (
+                <div className="sm:col-span-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mb-1.5">Live preview</p>
+                  <ExerciseMediaPreview
+                    exercise={{ name: exForm.name, video_url: exForm.video_url, image_url: exForm.image_url }}
+                  />
+                </div>
+              )}
               <label className="sm:col-span-2 block text-sm font-medium text-slate-700">
                 PDF URL
                 <input
@@ -744,6 +949,170 @@ export default function ClinicExerciseRehabPage() {
               </button>
               <button type="submit" className="btn-primary w-full sm:w-auto" disabled={saving}>
                 {saving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </GlassModalFooter>
+        </form>
+      </GlassModal>
+
+      <GlassModal open={Boolean(previewEx)} onClose={() => setPreviewEx(null)} size="lg">
+        <GlassModalHeader
+          title={previewEx?.name || 'Exercise preview'}
+          subtitle={
+            previewEx
+              ? `${Number(previewEx.clinic_id) > 0 ? 'Clinic library' : 'TUP Global'} · ${previewEx.difficulty || '—'}${
+                  previewEx.body_area ? ` · ${previewEx.body_area}` : ''
+                }`
+              : ''
+          }
+          icon="fa-play"
+          onClose={() => setPreviewEx(null)}
+        />
+        <GlassModalBody className="!px-4 !py-3 sm:!px-6 sm:!py-5 space-y-4">
+          {previewEx && (
+            <>
+              <ExerciseMediaPreview exercise={previewEx} />
+              {previewEx.instructions && (
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mb-1">Instructions</p>
+                  <p className="text-sm text-slate-700 whitespace-pre-wrap">{previewEx.instructions}</p>
+                </div>
+              )}
+              {previewEx.precautions && (
+                <div className="rounded-xl bg-amber-50 border border-amber-100 p-3 text-sm text-amber-900">
+                  <span className="font-semibold">Precautions: </span>
+                  {previewEx.precautions}
+                </div>
+              )}
+              {previewEx.pdf_url && (
+                <a
+                  href={previewEx.pdf_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm text-teal-700 font-medium hover:underline"
+                >
+                  <FaIcon icon="fa-file-pdf" /> Open PDF handout
+                </a>
+              )}
+            </>
+          )}
+        </GlassModalBody>
+        <GlassModalFooter>
+          <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end w-full">
+            <button type="button" className="btn-outline w-full sm:w-auto" onClick={() => setPreviewEx(null)}>
+              Close
+            </button>
+            <button
+              type="button"
+              className="btn-primary w-full sm:w-auto"
+              onClick={() => {
+                const ex = previewEx;
+                setPreviewEx(null);
+                if (ex) openAssign(ex);
+              }}
+            >
+              <FaIcon icon="fa-user-plus" className="mr-1.5" />
+              Assign to patient
+            </button>
+          </div>
+        </GlassModalFooter>
+      </GlassModal>
+
+      <GlassModal open={Boolean(assignEx)} onClose={() => setAssignEx(null)} size="md">
+        <GlassModalHeader
+          title="Assign exercise"
+          subtitle={assignEx ? `Assign “${assignEx.name}” as a home exercise program` : ''}
+          icon="fa-user-plus"
+          onClose={() => setAssignEx(null)}
+        />
+        <form onSubmit={submitAssign} className="flex flex-col flex-1 min-h-0">
+          <GlassModalBody className="!px-4 !py-3 sm:!px-6 sm:!py-5 space-y-3">
+            {assignEx && <ExerciseMediaPreview exercise={assignEx} className="max-h-40" />}
+            <label className="block text-sm font-medium text-slate-700">
+              Patient
+              <select
+                className="input-field mt-1.5 w-full"
+                required
+                value={assignForm.patient_id}
+                onChange={(e) => setAssignForm((f) => ({ ...f, patient_id: e.target.value }))}
+                disabled={patientsLoading}
+              >
+                <option value="">{patientsLoading ? 'Loading…' : 'Select patient'}</option>
+                {patients.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-sm font-medium text-slate-700">
+              Program title
+              <input
+                className="input-field mt-1.5 w-full"
+                value={assignForm.title}
+                onChange={(e) => setAssignForm((f) => ({ ...f, title: e.target.value }))}
+                required
+              />
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              <label className="block text-sm font-medium text-slate-700">
+                Sets
+                <input
+                  type="number"
+                  min={1}
+                  className="input-field mt-1.5 w-full"
+                  value={assignForm.sets}
+                  onChange={(e) => setAssignForm((f) => ({ ...f, sets: e.target.value }))}
+                />
+              </label>
+              <label className="block text-sm font-medium text-slate-700">
+                Reps
+                <input
+                  className="input-field mt-1.5 w-full"
+                  value={assignForm.reps}
+                  onChange={(e) => setAssignForm((f) => ({ ...f, reps: e.target.value }))}
+                />
+              </label>
+              <label className="block text-sm font-medium text-slate-700">
+                Hold (sec)
+                <input
+                  type="number"
+                  min={0}
+                  className="input-field mt-1.5 w-full"
+                  value={assignForm.hold_seconds}
+                  onChange={(e) => setAssignForm((f) => ({ ...f, hold_seconds: e.target.value }))}
+                />
+              </label>
+            </div>
+            <label className="block text-sm font-medium text-slate-700">
+              Frequency
+              <select
+                className="input-field mt-1.5 w-full"
+                value={assignForm.frequency}
+                onChange={(e) => setAssignForm((f) => ({ ...f, frequency: e.target.value }))}
+              >
+                <option value="Daily">Daily</option>
+                <option value="2x / day">2× / day</option>
+                <option value="3x / week">3× / week</option>
+                <option value="As needed">As needed</option>
+              </select>
+            </label>
+            <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={assignForm.publish}
+                onChange={(e) => setAssignForm((f) => ({ ...f, publish: e.target.checked }))}
+              />
+              Publish to patient now (they’ll see it in Home Exercises)
+            </label>
+          </GlassModalBody>
+          <GlassModalFooter>
+            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end w-full">
+              <button type="button" className="btn-outline w-full sm:w-auto" onClick={() => setAssignEx(null)}>
+                Cancel
+              </button>
+              <button type="submit" className="btn-primary w-full sm:w-auto" disabled={assignSaving || patientsLoading}>
+                {assignSaving ? 'Assigning…' : 'Assign'}
               </button>
             </div>
           </GlassModalFooter>
