@@ -52,6 +52,7 @@ import ClinicProtocolBuilderPage from './pages/clinic/ClinicProtocolBuilderPage'
 import ClinicSuggestionChipsPage from './pages/clinic/ClinicSuggestionChipsPage';
 import ClinicNotificationsManagePage from './pages/clinic/ClinicNotificationsManagePage';
 import ClinicCommunicationPage from './pages/clinic/ClinicCommunicationPage';
+import ClinicExerciseRehabPage from './pages/clinic/ClinicExerciseRehabPage';
 import ClinicNotesPage from './pages/clinic/ClinicNotesPage';
 import ClinicSupportCenterPage from './pages/clinic/ClinicSupportCenterPage';
 import AdminSupportCenterPage from './pages/admin/AdminSupportCenterPage';
@@ -341,6 +342,7 @@ export default function App() {
       <Route path="/clinic-portal/notifications" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><NotificationsPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/notifications/manage" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicNotificationsManagePage /></ProtectedRoute>} />
       <Route path="/clinic-portal/communication" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicCommunicationPage /></ProtectedRoute>} />
+      <Route path="/clinic-portal/rehab" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicExerciseRehabPage /></ProtectedRoute>} />
       {/* Doctor/admin clinic analytics (does not collide with public /clinic/:slug profiles) */}
       <Route path="/clinic-manage" element={<ProtectedRoute roles={['doctor', 'admin', 'super_admin']}><ClinicDashboardPage /></ProtectedRoute>} />
       <Route path="/clinic-manage/:clinicId" element={<ProtectedRoute roles={['doctor', 'admin', 'super_admin']}><ClinicDashboardPage /></ProtectedRoute>} />

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../../components/FaIcon';
 import GlassModal, { GlassModalBody, GlassModalFooter, GlassModalHeader } from '../../components/GlassModal';
@@ -15,6 +15,7 @@ const EMPTY_ITEM = {
   sets: 3,
   reps: '10',
   hold_seconds: '',
+  rest_seconds: '',
   frequency: 'Daily',
   duration_days: '',
   duration_weeks: '',
@@ -22,6 +23,7 @@ const EMPTY_ITEM = {
   is_mandatory: false,
   special_instructions: '',
   therapist_notes: '',
+  progression_rules: '',
 };
 
 const emptyForm = () => ({
@@ -83,12 +85,17 @@ export default function DoctorPrescriptions() {
 
   useEffect(() => {
     load();
-    exercises.list().then((res) => setExerciseList(res.data || [])).catch(() => {});
   }, [load]);
 
   useEffect(() => {
     if (isClinic) {
       if (!clinicId) return;
+      clinicPortal
+        .hepLibrary(clinicId, { scope: 'all' })
+        .then((res) => setExerciseList((res.data || res)?.exercises || []))
+        .catch(() => {
+          exercises.list().then((r) => setExerciseList(r.data || [])).catch(() => {});
+        });
       clinicPortal
         .patients(clinicId)
         .then((pats) => {
@@ -102,6 +109,7 @@ export default function DoctorPrescriptions() {
         })
         .catch(() => setPatients([]));
     } else {
+      exercises.list().then((res) => setExerciseList(res.data || [])).catch(() => {});
       doctors.patients().then((res) => setPatients(res.data || [])).catch(() => {});
     }
   }, [isClinic, clinicId]);
@@ -131,11 +139,15 @@ export default function DoctorPrescriptions() {
         start_date: data.start_date || new Date().toISOString().slice(0, 10),
         end_date: data.end_date || '',
         status: data.status || 'active',
+        is_protocol: data.is_protocol != null ? !!Number(data.is_protocol) : true,
+        publish_status: data.publish_status || 'draft',
+        protocol_goals: data.protocol_goals || '',
         exercises: (data.exercises || []).map((ex) => ({
           exercise_id: String(ex.exercise_id),
           sets: ex.sets ?? 3,
           reps: ex.reps || '10',
           hold_seconds: ex.hold_seconds ?? '',
+          rest_seconds: ex.rest_seconds ?? '',
           frequency: ex.frequency || 'Daily',
           duration_days: ex.duration_days ?? '',
           duration_weeks: ex.duration_weeks ?? '',
@@ -143,6 +155,7 @@ export default function DoctorPrescriptions() {
           is_mandatory: !!ex.is_mandatory,
           special_instructions: ex.special_instructions || '',
           therapist_notes: ex.therapist_notes || '',
+          progression_rules: ex.progression_rules || '',
         })) || [{ ...EMPTY_ITEM }],
       });
       setModalOpen(true);
@@ -192,6 +205,7 @@ export default function DoctorPrescriptions() {
         sets: parseInt(x.sets, 10) || 3,
         reps: String(x.reps),
         hold_seconds: x.hold_seconds ? parseInt(x.hold_seconds, 10) : null,
+        rest_seconds: x.rest_seconds !== '' && x.rest_seconds != null ? parseInt(x.rest_seconds, 10) : null,
         frequency: x.frequency || 'Daily',
         duration_days: x.duration_days ? parseInt(x.duration_days, 10) : null,
         duration_weeks: x.duration_weeks ? parseInt(x.duration_weeks, 10) : null,
@@ -199,6 +213,7 @@ export default function DoctorPrescriptions() {
         is_mandatory: !!x.is_mandatory,
         special_instructions: x.special_instructions,
         therapist_notes: x.therapist_notes,
+        progression_rules: x.progression_rules || null,
       }));
 
   const submit = async (e) => {
@@ -264,12 +279,17 @@ export default function DoctorPrescriptions() {
   const Layout = isClinic ? ClinicPortalShell : DashboardLayout;
   const layoutProps = isClinic
     ? {
-        title: 'Exercise & Rehab Plans',
-        subtitle: 'Assign, update and track patient rehabilitation exercises',
+        title: 'Home Exercise Programs (HEP)',
+        subtitle: 'Assign multi-exercise rehab programs — library & analytics live under Exercise & Rehab',
         actions: (
-          <button type="button" onClick={openCreate} className="btn-primary inline-flex items-center gap-2">
-            <FaIcon icon="fa-plus" /> New plan
-          </button>
+          <>
+            <Link to="/clinic-portal/rehab" className="btn-outline inline-flex items-center gap-2">
+              <FaIcon icon="fa-gauge-high" /> Rehab hub
+            </Link>
+            <button type="button" onClick={openCreate} className="btn-primary inline-flex items-center gap-2">
+              <FaIcon icon="fa-plus" /> New plan
+            </button>
+          </>
         ),
       }
     : { links: nav, variant };
@@ -578,13 +598,14 @@ export default function DoctorPrescriptions() {
                       <input className="input-field" type="number" min={1} placeholder="Sets" value={item.sets} onChange={(e) => updateExercise(idx, 'sets', e.target.value)} />
                       <input className="input-field" placeholder="Reps" value={item.reps} onChange={(e) => updateExercise(idx, 'reps', e.target.value)} />
                       <input className="input-field" type="number" min={0} placeholder="Hold (sec)" value={item.hold_seconds} onChange={(e) => updateExercise(idx, 'hold_seconds', e.target.value)} />
+                      <input className="input-field" type="number" min={0} placeholder="Rest (sec)" value={item.rest_seconds} onChange={(e) => updateExercise(idx, 'rest_seconds', e.target.value)} />
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       <select className="input-field" value={item.frequency} onChange={(e) => updateExercise(idx, 'frequency', e.target.value)}>
                         <option>Daily</option>
                         <option>Weekly</option>
                         <option>Custom</option>
                       </select>
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       <input className="input-field" type="number" min={1} placeholder="Duration days" value={item.duration_days} onChange={(e) => updateExercise(idx, 'duration_days', e.target.value)} />
                       <input className="input-field" type="number" min={1} placeholder="Duration weeks" value={item.duration_weeks} onChange={(e) => updateExercise(idx, 'duration_weeks', e.target.value)} />
                       <input className="input-field" type="date" value={item.scheduled_date} onChange={(e) => updateExercise(idx, 'scheduled_date', e.target.value)} title="Schedule date" />
@@ -593,7 +614,8 @@ export default function DoctorPrescriptions() {
                       <input type="checkbox" checked={!!item.is_mandatory} onChange={(e) => updateExercise(idx, 'is_mandatory', e.target.checked)} />
                       Mandatory
                     </label>
-                    <input className="input-field w-full" placeholder="Special instructions for patient" value={item.special_instructions} onChange={(e) => updateExercise(idx, 'special_instructions', e.target.value)} />
+                    <input className="input-field w-full" placeholder="Special instructions / precautions for patient" value={item.special_instructions} onChange={(e) => updateExercise(idx, 'special_instructions', e.target.value)} />
+                    <input className="input-field w-full" placeholder="Progression rules (e.g. increase reps after 1 week)" value={item.progression_rules || ''} onChange={(e) => updateExercise(idx, 'progression_rules', e.target.value)} />
                     {form.exercises.length > 1 && (
                       <button type="button" onClick={() => removeExercise(idx)} className="text-xs text-rose-600 font-semibold">Remove</button>
                     )}

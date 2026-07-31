@@ -2,7 +2,7 @@ export const PATIENT_NAV = [
   { to: '/patient', label: 'Overview', icon: 'fa-house' },
   { to: '/patient/appointments', label: 'Appointments', icon: 'fa-calendar-check' },
   { to: '/patient/video-consultations', label: 'Video Consultation', icon: 'fa-video' },
-  { to: '/patient/exercises', label: 'My Exercises', icon: 'fa-dumbbell' },
+  { to: '/patient/exercises', label: 'My Rehab Plan', icon: 'fa-dumbbell' },
   { to: '/patient/prescriptions', label: 'Prescription & Notes', icon: 'fa-file-prescription' },
   { to: '/patient/progress', label: 'Progress', icon: 'fa-chart-line' },
   { to: '/patient/packages', label: 'My Packages', icon: 'fa-box-open' },

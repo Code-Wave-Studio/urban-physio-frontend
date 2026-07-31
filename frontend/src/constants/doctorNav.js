@@ -9,7 +9,7 @@ export const DOCTOR_NAV = [
   { to: '/doctor/treatment-services', label: 'Services & treatments', icon: 'fa-hand-holding-medical' },
   { to: '/doctor/service-packages', label: 'My packages', icon: 'fa-box-open' },
   { to: '/doctor/admin-package-prices', label: 'Platform prices', icon: 'fa-tags' },
-  { to: '/doctor/prescriptions', label: 'Exercises', icon: 'fa-dumbbell' },
+  { to: '/doctor/prescriptions', label: 'Rehab Plans', icon: 'fa-dumbbell' },
   { to: '/doctor/documents', label: 'Documents', icon: 'fa-folder-tree' },
   { to: '/clinic-manage', label: 'Clinic Analytics', icon: 'fa-hospital-user' },
   { to: '/doctor/clinics', label: 'My Clinics', icon: 'fa-hospital' },

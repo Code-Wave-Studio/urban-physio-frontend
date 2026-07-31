@@ -911,6 +911,22 @@ export const clinicPortal = {
   createProgressReport: (clinicId, data) =>
     api.post(`/clinic-portal/${clinicId}/progress-reports`, data),
   liveEvents: (clinicId, params) => api.get(`/clinic-portal/${clinicId}/live/events`, { params }),
+  // Exercise & Rehab (HEP)
+  hepDashboard: (clinicId) => api.get(`/clinic-portal/${clinicId}/hep/dashboard`),
+  hepAnalytics: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/hep/analytics`, { params }),
+  hepLibrary: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/hep/library`, { params }),
+  hepCreateExercise: (clinicId, data) =>
+    api.post(`/clinic-portal/${clinicId}/hep/library`, data),
+  hepUpdateExercise: (clinicId, id, data) =>
+    api.put(`/clinic-portal/${clinicId}/hep/library/${id}`, data),
+  hepArchiveExercise: (clinicId, id) =>
+    api.delete(`/clinic-portal/${clinicId}/hep/library/${id}`),
+  hepMedia: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/hep/media`, { params }),
+  hepRegisterMedia: (clinicId, data) =>
+    api.post(`/clinic-portal/${clinicId}/hep/media`, data),
 };
 
 export const clinicQr = {
@@ -1131,6 +1147,7 @@ export const exercisePrescriptions = {
   create: (data) => api.post('/exercise-prescriptions', data),
   update: (id, data) => api.put(`/exercise-prescriptions/${id}`, data),
   publish: (id, data = {}) => api.post(`/exercise-prescriptions/${id}/publish`, data),
+  clone: (id, data = {}) => api.post(`/exercise-prescriptions/${id}/clone`, data),
   cancel: (id) => api.delete(`/exercise-prescriptions/${id}`),
   progress: (id) => api.get(`/exercise-prescriptions/${id}/progress`),
   log: (id, data) => api.post(`/exercise-prescriptions/${id}/log`, data),

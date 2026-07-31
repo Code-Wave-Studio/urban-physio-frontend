@@ -31,7 +31,8 @@ export default function PatientExercises() {
   const [logItem, setLogItem] = useState(null);
   const [logForm, setLogForm] = useState({
     status: 'completed',
-    pain_level: 3,
+    pain_feeling: 'moderate',
+    pain_level: 5,
     feedback: '',
     patient_comment: '',
     media_url: '',
@@ -39,6 +40,8 @@ export default function PatientExercises() {
   const [saving, setSaving] = useState(false);
   const [previewEx, setPreviewEx] = useState(null);
   const [tab, setTab] = useState('today'); // today | progress | history
+  const [lastTap, setLastTap] = useState({ id: null, at: 0 });
+  const [streak, setStreak] = useState(0);
 
   const loadPlans = useCallback(() => {
     setLoading(true);
@@ -86,15 +89,59 @@ export default function PatientExercises() {
     [exercises]
   );
 
+  const nextExercise = useMemo(
+    () => exercises.find((e) => e.today_log?.status !== 'completed' && e.today_log?.status !== 'skipped') || null,
+    [exercises]
+  );
+
+  const remaining = useMemo(
+    () => exercises.filter((e) => !e.today_log || (e.today_log.status !== 'completed' && e.today_log.status !== 'skipped')).length,
+    [exercises]
+  );
+
+  useEffect(() => {
+    // Weekly streak from history days with ≥1 completion (local calendar dates)
+    const hist = progress?.history || [];
+    const daySet = new Set(hist.filter((h) => h.status === 'completed').map((h) => h.log_date));
+    let s = 0;
+    const today = new Date();
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      if (daySet.has(key)) s += 1;
+      else if (i > 0) break;
+    }
+    setStreak(s);
+  }, [progress]);
+
   const openLog = (item, status = 'completed') => {
     setLogItem(item);
+    const feeling =
+      item.today_log?.pain_level != null
+        ? item.today_log.pain_level <= 3
+          ? 'easy'
+          : item.today_log.pain_level <= 6
+            ? 'moderate'
+            : 'painful'
+        : 'moderate';
     setLogForm({
       status,
-      pain_level: item.today_log?.pain_level || 3,
+      pain_feeling: feeling,
+      pain_level: item.today_log?.pain_level || 5,
       feedback: item.today_log?.feedback || '',
       patient_comment: item.today_log?.patient_comment || '',
       media_url: item.today_log?.media_url || '',
     });
+  };
+
+  const onCardTap = (ex) => {
+    const now = Date.now();
+    if (lastTap.id === ex.id && now - lastTap.at < 350 && ex.today_log?.status !== 'completed') {
+      openLog(ex, 'completed');
+      setLastTap({ id: null, at: 0 });
+      return;
+    }
+    setLastTap({ id: ex.id, at: now });
   };
 
   const submitLog = async (e) => {
@@ -105,7 +152,7 @@ export default function PatientExercises() {
       await exercisePrescriptions.log(detail.id, {
         item_id: logItem.id,
         status: logForm.status,
-        pain_level: logForm.pain_level,
+        pain_feeling: logForm.pain_feeling,
         feedback: logForm.feedback,
         patient_comment: logForm.patient_comment,
         media_url: logForm.media_url || undefined,
@@ -124,8 +171,8 @@ export default function PatientExercises() {
   return (
     <DashboardLayout links={PATIENT_NAV} variant="patient">
       <div className="mb-5 md:mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-slate-900">My Exercises</h1>
-        <p className="text-sm text-slate-600 mt-1">Your assigned rehabilitation plan — track daily progress and feedback.</p>
+        <h1 className="text-2xl md:text-3xl font-bold text-slate-900">My Rehab Plan</h1>
+        <p className="text-sm text-slate-600 mt-1">Daily schedule, videos, and recovery progress — double-tap a card to complete.</p>
       </div>
 
       {loading ? (
@@ -133,8 +180,8 @@ export default function PatientExercises() {
       ) : plans.length === 0 ? (
         <div className="glass-card text-center py-14 px-6">
           <FaIcon icon="fa-dumbbell" className="text-4xl text-slate-300 mb-3" />
-          <p className="font-semibold text-slate-700">No active exercise plan</p>
-          <p className="text-sm text-slate-500 mt-1">When your doctor assigns exercises, they will appear here.</p>
+          <p className="font-semibold text-slate-700">No active rehab plan</p>
+          <p className="text-sm text-slate-500 mt-1">When your physiotherapist assigns a program, it will appear here.</p>
         </div>
       ) : (
         <>
@@ -177,12 +224,13 @@ export default function PatientExercises() {
                   </span>
                 </div>
                 <ProgressBar percent={progress?.today?.percent ?? 0} />
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-4">
                   {[
                     { label: 'Completion', value: `${progress?.today?.percent ?? 0}%` },
                     { label: 'This week', value: `${progress?.week?.percent ?? 0}%` },
-                    { label: 'Pending', value: progress?.today?.pending ?? 0 },
+                    { label: 'Remaining', value: remaining },
                     { label: 'Avg pain', value: progress?.today?.pain_avg ?? '—' },
+                    { label: 'Streak', value: streak ? `${streak}d` : '—' },
                   ].map((s) => (
                     <div key={s.label} className="rounded-xl bg-slate-50 px-3 py-2 text-center border border-slate-100">
                       <p className="text-[10px] uppercase text-slate-400 tracking-wide">{s.label}</p>
@@ -191,6 +239,30 @@ export default function PatientExercises() {
                   ))}
                 </div>
               </div>
+
+              {nextExercise && (
+                <div className="rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50 to-white p-4 flex flex-col sm:flex-row sm:items-center gap-3 shadow-sm">
+                  <div className="w-12 h-12 rounded-xl bg-teal-600 text-white flex items-center justify-center shrink-0">
+                    <FaIcon icon="fa-play" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] uppercase tracking-wide text-teal-700 font-semibold">Next exercise</p>
+                    <p className="font-bold text-slate-900">{nextExercise.exercise_name}</p>
+                    <p className="text-xs text-slate-500">
+                      {nextExercise.sets} sets · {nextExercise.reps} reps
+                      {nextExercise.hold_seconds ? ` · hold ${nextExercise.hold_seconds}s` : ''}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="button" className="btn-outline !py-1.5 !px-3 text-xs" onClick={() => setPreviewEx(nextExercise)}>
+                      Watch
+                    </button>
+                    <button type="button" className="btn-primary !py-1.5 !px-3 text-xs" onClick={() => openLog(nextExercise, 'completed')}>
+                      Start
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Tabs */}
               <div className="flex gap-1">
@@ -214,14 +286,15 @@ export default function PatientExercises() {
               </div>
 
               {tab === 'today' && (
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="flex sm:grid sm:grid-cols-2 gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-1 px-1 sm:overflow-visible">
                   {exercises.map((ex) => {
                     const done = ex.today_log?.status === 'completed';
                     const skipped = ex.today_log?.status === 'skipped';
                     return (
                       <div
                         key={ex.id}
-                        className={`glass-card !p-4 flex flex-col gap-3 ${
+                        onClick={() => onCardTap(ex)}
+                        className={`snap-center shrink-0 w-[85%] sm:w-auto glass-card !p-4 flex flex-col gap-3 transition active:scale-[0.98] ${
                           done ? 'ring-1 ring-emerald-200 bg-emerald-50/30' : skipped ? 'opacity-80' : ''
                         }`}
                       >
@@ -256,7 +329,7 @@ export default function PatientExercises() {
                           <p className="text-xs text-slate-600 bg-slate-50 rounded-lg px-2.5 py-2">{ex.special_instructions}</p>
                         )}
 
-                        <div className="flex flex-wrap gap-2 mt-auto">
+                        <div className="flex flex-wrap gap-2 mt-auto" onClick={(e) => e.stopPropagation()}>
                           <button type="button" className="btn-outline !py-1.5 !px-3 text-xs" onClick={() => setPreviewEx(ex)}>
                             <FaIcon icon="fa-eye" className="mr-1" /> View
                           </button>
@@ -471,25 +544,36 @@ export default function PatientExercises() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-slate-700 mb-2 block">
-                  Pain level: <span className="text-teal-700 font-bold">{logForm.pain_level}/10</span>
-                </label>
-                <input
-                  type="range"
-                  min={1}
-                  max={10}
-                  value={logForm.pain_level}
-                  onChange={(e) => setLogForm((f) => ({ ...f, pain_level: Number(e.target.value) }))}
-                  className="w-full accent-teal-600"
-                />
-                <div className="flex justify-between text-[10px] text-slate-400 mt-0.5">
-                  <span>No pain</span>
-                  <span>Severe</span>
+                <label className="text-sm font-medium text-slate-700 mb-2 block">How did it feel?</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: 'easy', label: 'Easy', icon: 'fa-face-smile' },
+                    { id: 'moderate', label: 'Moderate', icon: 'fa-face-meh' },
+                    { id: 'painful', label: 'Painful', icon: 'fa-face-frown' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setLogForm((f) => ({ ...f, pain_feeling: opt.id }))}
+                      className={`py-3 rounded-xl text-xs font-semibold border transition ${
+                        logForm.pain_feeling === opt.id
+                          ? opt.id === 'painful'
+                            ? 'bg-rose-600 text-white border-rose-600'
+                            : opt.id === 'easy'
+                              ? 'bg-emerald-600 text-white border-emerald-600'
+                              : 'bg-amber-500 text-white border-amber-500'
+                          : 'bg-slate-50 text-slate-600 border-slate-200'
+                      }`}
+                    >
+                      <FaIcon icon={opt.icon} className="block text-lg mb-1 mx-auto" />
+                      {opt.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-slate-700 mb-1.5 block">Daily feedback</label>
+                <label className="text-sm font-medium text-slate-700 mb-1.5 block">Notes (optional)</label>
                 <textarea
                   className="input-field w-full min-h-[72px]"
                   placeholder="How did it feel?"
@@ -509,10 +593,10 @@ export default function PatientExercises() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-slate-700 mb-1.5 block">Photo/video URL (optional)</label>
+                <label className="text-sm font-medium text-slate-700 mb-1.5 block">Performance photo/video URL</label>
                 <input
                   className="input-field w-full"
-                  placeholder="https://…"
+                  placeholder="CDN / Cloudinary / S3 URL"
                   value={logForm.media_url}
                   onChange={(e) => setLogForm((f) => ({ ...f, media_url: e.target.value }))}
                 />
