@@ -718,6 +718,13 @@ export const clinicPortal = {
   billingReceipt: (clinicId, paymentId) =>
     api.get(`/clinic-portal/${clinicId}/billing/receipts/${paymentId}`),
   patients: (clinicId, params) => api.get(`/clinic-portal/${clinicId}/patients`, { params }),
+  mergePatients: (clinicId, data) => api.post(`/clinic-portal/${clinicId}/patients/merge`, data),
+  patientReminders: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/patients/reminders`, { params }),
+  createPatientReminder: (clinicId, data) =>
+    api.post(`/clinic-portal/${clinicId}/patients/reminders`, data),
+  updatePatientReminder: (clinicId, reminderId, data) =>
+    api.patch(`/clinic-portal/${clinicId}/patients/reminders/${reminderId}`, data),
   earnings: (clinicId) => api.get(`/clinic-portal/${clinicId}/earnings`),
   doctors: (clinicId) => api.get(`/clinic-portal/${clinicId}/doctors`),
   inviteDoctor: (clinicId, data) => api.post(`/clinic-portal/${clinicId}/invites`, data),
