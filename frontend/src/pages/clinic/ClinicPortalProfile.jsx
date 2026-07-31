@@ -7,6 +7,7 @@ import ClinicAdminPasswordCard from '../../components/clinic/ClinicAdminPassword
 import ClinicLogoUpload from '../../components/ClinicLogoUpload';
 import ClinicGalleryUpload from '../../components/clinic/ClinicGalleryUpload';
 import ClinicPortalProfileServices from '../../components/clinic/ClinicPortalProfileServices';
+import ClinicReputationPanel from '../../components/clinic/ClinicReputationPanel';
 import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
 import LocationMapModal from '../../components/LocationMapModal';
 import SearchableLocationSelect from '../../components/SearchableLocationSelect';
@@ -28,7 +29,8 @@ import {
 } from '../../utils/clinicProfileUtils';
 
 const TABS = [
-  { id: 'clinic', label: 'Clinic details', icon: 'fa-hospital' },
+  { id: 'clinic', label: 'Clinic Profile', icon: 'fa-hospital' },
+  { id: 'reputation', label: 'Reputation & Reviews', icon: 'fa-star' },
   { id: 'security', label: 'Account & security', icon: 'fa-shield-halved' },
 ];
 
@@ -66,12 +68,21 @@ const emptyOrg = () => ({
 
 export default function ClinicPortalProfile() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const tab = searchParams.get('tab') === 'security' ? 'security' : 'clinic';
+  const tab = ['security', 'reputation'].includes(searchParams.get('tab'))
+    ? searchParams.get('tab')
+    : 'clinic';
   const { user, setUser } = useAuth();
   const { isAdminMode, can, loading: boot } = useClinicPortal();
 
-  const [form, setForm] = useState(() => ({ ...emptyClinicForm(), ...emptyOrg() }));
+  const [form, setForm] = useState(() => ({
+    ...emptyClinicForm(),
+    ...emptyOrg(),
+    seo_title: '',
+    seo_description: '',
+    profile_extras: { awards: '', languages: '', insurance_support: '', about_highlight: '' },
+  }));
   const [clinicId, setClinicId] = useState(null);
+  const [clinicSlug, setClinicSlug] = useState('');
   const [status, setStatus] = useState('');
   const [rejection, setRejection] = useState('');
   const [loading, setLoading] = useState(true);
@@ -84,7 +95,7 @@ export default function ClinicPortalProfile() {
   const [savingAccount, setSavingAccount] = useState(false);
 
   const setTab = (id) => {
-    if (id === 'security') setSearchParams({ tab: 'security' });
+    if (id === 'security' || id === 'reputation') setSearchParams({ tab: id });
     else setSearchParams({});
   };
 
@@ -109,6 +120,22 @@ export default function ClinicPortalProfile() {
         const me = res.data || res;
         const c = me.clinic || {};
         setClinicId(c.id || null);
+        setClinicSlug(c.slug || '');
+        let extras = { awards: '', languages: '', insurance_support: '', about_highlight: '' };
+        try {
+          const raw = c.profile_extras_json || c.profile_extras;
+          const parsed = typeof raw === 'string' ? JSON.parse(raw || '{}') : raw || {};
+          extras = {
+            awards: Array.isArray(parsed.awards) ? parsed.awards.join(', ') : parsed.awards || '',
+            languages: Array.isArray(parsed.languages) ? parsed.languages.join(', ') : parsed.languages || '',
+            insurance_support: Array.isArray(parsed.insurance_support)
+              ? parsed.insurance_support.join(', ')
+              : parsed.insurance_support || '',
+            about_highlight: parsed.about_highlight || '',
+          };
+        } catch {
+          /* ignore */
+        }
         setForm({
           ...clinicRecordToForm(c),
           owner_name: c.owner_name || '',
@@ -120,6 +147,9 @@ export default function ClinicPortalProfile() {
           specialization: c.specialization || '',
           emergency_contact: c.emergency_contact || '',
           resubmit_note: c.resubmit_note || '',
+          seo_title: c.seo_title || '',
+          seo_description: c.seo_description || '',
+          profile_extras: extras,
         });
         setStatus(c.portal_status || c.approval_status || '');
         setRejection(c.rejection_reason || '');
@@ -168,6 +198,23 @@ export default function ClinicPortalProfile() {
         clinic_type: form.clinic_type.trim() || undefined,
         specialization: form.specialization.trim() || undefined,
         emergency_contact: form.emergency_contact.trim() || undefined,
+        seo_title: form.seo_title?.trim() || undefined,
+        seo_description: form.seo_description?.trim() || undefined,
+        profile_extras_json: {
+          awards: (form.profile_extras?.awards || '')
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean),
+          languages: (form.profile_extras?.languages || '')
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean),
+          insurance_support: (form.profile_extras?.insurance_support || '')
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean),
+          about_highlight: form.profile_extras?.about_highlight || '',
+        },
         resubmit,
         resubmit_note: form.resubmit_note.trim() || undefined,
       };
@@ -223,9 +270,9 @@ export default function ClinicPortalProfile() {
   return (
     <ClinicPortalShell
       title="Clinic Settings"
-      subtitle={`Status: ${status || '—'} · Manage banner photos, hours, services, stats and more`}
+      subtitle={`Status: ${status || '—'} · Profile, reputation, hours, services and security`}
     >
-      <div className="max-w-3xl space-y-4">
+      <div className={`space-y-4 ${tab === 'reputation' ? 'max-w-5xl' : 'max-w-3xl'}`}>
         {rejection && <p className="text-sm text-rose-600">Rejection: {rejection}</p>}
 
         <div className="portal-tabs">
@@ -248,6 +295,8 @@ export default function ClinicPortalProfile() {
 
         {loading ? (
           <div className="glass-card h-64 animate-pulse" />
+        ) : tab === 'reputation' ? (
+          <ClinicReputationPanel clinicId={clinicId} clinicSlug={clinicSlug} />
         ) : tab === 'security' ? (
           <div className="space-y-4">
             <div className="glass-card !p-4 sm:!p-6 space-y-4">
@@ -396,6 +445,80 @@ export default function ClinicPortalProfile() {
                 <ClinicPortalProfileServices clinicId={clinicId} />
               </FormSection>
             ) : null}
+
+            <FormSection title="Awards, languages & insurance" icon="fa-certificate" defaultOpen={false}>
+              <textarea
+                className="input-field"
+                rows={2}
+                placeholder="About highlight (short public blurb)"
+                value={form.profile_extras?.about_highlight || ''}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    profile_extras: { ...f.profile_extras, about_highlight: e.target.value },
+                  }))
+                }
+              />
+              <input
+                className="input-field"
+                placeholder="Awards & certifications (comma-separated)"
+                value={form.profile_extras?.awards || ''}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    profile_extras: { ...f.profile_extras, awards: e.target.value },
+                  }))
+                }
+              />
+              <input
+                className="input-field"
+                placeholder="Languages spoken (comma-separated)"
+                value={form.profile_extras?.languages || ''}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    profile_extras: { ...f.profile_extras, languages: e.target.value },
+                  }))
+                }
+              />
+              <input
+                className="input-field"
+                placeholder="Insurance support (comma-separated)"
+                value={form.profile_extras?.insurance_support || ''}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    profile_extras: { ...f.profile_extras, insurance_support: e.target.value },
+                  }))
+                }
+              />
+            </FormSection>
+
+            <FormSection title="SEO (public profile)" icon="fa-magnifying-glass" defaultOpen={false}>
+              <input
+                className="input-field"
+                placeholder="SEO title"
+                value={form.seo_title || ''}
+                onChange={(e) => set('seo_title', e.target.value)}
+              />
+              <textarea
+                className="input-field"
+                rows={2}
+                placeholder="SEO description"
+                value={form.seo_description || ''}
+                onChange={(e) => set('seo_description', e.target.value)}
+              />
+              {clinicSlug ? (
+                <a
+                  href={`/clinic/${clinicSlug}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs text-teal-700 font-semibold inline-flex items-center gap-1"
+                >
+                  <FaIcon icon="fa-eye" /> Preview public profile before publishing
+                </a>
+              ) : null}
+            </FormSection>
 
             <FormSection title="Clinic statistics" icon="fa-chart-simple" defaultOpen={false}>
               <ClinicStatisticsFields form={form} set={set} />

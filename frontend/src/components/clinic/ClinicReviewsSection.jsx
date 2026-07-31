@@ -106,6 +106,15 @@ export default function ClinicReviewsSection({ clinicId, initialReviews = [], in
               {r.comment?.trim() && (
                 <p className="text-sm text-slate-600 mt-2 leading-relaxed whitespace-pre-line">{r.comment}</p>
               )}
+              {r.clinic_reply?.trim() && (
+                <div className="mt-3 rounded-xl bg-white border border-teal-100 px-3 py-2">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-teal-700 mb-1">Clinic reply</p>
+                  <p className="text-sm text-slate-700 whitespace-pre-line">{r.clinic_reply}</p>
+                </div>
+              )}
+              {r.appointment_id ? (
+                <p className="text-[10px] text-teal-600 font-semibold mt-2">Verified patient</p>
+              ) : null}
             </li>
           ))}
         </ul>

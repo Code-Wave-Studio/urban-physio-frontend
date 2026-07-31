@@ -148,6 +148,21 @@ export function doctorSchema(doctor, canonicalUrl) {
 }
 
 export function clinicSchema(clinic, canonicalUrl) {
+  const reviews = (clinic.reviews || []).slice(0, 5).map((r) => ({
+    '@type': 'Review',
+    reviewRating: {
+      '@type': 'Rating',
+      ratingValue: Number(r.rating) || 0,
+      bestRating: 5,
+    },
+    author: {
+      '@type': 'Person',
+      name: r.patient_first_name || 'Patient',
+    },
+    reviewBody: r.comment || undefined,
+    datePublished: r.created_at || undefined,
+  }));
+
   return {
     '@context': 'https://schema.org',
     '@type': 'MedicalClinic',
@@ -172,8 +187,11 @@ export function clinicSchema(clinic, canonicalUrl) {
             '@type': 'AggregateRating',
             ratingValue: Number(clinic.rating_avg) || 0,
             reviewCount: Number(clinic.rating_count),
+            bestRating: 5,
+            worstRating: 1,
           }
         : undefined,
+    review: reviews.length ? reviews : undefined,
   };
 }
 

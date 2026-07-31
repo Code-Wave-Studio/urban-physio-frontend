@@ -979,6 +979,23 @@ export const clinicPortal = {
     api.delete(`/clinic-portal/${clinicId}/back-office/tasks/${id}`),
   boExport: (clinicId, params) =>
     api.get(`/clinic-portal/${clinicId}/back-office/export`, { params }),
+  // Reputation & Reviews
+  reputationOverview: (clinicId) =>
+    api.get(`/clinic-portal/${clinicId}/reputation/overview`),
+  reputationReviews: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/reputation/reviews`, { params }),
+  reputationReply: (clinicId, id, data) =>
+    api.post(`/clinic-portal/${clinicId}/reputation/reviews/${id}/reply`, data),
+  reputationDeleteReply: (clinicId, id) =>
+    api.delete(`/clinic-portal/${clinicId}/reputation/reviews/${id}/reply`),
+  reputationModerate: (clinicId, id, data) =>
+    api.post(`/clinic-portal/${clinicId}/reputation/reviews/${id}/moderate`, data),
+  reputationSuggestions: (clinicId, id) =>
+    api.get(`/clinic-portal/${clinicId}/reputation/reviews/${id}/suggestions`),
+  reputationSettings: (clinicId) =>
+    api.get(`/clinic-portal/${clinicId}/reputation/settings`),
+  reputationSaveSettings: (clinicId, data) =>
+    api.put(`/clinic-portal/${clinicId}/reputation/settings`, data),
   // AI-Driven Analytics & Reports Center
   aiDash: (clinicId, params) =>
     api.get(`/clinic-portal/${clinicId}/ai-analytics/dashboard`, { params }),

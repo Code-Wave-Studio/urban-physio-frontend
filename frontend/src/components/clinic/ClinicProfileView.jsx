@@ -765,7 +765,39 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
         )}
 
-
+        {(clinic.profile_extras?.awards?.length > 0 ||
+          clinic.profile_extras?.languages?.length > 0 ||
+          clinic.profile_extras?.insurance_support?.length > 0) && (
+          <Section title="Credentials & support" icon="fa-certificate" id="profile-credentials">
+            <div className="space-y-3 text-sm text-slate-700">
+              {clinic.profile_extras?.about_highlight ? (
+                <p className="leading-relaxed">{clinic.profile_extras.about_highlight}</p>
+              ) : null}
+              {clinic.profile_extras?.awards?.length > 0 && (
+                <div>
+                  <p className="text-xs font-bold uppercase text-slate-500 mb-1">Awards & certifications</p>
+                  <ul className="list-disc pl-5 space-y-0.5">
+                    {clinic.profile_extras.awards.map((a) => (
+                      <li key={a}>{a}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {clinic.profile_extras?.languages?.length > 0 && (
+                <p>
+                  <span className="text-xs font-bold uppercase text-slate-500">Languages · </span>
+                  {clinic.profile_extras.languages.join(', ')}
+                </p>
+              )}
+              {clinic.profile_extras?.insurance_support?.length > 0 && (
+                <p>
+                  <span className="text-xs font-bold uppercase text-slate-500">Insurance · </span>
+                  {clinic.profile_extras.insurance_support.join(', ')}
+                </p>
+              )}
+            </div>
+          </Section>
+        )}
 
         {clinic.related_clinics?.length > 0 && (
 
