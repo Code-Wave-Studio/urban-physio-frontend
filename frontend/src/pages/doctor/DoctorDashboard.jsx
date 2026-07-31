@@ -20,6 +20,7 @@ import FaIcon from '../../components/FaIcon';
 import { doctors } from '../../services/api';
 import { DOCTOR_NAV } from '../../constants/doctorNav';
 import { STATUS_STYLES, TYPE_ICONS, formatTime, formatType, patientLabel } from '../../utils/appointmentListUtils';
+import DoctorQuickWork from '../../components/doctor/DoctorQuickWork';
 import toast from 'react-hot-toast';
 
 ChartJS.register(
@@ -484,6 +485,8 @@ export default function DoctorDashboard() {
           )}
         </div>
       </div>
+
+      <DoctorQuickWork />
     </DashboardLayout>
   );
 }
