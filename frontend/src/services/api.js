@@ -927,6 +927,58 @@ export const clinicPortal = {
     api.get(`/clinic-portal/${clinicId}/hep/media`, { params }),
   hepRegisterMedia: (clinicId, data) =>
     api.post(`/clinic-portal/${clinicId}/hep/media`, data),
+  // Back Office Management
+  boDashboard: (clinicId) => api.get(`/clinic-portal/${clinicId}/back-office/dashboard`),
+  boAnalytics: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/back-office/analytics`, { params }),
+  boProfitLoss: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/back-office/profit-loss`, { params }),
+  boInventory: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/back-office/inventory`, { params }),
+  boCreateInventory: (clinicId, data) =>
+    api.post(`/clinic-portal/${clinicId}/back-office/inventory`, data),
+  boUpdateInventory: (clinicId, id, data) =>
+    api.put(`/clinic-portal/${clinicId}/back-office/inventory/${id}`, data),
+  boArchiveInventory: (clinicId, id) =>
+    api.delete(`/clinic-portal/${clinicId}/back-office/inventory/${id}`),
+  boCategories: (clinicId) =>
+    api.get(`/clinic-portal/${clinicId}/back-office/categories`),
+  boCreateCategory: (clinicId, data) =>
+    api.post(`/clinic-portal/${clinicId}/back-office/categories`, data),
+  boSuppliers: (clinicId) =>
+    api.get(`/clinic-portal/${clinicId}/back-office/suppliers`),
+  boCreateSupplier: (clinicId, data) =>
+    api.post(`/clinic-portal/${clinicId}/back-office/suppliers`, data),
+  boPurchaseOrders: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/back-office/purchase-orders`, { params }),
+  boGetPurchaseOrder: (clinicId, id) =>
+    api.get(`/clinic-portal/${clinicId}/back-office/purchase-orders/${id}`),
+  boCreatePurchaseOrder: (clinicId, data) =>
+    api.post(`/clinic-portal/${clinicId}/back-office/purchase-orders`, data),
+  boUpdatePurchaseOrderStatus: (clinicId, id, data) =>
+    api.post(`/clinic-portal/${clinicId}/back-office/purchase-orders/${id}/status`, data),
+  boExpenses: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/back-office/expenses`, { params }),
+  boCreateExpense: (clinicId, data) =>
+    api.post(`/clinic-portal/${clinicId}/back-office/expenses`, data),
+  boUpdateExpense: (clinicId, id, data) =>
+    api.put(`/clinic-portal/${clinicId}/back-office/expenses/${id}`, data),
+  boEquipment: (clinicId) =>
+    api.get(`/clinic-portal/${clinicId}/back-office/equipment`),
+  boCreateEquipment: (clinicId, data) =>
+    api.post(`/clinic-portal/${clinicId}/back-office/equipment`, data),
+  boUpdateEquipment: (clinicId, id, data) =>
+    api.put(`/clinic-portal/${clinicId}/back-office/equipment/${id}`, data),
+  boTasks: (clinicId) =>
+    api.get(`/clinic-portal/${clinicId}/back-office/tasks`),
+  boCreateTask: (clinicId, data) =>
+    api.post(`/clinic-portal/${clinicId}/back-office/tasks`, data),
+  boUpdateTask: (clinicId, id, data) =>
+    api.put(`/clinic-portal/${clinicId}/back-office/tasks/${id}`, data),
+  boDeleteTask: (clinicId, id) =>
+    api.delete(`/clinic-portal/${clinicId}/back-office/tasks/${id}`),
+  boExport: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/back-office/export`, { params }),
 };
 
 export const clinicQr = {

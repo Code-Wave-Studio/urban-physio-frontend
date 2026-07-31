@@ -40,6 +40,7 @@ export const CLINIC_ADMIN_NAV = [
   { to: '/clinic-portal/billing', label: 'Billing', icon: 'fa-file-invoice-dollar', perm: 'billing.view', section: 'ops' },
   { to: '/clinic-portal/invoices', label: 'Invoices', icon: 'fa-file-invoice', perm: 'billing.view', section: 'ops' },
   { to: '/clinic-portal/rehab', label: 'Exercise & Rehab', icon: 'fa-dumbbell', perm: 'exercises.manage', section: 'ops', match: 'prefix' },
+  { to: '/clinic-portal/back-office', label: 'Back Office', icon: 'fa-warehouse', perm: 'backoffice.view', section: 'ops', match: 'prefix' },
 
   // —— Bottom: Settings ——
   { to: '/clinic-portal/settings/availability', label: 'Availability Settings', icon: 'fa-sliders', perm: 'availability.manage', section: 'settings' },

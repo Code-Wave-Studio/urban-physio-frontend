@@ -11,7 +11,7 @@ function money(n) {
 }
 
 function emptyItem() {
-  return { description: '', detail: '', qty: 1, unit_price: 0, discount_type: '', discount_value: 0 };
+  return { description: '', detail: '', qty: 1, unit_price: 0, discount_type: '', discount_value: 0, inventory_item_id: null };
 }
 
 function compute(items, opts) {
@@ -165,8 +165,25 @@ export default function ClinicInvoiceGeneratorPage() {
   });
   const [savingSettings, setSavingSettings] = useState(false);
   const searchTimer = useRef(null);
+  const [stockItems, setStockItems] = useState([]);
 
   const totals = useMemo(() => compute(items, opts), [items, opts]);
+
+  useEffect(() => {
+    if (!clinicId || !can('backoffice.view')) return undefined;
+    let cancelled = false;
+    clinicPortal
+      .boInventory(clinicId)
+      .then((r) => {
+        if (!cancelled) setStockItems((r.data || r)?.items || []);
+      })
+      .catch(() => {
+        if (!cancelled) setStockItems([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [clinicId]); // eslint-disable-line react-hooks/exhaustive-deps — can() is stable enough at mount
 
   const loadSettings = useCallback(async () => {
     if (!clinicId) return;
@@ -590,6 +607,28 @@ export default function ClinicInvoiceGeneratorPage() {
               <p className="font-semibold text-sm">Line Items</p>
               {items.map((it, i) => (
                 <div key={i} className="rounded-xl border border-slate-100 p-3 space-y-2">
+                  {stockItems.length > 0 && (
+                    <select
+                      className="input-field text-xs"
+                      value={it.inventory_item_id || ''}
+                      onChange={(e) => {
+                        const id = e.target.value ? Number(e.target.value) : null;
+                        const found = stockItems.find((s) => s.id === id);
+                        updateItem(i, {
+                          inventory_item_id: id,
+                          description: found ? found.name : it.description,
+                          unit_price: found ? found.unit_price : it.unit_price,
+                        });
+                      }}
+                    >
+                      <option value="">Manual line (no stock deduct)</option>
+                      {stockItems.filter((s) => Number(s.is_consumable) !== 0).map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name} · stock {s.available_qty ?? s.qty_on_hand} {s.unit}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                   <input className="input-field text-sm" placeholder="Description" value={it.description}
                     onChange={(e) => updateItem(i, { description: e.target.value })} />
                   <div className="grid grid-cols-3 gap-2">
