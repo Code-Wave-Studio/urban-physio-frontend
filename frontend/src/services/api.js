@@ -979,6 +979,31 @@ export const clinicPortal = {
     api.delete(`/clinic-portal/${clinicId}/back-office/tasks/${id}`),
   boExport: (clinicId, params) =>
     api.get(`/clinic-portal/${clinicId}/back-office/export`, { params }),
+  // AI-Driven Analytics & Reports Center
+  aiDash: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/ai-analytics/dashboard`, { params }),
+  aiInsights: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/ai-analytics/insights`, { params }),
+  aiFinancial: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/ai-analytics/financial`, { params }),
+  aiAppointments: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/ai-analytics/appointments`, { params }),
+  aiPatients: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/ai-analytics/patients`, { params }),
+  aiClinical: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/ai-analytics/clinical`, { params }),
+  aiCommunication: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/ai-analytics/communication`, { params }),
+  aiStaff: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/ai-analytics/staff`, { params }),
+  aiBranches: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/ai-analytics/branches`, { params }),
+  aiExport: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/ai-analytics/export`, { params }),
+  aiGetLayout: (clinicId, params) =>
+    api.get(`/clinic-portal/${clinicId}/ai-analytics/layout`, { params }),
+  aiSaveLayout: (clinicId, data) =>
+    api.put(`/clinic-portal/${clinicId}/ai-analytics/layout`, data),
 };
 
 export const clinicQr = {

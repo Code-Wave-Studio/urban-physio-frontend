@@ -33,6 +33,7 @@ export const CLINIC_ADMIN_NAV = [
   { to: '/clinic-portal/patients', label: 'Patients', icon: 'fa-users', perm: 'patients.view', section: 'ops', match: 'prefix' },
   { to: '/clinic-portal/packages', label: 'Packages', icon: 'fa-box-open', perm: 'billing.view', section: 'ops' },
   { to: '/clinic-portal/reports', label: 'Reports', icon: 'fa-chart-column', perm: 'analytics.view', section: 'ops' },
+  { to: '/clinic-portal/analytics-center', label: 'Analytics Center', icon: 'fa-brain', perm: 'analytics.view', section: 'ops', match: 'prefix' },
   { to: '/clinic-portal/communication', label: 'Communication', icon: 'fa-comments', perm: 'notifications.view', section: 'ops', match: 'prefix' },
   { to: '/clinic-portal/notifications', label: 'Notifications', icon: 'fa-bell', notifyKey: true, perm: 'notifications.view', section: 'ops' },
   { to: '/clinic-portal/documents', label: 'Documents', icon: 'fa-folder-tree', perm: 'documents.manage', section: 'ops' },

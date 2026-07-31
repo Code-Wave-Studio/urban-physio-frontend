@@ -109,10 +109,17 @@ export default function ClinicReportsPage() {
       title="Reports"
       subtitle="Daily revenue, pending payments, appointments and package utilisation"
       actions={
-        isAdminMode && can('dashboard.admin') ? (
-          <Link to="/clinic-portal/admin" className="btn-primary inline-flex items-center gap-2 !py-2 !px-3 text-sm">
-            <FaIcon icon="fa-chart-line" /> Full analytics
-          </Link>
+        isAdminMode && can('analytics.view') ? (
+          <div className="flex flex-wrap gap-2">
+            <Link to="/clinic-portal/analytics-center" className="btn-primary inline-flex items-center gap-2 !py-2 !px-3 text-sm">
+              <FaIcon icon="fa-brain" /> AI Analytics Center
+            </Link>
+            {can('dashboard.admin') ? (
+              <Link to="/clinic-portal/admin" className="btn-outline inline-flex items-center gap-2 !py-2 !px-3 text-sm">
+                <FaIcon icon="fa-chart-line" /> Admin dashboard
+              </Link>
+            ) : null}
+          </div>
         ) : null
       }
     >
