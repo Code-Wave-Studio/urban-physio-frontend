@@ -9,6 +9,9 @@ import {
   conditionIcon,
   categoryStyle,
 } from '../utils/conditionHelpers';
+import ManagedPageSeo from '../components/seo/ManagedPageSeo';
+import SeoBreadcrumbs from '../components/seo/SeoBreadcrumbs';
+import { itemListSchema } from '../components/seo/PageMeta';
 
 const FALLBACK = [
   {
@@ -77,21 +80,36 @@ export default function Conditions() {
     return { all: allList.length, byCat };
   }, [allList]);
 
+  const listSchema = itemListSchema({
+    name: 'Conditions We Treat',
+    description: 'Injury, chronic pain, sports conditions and neurological rehab programmes.',
+    canonicalUrl: typeof window !== 'undefined' ? `${window.location.origin}/conditions` : '/conditions',
+    items: (list.length ? list : allList).slice(0, 30).map((c) => ({
+      name: c.title,
+      url: `/conditions/${c.slug}`,
+    })),
+  });
+
   return (
     <div className="min-h-screen flex flex-col overflow-x-hidden">
+      <ManagedPageSeo
+        fallbackTitle="Conditions We Treat"
+        fallbackDescription="Injury, chronic pain, sports conditions and neurological rehab — evidence-based physiotherapy plans tailored to you."
+        fallbackKeywords="ACL rehab, stroke physiotherapy, rotator cuff, chronic pain physio"
+        jsonLd={listSchema}
+      />
       <Navbar />
 
       {/* Hero */}
       <section className="relative bg-gradient-to-br from-orange-600 via-primary-700 to-orange-900 text-white py-12 md:py-16">
         <div className="absolute inset-0 opacity-30 bg-[url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.08\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4z\'/%3E%3C/g%3E%3C/svg%3E')]" />
         <div className="max-w-7xl mx-auto px-4 relative">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-primary-100 hover:text-white text-sm mb-4"
-          >
-            <FaIcon icon="fa-arrow-left" />
-            Back to Home
-          </Link>
+          <SeoBreadcrumbs
+            items={[
+              { label: 'Home', href: '/' },
+              { label: 'Conditions' },
+            ]}
+          />
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
             <div>
               <span className="inline-flex items-center gap-2 glass-dark px-3 py-1 rounded-full text-xs font-medium mb-4">

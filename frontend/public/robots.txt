@@ -1,20 +1,45 @@
 User-agent: *
 Allow: /
 
+# Private / authenticated areas
 Disallow: /admin
 Disallow: /patient
 Disallow: /clinic-portal
 Disallow: /clinic/login
 Disallow: /clinic/register
+Disallow: /clinic-manage
+Disallow: /login
+Disallow: /register
+
+# Doctor portal (keep public /doctor/{slug} profiles crawlable)
 Disallow: /doctor/login
 Disallow: /doctor/register
 Disallow: /doctor/profile
 Disallow: /doctor/appointments
 Disallow: /doctor/clinics
-Disallow: /doctor
+Disallow: /doctor/dashboard
 Disallow: /doctor/notifications
-Disallow: /clinic-manage
-Disallow: /login
-Disallow: /register
+Disallow: /doctor/earnings
+Disallow: /doctor/availability
+Disallow: /doctor/clinic-availability
+Disallow: /doctor/patients
+Disallow: /doctor/calendar
+Disallow: /doctor/documents
+Disallow: /doctor/prescriptions
+Disallow: /doctor/packages
+Disallow: /doctor/requests
+Disallow: /doctor/emergency
+Disallow: /doctor/consultation
+Disallow: /doctor/treatment
+Disallow: /doctor/search
+Disallow: /doctor/booking
+Disallow: /doctor/custom-slots
+Disallow: /doctor/service-packages
+Disallow: /doctor/admin-package-prices
 
-Sitemap: https://mediumorchid-monkey-387815.hostingersite.com/backend/api/sitemap
+# Booking & sensitive token URLs
+Disallow: /book/
+Disallow: /c/
+Disallow: /pay/
+
+Sitemap: /backend/api/sitemap

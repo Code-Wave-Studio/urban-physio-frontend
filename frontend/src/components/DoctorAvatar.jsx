@@ -13,14 +13,16 @@ export default function DoctorAvatar({ doctor, size = 'md', className = '' }) {
   const sizeClass = sizes[size] || sizes.md;
   const src = resolveMediaUrl(doctor?.avatar);
   const initials = `${doctor?.first_name?.[0] || ''}${doctor?.last_name?.[0] || ''}`.toUpperCase() || '?';
+  const altName = `Dr. ${doctor?.first_name || ''} ${doctor?.last_name || ''}`.trim() || 'Physiotherapist';
 
   if (src) {
     return (
       <img
         src={src}
-        alt=""
+        alt={altName}
         className={`${sizeClass} object-cover shrink-0 ring-2 ring-white/80 shadow-sm bg-slate-100 ${className}`}
         loading="lazy"
+        decoding="async"
       />
     );
   }

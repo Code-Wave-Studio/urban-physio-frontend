@@ -9,7 +9,7 @@ import DoctorProfileBanner from '../components/doctor/DoctorProfileBanner';
 import DoctorCredentialsSection from '../components/doctor/DoctorCredentialsSection';
 import BadgeList from '../components/platform/BadgeList';
 import ReviewStars from '../components/platform/ReviewStars';
-import PageMeta, { doctorSchema } from '../components/seo/PageMeta';
+import PageMeta, { doctorSchema, breadcrumbSchema } from '../components/seo/PageMeta';
 import DoctorQuickActions from '../components/doctor/DoctorQuickActions';
 import ProfileSlotsPreview from '../components/profile/ProfileSlotsPreview';
 import { doctors, booking } from '../services/api';
@@ -134,7 +134,18 @@ export default function DoctorProfilePage({ legacy = false }) {
 
   const canonical = doctor?.canonical_path || (doctor?.slug ? `/doctor/${doctor.slug}` : legacyId ? `/doctors/${legacyId}` : '');
   const canonicalUrl = typeof window !== 'undefined' ? `${window.location.origin}${canonical}` : canonical;
-  const jsonLd = useMemo(() => (doctor ? doctorSchema(doctor, canonicalUrl) : null), [doctor, canonicalUrl]);
+  const jsonLd = useMemo(() => {
+    if (!doctor) return null;
+    const name = `Dr. ${doctor.first_name || ''} ${doctor.last_name || ''}`.trim();
+    return [
+      doctorSchema(doctor, canonicalUrl),
+      breadcrumbSchema([
+        { label: 'Home', href: '/' },
+        { label: 'Doctors', href: '/doctors' },
+        { label: name },
+      ]),
+    ].filter(Boolean);
+  }, [doctor, canonicalUrl]);
   const profilePackages = useMemo(
     () => [
       ...adminPackages.map((p) => ({ ...p, package_source: 'admin' })),

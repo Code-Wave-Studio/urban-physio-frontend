@@ -20,6 +20,7 @@ import {
   TRENDING_SEARCHES,
 } from '../utils/searchHistory';
 import { useTypingSearchPlaceholder } from '../hooks/useTypingSearchPlaceholder';
+import ManagedPageSeo from '../components/seo/ManagedPageSeo';
 
 const TYPE_MAP = {
   doctors: 'doctors',
@@ -252,6 +253,11 @@ export default function SearchResultsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
+      <ManagedPageSeo
+        fallbackTitle={q ? `Search: ${q}` : 'Search'}
+        fallbackDescription="Search physiotherapists, clinics, treatments, conditions and exercises on The Urban Physio."
+        noindex
+      />
       <Navbar />
       <div className="flex-1 max-w-6xl mx-auto px-4 py-8 sm:py-10 w-full">
         <div className="glass-card p-4 sm:p-6 mb-6 border border-white/80 shadow-sm">

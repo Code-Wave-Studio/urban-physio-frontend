@@ -4,13 +4,16 @@ import FaqSection from '../components/FaqSection';
 import FaIcon from '../components/FaIcon';
 import { SITE_FAQS } from '../constants/supportPages';
 import ManagedPageSeo from '../components/seo/ManagedPageSeo';
+import { faqPageSchema } from '../components/seo/PageMeta';
 
 export default function FaqPage() {
+  const faqLd = faqPageSchema(SITE_FAQS);
   return (
     <>
     <ManagedPageSeo
       fallbackTitle="Frequently Asked Questions"
       fallbackDescription="Everything you need to know about booking, sessions, payments, and care on The Urban Physio."
+      jsonLd={faqLd}
     />
     <InfoPageLayout
       title="Frequently Asked Questions"

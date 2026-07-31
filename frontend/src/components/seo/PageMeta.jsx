@@ -279,3 +279,56 @@ export function cityListingSchema({ city, type, items, canonicalUrl }) {
     ],
   };
 }
+
+export function medicalWebPageSchema({ name, description, canonicalUrl, about }) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'MedicalWebPage',
+    name,
+    description: description || undefined,
+    url: canonicalUrl,
+    about: about || undefined,
+    isPartOf: {
+      '@type': 'WebSite',
+      name: SITE,
+      url: typeof window !== 'undefined' ? window.location.origin : undefined,
+    },
+  };
+}
+
+export function itemListSchema({ name, description, canonicalUrl, items }) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name,
+    description: description || undefined,
+    url: canonicalUrl,
+    numberOfItems: items?.length || 0,
+    itemListElement: (items || []).slice(0, 30).map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: item.name,
+      url: item.url
+        ? item.url.startsWith('http')
+          ? item.url
+          : `${typeof window !== 'undefined' ? window.location.origin : ''}${item.url}`
+        : undefined,
+    })),
+  };
+}
+
+export function faqPageSchema(faqs) {
+  if (!faqs?.length) return null;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((f) => ({
+      '@type': 'Question',
+      name: f.question || f.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: f.answer || f.a,
+      },
+    })),
+  };
+}

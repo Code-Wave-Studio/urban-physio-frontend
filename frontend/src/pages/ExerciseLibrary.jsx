@@ -7,6 +7,8 @@ import FaIcon from '../components/FaIcon';
 import SaveExerciseButton from '../components/exercise/SaveExerciseButton';
 import ExerciseDetailModal from '../components/exercise/ExerciseDetailModal';
 import { exercises } from '../services/api';
+import ManagedPageSeo from '../components/seo/ManagedPageSeo';
+import SeoBreadcrumbs from '../components/seo/SeoBreadcrumbs';
 
 const BODY_AREAS = [
   { id: '', label: 'All', icon: 'fa-table-cells' },
@@ -74,6 +76,11 @@ export default function ExerciseLibrary() {
 
   return (
     <div className="page-enter min-h-screen overflow-x-hidden bg-gradient-to-b from-slate-50 via-white to-teal-50/30">
+      <ManagedPageSeo
+        fallbackTitle="Physiotherapy Exercise Library"
+        fallbackDescription="Browse guided physiotherapy exercises for back, neck, knee, shoulder and general rehab — free public library."
+        fallbackKeywords="physio exercises, home exercises, rehab exercises, physiotherapy library"
+      />
       <Navbar />
 
       {/* Hero */}
@@ -81,6 +88,14 @@ export default function ExerciseLibrary() {
         <div className="absolute inset-0 bg-gradient-to-br from-teal-700 via-emerald-700 to-slate-900" />
         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.4),transparent_50%)]" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-[1] text-center text-white">
+          <div className="flex justify-center mb-2">
+            <SeoBreadcrumbs
+              items={[
+                { label: 'Home', href: '/' },
+                { label: 'Exercises' },
+              ]}
+            />
+          </div>
           <motion.span
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}

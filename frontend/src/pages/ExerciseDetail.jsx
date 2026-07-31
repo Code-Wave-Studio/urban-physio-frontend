@@ -4,6 +4,8 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import FaIcon from '../components/FaIcon';
 import ManagedPageSeo from '../components/seo/ManagedPageSeo';
+import SeoBreadcrumbs from '../components/seo/SeoBreadcrumbs';
+import { breadcrumbSchema, medicalWebPageSchema } from '../components/seo/PageMeta';
 import SaveExerciseButton from '../components/exercise/SaveExerciseButton';
 import { exercises } from '../services/api';
 import { bookExerciseUrl } from '../utils/bookUrl';
@@ -68,23 +70,38 @@ export default function ExerciseDetail() {
   const fallbackDescription =
     (item.instructions ? String(item.instructions).slice(0, 155) : '') ||
     `Learn how to perform ${item.name}, a physiotherapy exercise for ${item.body_area || 'recovery'}.`;
+  const canonical = `/exercises/${item.slug}`;
+  const crumbs = [
+    { label: 'Home', href: '/' },
+    { label: 'Exercises', href: '/exercises' },
+    { label: item.name },
+  ];
+  const jsonLd = [
+    medicalWebPageSchema({
+      name: item.name,
+      description: fallbackDescription,
+      canonicalUrl: typeof window !== 'undefined' ? `${window.location.origin}${canonical}` : canonical,
+      about: item.name,
+    }),
+    breadcrumbSchema(crumbs),
+  ].filter(Boolean);
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <ManagedPageSeo fallbackTitle={fallbackTitle} fallbackDescription={fallbackDescription} />
+      <ManagedPageSeo
+        pathOverride={canonical}
+        fallbackTitle={fallbackTitle}
+        fallbackDescription={fallbackDescription}
+        jsonLd={jsonLd}
+        canonical={canonical}
+      />
 
       <section
         className={`bg-gradient-to-br ${AREA_GRADIENT[item.body_area] || AREA_GRADIENT.general} border-b border-white/60 py-8 md:py-12`}
       >
         <div className="max-w-4xl mx-auto px-4">
-          <Link
-            to="/exercises"
-            className="inline-flex items-center gap-2 text-primary-600 text-sm font-medium hover:underline mb-4"
-          >
-            <FaIcon icon="fa-arrow-left" />
-            Exercise Library
-          </Link>
+          <SeoBreadcrumbs tone="onLight" items={crumbs} />
           <div className="flex flex-wrap items-center gap-3 mb-3">
             <span className="text-xs font-bold uppercase tracking-wider text-teal-700 capitalize">
               {item.body_area}

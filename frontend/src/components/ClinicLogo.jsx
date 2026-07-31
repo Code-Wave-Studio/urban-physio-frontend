@@ -19,9 +19,10 @@ export default function ClinicLogo({ clinic, logo, name, size = 'md', className 
     return (
       <img
         src={src}
-        alt=""
+        alt={`${displayName} logo`}
         className={`${sizeClass} object-cover shrink-0 ring-2 ring-white/80 shadow-sm bg-slate-100 ${className}`}
         loading="lazy"
+        decoding="async"
       />
     );
   }

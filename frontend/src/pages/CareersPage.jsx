@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import InfoPageLayout from '../components/InfoPageLayout';
 import FaIcon from '../components/FaIcon';
 import { careers } from '../services/api';
+import ManagedPageSeo from '../components/seo/ManagedPageSeo';
 
 const BENEFITS = [
   { icon: 'fa-users', title: 'Reach more patients', text: 'Get discovered by thousands of patients searching for physiotherapy near them.' },
@@ -121,6 +122,11 @@ export default function CareersPage() {
   );
 
   return (
+    <>
+    <ManagedPageSeo
+      fallbackTitle="Careers & Partnerships"
+      fallbackDescription="Grow your physiotherapy practice with India's modern digital care platform. Join as a physiotherapist or partner your clinic with The Urban Physio."
+    />
     <InfoPageLayout
       title="Careers & Partnerships"
       subtitle="Grow your physiotherapy practice with India's modern digital care platform. Join as a physiotherapist or partner your clinic with The Urban Physio."
@@ -375,5 +381,6 @@ export default function CareersPage() {
         </form>
       </section>
     </InfoPageLayout>
+    </>
   );
 }

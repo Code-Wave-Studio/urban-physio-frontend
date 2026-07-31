@@ -149,10 +149,11 @@ export default function PhysioFeedDetail({ mode = 'blog', legacy = false }) {
               <div className="rounded-2xl overflow-hidden border border-slate-200/80 shadow-md bg-slate-100 aspect-[16/9] sm:aspect-[2/1] max-h-[min(52vw,320px)] sm:max-h-[360px] mb-6">
                 <img
                   src={featuredSrc}
-                  alt=""
+                  alt={post.title || 'Article featured image'}
                   className="w-full h-full object-cover object-center"
                   loading="eager"
                   decoding="async"
+                  fetchPriority="high"
                 />
               </div>
             )}

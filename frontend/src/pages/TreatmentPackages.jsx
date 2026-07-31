@@ -9,6 +9,8 @@ import TreatmentPackagesBrowser from '../components/packages/TreatmentPackagesBr
 import { treatmentPackages } from '../services/api';
 import { bookPackageUrl } from '../utils/bookUrl';
 import { formatPackagePrice, PACKAGE_HIGHLIGHTS } from '../utils/packageHelpers';
+import ManagedPageSeo from '../components/seo/ManagedPageSeo';
+import SeoBreadcrumbs from '../components/seo/SeoBreadcrumbs';
 
 const FALLBACK = [
   {
@@ -86,12 +88,23 @@ export default function TreatmentPackages() {
 
   return (
     <div className="page-enter min-h-screen bg-gradient-to-b from-orange-50/60 via-white to-slate-50">
+      <ManagedPageSeo
+        fallbackTitle="Physiotherapy Treatment Packages"
+        fallbackDescription="Structured multi-session physiotherapy packages for recovery — clinic, home visit and online options across India."
+        fallbackKeywords="physio package, physiotherapy package India, rehab package, recovery package"
+      />
       <Navbar />
 
       <section className="relative pt-24 pb-14 md:pt-28 md:pb-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-orange-600 via-orange-700 to-slate-900" />
         <div className="absolute inset-0 opacity-30 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.25),transparent_50%)]" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-[1]">
+          <SeoBreadcrumbs
+            items={[
+              { label: 'Home', href: '/' },
+              { label: 'Packages' },
+            ]}
+          />
           <div className="max-w-3xl">
             <motion.span
               initial={{ opacity: 0, y: 10 }}

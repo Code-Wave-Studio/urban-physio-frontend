@@ -9,6 +9,9 @@ import {
   treatmentIcon,
   bodyAreaStyle,
 } from '../utils/treatmentHelpers';
+import ManagedPageSeo from '../components/seo/ManagedPageSeo';
+import SeoBreadcrumbs from '../components/seo/SeoBreadcrumbs';
+import { itemListSchema } from '../components/seo/PageMeta';
 
 const FALLBACK = [
   {
@@ -86,21 +89,36 @@ export default function Treatments() {
     return { all: allList.length, byCat };
   }, [allList]);
 
+  const listSchema = itemListSchema({
+    name: 'Physiotherapy Treatments',
+    description: 'Evidence-based physiotherapy treatments for back, neck, knee, shoulder and sports injuries.',
+    canonicalUrl: typeof window !== 'undefined' ? `${window.location.origin}/treatments` : '/treatments',
+    items: (list.length ? list : allList).slice(0, 30).map((t) => ({
+      name: t.title,
+      url: `/treatments/${t.slug}`,
+    })),
+  });
+
   return (
     <div className="min-h-screen flex flex-col overflow-x-hidden">
+      <ManagedPageSeo
+        fallbackTitle="Physiotherapy Treatments"
+        fallbackDescription="Explore evidence-based physiotherapy treatments for back, neck, knee, shoulder and sports injuries across India."
+        fallbackKeywords="physiotherapy treatments, back pain physio, knee rehab, neck pain treatment"
+        jsonLd={listSchema}
+      />
       <Navbar />
 
       {/* Hero */}
       <section className="relative bg-gradient-to-br from-orange-500 via-primary-600 to-primary-800 text-white py-12 md:py-16">
         <div className="absolute inset-0 opacity-30 bg-[url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.08\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4z\'/%3E%3C/g%3E%3C/svg%3E')]" />
         <div className="max-w-7xl mx-auto px-4 relative">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-primary-100 hover:text-white text-sm mb-4"
-          >
-            <FaIcon icon="fa-arrow-left" />
-            Back to Home
-          </Link>
+          <SeoBreadcrumbs
+            items={[
+              { label: 'Home', href: '/' },
+              { label: 'Treatments' },
+            ]}
+          />
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
             <div>
               <span className="inline-flex items-center gap-2 glass-dark px-3 py-1 rounded-full text-xs font-medium mb-4">

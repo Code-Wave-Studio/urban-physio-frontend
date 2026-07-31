@@ -3,6 +3,7 @@ import InfoPageLayout from '../components/InfoPageLayout';
 import FaIcon from '../components/FaIcon';
 import { CANCELLATION_STEPS, CANCELLATION_TIMELINE } from '../constants/supportPages';
 import { useContact } from '../contexts/ContactContext';
+import ManagedPageSeo from '../components/seo/ManagedPageSeo';
 
 const COLOR_MAP = {
   emerald: 'border-emerald-200 bg-emerald-50 text-emerald-800',
@@ -16,6 +17,11 @@ export default function CancellationHelpPage() {
   const { email } = useContact();
 
   return (
+    <>
+    <ManagedPageSeo
+      fallbackTitle="Cancellation Help"
+      fallbackDescription="How to cancel a physiotherapy session, what refunds to expect, and how long payments take to return."
+    />
     <InfoPageLayout
       title="Cancellation Help"
       subtitle="How to cancel a session, what refunds to expect, and how long payments take to return."
@@ -109,5 +115,6 @@ export default function CancellationHelpPage() {
         </div>
       </div>
     </InfoPageLayout>
+    </>
   );
 }

@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import FaIcon from '../../components/FaIcon';
+import PageMeta from '../../components/seo/PageMeta';
 import { AUTH_LOGIN_PORTAL_LIST, AUTH_PORTAL_LIST, AUTH_PORTALS } from '../../constants/authPortals';
 
 /**
@@ -13,6 +14,15 @@ export default function AuthPortalPicker({ mode }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50/30 to-white">
+      <PageMeta
+        title={isLogin ? 'Sign in' : 'Create account'}
+        description={
+          isLogin
+            ? 'Sign in to The Urban Physio as a patient, doctor, or clinic.'
+            : 'Create a The Urban Physio account as a patient, doctor, or clinic.'
+        }
+        noindex
+      />
       <Navbar />
 
       <div className="max-w-3xl mx-auto px-4 py-10 sm:py-14">

@@ -21,6 +21,7 @@ const SUPPORT_LINKS = [
   { to: '/careers', label: 'Careers', icon: 'fa-briefcase' },
   { to: '/contact', label: 'Contact Us', icon: 'fa-envelope' },
   { to: '/cancellation-help', label: 'Cancellation Help', icon: 'fa-calendar-xmark' },
+  { to: '/sitemap', label: 'Sitemap', icon: 'fa-sitemap' },
 ];
 
 function FooterLinkColumn({ title, links }) {

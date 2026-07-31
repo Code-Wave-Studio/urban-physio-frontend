@@ -6,6 +6,7 @@ import FaIcon from '../components/FaIcon';
 import CodeWaveAttribution from '../core/CodeWaveAttribution';
 import { CODEWAVE_ATTRIBUTION, CODEWAVE_DEVELOPER, CODEWAVE_URL } from '../core/codewaveLicense';
 import { license as licenseApi } from '../services/api';
+import ManagedPageSeo from '../components/seo/ManagedPageSeo';
 
 function fmtDate(value) {
   if (!value) return null;
@@ -64,6 +65,12 @@ export default function LicensePage() {
   const issued = fmtDate(data?.issued_at);
 
   return (
+    <>
+    <ManagedPageSeo
+      fallbackTitle="Software License"
+      fallbackDescription="This platform is officially licensed software. The developer attribution is protected under the license agreement."
+      noindex
+    />
     <InfoPageLayout
       title="Software License"
       subtitle="This platform is officially licensed software. The developer attribution is protected under the license agreement."
@@ -205,5 +212,6 @@ export default function LicensePage() {
         </div>
       )}
     </InfoPageLayout>
+    </>
   );
 }

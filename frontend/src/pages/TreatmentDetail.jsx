@@ -10,6 +10,9 @@ import {
   bodyAreaStyle,
   parsePlanPhases,
 } from '../utils/treatmentHelpers';
+import PageMeta, { breadcrumbSchema, medicalWebPageSchema } from '../components/seo/PageMeta';
+import SeoBreadcrumbs from '../components/seo/SeoBreadcrumbs';
+import ManagedPageSeo from '../components/seo/ManagedPageSeo';
 
 function SectionCard({ icon, title, children, accent = 'primary' }) {
   const accentMap = {
@@ -59,6 +62,7 @@ export default function TreatmentDetail() {
   if (error || !item) {
     return (
       <div className="min-h-screen flex flex-col">
+        <PageMeta title="Treatment not found" noindex />
         <Navbar />
         <div className="max-w-lg mx-auto px-4 py-20 text-center flex-1">
           <h1 className="text-2xl font-bold">Treatment not found</h1>
@@ -73,6 +77,27 @@ export default function TreatmentDetail() {
 
   const phases = parsePlanPhases(item.treatment_plan);
   const related = item.related || [];
+  const canonical = `/treatments/${item.slug}`;
+  const title = item.seo_title || item.title;
+  const description =
+    item.seo_description ||
+    item.short_description ||
+    (item.description ? String(item.description).slice(0, 155) : '') ||
+    `${item.title} physiotherapy treatment at The Urban Physio.`;
+  const crumbs = [
+    { label: 'Home', href: '/' },
+    { label: 'Treatments', href: '/treatments' },
+    { label: item.title },
+  ];
+  const jsonLd = [
+    medicalWebPageSchema({
+      name: title,
+      description,
+      canonicalUrl: typeof window !== 'undefined' ? `${window.location.origin}${canonical}` : canonical,
+      about: item.title,
+    }),
+    breadcrumbSchema(crumbs),
+  ].filter(Boolean);
 
   const sections = [
     { key: 'description', icon: 'fa-circle-info', title: 'Overview', content: item.description, accent: 'primary' },
@@ -84,18 +109,20 @@ export default function TreatmentDetail() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <ManagedPageSeo
+        pathOverride={canonical}
+        fallbackTitle={title}
+        fallbackDescription={description}
+        jsonLd={jsonLd}
+        canonical={canonical}
+        image={item.image || item.featured_image}
+      />
       <Navbar />
 
       {/* Hero */}
       <section className="bg-gradient-to-br from-orange-50 via-white to-primary-50 border-b border-white/60 py-8 md:py-12">
         <div className="max-w-4xl mx-auto px-4">
-          <Link
-            to="/treatments"
-            className="inline-flex items-center gap-2 text-primary-600 text-sm font-medium hover:underline mb-4"
-          >
-            <FaIcon icon="fa-arrow-left" />
-            All Treatments
-          </Link>
+          <SeoBreadcrumbs tone="onLight" items={crumbs} />
           <div className="flex flex-wrap items-center gap-3 mb-4">
             <div
               className={`w-14 h-14 rounded-2xl flex items-center justify-center ${bodyAreaStyle(item.body_area)}`}

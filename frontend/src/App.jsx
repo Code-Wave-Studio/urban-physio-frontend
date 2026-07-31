@@ -99,6 +99,7 @@ import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import CancellationHelpPage from './pages/CancellationHelpPage';
 import LicensePage from './pages/LicensePage';
+import HtmlSitemapPage from './pages/HtmlSitemapPage';
 import EmergencyBookingWizard from './pages/EmergencyBookingWizard';
 import DoctorEmergency from './pages/doctor/DoctorEmergency';
 import AdminEmergency from './pages/admin/AdminEmergency';
@@ -281,6 +282,7 @@ export default function App() {
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/cancellation-help" element={<CancellationHelpPage />} />
       <Route path="/license" element={<LicensePage />} />
+      <Route path="/sitemap" element={<HtmlSitemapPage />} />
 
       <Route path="/patient" element={<ProtectedRoute roles={['patient']}><PatientDashboard /></ProtectedRoute>} />
       <Route path="/patient/appointments" element={<ProtectedRoute roles={['patient']}><PatientAppointments /></ProtectedRoute>} />

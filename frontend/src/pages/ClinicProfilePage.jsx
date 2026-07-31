@@ -3,7 +3,7 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import FaIcon from '../components/FaIcon';
-import PageMeta, { clinicSchema } from '../components/seo/PageMeta';
+import PageMeta, { clinicSchema, breadcrumbSchema } from '../components/seo/PageMeta';
 import ClinicProfileView from '../components/clinic/ClinicProfileView';
 import { clinics } from '../services/api';
 import { googleMapsUrl } from '../utils/locationHelpers';
@@ -27,7 +27,17 @@ export default function ClinicProfilePage({ legacy = false }) {
 
   const canonical = clinic?.canonical_path || (slug ? `/clinic/${slug}` : '');
   const canonicalUrl = typeof window !== 'undefined' ? `${window.location.origin}${canonical}` : canonical;
-  const jsonLd = useMemo(() => (clinic ? clinicSchema(clinic, canonicalUrl) : null), [clinic, canonicalUrl]);
+  const jsonLd = useMemo(() => {
+    if (!clinic) return null;
+    return [
+      clinicSchema(clinic, canonicalUrl),
+      breadcrumbSchema([
+        { label: 'Home', href: '/' },
+        { label: 'Clinics', href: '/clinics' },
+        { label: clinic.name },
+      ]),
+    ].filter(Boolean);
+  }, [clinic, canonicalUrl]);
 
   if (!loading && clinic?.slug && legacy) {
     return <Navigate to={clinic?.canonical_path || '/clinics'} replace />;
