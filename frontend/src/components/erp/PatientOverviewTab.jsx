@@ -78,7 +78,7 @@ function reducer(state, action) {
   }
 }
 
-export default function PatientOverviewTab({ patientKey, initialData }) {
+export default function PatientOverviewTab({ patientKey, clinicId, initialData, onSaved }) {
   const [state, dispatch] = useReducer(reducer, {
     ...pickProfile(initialData?.profile || {}),
     isDirty: false,
@@ -90,10 +90,12 @@ export default function PatientOverviewTab({ patientKey, initialData }) {
   const snapshotRef = useRef(pickProfile(initialData?.profile || {}));
   const loadedRef = useRef(false);
 
+  const erpParams = clinicId ? { clinic_id: clinicId } : undefined;
+
   const load = useCallback(async () => {
     if (!patientKey) return;
     try {
-      const res = await erpPatient.getOverview(patientKey);
+      const res = await erpPatient.getOverview(patientKey, erpParams);
       const d = res.data || res;
       const profile = pickProfile(d.profile || {});
       snapshotRef.current = profile;
@@ -103,7 +105,11 @@ export default function PatientOverviewTab({ patientKey, initialData }) {
     } catch {
       // Keep initial / current data
     }
-  }, [patientKey]);
+  }, [patientKey, clinicId]);
+
+  useEffect(() => {
+    loadedRef.current = false;
+  }, [patientKey, clinicId]);
 
   useEffect(() => {
     if (!loadedRef.current) {
@@ -134,15 +140,16 @@ export default function PatientOverviewTab({ patientKey, initialData }) {
       if (!String(profile.email || '').trim()) {
         profile.email = null;
       }
-      const res = await erpPatient.updateOverview(patientKey, profile);
+      const res = await erpPatient.updateOverview(patientKey, profile, erpParams);
       const d = res.data || res;
-      const saved = pickProfile(d.profile || profile);
+      const saved = pickProfile(d?.profile || profile);
       snapshotRef.current = saved;
       dispatch({ type: 'RESET', profile: saved });
-      if (d.stats) setStats(d.stats);
-      if (d.active_package !== undefined) setActivePkg(d.active_package || null);
+      if (d?.stats) setStats(d.stats);
+      if (d && d.active_package !== undefined) setActivePkg(d.active_package || null);
       setEditing(false);
       toast.success('Profile saved');
+      onSaved?.(saved);
     } catch (e) {
       toast.error(e.message || 'Save failed');
     } finally {

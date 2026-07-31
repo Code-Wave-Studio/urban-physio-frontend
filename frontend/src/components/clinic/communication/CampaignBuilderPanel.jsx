@@ -21,7 +21,7 @@ const EMPTY = {
   title: '',
   subject: '',
   message: '',
-  audience_key: 'active_patients',
+  audience_key: 'all',
   channels: ['whatsapp', 'sms', 'email'],
   smart_route: true,
   scheduled_at: '',
@@ -334,10 +334,10 @@ export default function CampaignBuilderPanel({
   const audienceEntries = Object.keys(audienceMap || {}).length
     ? audienceMap
     : {
-        active_patients: 'Active Patients',
+        all: 'All Patients (same as Patients page)',
+        active_patients: 'Active Patients (online + visit 90d)',
         appointments_today: 'Appointments Today',
         pending_payments: 'Pending Payments',
-        all: 'All Patients',
       };
 
   return (
@@ -411,7 +411,11 @@ export default function CampaignBuilderPanel({
                   ))}
                 </select>
                 <p className="text-xs mt-2 font-medium text-emerald-700">
-                  {audienceCount == null ? 'Counting patients…' : `${audienceCount} patient${audienceCount === 1 ? '' : 's'} matched`}
+                  {audienceLoading || audienceCount == null
+                    ? 'Counting patients…'
+                    : `${audienceCount} patient${audienceCount === 1 ? '' : 's'} matched${
+                        form.audience_key === 'all' ? ' (same list as Patients page)' : ''
+                      }`}
                 </p>
               </label>
 

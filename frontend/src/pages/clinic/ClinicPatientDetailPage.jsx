@@ -268,7 +268,12 @@ export default function ClinicPatientDetailPage() {
 
           <section className="glass-card !p-3 sm:!p-4 md:!p-5 min-w-0">
             {tab === 'Overview' && (
-              <PatientOverviewTab patientKey={data.patient_key || patientKey} initialData={data._erpOverview} />
+              <PatientOverviewTab
+                patientKey={data.patient_key || patientKey}
+                clinicId={clinicId}
+                initialData={data._erpOverview}
+                onSaved={() => load()}
+              />
             )}
 
             {tab === 'Timeline' && (

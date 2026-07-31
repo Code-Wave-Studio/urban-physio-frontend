@@ -1198,12 +1198,12 @@ export const exercises = {
 // ─── ERP APIs ────────────────────────────────────────────────────────────────
 
 export const erpPatient = {
-  getOverview: (patientKey) => api.get(`/erp/patients/${patientKey}/overview`),
-  updateOverview: (patientKey, data) => api.put(`/erp/patients/${patientKey}/overview`, data),
+  getOverview: (patientKey, params) => api.get(`/erp/patients/${patientKey}/overview`, { params }),
+  updateOverview: (patientKey, data, params) => api.put(`/erp/patients/${patientKey}/overview`, data, { params }),
   getTimeline: (patientKey, params) => api.get(`/erp/patients/${patientKey}/timeline`, { params }),
-  addTimelineEvent: (patientKey, data) => api.post(`/erp/patients/${patientKey}/timeline`, data),
-  updateTimelineEvent: (patientKey, id, data) => api.put(`/erp/patients/${patientKey}/timeline/${id}`, data),
-  deleteTimelineEvent: (patientKey, id) => api.delete(`/erp/patients/${patientKey}/timeline/${id}`),
+  addTimelineEvent: (patientKey, data, params) => api.post(`/erp/patients/${patientKey}/timeline`, data, { params }),
+  updateTimelineEvent: (patientKey, id, data, params) => api.put(`/erp/patients/${patientKey}/timeline/${id}`, data, { params }),
+  deleteTimelineEvent: (patientKey, id, params) => api.delete(`/erp/patients/${patientKey}/timeline/${id}`, { params }),
 };
 
 export const erpAssessments = {
