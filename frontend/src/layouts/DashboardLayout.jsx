@@ -32,7 +32,14 @@ function NavLink({ link, pathname, unreadCount }) {
   );
 }
 
-export default function DashboardLayout({ children, links = [], variant, sidebarFooter = null }) {
+export default function DashboardLayout({
+  children,
+  links = [],
+  variant,
+  sidebarFooter = null,
+  brandLogoSrc = null,
+  brandLogoAlt = 'The Urban Physio',
+}) {
   const { pathname } = useLocation();
   const { user } = useAuth();
   const isPatient = variant === 'patient';
@@ -48,7 +55,7 @@ export default function DashboardLayout({ children, links = [], variant, sidebar
       ? { title: 'Clinic Portal', subtitle: `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 'Clinic', accent: 'emerald' }
       : isPatient
         ? { title: 'Patient Portal', subtitle: `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 'My Health', accent: 'primary' }
-        : null;
+        : { title: 'Portal', subtitle: '', accent: 'primary' };
 
   const refreshUnread = () => {
     if (!hasStoredToken()) return;
@@ -119,7 +126,12 @@ export default function DashboardLayout({ children, links = [], variant, sidebar
   if (usePortalSidebar) {
     return (
       <div className="min-h-screen relative admin-shell">
-        <Navbar beforeLogo={sidebarToggle} portalMode />
+        <Navbar
+          beforeLogo={sidebarToggle}
+          portalMode
+          logoSrc={brandLogoSrc || undefined}
+          logoAlt={brandLogoAlt}
+        />
         <DashboardPortalSidebar
           open={sidebarOpen}
           onClose={closeSidebar}
@@ -129,6 +141,8 @@ export default function DashboardLayout({ children, links = [], variant, sidebar
           subtitle={portalMeta.subtitle}
           accent={portalMeta.accent}
           footerExtra={sidebarFooter}
+          logoSrc={brandLogoSrc || undefined}
+          logoAlt={brandLogoAlt}
         />
 
         <div

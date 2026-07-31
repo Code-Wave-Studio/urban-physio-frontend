@@ -31,7 +31,7 @@ const MORE_NAV_LINKS = [
  * Public site header — same on home, booking, login, and portals (portals add sidebar toggle via beforeLogo).
  * @param {{ beforeLogo?: import('react').ReactNode, headerSpacerClass?: string, portalMode?: boolean }} props
  */
-export default function Navbar({ beforeLogo = null, headerSpacerClass = '', portalMode = false }) {
+export default function Navbar({ beforeLogo = null, headerSpacerClass = '', portalMode = false, logoSrc = null, logoAlt = 'The Urban Physio' }) {
   const { pathname, search } = useLocation();
   const { user, logout, hasRole } = useAuth();
   const { city, setShowSelector, locationLabel } = useLocationContext();
@@ -152,6 +152,8 @@ export default function Navbar({ beforeLogo = null, headerSpacerClass = '', port
                   linkToHome={false}
                   className="h-9 md:h-10 w-auto max-w-[100px] md:max-w-[120px] object-contain"
                   showText={false}
+                  src={logoSrc || undefined}
+                  alt={logoAlt}
                 />
               </Link>
             </div>

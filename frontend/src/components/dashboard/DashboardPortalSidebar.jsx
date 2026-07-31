@@ -17,6 +17,8 @@ export default function DashboardPortalSidebar({
   subtitle,
   accent = 'primary',
   footerExtra = null,
+  logoSrc = null,
+  logoAlt = 'The Urban Physio',
 }) {
   const { pathname } = useLocation();
   const { user } = useAuth();
@@ -89,7 +91,13 @@ export default function DashboardPortalSidebar({
       >
         <div className="flex items-center justify-between gap-2 p-4 border-b border-slate-200/80 lg:hidden shrink-0">
           <div className="flex items-center gap-3 min-w-0">
-            <Logo linkToHome={false} showText={false} className="h-9 w-auto max-w-[110px] object-contain shrink-0" />
+            <Logo
+              linkToHome={false}
+              showText={false}
+              className="h-9 w-auto max-w-[110px] object-contain shrink-0"
+              src={logoSrc || undefined}
+              alt={logoAlt}
+            />
             <div className="min-w-0">
               <p className="font-bold text-slate-900 text-sm">{title}</p>
               <p className="text-xs text-slate-500 truncate">{subtitle}</p>
@@ -102,7 +110,13 @@ export default function DashboardPortalSidebar({
 
         <div className="hidden lg:block p-4 pb-3 border-b border-slate-200/80 shrink-0">
           <div className="flex items-center gap-3">
-            <Logo linkToHome={false} showText={false} className="h-11 w-auto max-w-[130px] object-contain shrink-0" />
+            <Logo
+              linkToHome={false}
+              showText={false}
+              className="h-11 w-auto max-w-[130px] object-contain shrink-0"
+              src={logoSrc || undefined}
+              alt={logoAlt}
+            />
             <div className="min-w-0">
               <p className={`text-[10px] font-semibold uppercase tracking-wider ${accentLabel}`}>{title}</p>
               <p className="text-[10px] text-slate-500 truncate mt-1">{subtitle}</p>

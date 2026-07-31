@@ -72,7 +72,7 @@ export default function ClinicPortalProfile() {
     ? searchParams.get('tab')
     : 'clinic';
   const { user, setUser } = useAuth();
-  const { isAdminMode, can, loading: boot } = useClinicPortal();
+  const { isAdminMode, can, loading: boot, reload } = useClinicPortal();
 
   const [form, setForm] = useState(() => ({
     ...emptyClinicForm(),
@@ -365,7 +365,10 @@ export default function ClinicPortalProfile() {
                 logo={form.logo}
                 name={form.name}
                 clinicId={clinicId}
-                onUploaded={(url) => set('logo', url)}
+                onUploaded={(url) => {
+                  set('logo', url);
+                  reload?.();
+                }}
               />
               <div className="grid sm:grid-cols-2 gap-3">
                 <div>

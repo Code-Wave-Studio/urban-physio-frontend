@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import FaIcon from './FaIcon';
 import { SITE_LOGO_SRC } from '../constants/siteBrand';
@@ -9,15 +9,32 @@ export default function Logo({
   textClassName = '',
   linkToHome = true,
   lightText = false,
+  /** Override image (e.g. clinic logo). Falls back to The Urban Physio logo. */
+  src = null,
+  alt = 'The Urban Physio',
 }) {
-  const [failed, setFailed] = useState(false);
+  const preferred = src || SITE_LOGO_SRC;
+  const [currentSrc, setCurrentSrc] = useState(preferred);
 
-  const image = !failed ? (
+  useEffect(() => {
+    setCurrentSrc(src || SITE_LOGO_SRC);
+  }, [src]);
+
+  const onError = () => {
+    if (currentSrc !== SITE_LOGO_SRC) {
+      setCurrentSrc(SITE_LOGO_SRC);
+      return;
+    }
+    setCurrentSrc('');
+  };
+
+  const image = currentSrc ? (
     <img
-      src={SITE_LOGO_SRC}
-      alt="The Urban Physio"
+      key={currentSrc}
+      src={currentSrc}
+      alt={alt}
       className={`${className} group-hover:scale-105 transition-transform`}
-      onError={() => setFailed(true)}
+      onError={onError}
     />
   ) : (
     <div className="w-10 h-10 bg-primary-600/90 backdrop-blur rounded-xl flex items-center justify-center shadow-lg shrink-0">
