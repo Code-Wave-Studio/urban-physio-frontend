@@ -51,6 +51,31 @@ function parseChannels(raw) {
   return ['whatsapp', 'sms', 'email'];
 }
 
+function maskPhone(phone) {
+  const p = String(phone || '').replace(/\s+/g, '');
+  if (!p) return '—';
+  if (p.length <= 4) return p;
+  return `${'•'.repeat(Math.min(6, p.length - 4))}${p.slice(-4)}`;
+}
+
+function maskEmail(email) {
+  const e = String(email || '').trim();
+  if (!e || !e.includes('@')) return e || '—';
+  const [user, domain] = e.split('@');
+  const u = user.length <= 2 ? `${user[0] || ''}•` : `${user.slice(0, 2)}${'•'.repeat(Math.min(4, user.length - 2))}`;
+  return `${u}@${domain}`;
+}
+
+function recipientReachable(r, channels) {
+  return channels.some((ch) => {
+    if (ch === 'whatsapp') return r.can_whatsapp;
+    if (ch === 'sms') return r.can_sms;
+    if (ch === 'email') return r.can_email;
+    if (ch === 'in_app') return r.can_in_app;
+    return false;
+  });
+}
+
 export default function CampaignBuilderPanel({
   clinicId,
   audiences = {},
@@ -62,6 +87,10 @@ export default function CampaignBuilderPanel({
   const [step, setStep] = useState(1);
   const [form, setForm] = useState(EMPTY);
   const [audienceCount, setAudienceCount] = useState(null);
+  const [recipients, setRecipients] = useState([]);
+  const [recipientsTruncated, setRecipientsTruncated] = useState(false);
+  const [audienceLoading, setAudienceLoading] = useState(false);
+  const [recipientQuery, setRecipientQuery] = useState('');
   const [previewCh, setPreviewCh] = useState('whatsapp');
   const [saving, setSaving] = useState(false);
   const [sendingId, setSendingId] = useState(null);
@@ -102,20 +131,52 @@ export default function CampaignBuilderPanel({
   useEffect(() => {
     if (!clinicId) return;
     let cancelled = false;
+    setAudienceLoading(true);
     clinicPortal
-      .commAudiencePreview(clinicId, { audience: form.audience_key })
+      .commAudiencePreview(clinicId, { audience: form.audience_key, limit: 200 })
       .then((r) => {
         if (cancelled) return;
         setAudienceCount(r.data?.count ?? 0);
+        setRecipients(Array.isArray(r.data?.recipients) ? r.data.recipients : r.data?.sample || []);
+        setRecipientsTruncated(Boolean(r.data?.truncated));
         if (r.data?.presets) setAudienceMap(r.data.presets);
       })
       .catch(() => {
-        if (!cancelled) setAudienceCount(null);
+        if (!cancelled) {
+          setAudienceCount(null);
+          setRecipients([]);
+          setRecipientsTruncated(false);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setAudienceLoading(false);
       });
     return () => {
       cancelled = true;
     };
   }, [clinicId, form.audience_key]);
+
+  useEffect(() => {
+    setRecipientQuery('');
+  }, [form.audience_key]);
+
+  const filteredRecipients = useMemo(() => {
+    const q = recipientQuery.trim().toLowerCase();
+    if (!q) return recipients;
+    return recipients.filter((r) => {
+      const hay = `${r.name || ''} ${r.phone || ''} ${r.email || ''}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }, [recipients, recipientQuery]);
+
+  const reachStats = useMemo(() => {
+    const total = recipients.length;
+    let reachable = 0;
+    recipients.forEach((r) => {
+      if (recipientReachable(r, form.channels)) reachable += 1;
+    });
+    return { total, reachable, skipped: total - reachable };
+  }, [recipients, form.channels]);
 
   const set = (patch) => setForm((f) => ({ ...f, ...patch }));
 
@@ -495,8 +556,115 @@ export default function CampaignBuilderPanel({
                   </li>
                 </ul>
               </div>
-              <div className="rounded-xl bg-slate-50 border border-slate-100 p-3 text-sm text-slate-600 whitespace-pre-wrap max-h-40 overflow-y-auto">
+
+              <div className="rounded-xl bg-slate-50 border border-slate-100 p-3 text-sm text-slate-600 whitespace-pre-wrap max-h-32 overflow-y-auto">
                 {form.message || 'No message'}
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 overflow-hidden bg-white">
+                <div className="px-3 sm:px-4 py-3 border-b border-slate-100 bg-slate-50/80 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-slate-900">Patients who will receive this</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      {audienceLoading
+                        ? 'Loading list…'
+                        : audienceCount == null
+                          ? 'Could not load audience'
+                          : `${reachStats.reachable} reachable of ${audienceCount} matched${
+                              reachStats.skipped ? ` · ${reachStats.skipped} may skip (no contact for selected channels)` : ''
+                            }`}
+                    </p>
+                  </div>
+                  <div className="relative w-full sm:w-56">
+                    <FaIcon icon="fa-magnifying-glass" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs" />
+                    <input
+                      className="input-field !pl-8 !py-2 text-sm"
+                      placeholder="Search name / phone…"
+                      value={recipientQuery}
+                      onChange={(e) => setRecipientQuery(e.target.value)}
+                      disabled={audienceLoading || !recipients.length}
+                    />
+                  </div>
+                </div>
+
+                {audienceLoading ? (
+                  <div className="p-8 text-center text-sm text-slate-500">
+                    <FaIcon icon="fa-spinner" className="fa-spin mr-2" />
+                    Loading patients…
+                  </div>
+                ) : !recipients.length ? (
+                  <div className="p-8 text-center text-sm text-slate-500">No patients in this audience.</div>
+                ) : (
+                  <ul className="max-h-[min(52vh,420px)] overflow-y-auto divide-y divide-slate-100">
+                    {filteredRecipients.map((r) => {
+                      const ok = recipientReachable(r, form.channels);
+                      const initials = r.initials || String(r.name || 'P').slice(0, 1).toUpperCase();
+                      return (
+                        <li
+                          key={`${r.patient_id || r.clinic_patient_id || r.user_id}-${r.phone || r.email || r.name}`}
+                          className={`flex items-start gap-3 px-3 sm:px-4 py-3 transition ${
+                            ok ? 'bg-white hover:bg-emerald-50/40' : 'bg-amber-50/40'
+                          }`}
+                        >
+                          <span
+                            className={`mt-0.5 w-9 h-9 shrink-0 rounded-full flex items-center justify-center text-xs font-bold ${
+                              ok ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'
+                            }`}
+                            aria-hidden
+                          >
+                            {initials}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                              <p className="text-sm font-semibold text-slate-900 truncate">{r.name || 'Patient'}</p>
+                              {!ok && (
+                                <span className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
+                                  May skip
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-slate-500 mt-0.5 truncate">
+                              {maskPhone(r.phone)}
+                              {r.email ? ` · ${maskEmail(r.email)}` : ''}
+                            </p>
+                            <div className="flex flex-wrap gap-1 mt-1.5">
+                              {CHANNELS.filter((ch) => form.channels.includes(ch.id)).map((ch) => {
+                                const can =
+                                  (ch.id === 'whatsapp' && r.can_whatsapp) ||
+                                  (ch.id === 'sms' && r.can_sms) ||
+                                  (ch.id === 'email' && r.can_email) ||
+                                  (ch.id === 'in_app' && r.can_in_app);
+                                return (
+                                  <span
+                                    key={ch.id}
+                                    className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-md border ${
+                                      can
+                                        ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                                        : 'border-slate-200 bg-slate-50 text-slate-400 line-through'
+                                    }`}
+                                    title={can ? `${ch.label} available` : `No ${ch.label} contact`}
+                                  >
+                                    <FaIcon icon={ch.icon} brand={ch.brand} className="text-[9px]" />
+                                    {ch.label}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </li>
+                      );
+                    })}
+                    {!filteredRecipients.length && (
+                      <li className="p-6 text-center text-sm text-slate-500">No match for “{recipientQuery}”.</li>
+                    )}
+                  </ul>
+                )}
+
+                {recipientsTruncated && audienceCount != null && (
+                  <p className="px-3 sm:px-4 py-2.5 text-[11px] text-slate-500 border-t border-slate-100 bg-slate-50/60">
+                    Showing first {recipients.length} of {audienceCount}. Full list is used when you send.
+                  </p>
+                )}
               </div>
             </div>
           )}
