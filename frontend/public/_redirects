@@ -9,3 +9,9 @@
 # www → apex: set in Cloudflare Dashboard → Rules → Redirects.
 #
 # /backend/api: frontend uses VITE_API_URL (Hostinger), not a CF proxy.
+#
+# Pretty sitemap aliases → Hostinger physical sitemap.php (SPA has no PHP)
+# Use 302 (not 200) — Cloudflare Pages reliably redirects off-site; 200 proxy is Workers-only.
+/sitemap.xml  https://mediumorchid-monkey-387815.hostingersite.com/backend/api/sitemap.php  302
+/backend/api/sitemap  https://mediumorchid-monkey-387815.hostingersite.com/backend/api/sitemap.php  302
+/backend/api/sitemap.php  https://mediumorchid-monkey-387815.hostingersite.com/backend/api/sitemap.php  302

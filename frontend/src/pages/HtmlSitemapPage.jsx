@@ -75,9 +75,10 @@ export default function HtmlSitemapPage() {
         <p className="mt-2 text-slate-600 max-w-2xl text-sm md:text-base leading-relaxed">
           A complete map of our public website. Prefer the machine-readable feed?{' '}
           <a
-            href="/backend/api/sitemap"
+            href="https://mediumorchid-monkey-387815.hostingersite.com/backend/api/sitemap.php"
             className="text-orange-700 font-medium hover:underline"
             rel="noopener noreferrer"
+            target="_blank"
           >
             XML sitemap
           </a>
