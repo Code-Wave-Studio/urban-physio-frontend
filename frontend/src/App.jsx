@@ -142,7 +142,9 @@ import AdminBadges from './pages/admin/AdminBadges';
 import AdminCoupons from './pages/admin/AdminCoupons';
 import AdminReviews from './pages/admin/AdminReviews';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
+import AdminCareers from './pages/admin/AdminCareers';
 import { ADMIN_NAV } from './constants/adminNav';
+
 import { DOCTOR_NAV } from './constants/doctorNav';
 import CitySeoListingPage from './pages/CitySeoListingPage';
 import AuthLoginPage from './pages/auth/AuthLoginPage';
@@ -392,6 +394,8 @@ export default function App() {
       <Route path="/admin/appointments" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminAppointments /></ProtectedRoute>} />
       <Route path="/admin/appointment-requests" element={<ProtectedRoute roles={['admin', 'super_admin']}><AppointmentRequestsPage navItems={ADMIN_NAV} title="Doctor change requests" scope="admin" /></ProtectedRoute>} />
       <Route path="/admin/contact" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminContact /></ProtectedRoute>} />
+      <Route path="/admin/careers" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminCareers /></ProtectedRoute>} />
+
       <Route path="/admin/invoice-settings" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminInvoiceSettings /></ProtectedRoute>} />
       <Route path="/admin/billing" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminBillingPage /></ProtectedRoute>} />
       <Route path="/admin/zoom" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminZoomMeetings /></ProtectedRoute>} />

@@ -670,7 +670,9 @@ export const seo = {
 export const careers = {
   apply: (data) => api.post('/careers/apply', data),
   applications: (params = {}) => api.get('/careers/applications', { params }),
+  updateStatus: (id, status) => api.put(`/careers/applications/${id}/status`, { status }),
 };
+
 
 export const clinicPortal = {
   me: () => api.get('/clinic-portal/me'),

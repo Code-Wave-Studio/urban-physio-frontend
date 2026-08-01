@@ -5,6 +5,7 @@ import Footer from '../components/Footer';
 import FaIcon from '../components/FaIcon';
 import { physioFeed } from '../services/api';
 import { resolveMediaUrl } from '../utils/mediaUrl';
+import PageMeta, { breadcrumbSchema } from '../components/seo/PageMeta';
 
 function mediaSrc(url) {
   return resolveMediaUrl(url) || url;

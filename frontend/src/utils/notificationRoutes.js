@@ -138,7 +138,12 @@ export function getNotificationPath(notification, roleSlug) {
     return id ? `/admin/contact?tab=messages&msg=${id}` : '/admin/contact?tab=messages';
   }
 
+  if (type === 'career_application') {
+    return '/admin/careers';
+  }
+
   return null;
+
 }
 
 export function findAppointmentInList(list, { apptId, bookingId }) {
