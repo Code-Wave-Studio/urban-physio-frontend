@@ -6,6 +6,8 @@ import Footer from '../components/Footer';
 import FaIcon from '../components/FaIcon';
 import SaveExerciseButton from '../components/exercise/SaveExerciseButton';
 import ExerciseDetailModal from '../components/exercise/ExerciseDetailModal';
+import ExerciseMediaDisplay from '../components/exercise/ExerciseMediaDisplay';
+import { parseMediaSource } from '../utils/mediaParser';
 import { exercises } from '../services/api';
 import ManagedPageSeo from '../components/seo/ManagedPageSeo';
 import SeoBreadcrumbs from '../components/seo/SeoBreadcrumbs';
@@ -42,13 +44,14 @@ const BAR_GRADIENT = {
 };
 
 const FALLBACK = [
-  { id: 1, name: 'Cat-Cow Stretch', slug: 'cat-cow-stretch', body_area: 'back', difficulty: 'beginner', instructions: 'Start on hands and knees. Arch your back up (cat), then drop belly down (cow). Move slowly with your breath.', default_sets: 2, default_reps: '10', equipment: 'Mat' },
-  { id: 2, name: 'Knee Extension', slug: 'knee-extension', body_area: 'knee', difficulty: 'beginner', instructions: 'Sit on a chair. Straighten one knee fully, hold briefly, lower slowly.', default_sets: 3, default_reps: '12', default_hold_seconds: 3, equipment: 'Chair' },
+  { id: 1, name: 'Cat-Cow Stretch', slug: 'cat-cow-stretch', body_area: 'back', difficulty: 'beginner', video_url: 'https://www.youtube.com/watch?v=inpok4MKVLM', instructions: 'Start on hands and knees. Arch your back up (cat), then drop belly down (cow). Move slowly with your breath.', default_sets: 2, default_reps: '10', equipment: 'Mat' },
+  { id: 2, name: 'Knee Extension', slug: 'knee-extension', body_area: 'knee', difficulty: 'beginner', video_url: 'https://www.youtube.com/watch?v=1xN5hL1S_-s', instructions: 'Sit on a chair. Straighten one knee fully, hold briefly, lower slowly.', default_sets: 3, default_reps: '12', default_hold_seconds: 3, equipment: 'Chair' },
   { id: 3, name: 'Shoulder Pendulum', slug: 'shoulder-pendulum', body_area: 'shoulder', difficulty: 'beginner', instructions: 'Lean forward supporting yourself. Let arm hang and swing gently in small circles.', default_sets: 2, default_reps: '10 each direction', equipment: 'None' },
   { id: 4, name: 'Neck Isometrics', slug: 'neck-isometrics', body_area: 'neck', difficulty: 'beginner', instructions: 'Place hand on forehead. Push head into hand without moving. Hold 5 seconds.', default_sets: 3, default_reps: '5', default_hold_seconds: 5, equipment: 'None' },
-  { id: 5, name: 'Glute Bridge', slug: 'glute-bridge', body_area: 'back', difficulty: 'intermediate', instructions: 'Lie on back, knees bent. Lift hips until body forms straight line.', default_sets: 3, default_reps: '15', default_hold_seconds: 2, equipment: 'Mat' },
+  { id: 5, name: 'Glute Bridge', slug: 'glute-bridge', body_area: 'back', difficulty: 'intermediate', video_url: 'https://www.youtube.com/watch?v=4BOTvaRaDjI', instructions: 'Lie on back, knees bent. Lift hips until body forms straight line.', default_sets: 3, default_reps: '15', default_hold_seconds: 2, equipment: 'Mat' },
   { id: 6, name: 'Heel Raises', slug: 'heel-raises', body_area: 'general', difficulty: 'beginner', instructions: 'Stand holding support. Rise onto toes, hold, lower slowly.', default_sets: 3, default_reps: '15', default_hold_seconds: 2, equipment: 'Wall support' },
 ];
+
 
 export default function ExerciseLibrary() {
   const [list, setList] = useState([]);
@@ -180,17 +183,27 @@ export default function ExerciseLibrary() {
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {filtered.map((ex, idx) => (
-              <motion.article
-                key={ex.id || ex.slug}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.04 }}
-                className="group glass-card overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-white/70"
-                onClick={() => setSelected(ex)}
-              >
-                <div className={`h-2 bg-gradient-to-r ${BAR_GRADIENT[ex.body_area] || BAR_GRADIENT.general}`} />
-                <div className="p-5">
+            {filtered.map((ex, idx) => {
+              const parsedMedia = parseMediaSource(ex);
+              const hasMedia = Boolean(parsedMedia.type);
+              return (
+                <motion.article
+                  key={ex.id || ex.slug}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.04 }}
+                  className="group glass-card overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-white/70 flex flex-col"
+                  onClick={() => setSelected(ex)}
+                >
+                  {hasMedia ? (
+                    <div className="relative h-[140px] w-full shrink-0 overflow-hidden rounded-t-[inherit] rounded-b-none bg-slate-950">
+                      <ExerciseMediaDisplay exercise={ex} title={ex.name} />
+                    </div>
+                  ) : (
+                    <div className={`h-2 shrink-0 bg-gradient-to-r ${BAR_GRADIENT[ex.body_area] || BAR_GRADIENT.general}`} />
+                  )}
+                  <div className="p-5 flex-1 flex flex-col justify-between">
+
                   <div className="flex justify-between items-start gap-2">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 capitalize">{ex.body_area}</span>
                     <div className="flex items-center gap-2">
@@ -216,7 +229,9 @@ export default function ExerciseLibrary() {
                   </p>
                 </div>
               </motion.article>
-            ))}
+            );
+          })}
+
           </div>
         )}
 
