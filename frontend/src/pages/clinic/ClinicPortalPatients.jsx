@@ -326,6 +326,12 @@ export default function ClinicPortalPatients() {
     return () => clearTimeout(t);
   }, [clinicId, load, q]);
 
+  useEffect(() => {
+    const onChanged = () => load();
+    window.addEventListener('clinic-patients-changed', onChanged);
+    return () => window.removeEventListener('clinic-patients-changed', onChanged);
+  }, [load]);
+
   // Prefetch a larger set for Cmd+K jump-to
   useEffect(() => {
     if (!clinicId) return undefined;

@@ -144,32 +144,41 @@ export default function PhysioFeed({ mode = 'all', legacy = false }) {
             {list.map((post) => {
               const imgUrl = post.featured_image ? mediaSrc(post.featured_image) : null;
               return (
-                <Link key={post.id} to={postHref(post)} className="group glass-card overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 flex flex-col justify-between">
-                  <div>
-                    <div className={`h-1.5 bg-gradient-to-r ${TYPE_STYLE[post.type] || TYPE_STYLE.blog}`} />
-                    {imgUrl && (
-                      <div className="h-[160px] w-full overflow-hidden bg-slate-100 mb-4">
-                        <img
-                          src={imgUrl}
-                          alt={post.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          loading="lazy"
-                        />
-                      </div>
-                    )}
-                    <div className={`p-5 ${imgUrl ? 'pt-0' : ''}`}>
+                <Link
+                  key={post.id}
+                  to={postHref(post)}
+                  className="group glass-card !p-0 overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 flex flex-col"
+                >
+                  {/* Top accent line — preserved */}
+                  <div className={`h-1.5 shrink-0 bg-gradient-to-r ${TYPE_STYLE[post.type] || TYPE_STYLE.blog}`} />
+
+                  {/* Thumbnail: directly below accent, above category tag */}
+                  {imgUrl && (
+                    <div className="aspect-video w-full shrink-0 overflow-hidden bg-slate-100 mb-4">
+                      <img
+                        src={imgUrl}
+                        alt={post.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </div>
+                  )}
+
+                  {/* Existing text block — typography / spacing unchanged */}
+                  <div className={`p-5 flex-1 flex flex-col justify-between ${imgUrl ? '!pt-0' : ''}`}>
+                    <div>
                       <span className="text-[10px] font-bold uppercase text-indigo-600">{post.type}</span>
                       <h2 className="font-bold text-lg text-slate-800 mt-2 group-hover:text-indigo-700">{post.title}</h2>
                       <p className="text-sm text-slate-600 mt-2 line-clamp-3">{post.excerpt}</p>
                     </div>
-                  </div>
-                  <div className={`p-5 pt-0 ${!imgUrl ? 'mt-0' : ''}`}>
-                    <p className="text-xs text-slate-400 mt-4">{post.author_name || 'Urban Physio'} · {post.view_count || 0} views</p>
+                    <p className="text-xs text-slate-400 mt-4">
+                      {post.author_name || 'Urban Physio'} · {post.view_count || 0} views
+                    </p>
                   </div>
                 </Link>
               );
             })}
-
           </div>
         )}
       </main>

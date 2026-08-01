@@ -80,6 +80,12 @@ export default function ClinicPortalAppointments() {
     if (clinicId) load();
   }, [clinicId, load]);
 
+  useEffect(() => {
+    const onChanged = () => load();
+    window.addEventListener('clinic-appointments-changed', onChanged);
+    return () => window.removeEventListener('clinic-appointments-changed', onChanged);
+  }, [load]);
+
   // When navigator changes, update dateRange which triggers load via dependency
   const handleNavChange = ({ view, anchor, from, to }) => {
     setNavView(view);

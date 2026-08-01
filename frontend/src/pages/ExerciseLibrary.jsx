@@ -192,43 +192,48 @@ export default function ExerciseLibrary() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.04 }}
-                  className="group glass-card overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-white/70 flex flex-col"
+                  className="group glass-card !p-0 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-white/70 flex flex-col"
                   onClick={() => setSelected(ex)}
                 >
+                  {/* Media thumbnail (edge-to-edge) OR original teal/gradient accent bar fallback */}
                   {hasMedia ? (
-                    <div className="relative h-[140px] w-full shrink-0 overflow-hidden rounded-t-[inherit] rounded-b-none bg-slate-950">
-                      <ExerciseMediaDisplay exercise={ex} title={ex.name} />
+                    <div className="relative h-[140px] w-full shrink-0 overflow-hidden rounded-t-xl md:rounded-t-2xl rounded-b-none bg-slate-950">
+                      <ExerciseMediaDisplay
+                        exercise={ex}
+                        title={ex.name}
+                        variant="thumbnail"
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
                     </div>
                   ) : (
                     <div className={`h-2 shrink-0 bg-gradient-to-r ${BAR_GRADIENT[ex.body_area] || BAR_GRADIENT.general}`} />
                   )}
                   <div className="p-5 flex-1 flex flex-col justify-between">
-
-                  <div className="flex justify-between items-start gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 capitalize">{ex.body_area}</span>
-                    <div className="flex items-center gap-2">
-                      <SaveExerciseButton exercise={ex} stopPropagation />
-                      <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full border capitalize min-h-[22px] ${DIFFICULTY_STYLES[ex.difficulty]}`}>
-                        {ex.difficulty}
-                      </span>
+                    <div className="flex justify-between items-start gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 capitalize">{ex.body_area}</span>
+                      <div className="flex items-center gap-2">
+                        <SaveExerciseButton exercise={ex} stopPropagation />
+                        <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full border capitalize min-h-[22px] ${DIFFICULTY_STYLES[ex.difficulty] || DIFFICULTY_STYLES.beginner}`}>
+                          {ex.difficulty || 'beginner'}
+                        </span>
+                      </div>
                     </div>
+                    <h3 className="font-bold text-lg text-slate-800 mt-2 group-hover:text-teal-700 transition-colors">{ex.name}</h3>
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-teal-50 text-teal-800">
+                        {ex.default_sets} × {ex.default_reps}
+                      </span>
+                      {ex.equipment && (
+                        <span className="text-xs px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600">{ex.equipment}</span>
+                      )}
+                    </div>
+                    <p className="text-sm text-slate-600 mt-3 line-clamp-2 leading-relaxed">{ex.instructions}</p>
+                    <p className="text-sm font-semibold text-teal-600 mt-4 inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                      View instructions
+                      <FaIcon icon="fa-arrow-right" className="text-xs" />
+                    </p>
                   </div>
-                  <h3 className="font-bold text-lg text-slate-800 mt-2 group-hover:text-teal-700 transition-colors">{ex.name}</h3>
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-teal-50 text-teal-800">
-                      {ex.default_sets} × {ex.default_reps}
-                    </span>
-                    {ex.equipment && (
-                      <span className="text-xs px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600">{ex.equipment}</span>
-                    )}
-                  </div>
-                  <p className="text-sm text-slate-600 mt-3 line-clamp-2 leading-relaxed">{ex.instructions}</p>
-                  <p className="text-sm font-semibold text-teal-600 mt-4 inline-flex items-center gap-1 group-hover:gap-2 transition-all">
-                    View instructions
-                    <FaIcon icon="fa-arrow-right" className="text-xs" />
-                  </p>
-                </div>
-              </motion.article>
+                </motion.article>
             );
           })}
 

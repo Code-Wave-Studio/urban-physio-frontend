@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import FaIcon from '../FaIcon';
+import GlassModal, { GlassModalBody, GlassModalHeader } from '../GlassModal';
+import ClinicOfflinePatientForm from './ClinicOfflinePatientForm';
+import ClinicBookingModal from './ClinicBookingModal';
 import { supportTickets } from '../../services/api';
 import useClinicPortal from '../../hooks/useClinicPortal';
+import { setFloatingActionsHidden } from '../../utils/floatingActionsBus';
 
 const FEEDBACK_CATS = ['Overall Experience', 'Booking', 'Staff', 'Facilities', 'App / Portal', 'Other'];
-
 const PATIENT_SUPPORT = ['Appointment Issue', 'Billing', 'Medical Question', 'Portal Issue'];
 const STAFF_SUPPORT = ['System Bug', 'Feature Request', 'Patient Issue', 'Hardware Issue'];
 
@@ -26,11 +29,15 @@ function detectBrowser() {
 }
 
 /**
- * Floating Help & Feedback action button for the clinic portal.
+ * Clinic portal FAB — Plus shortcuts for New Patient / New Appointment,
+ * plus Help & Feedback (without leaving the current page).
  */
 export default function HelpFeedbackFab() {
   const { clinicId, clinic, me, portalRole } = useClinicPortal();
-  const [open, setOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [patientOpen, setPatientOpen] = useState(false);
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [mode, setMode] = useState(null); // 'feedback' | 'support'
   const [saving, setSaving] = useState(false);
   const [rating, setRating] = useState(0);
@@ -42,6 +49,9 @@ export default function HelpFeedbackFab() {
 
   const isStaff = portalRole === 'clinic_admin' || portalRole === 'clinic_receptionist' || !!clinicId;
   const categories = mode === 'feedback' ? FEEDBACK_CATS : isStaff ? STAFF_SUPPORT : PATIENT_SUPPORT;
+
+  const canAddPatient = !!clinicId;
+  const canBook = !!clinicId;
 
   const context = useMemo(
     () => ({
@@ -75,10 +85,16 @@ export default function HelpFeedbackFab() {
     }
     if (!tips.length) tips.push('Include steps to reproduce and a screenshot if possible.');
     return tips;
-  }, [mode, open]);
+  }, [mode, helpOpen]);
 
   useEffect(() => {
-    if (!open) {
+    const anyOverlay = menuOpen || patientOpen || bookingOpen || helpOpen;
+    setFloatingActionsHidden(anyOverlay, 'clinic-fab');
+    return () => setFloatingActionsHidden(false, 'clinic-fab');
+  }, [menuOpen, patientOpen, bookingOpen, helpOpen]);
+
+  useEffect(() => {
+    if (!helpOpen) {
       setMode(null);
       setRating(0);
       setEmoji('');
@@ -87,7 +103,7 @@ export default function HelpFeedbackFab() {
       setAttachments([]);
       setContactOk(true);
     }
-  }, [open]);
+  }, [helpOpen]);
 
   const onFiles = (files) => {
     const list = Array.from(files || []).slice(0, 5);
@@ -103,7 +119,7 @@ export default function HelpFeedbackFab() {
     });
   };
 
-  const submit = async () => {
+  const submitHelp = async () => {
     if (!category || !description.trim()) {
       toast.error('Category and description are required');
       return;
@@ -125,7 +141,7 @@ export default function HelpFeedbackFab() {
         ...context,
       });
       toast.success(mode === 'feedback' ? 'Thanks for your feedback!' : 'Support request submitted');
-      setOpen(false);
+      setHelpOpen(false);
     } catch (e) {
       toast.error(e.message || 'Could not submit');
     } finally {
@@ -133,25 +149,133 @@ export default function HelpFeedbackFab() {
     }
   };
 
+  const openPatient = () => {
+    setMenuOpen(false);
+    setPatientOpen(true);
+  };
+
+  const openBooking = () => {
+    setMenuOpen(false);
+    setBookingOpen(true);
+  };
+
+  const openHelp = () => {
+    setMenuOpen(false);
+    setHelpOpen(true);
+  };
+
+  const speedActions = [
+    canAddPatient && {
+      id: 'patient',
+      label: 'New patient',
+      icon: 'fa-user-plus',
+      tone: 'bg-teal-600 hover:bg-teal-700',
+      onClick: openPatient,
+    },
+    canBook && {
+      id: 'appointment',
+      label: 'New appointment',
+      icon: 'fa-calendar-plus',
+      tone: 'bg-orange-500 hover:bg-orange-600',
+      onClick: openBooking,
+    },
+    {
+      id: 'help',
+      label: 'Help & feedback',
+      icon: 'fa-life-ring',
+      tone: 'bg-slate-700 hover:bg-slate-800',
+      onClick: openHelp,
+    },
+  ].filter(Boolean);
+
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 w-14 h-14 rounded-full bg-teal-600 text-white shadow-lg hover:bg-teal-700 flex items-center justify-center"
-        aria-label="Help and Feedback"
-      >
-        <FaIcon icon="fa-life-ring" className="text-xl" />
-      </button>
+      {/* Speed-dial menu */}
+      {menuOpen && (
+        <button
+          type="button"
+          className="fixed inset-0 z-40 bg-slate-900/25 backdrop-blur-[1px]"
+          aria-label="Close quick actions"
+          onClick={() => setMenuOpen(false)}
+        />
+      )}
 
-      {open && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end gap-3 pointer-events-none">
+        {menuOpen && (
+          <div className="flex flex-col items-end gap-2.5 pointer-events-auto mb-1">
+            {speedActions.map((action) => (
+              <button
+                key={action.id}
+                type="button"
+                onClick={action.onClick}
+                className="group flex items-center gap-2"
+              >
+                <span className="text-xs font-semibold text-slate-700 bg-white/95 border border-slate-200 shadow-sm px-2.5 py-1.5 rounded-lg">
+                  {action.label}
+                </span>
+                <span
+                  className={`w-12 h-12 rounded-full text-white shadow-lg flex items-center justify-center ${action.tone}`}
+                  aria-hidden
+                >
+                  <FaIcon icon={action.icon} />
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => setMenuOpen((v) => !v)}
+          className={`pointer-events-auto w-14 h-14 rounded-full text-white shadow-lg flex items-center justify-center transition-all ${
+            menuOpen ? 'bg-slate-800 rotate-45' : 'bg-teal-600 hover:bg-teal-700'
+          }`}
+          aria-label={menuOpen ? 'Close quick add' : 'Quick add'}
+          aria-expanded={menuOpen}
+        >
+          <FaIcon icon="fa-plus" className="text-xl" />
+        </button>
+      </div>
+
+      {/* New patient — inline modal (no page navigation) */}
+      <GlassModal open={patientOpen} onClose={() => setPatientOpen(false)} size="md" zIndex={10000}>
+        <GlassModalHeader
+          title="New patient"
+          subtitle="Walk-in / offline patient with optional invite"
+          icon="fa-user-plus"
+          onClose={() => setPatientOpen(false)}
+        />
+        <GlassModalBody>
+          <ClinicOfflinePatientForm
+            clinicId={clinicId}
+            onCreated={() => {
+              setPatientOpen(false);
+              window.dispatchEvent(new Event('clinic-patients-changed'));
+            }}
+          />
+        </GlassModalBody>
+      </GlassModal>
+
+      {/* New appointment — same booking wizard used on calendar / appointments */}
+      <ClinicBookingModal
+        clinicId={clinicId}
+        open={bookingOpen}
+        onClose={() => setBookingOpen(false)}
+        onBooked={() => {
+          setBookingOpen(false);
+          window.dispatchEvent(new Event('clinic-appointments-changed'));
+        }}
+      />
+
+      {/* Help & Feedback sheet (preserved) */}
+      {helpOpen && (
+        <div className="fixed inset-0 z-[10000] bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[90dvh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between px-4 py-3 border-b">
               <p className="font-bold">
                 {!mode ? 'Help & Feedback' : mode === 'feedback' ? 'Give Feedback' : 'Request Support'}
               </p>
-              <button type="button" onClick={() => (mode ? setMode(null) : setOpen(false))}>
+              <button type="button" onClick={() => (mode ? setMode(null) : setHelpOpen(false))}>
                 <FaIcon icon={mode ? 'fa-arrow-left' : 'fa-xmark'} />
               </button>
             </div>
@@ -164,7 +288,9 @@ export default function HelpFeedbackFab() {
                     onClick={() => setMode('feedback')}
                     className="rounded-xl border border-slate-200 p-4 text-left hover:border-teal-300 hover:bg-teal-50"
                   >
-                    <p className="font-semibold flex items-center gap-2"><FaIcon icon="fa-face-smile" /> Give Feedback</p>
+                    <p className="font-semibold flex items-center gap-2">
+                      <FaIcon icon="fa-face-smile" /> Give Feedback
+                    </p>
                     <p className="text-xs text-slate-500 mt-1">Rate your experience and share ideas</p>
                   </button>
                   <button
@@ -172,7 +298,9 @@ export default function HelpFeedbackFab() {
                     onClick={() => setMode('support')}
                     className="rounded-xl border border-slate-200 p-4 text-left hover:border-teal-300 hover:bg-teal-50"
                   >
-                    <p className="font-semibold flex items-center gap-2"><FaIcon icon="fa-headset" /> Request Support</p>
+                    <p className="font-semibold flex items-center gap-2">
+                      <FaIcon icon="fa-headset" /> Request Support
+                    </p>
                     <p className="text-xs text-slate-500 mt-1">Get help with appointments, billing, or bugs</p>
                   </button>
                 </div>
@@ -209,7 +337,11 @@ export default function HelpFeedbackFab() {
                     Category
                     <select className="input-field mt-1" value={category} onChange={(e) => setCategory(e.target.value)}>
                       <option value="">Select…</option>
-                      {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+                      {categories.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
                     </select>
                   </label>
 
@@ -227,7 +359,11 @@ export default function HelpFeedbackFab() {
                   {mode === 'support' && suggestions.length > 0 && (
                     <div className="rounded-xl bg-amber-50 border border-amber-100 p-3 text-xs space-y-1">
                       <p className="font-semibold text-amber-800">Before you submit</p>
-                      {suggestions.map((s) => <p key={s} className="text-amber-700">• {s}</p>)}
+                      {suggestions.map((s) => (
+                        <p key={s} className="text-amber-700">
+                          • {s}
+                        </p>
+                      ))}
                     </div>
                   )}
 
@@ -249,7 +385,13 @@ export default function HelpFeedbackFab() {
                         {attachments.map((a, i) => (
                           <li key={i} className="flex justify-between">
                             <span className="truncate">{a.name}</span>
-                            <button type="button" className="text-rose-500" onClick={() => setAttachments((p) => p.filter((_, j) => j !== i))}>Remove</button>
+                            <button
+                              type="button"
+                              className="text-rose-500"
+                              onClick={() => setAttachments((p) => p.filter((_, j) => j !== i))}
+                            >
+                              Remove
+                            </button>
                           </li>
                         ))}
                       </ul>
@@ -258,18 +400,31 @@ export default function HelpFeedbackFab() {
 
                   <label className="flex items-center gap-2 text-sm">
                     <input type="checkbox" checked={contactOk} onChange={(e) => setContactOk(e.target.checked)} />
-                    It's OK to contact me about this
+                    It&apos;s OK to contact me about this
                   </label>
 
                   <div className="rounded-xl bg-slate-50 p-3 text-[11px] text-slate-500 space-y-0.5">
-                    <p>Clinic: <span className="font-medium text-slate-700">{context.clinic_name || 'Current clinic'}</span></p>
-                    <p>Submitted at: {new Date().toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</p>
-                    <p>Page: {context.page_url?.slice(0, 60)}…</p>
-                    <p>{context.browser} · {context.device} · {context.screen_res}</p>
-                    <p>{context.requester_name} · {context.requester_email}</p>
+                    <p>
+                      Clinic:{' '}
+                      <span className="font-medium text-slate-700">{context.clinic_name || 'Current clinic'}</span>
+                    </p>
+                    <p>
+                      Submitted at:{' '}
+                      {new Date().toLocaleString('en-IN', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true,
+                      })}
+                    </p>
+                    <p>
+                      {context.browser} · {context.device} · {context.screen_res}
+                    </p>
                   </div>
 
-                  <button type="button" className="btn-primary w-full justify-center" disabled={saving} onClick={submit}>
+                  <button type="button" className="btn-primary w-full justify-center" disabled={saving} onClick={submitHelp}>
                     {saving ? 'Submitting…' : 'Submit'}
                   </button>
                 </>

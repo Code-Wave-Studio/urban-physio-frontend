@@ -3,33 +3,46 @@ import { parseMediaSource } from '../../utils/mediaParser';
 
 /**
  * Universal Exercise Media Rendering Component
- * Renders native videos, static GIFs, Images, or YouTube embeds.
- * Strictly enforces silent autoplay, continuous looping, and clean presentation.
+ *
+ * variant="player"     — modal / detail: silent autoplay + loop, no controls
+ * variant="thumbnail"  — card grid: static YouTube thumb / covered image / muted loop video
  */
 export default function ExerciseMediaDisplay({
   exercise,
   mediaUrl,
   className = 'w-full h-full object-cover',
   title = '',
+  variant = 'player',
 }) {
-  const media = useMemo(() => {
-    return parseMediaSource(exercise || mediaUrl);
-  }, [exercise, mediaUrl]);
+  const media = useMemo(() => parseMediaSource(exercise || mediaUrl), [exercise, mediaUrl]);
+  const label = title || (exercise && exercise.name) || 'Exercise Media';
 
-  if (!media.type) {
-    return null;
+  if (!media.type) return null;
+
+  // Card grid: prefer lightweight static thumbnail for YouTube
+  if (variant === 'thumbnail' && media.type === 'youtube' && media.thumbnailUrl) {
+    return (
+      <img
+        src={media.thumbnailUrl}
+        alt={label}
+        className={className}
+        loading="lazy"
+        decoding="async"
+      />
+    );
   }
 
-  if (media.type === 'youtube') {
+  if (media.type === 'youtube' && media.embedUrl) {
     return (
       <div className="relative w-full h-full overflow-hidden bg-slate-950 pointer-events-none select-none">
         <iframe
           src={media.embedUrl}
-          title={title || (exercise && exercise.name) || 'Exercise Media'}
-          className="absolute inset-0 w-full h-full scale-[1.35] object-cover pointer-events-none"
+          title={label}
+          className="absolute inset-0 w-full h-full scale-[1.35] object-cover pointer-events-none border-0"
           allow="autoplay; encrypted-media; picture-in-picture"
-          allowFullScreen
-          frameBorder="0"
+          allowFullScreen={false}
+          loading="lazy"
+          tabIndex={-1}
         />
       </div>
     );
@@ -44,6 +57,7 @@ export default function ExerciseMediaDisplay({
         muted
         playsInline
         controls={false}
+        disablePictureInPicture
         className={className}
       />
     );
@@ -53,9 +67,10 @@ export default function ExerciseMediaDisplay({
     return (
       <img
         src={media.url}
-        alt={title || (exercise && exercise.name) || 'Exercise Media'}
+        alt={label}
         className={className}
         loading="lazy"
+        decoding="async"
       />
     );
   }

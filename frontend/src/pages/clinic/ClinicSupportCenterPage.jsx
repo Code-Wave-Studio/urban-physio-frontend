@@ -97,7 +97,7 @@ export default function ClinicSupportCenterPage() {
       }
     >
       <p className="text-sm text-slate-500 mb-4">
-        Use the floating help button to submit new feedback or support requests. Platform admins manage resolution.
+        Use the floating + button for quick add, or Help & Feedback from its menu. Platform admins manage resolution.
       </p>
 
       {analytics && (

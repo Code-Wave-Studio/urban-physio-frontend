@@ -3,7 +3,7 @@ import GlassModal, { GlassModalBody } from '../GlassModal';
 import FaIcon from '../FaIcon';
 import { bookExerciseUrl } from '../../utils/bookUrl';
 import ExerciseMediaDisplay from './ExerciseMediaDisplay';
-import { parseMediaSource } from '../../utils/mediaParser';
+import { hasExerciseMedia } from '../../utils/mediaParser';
 
 const DIFFICULTY_STYLES = {
   beginner: 'bg-emerald-100 text-emerald-800 border-emerald-200',
@@ -20,12 +20,13 @@ const AREA_GRADIENT = {
 };
 
 export default function ExerciseDetailModal({ exercise, onClose }) {
-  const hasMedia = exercise ? Boolean(parseMediaSource(exercise).type) : false;
+  const hasMedia = exercise ? hasExerciseMedia(exercise) : false;
 
   return (
     <GlassModal open={!!exercise} onClose={onClose} size="md" titleId="exercise-detail">
       {exercise && (
         <>
+          {/* Mint / area-tint header — title + difficulty */}
           <div className={`shrink-0 p-5 md:p-6 bg-gradient-to-br ${AREA_GRADIENT[exercise.body_area] || AREA_GRADIENT.general}`}>
             <div className="flex justify-between items-start gap-3">
               <div className="min-w-0">
@@ -40,14 +41,24 @@ export default function ExerciseDetailModal({ exercise, onClose }) {
               {exercise.difficulty || 'beginner'}
             </span>
           </div>
+
+          {/* Scrollable body: media sits between header and Sets/Reps; CTA stays reachable on mobile */}
           <GlassModalBody className="space-y-4">
             {hasMedia && (
-              <div className="w-full aspect-video rounded-xl sm:rounded-2xl overflow-hidden bg-slate-950 shadow-md border border-slate-100/80 shrink-0">
-                <ExerciseMediaDisplay exercise={exercise} title={exercise.name} />
+              <div
+                key={`media-${exercise.id || exercise.slug || exercise.name}`}
+                className="w-full aspect-video rounded-xl sm:rounded-2xl overflow-hidden bg-slate-950 shadow-md border border-slate-100/80 shrink-0"
+              >
+                <ExerciseMediaDisplay
+                  exercise={exercise}
+                  title={exercise.name}
+                  variant="player"
+                  className="w-full h-full object-cover"
+                />
               </div>
             )}
-            <div className="grid grid-cols-3 gap-2">
 
+            <div className="grid grid-cols-3 gap-2">
               <div className="text-center p-3 rounded-xl bg-slate-50 border border-slate-100">
                 <p className="text-lg font-bold text-slate-800">{exercise.default_sets ?? '—'}</p>
                 <p className="text-[10px] uppercase text-slate-500 font-semibold">Sets</p>
@@ -61,12 +72,14 @@ export default function ExerciseDetailModal({ exercise, onClose }) {
                 <p className="text-[10px] uppercase text-slate-500 font-semibold">Hold (s)</p>
               </div>
             </div>
+
             {exercise.equipment && (
               <p className="text-sm text-slate-600 flex items-center gap-2">
                 <FaIcon icon="fa-toolbox" className="text-teal-600" />
                 Equipment: <span className="font-semibold text-slate-800">{exercise.equipment}</span>
               </p>
             )}
+
             <div>
               <h3 className="text-sm font-bold text-slate-800 mb-2 flex items-center gap-2">
                 <FaIcon icon="fa-list-ol" className="text-teal-600" />
@@ -76,6 +89,7 @@ export default function ExerciseDetailModal({ exercise, onClose }) {
                 {exercise.instructions || 'Open the exercise library for full instructions.'}
               </p>
             </div>
+
             <Link to={bookExerciseUrl(exercise)} className="btn-primary w-full block text-center" onClick={onClose}>
               Book a physiotherapist
             </Link>
