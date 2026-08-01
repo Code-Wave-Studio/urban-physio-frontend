@@ -29,30 +29,39 @@ export const GUEST_SPEED_DIAL = [
 ];
 
 export const PATIENT_SPEED_DIAL = [
-  { to: '/patient', label: 'Patient Dashboard', icon: 'fa-gauge-high', color: 'from-primary-500 to-orange-600' },
-  { to: '/patient/saved', label: 'My Favourites', icon: 'fa-heart', color: 'from-rose-500 to-pink-600' },
-  { to: '/book', label: 'Book Appointment', icon: 'fa-calendar-plus', color: 'from-emerald-500 to-teal-600' },
-  { to: '/patient/notifications', label: 'Notifications', icon: 'fa-bell', color: 'from-violet-500 to-indigo-600', notifyKey: true },
+  { to: '/book', label: 'Book Appointment', icon: 'fa-calendar-plus', color: 'from-primary-500 to-orange-600' },
+  { to: '/patient/prescriptions', label: 'Prescription & Notes', icon: 'fa-file-prescription', color: 'from-violet-500 to-purple-600' },
+  { to: '/patient/exercises', label: 'My Rehab Plan', icon: 'fa-dumbbell', color: 'from-emerald-500 to-teal-600' },
+  { to: '/patient/saved', label: 'Favorites', icon: 'fa-heart', color: 'from-rose-500 to-pink-600' },
 ];
 
 export const DOCTOR_SPEED_DIAL = [
-  { to: '/doctor', label: 'Doctor Dashboard', icon: 'fa-gauge-high', color: 'from-primary-500 to-primary-700' },
+  { to: '/doctor/appointments', label: 'Appointments', icon: 'fa-calendar-check', color: 'from-teal-500 to-emerald-600' },
   { to: '/doctor/clinic-availability', label: 'Availability', icon: 'fa-calendar-days', color: 'from-sky-500 to-cyan-600' },
-  { to: '/doctor/requests', label: 'Rescheduling & Cancellation', icon: 'fa-arrows-rotate', color: 'from-amber-500 to-orange-600' },
-  { to: '/doctor/notifications', label: 'Notifications', icon: 'fa-bell', color: 'from-violet-500 to-indigo-600', notifyKey: true },
+  { to: '/doctor/patients', label: 'Patients', icon: 'fa-users', color: 'from-violet-500 to-purple-600' },
+  { to: '/doctor/requests', label: 'Reschedule / Cancel', icon: 'fa-arrows-rotate', color: 'from-amber-500 to-orange-600' },
 ];
 
 export const ADMIN_SPEED_DIAL = [
-  { to: '/admin', label: 'Admin Dashboard', icon: 'fa-gauge-high', color: 'from-primary-500 to-primary-700' },
-  { to: '/admin/users', label: 'Users', icon: 'fa-users', color: 'from-violet-500 to-purple-600' },
+  { to: '/admin', label: 'Dashboard', icon: 'fa-gauge-high', color: 'from-primary-500 to-orange-600' },
+  { to: '/admin/appointments', label: 'Appointments', icon: 'fa-calendar-check', color: 'from-sky-500 to-blue-600' },
+  { to: '/admin/appointment-requests', label: 'Doctor Change', icon: 'fa-user-doctor', color: 'from-amber-500 to-orange-600' },
+  { to: '/admin/support', label: 'Support Centre', icon: 'fa-life-ring', color: 'from-rose-500 to-pink-600' },
   { to: '/admin/clinics', label: 'Clinics', icon: 'fa-hospital', color: 'from-emerald-500 to-teal-600' },
-  { to: '/admin/analytics', label: 'Analytics', icon: 'fa-chart-line', color: 'from-sky-500 to-blue-600' },
-  { to: '/admin/notifications', label: 'Notifications', icon: 'fa-bell', color: 'from-amber-500 to-orange-600', notifyKey: true },
+  { to: '/admin/users', label: 'Users', icon: 'fa-users', color: 'from-violet-500 to-purple-600' },
+];
+
+export const CLINIC_SPEED_DIAL = [
+  { action: 'book', label: 'Book Appointment', icon: 'fa-calendar-plus', color: 'from-orange-500 to-amber-600' },
+  { action: 'new-patient', label: 'New Patient', icon: 'fa-user-plus', color: 'from-teal-500 to-emerald-600' },
+  { to: '/clinic-portal/calendar', label: 'Calendar', icon: 'fa-calendar-days', color: 'from-sky-500 to-blue-600' },
+  { to: '/clinic-portal/patients', label: 'Patients', icon: 'fa-users', color: 'from-rose-500 to-pink-600' },
 ];
 
 export function speedDialForRole(hasRole) {
   if (hasRole('super_admin', 'admin')) return ADMIN_SPEED_DIAL;
   if (hasRole('doctor')) return DOCTOR_SPEED_DIAL;
+  if (hasRole('clinic', 'clinic_staff', 'clinic_admin')) return CLINIC_SPEED_DIAL;
   if (hasRole('patient')) return PATIENT_SPEED_DIAL;
   return GUEST_SPEED_DIAL;
 }

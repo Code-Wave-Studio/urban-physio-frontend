@@ -65,6 +65,9 @@ function ClinicPortalShellInner({ children, title, subtitle, actions }) {
       sidebarFooter={modeSwitch}
       brandLogoSrc={brandLogoSrc}
       brandLogoAlt={brandLogoAlt}
+      clinicId={clinicId}
+      clinicClosed={Boolean(Number(clinic?.is_closed))}
+      avatarUrl={clinic?.logo || clinic?.logo_url}
     >
       <div className="mb-3 sm:mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">

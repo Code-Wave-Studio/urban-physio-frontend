@@ -67,6 +67,9 @@ export default function DashboardLayout({
   sidebarFooter = null,
   brandLogoSrc = null,
   brandLogoAlt = 'The Urban Physio',
+  clinicId = null,
+  clinicClosed = false,
+  avatarUrl = null,
 }) {
   const { pathname } = useLocation();
   const { user } = useAuth();
@@ -171,6 +174,10 @@ export default function DashboardLayout({
           footerExtra={sidebarFooter}
           logoSrc={brandLogoSrc || undefined}
           logoAlt={brandLogoAlt}
+          variant={isDoctor ? 'doctor' : isClinic ? 'clinic' : 'patient'}
+          clinicId={clinicId}
+          clinicClosed={clinicClosed}
+          avatarUrl={avatarUrl}
         />
 
         <div

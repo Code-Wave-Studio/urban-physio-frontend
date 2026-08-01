@@ -929,6 +929,55 @@
     transform: scale(0.98);
   }
 
+  /* Portal architecture — categorized accordion + speed dial */
+  .portal-nav-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600;
+    transition:
+      transform 0.2s ease-in-out,
+      background-color 0.2s ease-in-out,
+      color 0.2s ease-in-out,
+      box-shadow 0.2s ease-in-out;
+  }
+
+  .portal-nav-link-icon {
+    @apply w-6 flex items-center justify-center shrink-0 opacity-90;
+  }
+
+  @media (hover: hover) {
+    .portal-nav-link:not([class*='portal-nav-link--active']):hover {
+      @apply bg-white/80 text-slate-900;
+      transform: translateX(3px);
+    }
+  }
+
+  .portal-nav-link:active {
+    transform: scale(0.98);
+  }
+
+  .portal-nav-link--active-primary {
+    @apply bg-primary-600 text-white shadow-md shadow-primary-600/25;
+  }
+
+  .portal-nav-link--active-teal {
+    @apply bg-teal-600 text-white shadow-md shadow-teal-600/25;
+  }
+
+  .portal-nav-link--active-emerald {
+    @apply bg-emerald-600 text-white shadow-md shadow-emerald-600/25;
+  }
+
+  .portal-speed-dial-item {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .portal-avatar-btn:active {
+    transform: scale(0.96);
+  }
+
+  .portal-presence-toggle:active .relative {
+    transform: scale(0.96);
+  }
+
   .icon-hover-shift {
     @apply inline-block transition-transform duration-300 ease-micro;
   }

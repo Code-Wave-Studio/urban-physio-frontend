@@ -2,11 +2,17 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import FaIcon from '../FaIcon';
 import Logo from '../Logo';
-import { clinicNavSections, isClinicNavActive } from '../../constants/clinicNav';
+import PortalNavSections from '../portal/PortalNavSections';
+import PortalSpeedDial from '../portal/PortalSpeedDial';
+import PortalProfileCard from '../portal/PortalProfileCard';
+import { PATIENT_SPEED_DIAL, PATIENT_SECTION_ORDER } from '../../constants/patientNav';
+import { DOCTOR_SPEED_DIAL, DOCTOR_SECTION_ORDER } from '../../constants/doctorNav';
+import { CLINIC_SPEED_DIAL, CLINIC_SECTION_ORDER } from '../../constants/clinicNav';
+import { isClinicNavActive } from '../../constants/clinicNav';
 
 /**
  * Slide-in sidebar for Doctor, Patient & Clinic portals.
- * Clinic links may include section: 'ops' | 'settings' for Feature Request layout.
+ * Categorized accordion menus + speed dial + profile card.
  */
 export default function DashboardPortalSidebar({
   open,
@@ -19,58 +25,52 @@ export default function DashboardPortalSidebar({
   footerExtra = null,
   logoSrc = null,
   logoAlt = 'The Urban Physio',
+  variant = 'patient',
+  clinicId = null,
+  clinicClosed = false,
+  avatarUrl = null,
+  onAvatarUpdated,
 }) {
   const { pathname } = useLocation();
   const { user } = useAuth();
 
-  const activeClass =
-    accent === 'teal'
-      ? 'bg-teal-600 text-white shadow-md shadow-teal-600/25'
-      : accent === 'emerald'
-        ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25'
-        : 'bg-primary-600 text-white shadow-md shadow-primary-600/25';
-
   const accentLabel =
     accent === 'teal' ? 'text-teal-700' : accent === 'emerald' ? 'text-emerald-700' : 'text-primary-600';
 
-  const hasSections = Array.isArray(links) && links.some((l) => l.section === 'settings' || l.section === 'ops');
-  const { ops, settings } = hasSections
-    ? clinicNavSections(links)
-    : { ops: links || [], settings: [] };
+  const sectionOrder =
+    variant === 'doctor'
+      ? DOCTOR_SECTION_ORDER
+      : variant === 'clinic'
+        ? CLINIC_SECTION_ORDER
+        : PATIENT_SECTION_ORDER;
 
-  const renderLink = (link, i) => {
-    const active = isClinicNavActive(pathname, link) || (!link.match && pathname === link.to);
-    return (
-      <Link
-        key={link.to}
-        to={link.to}
-        onClick={onClose}
-        className={`admin-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-          active ? activeClass : 'text-slate-600 hover:bg-white/70 hover:text-slate-900'
-        }`}
-        style={{ transitionDelay: open ? `${i * 16}ms` : '0ms' }}
-      >
-        {typeof link.icon === 'string' && link.icon.startsWith('fa-') ? (
-          <span className="w-6 flex items-center justify-center shrink-0 opacity-90">
-            <FaIcon icon={link.icon} className="text-sm" />
-          </span>
-        ) : (
-          <span className="text-lg w-6 text-center shrink-0" aria-hidden="true">
-            {link.icon}
-          </span>
-        )}
-        <span className="truncate flex-1">{link.label}</span>
-        {link.notifyKey && unreadCount > 0 && (
-          <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </span>
-        )}
-        {active && !link.notifyKey && (
-          <FaIcon icon="fa-chevron-right" className="ml-auto text-xs opacity-80 shrink-0" />
-        )}
-      </Link>
-    );
+  const speedDial =
+    variant === 'doctor'
+      ? DOCTOR_SPEED_DIAL
+      : variant === 'clinic'
+        ? CLINIC_SPEED_DIAL
+        : PATIENT_SPEED_DIAL;
+
+  const showPresence = variant === 'doctor' || variant === 'clinic';
+  const presenceOnline =
+    variant === 'clinic' ? !clinicClosed : Number(user?.profile_public ?? 1) === 1;
+
+  const displayName =
+    variant === 'doctor'
+      ? `Dr. ${user?.first_name || ''} ${user?.last_name || ''}`.trim()
+      : `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || subtitle;
+
+  const onSpeedAction = (action) => {
+    if (action === 'book') {
+      window.dispatchEvent(new CustomEvent('clinic-fab-open', { detail: { mode: 'booking' } }));
+    }
+    if (action === 'new-patient') {
+      window.dispatchEvent(new CustomEvent('clinic-fab-open', { detail: { mode: 'patient' } }));
+    }
   };
+
+  // Fallback flat render if links have no sections (legacy)
+  const hasSections = Array.isArray(links) && links.some((l) => l.section);
 
   return (
     <>
@@ -108,7 +108,7 @@ export default function DashboardPortalSidebar({
           </button>
         </div>
 
-        <div className="hidden lg:block p-4 pb-3 border-b border-slate-200/80 shrink-0">
+        <div className="hidden lg:block p-4 pb-3 border-b border-slate-200/80 shrink-0 space-y-3">
           <div className="flex items-center gap-3">
             <Logo
               linkToHome={false}
@@ -122,26 +122,76 @@ export default function DashboardPortalSidebar({
               <p className="text-[10px] text-slate-500 truncate mt-1">{subtitle}</p>
             </div>
           </div>
+          <PortalProfileCard
+            name={displayName}
+            roleLabel={title}
+            avatarUrl={avatarUrl || user?.avatar}
+            accent={accent}
+            showPresence={showPresence}
+            presenceOnline={presenceOnline}
+            allowAvatarUpload={variant === 'doctor' || variant === 'patient'}
+            onAvatarUpdated={onAvatarUpdated}
+            clinicId={variant === 'clinic' ? clinicId : null}
+          />
+          <PortalSpeedDial items={speedDial} onAction={onSpeedAction} onNavigate={onClose} />
         </div>
 
-        <nav className="dashboard-sidebar-nav flex-1 p-3 space-y-0.5 overflow-y-auto overscroll-contain" aria-label="Portal navigation">
-          {ops.map((link, i) => renderLink(link, i))}
+        {/* Mobile: profile + speed dial under header */}
+        <div className="lg:hidden px-3 pt-3 space-y-3 shrink-0">
+          <PortalProfileCard
+            name={displayName}
+            roleLabel={title}
+            avatarUrl={avatarUrl || user?.avatar}
+            accent={accent}
+            showPresence={showPresence}
+            presenceOnline={presenceOnline}
+            allowAvatarUpload={variant === 'doctor' || variant === 'patient'}
+            onAvatarUpdated={onAvatarUpdated}
+            clinicId={variant === 'clinic' ? clinicId : null}
+          />
+          <PortalSpeedDial items={speedDial} onAction={onSpeedAction} onNavigate={onClose} />
+        </div>
 
-          {settings.length > 0 && (
-            <div className="pt-3 mt-2 border-t border-slate-200/80">
-              <p className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                Settings
-              </p>
-              {settings.map((link, i) => renderLink(link, ops.length + i))}
+        <nav className="dashboard-sidebar-nav flex-1 p-3 overflow-y-auto overscroll-contain" aria-label="Portal navigation">
+          {hasSections ? (
+            <PortalNavSections
+              links={links}
+              sectionOrder={sectionOrder}
+              unreadCount={unreadCount}
+              onNavigate={onClose}
+              accent={accent}
+              open={open}
+            />
+          ) : (
+            <div className="space-y-0.5">
+              {(links || []).map((link) => {
+                const active = isClinicNavActive(pathname, link) || pathname === link.to;
+                return (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    onClick={onClose}
+                    className={`portal-nav-link ${
+                      active
+                        ? accent === 'teal'
+                          ? 'portal-nav-link--active-teal'
+                          : accent === 'emerald'
+                            ? 'portal-nav-link--active-emerald'
+                            : 'portal-nav-link--active-primary'
+                        : ''
+                    }`}
+                  >
+                    <FaIcon icon={link.icon} className="text-sm w-6 text-center" />
+                    <span className="truncate flex-1">{link.label}</span>
+                  </Link>
+                );
+              })}
             </div>
           )}
         </nav>
 
         <div className="p-4 border-t border-slate-200/80 shrink-0 text-xs text-slate-500 space-y-3">
           {footerExtra}
-          <p className="truncate">
-            {user?.first_name} {user?.last_name}
-          </p>
           <Link to="/" className={`${accentLabel} font-medium hover:underline inline-flex items-center gap-1`}>
             <FaIcon icon="fa-arrow-up-right-from-square" className="text-[10px]" />
             View public site

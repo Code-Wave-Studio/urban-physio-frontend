@@ -88,6 +88,17 @@ export default function HelpFeedbackFab() {
   }, [mode, helpOpen]);
 
   useEffect(() => {
+    const onFab = (e) => {
+      const mode = e.detail?.mode;
+      setMenuOpen(false);
+      if (mode === 'patient') setPatientOpen(true);
+      if (mode === 'booking') setBookingOpen(true);
+    };
+    window.addEventListener('clinic-fab-open', onFab);
+    return () => window.removeEventListener('clinic-fab-open', onFab);
+  }, []);
+
+  useEffect(() => {
     const anyOverlay = menuOpen || patientOpen || bookingOpen || helpOpen;
     setFloatingActionsHidden(anyOverlay, 'clinic-fab');
     return () => setFloatingActionsHidden(false, 'clinic-fab');
