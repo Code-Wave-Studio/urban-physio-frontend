@@ -22,6 +22,7 @@ function ClinicPortalShellInner({ children, title, subtitle, actions }) {
     loading,
     reload,
     clinic,
+    clinicId,
   } = useClinicPortal();
   const [switchOpen, setSwitchOpen] = useState(false);
   const links = clinicNavFor(portalRole, permissions);
@@ -65,7 +66,7 @@ function ClinicPortalShellInner({ children, title, subtitle, actions }) {
       sidebarFooter={modeSwitch}
       brandLogoSrc={brandLogoSrc}
       brandLogoAlt={brandLogoAlt}
-      clinicId={clinicId}
+      clinicId={clinicId || clinic?.id || null}
       clinicClosed={Boolean(Number(clinic?.is_closed))}
       avatarUrl={clinic?.logo || clinic?.logo_url}
     >
