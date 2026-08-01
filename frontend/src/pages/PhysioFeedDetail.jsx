@@ -6,7 +6,6 @@ import FaIcon from '../components/FaIcon';
 import { physioFeed } from '../services/api';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import PodcastEpisodePlayer from '../components/podcast/PodcastEpisodePlayer';
-import PhysioFeedDetailSidebar from '../components/physiofeed/PhysioFeedDetailSidebar';
 import { cmsContentToHtml } from '../utils/htmlContent';
 import PageMeta, { breadcrumbSchema } from '../components/seo/PageMeta';
 
@@ -17,9 +16,7 @@ function mediaSrc(url) {
 export default function PhysioFeedDetail({ mode = 'blog', legacy = false }) {
   const { slug } = useParams();
   const [post, setPost] = useState(null);
-  const [related, setRelated] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [relatedLoading, setRelatedLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
@@ -31,15 +28,6 @@ export default function PhysioFeedDetail({ mode = 'blog', legacy = false }) {
       })
       .catch(() => setPost(null))
       .finally(() => setLoading(false));
-  }, [slug]);
-
-  useEffect(() => {
-    setRelatedLoading(true);
-    physioFeed
-      .list()
-      .then((res) => setRelated(res.data || []))
-      .catch(() => setRelated([]))
-      .finally(() => setRelatedLoading(false));
   }, [slug]);
 
   // Hooks must run unconditionally (before any early return) — React #310
@@ -136,48 +124,45 @@ export default function PhysioFeedDetail({ mode = 'blog', legacy = false }) {
         jsonLd={jsonLd}
       />
       <Navbar />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-16">
-        <div className="lg:grid lg:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] xl:grid-cols-[minmax(0,17rem)_minmax(0,48rem)] lg:gap-8 xl:gap-10 lg:justify-center">
-          <PhysioFeedDetailSidebar posts={related} currentSlug={slug} loading={relatedLoading} />
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-16">
+        <article className="min-w-0 w-full mx-auto">
+          <Link to={isPodcast ? '/podcast' : '/blog'} className="text-sm text-indigo-600 font-semibold inline-flex items-center gap-1 mb-5">
+            <FaIcon icon="fa-arrow-left" /> Back to {isPodcast ? 'Podcast' : 'Blog'}
+          </Link>
 
-          <article className="min-w-0 w-full max-w-3xl lg:max-w-none mx-auto lg:mx-0">
-            <Link to={isPodcast ? '/podcast' : '/blog'} className="text-sm text-indigo-600 font-semibold inline-flex items-center gap-1 mb-5">
-              <FaIcon icon="fa-arrow-left" /> Back to {isPodcast ? 'Podcast' : 'Blog'}
-            </Link>
+          {featuredSrc && (
+            <div className="rounded-2xl overflow-hidden border border-slate-200/80 shadow-md bg-slate-100 aspect-[16/9] sm:aspect-[2/1] max-h-[min(52vw,360px)] sm:max-h-[420px] mb-6">
+              <img
+                src={featuredSrc}
+                alt={post.title || 'Article featured image'}
+                className="w-full h-full object-cover object-center"
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
+              />
+            </div>
+          )}
 
-            {featuredSrc && (
-              <div className="rounded-2xl overflow-hidden border border-slate-200/80 shadow-md bg-slate-100 aspect-[16/9] sm:aspect-[2/1] max-h-[min(52vw,320px)] sm:max-h-[360px] mb-6">
-                <img
-                  src={featuredSrc}
-                  alt={post.title || 'Article featured image'}
-                  className="w-full h-full object-cover object-center"
-                  loading="eager"
-                  decoding="async"
-                  fetchPriority="high"
-                />
-              </div>
-            )}
+          <span className="text-xs font-bold uppercase text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full">{post.type}</span>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800 mt-3">{post.title}</h1>
+          <p className="text-sm text-slate-500 mt-2">
+            {post.author_name}
+            {post.published_at ? ` · ${post.published_at.slice(0, 10)}` : ''}
+            {post.reading_time_minutes ? ` · ${post.reading_time_minutes} min read` : ''}
+          </p>
 
-            <span className="text-xs font-bold uppercase text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full">{post.type}</span>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800 mt-3">{post.title}</h1>
-            <p className="text-sm text-slate-500 mt-2">
-              {post.author_name}
-              {post.published_at ? ` · ${post.published_at.slice(0, 10)}` : ''}
-              {post.reading_time_minutes ? ` · ${post.reading_time_minutes} min read` : ''}
-            </p>
+          {isPodcast && (videoSrc || audioSrc) && (
+            <PodcastEpisodePlayer post={post} audioSrc={audioSrc} videoSrc={videoSrc} />
+          )}
 
-            {isPodcast && (videoSrc || audioSrc) && (
-              <PodcastEpisodePlayer post={post} audioSrc={audioSrc} videoSrc={videoSrc} />
-            )}
-
-            <div
-              className="cms-prose max-w-none mt-8"
-              dangerouslySetInnerHTML={{ __html: cmsContentToHtml(post.content) }}
-            />
-          </article>
-        </div>
+          <div
+            className="cms-prose max-w-none mt-8"
+            dangerouslySetInnerHTML={{ __html: cmsContentToHtml(post.content) }}
+          />
+        </article>
       </div>
       <Footer />
     </>
   );
 }
+

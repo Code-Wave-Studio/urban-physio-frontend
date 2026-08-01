@@ -4,7 +4,11 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import FaIcon from '../components/FaIcon';
 import { physioFeed } from '../services/api';
-import PageMeta, { breadcrumbSchema } from '../components/seo/PageMeta';
+import { resolveMediaUrl } from '../utils/mediaUrl';
+
+function mediaSrc(url) {
+  return resolveMediaUrl(url) || url;
+}
 
 const TABS = [
   { id: '', label: 'All', icon: 'fa-table-cells' },
@@ -136,17 +140,35 @@ export default function PhysioFeed({ mode = 'all', legacy = false }) {
           <div className="glass-card text-center py-16 text-slate-600">No content found.</div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {list.map((post) => (
-              <Link key={post.id} to={postHref(post)} className="group glass-card overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1">
-                <div className={`h-1.5 bg-gradient-to-r ${TYPE_STYLE[post.type] || TYPE_STYLE.blog}`} />
-                <div className="p-5">
-                  <span className="text-[10px] font-bold uppercase text-indigo-600">{post.type}</span>
-                  <h2 className="font-bold text-lg text-slate-800 mt-2 group-hover:text-indigo-700">{post.title}</h2>
-                  <p className="text-sm text-slate-600 mt-2 line-clamp-3">{post.excerpt}</p>
-                  <p className="text-xs text-slate-400 mt-4">{post.author_name || 'Urban Physio'} · {post.view_count || 0} views</p>
-                </div>
-              </Link>
-            ))}
+            {list.map((post) => {
+              const imgUrl = post.featured_image ? mediaSrc(post.featured_image) : null;
+              return (
+                <Link key={post.id} to={postHref(post)} className="group glass-card overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 flex flex-col justify-between">
+                  <div>
+                    <div className={`h-1.5 bg-gradient-to-r ${TYPE_STYLE[post.type] || TYPE_STYLE.blog}`} />
+                    {imgUrl && (
+                      <div className="h-[160px] w-full overflow-hidden bg-slate-100 mb-4">
+                        <img
+                          src={imgUrl}
+                          alt={post.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                        />
+                      </div>
+                    )}
+                    <div className={`p-5 ${imgUrl ? 'pt-0' : ''}`}>
+                      <span className="text-[10px] font-bold uppercase text-indigo-600">{post.type}</span>
+                      <h2 className="font-bold text-lg text-slate-800 mt-2 group-hover:text-indigo-700">{post.title}</h2>
+                      <p className="text-sm text-slate-600 mt-2 line-clamp-3">{post.excerpt}</p>
+                    </div>
+                  </div>
+                  <div className={`p-5 pt-0 ${!imgUrl ? 'mt-0' : ''}`}>
+                    <p className="text-xs text-slate-400 mt-4">{post.author_name || 'Urban Physio'} · {post.view_count || 0} views</p>
+                  </div>
+                </Link>
+              );
+            })}
+
           </div>
         )}
       </main>
