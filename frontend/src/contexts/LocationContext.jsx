@@ -15,6 +15,23 @@ import {
 
 const LocationContext = createContext(null);
 const STORAGE_KEY = 'selectedCity';
+const PROMPT_SESSION_KEY = 'tup_location_prompt_seen';
+
+function hasSeenLocationPromptThisSession() {
+  try {
+    return sessionStorage.getItem(PROMPT_SESSION_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function markLocationPromptSeen() {
+  try {
+    sessionStorage.setItem(PROMPT_SESSION_KEY, '1');
+  } catch {
+    /* private mode */
+  }
+}
 
 function unwrapList(res) {
   return res?.data ?? res ?? [];
@@ -74,7 +91,9 @@ export function LocationProvider({ children }) {
   const [locationSource, setLocationSource] = useState(null);
   const [nearbyDoctors, setNearbyDoctors] = useState([]);
   const [nearbyClinics, setNearbyClinics] = useState([]);
-  const [showSelector, setShowSelector] = useState(false);
+  const [showSelector, setShowSelectorState] = useState(false);
+  /** 'auto' = delayed soft prompt; 'manual' = user opened from UI */
+  const [selectorIntent, setSelectorIntent] = useState('manual');
   const [loading, setLoading] = useState(true);
   const [detectingGps, setDetectingGps] = useState(false);
   const [locationResolved, setLocationResolved] = useState(false);
@@ -84,6 +103,27 @@ export function LocationProvider({ children }) {
   const locationEpoch = useRef(0);
 
   const hasNearbyProviders = nearbyDoctors.length > 0 || nearbyClinics.length > 0;
+
+  const setShowSelector = useCallback((open) => {
+    if (open) {
+      setSelectorIntent('manual');
+      setShowSelectorState(true);
+    } else {
+      setShowSelectorState(false);
+    }
+  }, []);
+
+  /** Soft homepage-style prompt — once per session, delayed in LocationSelector */
+  const promptSelectorAuto = useCallback(() => {
+    if (hasSeenLocationPromptThisSession()) return;
+    setSelectorIntent('auto');
+    setShowSelectorState(true);
+  }, []);
+
+  const dismissSelector = useCallback(() => {
+    markLocationPromptSeen();
+    setShowSelectorState(false);
+  }, []);
 
   const persistCity = useCallback((resolvedCity, source = 'gps') => {
     if (resolvedCity && hasFunctionalConsent()) {
@@ -120,7 +160,7 @@ export function LocationProvider({ children }) {
 
       if (userInitiated) {
         setCoords(data?.coords ?? null);
-        setShowSelector(false);
+        setShowSelectorState(false);
         if (resolvedCity) persistCity(resolvedCity, fromGps ? 'gps' : 'manual');
         return has;
       }
@@ -129,19 +169,20 @@ export function LocationProvider({ children }) {
         setCoords(data?.coords ?? null);
         setLocationSource('gps');
         if (!has) {
-          setShowSelector(true);
+          promptSelectorAuto();
           return false;
         }
-        setShowSelector(false);
+        setShowSelectorState(false);
         if (resolvedCity) persistCity(resolvedCity, 'gps');
         return true;
       }
 
-      setShowSelector(!has);
+      if (!has) promptSelectorAuto();
+      else setShowSelectorState(false);
       if (has && resolvedCity) persistCity(resolvedCity, 'gps');
       return has;
     },
-    [persistCity]
+    [persistCity, promptSelectorAuto]
   );
 
   const loadCityProviders = useCallback(
@@ -175,12 +216,12 @@ export function LocationProvider({ children }) {
           setLocationLabel(formatLocationLabel(cityData));
           setCoords(options.coords ?? null);
           setLocationSource(options.fromGps ? 'gps' : 'city');
-          setShowSelector(false);
+          setShowSelectorState(false);
           persistCity(cityData, options.fromGps ? 'gps' : 'manual');
           toast.success(`Location set to ${cityData.name}`);
           return false;
         }
-        if (!options.userInitiated) setShowSelector(true);
+        if (!options.userInitiated) promptSelectorAuto();
         toast.error('Could not load providers for this city.');
         return false;
       } finally {
@@ -188,7 +229,7 @@ export function LocationProvider({ children }) {
         setLocationResolved(true);
       }
     },
-    [applyProviderPayload, persistCity, coords]
+    [applyProviderPayload, persistCity, coords, promptSelectorAuto]
   );
 
   const detectLocation = useCallback(
@@ -232,13 +273,15 @@ export function LocationProvider({ children }) {
             toast.success(`Showing care near ${label}`);
           }
         } else if (label) {
-          setShowSelector(true);
+          if (userInitiated) setShowSelector(true);
+          else promptSelectorAuto();
           toast(`We detected ${label}, but no doctors/clinics nearby yet. Please confirm your city.`, {
             icon: '📍',
             duration: 5000,
           });
         } else {
-          setShowSelector(true);
+          if (userInitiated) setShowSelector(true);
+          else promptSelectorAuto();
           toast('No doctors or clinics near your current location. Please select your city manually.', {
             icon: '📍',
             duration: 5000,
@@ -246,7 +289,8 @@ export function LocationProvider({ children }) {
         }
       } catch (err) {
         if (epoch !== locationEpoch.current) return;
-        setShowSelector(true);
+        if (userInitiated) setShowSelector(true);
+        else promptSelectorAuto();
         toast.error(err?.message || 'Could not detect location. Please select your city manually.');
       } finally {
         setLoading(false);
@@ -256,7 +300,7 @@ export function LocationProvider({ children }) {
         }
       }
     },
-    [applyProviderPayload]
+    [applyProviderPayload, promptSelectorAuto, setShowSelector]
   );
 
   const requestGeolocation = useCallback(
@@ -273,7 +317,8 @@ export function LocationProvider({ children }) {
       if (!navigator.geolocation) {
         setDetectingGps(false);
         setLoading(false);
-        setShowSelector(true);
+        if (userInitiated) setShowSelector(true);
+        else promptSelectorAuto();
         setLocationResolved(true);
         toast.error('Geolocation not supported. Please select your city manually.');
         return;
@@ -301,7 +346,8 @@ export function LocationProvider({ children }) {
           }
         }
 
-        setShowSelector(true);
+        if (userInitiated) setShowSelector(true);
+        else promptSelectorAuto();
         if (userInitiated) {
           const permission = await queryGeolocationPermission();
           if (err?.code === 1) {
@@ -328,7 +374,7 @@ export function LocationProvider({ children }) {
         }
       }
     },
-    [detectLocation, loadCityProviders]
+    [detectLocation, loadCityProviders, promptSelectorAuto, setShowSelector]
   );
 
   const promptForLocationAccess = useCallback(
@@ -344,12 +390,12 @@ export function LocationProvider({ children }) {
         return;
       }
 
-      setShowSelector(true);
+      promptSelectorAuto();
       setLoading(false);
       setDetectingGps(false);
       setLocationResolved(false);
     },
-    [loadCityProviders]
+    [loadCityProviders, promptSelectorAuto]
   );
 
   const refreshLocation = useCallback(() => {
@@ -415,7 +461,7 @@ export function LocationProvider({ children }) {
   const selectCity = async (cityData) => {
     if (!cityData?.id) return;
     locationEpoch.current += 1;
-    setShowSelector(false);
+    dismissSelector();
     setCoords(null);
     setLocationSource('city');
     await loadCityProviders(cityData.id, cityData, { userInitiated: true });
@@ -437,6 +483,7 @@ export function LocationProvider({ children }) {
         hasNearbyProviders,
         locationResolved,
         showSelector,
+        selectorIntent,
         loading,
         detectingGps,
         requestGeolocation: useCurrentLocation,
@@ -445,6 +492,7 @@ export function LocationProvider({ children }) {
         detectLocation,
         loadCityProviders,
         setShowSelector,
+        dismissSelector,
       }}
     >
       {children}
