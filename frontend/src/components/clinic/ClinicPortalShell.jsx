@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../FaIcon';
@@ -7,10 +7,10 @@ import HelpFeedbackFab from './HelpFeedbackFab';
 import { clinicNavFor } from '../../constants/clinicNav';
 import useClinicPortal from '../../hooks/useClinicPortal';
 import { ClinicPortalProvider } from '../../contexts/ClinicPortalContext';
-import { resolveMediaUrl } from '../../utils/mediaUrl';
 
 /**
  * Shared clinic portal chrome: role-aware nav + mode switcher in sidebar footer.
+ * Header/sidebar always use the company (The Urban Physio) logo — not the clinic brand logo.
  * Broadcast lives on Communication / Notification Setup — not on every page header.
  */
 function ClinicPortalShellInner({ children, title, subtitle, actions }) {
@@ -26,14 +26,6 @@ function ClinicPortalShellInner({ children, title, subtitle, actions }) {
   } = useClinicPortal();
   const [switchOpen, setSwitchOpen] = useState(false);
   const links = clinicNavFor(portalRole, permissions);
-
-  const brandLogoSrc = useMemo(() => {
-    const raw = clinic?.logo || clinic?.logo_url || '';
-    if (!raw || !String(raw).trim()) return null;
-    return resolveMediaUrl(raw) || String(raw).trim();
-  }, [clinic?.logo, clinic?.logo_url]);
-
-  const brandLogoAlt = clinic?.name ? `${clinic.name} logo` : 'Clinic logo';
 
   const modeSwitch = (
     <button
@@ -64,11 +56,8 @@ function ClinicPortalShellInner({ children, title, subtitle, actions }) {
       links={links}
       variant="clinic"
       sidebarFooter={modeSwitch}
-      brandLogoSrc={brandLogoSrc}
-      brandLogoAlt={brandLogoAlt}
       clinicId={clinicId || clinic?.id || null}
       clinicClosed={Boolean(Number(clinic?.is_closed))}
-      avatarUrl={clinic?.logo || clinic?.logo_url}
     >
       <div className="mb-3 sm:mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">

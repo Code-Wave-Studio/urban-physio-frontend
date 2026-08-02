@@ -110,11 +110,19 @@ export default function AdvancedBookingWizard({
       try {
         const [bootRes, patRes] = await Promise.all([
           clinicPortal.bookingBootstrap(clinicId),
-          clinicPortal.patients(clinicId, { limit: 250 }),
+          clinicPortal.patients(clinicId, { page: 1, per_page: 100 }),
         ]);
         if (cancelled) return;
         setBoot(bootRes.data || bootRes);
-        setPatients(patRes.data || patRes || []);
+        const patPayload = patRes.data || patRes || {};
+        const patRows = Array.isArray(patPayload)
+          ? patPayload
+          : Array.isArray(patPayload.items)
+            ? patPayload.items
+            : Array.isArray(patPayload.patients)
+              ? patPayload.patients
+              : [];
+        setPatients(patRows);
         if (initialPatient) setPatientKeySel(initialPatient);
         // Brief splash then advance
         setTimeout(() => {
@@ -128,10 +136,10 @@ export default function AdvancedBookingWizard({
     return () => { cancelled = true; };
   }, [open, clinicId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const services = boot?.services || [];
-  const doctors = boot?.doctors || [];
-  const packages = boot?.packages || [];
-  const platforms = boot?.online_platforms || [];
+  const services = Array.isArray(boot?.services) ? boot.services : [];
+  const doctors = Array.isArray(boot?.doctors) ? boot.doctors : [];
+  const packages = Array.isArray(boot?.packages) ? boot.packages : [];
+  const platforms = Array.isArray(boot?.online_platforms) ? boot.online_platforms : [];
   const clinic = boot?.clinic || {};
 
   const coreServices = services.filter((s) => s.bucket === 'core');
@@ -154,15 +162,16 @@ export default function AdvancedBookingWizard({
     [selectedServices, services]
   );
 
-  const selectedPatient = useMemo(
-    () => patients.find((p) => patientKey(p) === patientKeySel),
-    [patients, patientKeySel]
-  );
+  const selectedPatient = useMemo(() => {
+    if (!Array.isArray(patients) || !patientKeySel) return undefined;
+    return patients.find((p) => patientKey(p) === patientKeySel);
+  }, [patients, patientKeySel]);
 
   const filteredPatients = useMemo(() => {
+    const list = Array.isArray(patients) ? patients : [];
     const q = patientQ.trim().toLowerCase();
-    if (!q) return patients.slice(0, 30);
-    return patients.filter((p) => {
+    if (!q) return list.slice(0, 30);
+    return list.filter((p) => {
       const blob = `${p.first_name || ''} ${p.last_name || ''} ${p.phone || ''} ${p.patient_name || ''}`.toLowerCase();
       return blob.includes(q);
     }).slice(0, 30);

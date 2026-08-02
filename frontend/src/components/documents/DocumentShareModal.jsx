@@ -50,8 +50,15 @@ export default function DocumentShareModal({ open, doc, onClose, onShared }) {
             clinicPortal.doctors(cid).catch(() => ({ data: [] })),
             clinicPortal.patients(cid).catch(() => ({ data: [] })),
           ]);
-          setDoctorList(docs.data || docs || []);
-          setPatients(pats.data || pats || []);
+          setDoctorList(Array.isArray(docs.data) ? docs.data : Array.isArray(docs) ? docs : []);
+          const patPayload = pats.data || pats || {};
+          setPatients(
+            Array.isArray(patPayload)
+              ? patPayload
+              : Array.isArray(patPayload.items)
+                ? patPayload.items
+                : []
+          );
         })
         .catch(() => {});
     }

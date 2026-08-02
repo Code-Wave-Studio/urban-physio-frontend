@@ -39,7 +39,7 @@ export default function ClinicSupportCenterPage() {
         supportTickets.list({ type: filterType === 'all' ? undefined : filterType }),
         supportTickets.analytics(),
       ]);
-      setTickets(list.data || list || []);
+      setTickets(Array.isArray(list.data) ? list.data : Array.isArray(list) ? list : list.data?.items || []);
       setAnalytics(an.data || an);
     } catch (e) {
       toast.error(e.message || 'Could not load support centre');

@@ -99,12 +99,16 @@ export default function DoctorPrescriptions() {
       clinicPortal
         .patients(clinicId)
         .then((pats) => {
+          const payload = pats.data || pats || {};
+          const rows = Array.isArray(payload) ? payload : payload.items || [];
           setPatients(
-            (pats.data || []).map((p) => ({
-              id: p.patient_id || p.id,
-              first_name: p.first_name || p.patient_name || 'Patient',
-              last_name: p.last_name || '',
-            })).filter((p) => p.id)
+            rows
+              .map((p) => ({
+                id: p.patient_id || p.id,
+                first_name: p.first_name || p.patient_name || 'Patient',
+                last_name: p.last_name || '',
+              }))
+              .filter((p) => p.id)
           );
         })
         .catch(() => setPatients([]));
