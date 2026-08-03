@@ -1,10 +1,14 @@
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import FaIcon from './FaIcon';
 import Logo from './Logo';
 import NavDrawerProfileCard from './nav/NavDrawerProfileCard';
 import {
   EXPLORE_LINKS,
+  PATIENT_PORTAL_LINKS,
+  DOCTOR_PORTAL_LINKS,
+  CLINIC_PORTAL_LINKS,
+  ADMIN_PORTAL_LINKS,
   PROVIDER_LINKS,
   MORE_LINKS,
   speedDialForRole,
@@ -63,6 +67,72 @@ function NavListItem({ to, label, icon, pathname, search, onNavigate, tone = 'pr
       </span>
       <FaIcon icon="fa-chevron-right" className="text-[10px] text-slate-300 shrink-0" />
     </Link>
+  );
+}
+
+function PortalNavCategoryCard({
+  title,
+  icon,
+  links,
+  pathname,
+  search,
+  onNavigate,
+  defaultOpen = false,
+  tone = 'primary',
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  const iconStyle =
+    tone === 'emerald'
+      ? 'bg-emerald-100/80 text-emerald-700'
+      : tone === 'teal'
+      ? 'bg-teal-100/80 text-teal-700'
+      : tone === 'violet'
+      ? 'bg-violet-100/80 text-violet-700'
+      : tone === 'amber'
+      ? 'bg-amber-100/80 text-amber-700'
+      : 'bg-primary-100/80 text-primary-700';
+
+  return (
+    <section className="rounded-xl border border-slate-200/80 bg-white p-3 shadow-xs">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between gap-2 py-0.5 px-0.5 text-left select-none group"
+      >
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${iconStyle}`}>
+            <FaIcon icon={icon} />
+          </span>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-800 truncate group-hover:text-primary-700 transition-colors">
+            {title}
+          </h2>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+            {links.length}
+          </span>
+          <FaIcon
+            icon="fa-chevron-down"
+            className={`text-xs text-slate-400 transition-transform duration-200 ${open ? 'rotate-180 text-primary-600' : ''}`}
+          />
+        </div>
+      </button>
+
+      {open && (
+        <div className="mt-2 pt-1 border-t border-slate-100 divide-y divide-slate-100">
+          {links.map((link) => (
+            <NavListItem
+              key={link.to + link.label}
+              {...link}
+              pathname={pathname}
+              search={search}
+              onNavigate={onNavigate}
+            />
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -204,6 +274,51 @@ export default function MobileNavDrawer({
               ))}
             </div>
           </NavCategoryCard>
+
+          {/* Portal Categories (Below Explore section) */}
+          <PortalNavCategoryCard
+            title="Patient Portal"
+            icon="fa-user"
+            tone="primary"
+            links={PATIENT_PORTAL_LINKS}
+            pathname={pathname}
+            search={search}
+            onNavigate={handleNavigate}
+            defaultOpen={pathname.startsWith('/patient') || hasRole('patient')}
+          />
+
+          <PortalNavCategoryCard
+            title="Doctor Portal"
+            icon="fa-user-doctor"
+            tone="teal"
+            links={DOCTOR_PORTAL_LINKS}
+            pathname={pathname}
+            search={search}
+            onNavigate={handleNavigate}
+            defaultOpen={pathname.startsWith('/doctor') || hasRole('doctor')}
+          />
+
+          <PortalNavCategoryCard
+            title="Clinic Portal"
+            icon="fa-hospital-user"
+            tone="emerald"
+            links={CLINIC_PORTAL_LINKS}
+            pathname={pathname}
+            search={search}
+            onNavigate={handleNavigate}
+            defaultOpen={pathname.startsWith('/clinic-portal') || hasRole('clinic', 'clinic_staff', 'clinic_admin')}
+          />
+
+          <PortalNavCategoryCard
+            title="Admin Portal"
+            icon="fa-shield-halved"
+            tone="violet"
+            links={ADMIN_PORTAL_LINKS}
+            pathname={pathname}
+            search={search}
+            onNavigate={handleNavigate}
+            defaultOpen={pathname.startsWith('/admin') || hasRole('super_admin', 'admin')}
+          />
 
           <NavCategoryCard title="Providers">
             <div className="divide-y divide-slate-100">
