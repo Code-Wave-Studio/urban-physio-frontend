@@ -275,50 +275,59 @@ export default function MobileNavDrawer({
             </div>
           </NavCategoryCard>
 
-          {/* Portal Categories (Below Explore section) */}
-          <PortalNavCategoryCard
-            title="Patient Portal"
-            icon="fa-user"
-            tone="primary"
-            links={PATIENT_PORTAL_LINKS}
-            pathname={pathname}
-            search={search}
-            onNavigate={handleNavigate}
-            defaultOpen={pathname.startsWith('/patient') || hasRole('patient')}
-          />
+          {/* Portal Categories (Below Explore section) — Only show portal matching user role */}
+          {user && hasRole('patient') && (
+            <PortalNavCategoryCard
+              title="Patient Portal"
+              icon="fa-user"
+              tone="primary"
+              links={PATIENT_PORTAL_LINKS}
+              pathname={pathname}
+              search={search}
+              onNavigate={handleNavigate}
+              defaultOpen={pathname.startsWith('/patient') || hasRole('patient')}
+            />
+          )}
 
-          <PortalNavCategoryCard
-            title="Doctor Portal"
-            icon="fa-user-doctor"
-            tone="teal"
-            links={DOCTOR_PORTAL_LINKS}
-            pathname={pathname}
-            search={search}
-            onNavigate={handleNavigate}
-            defaultOpen={pathname.startsWith('/doctor') || hasRole('doctor')}
-          />
+          {user && hasRole('doctor') && (
+            <PortalNavCategoryCard
+              title="Doctor Portal"
+              icon="fa-user-doctor"
+              tone="teal"
+              links={DOCTOR_PORTAL_LINKS}
+              pathname={pathname}
+              search={search}
+              onNavigate={handleNavigate}
+              defaultOpen={pathname.startsWith('/doctor') || hasRole('doctor')}
+            />
+          )}
 
-          <PortalNavCategoryCard
-            title="Clinic Portal"
-            icon="fa-hospital-user"
-            tone="emerald"
-            links={CLINIC_PORTAL_LINKS}
-            pathname={pathname}
-            search={search}
-            onNavigate={handleNavigate}
-            defaultOpen={pathname.startsWith('/clinic-portal') || hasRole('clinic', 'clinic_staff', 'clinic_admin')}
-          />
+          {user && hasRole('clinic', 'clinic_staff', 'clinic_admin') && (
+            <PortalNavCategoryCard
+              title="Clinic Portal"
+              icon="fa-hospital-user"
+              tone="emerald"
+              links={CLINIC_PORTAL_LINKS}
+              pathname={pathname}
+              search={search}
+              onNavigate={handleNavigate}
+              defaultOpen={pathname.startsWith('/clinic-portal') || hasRole('clinic', 'clinic_staff', 'clinic_admin')}
+            />
+          )}
 
-          <PortalNavCategoryCard
-            title="Admin Portal"
-            icon="fa-shield-halved"
-            tone="violet"
-            links={ADMIN_PORTAL_LINKS}
-            pathname={pathname}
-            search={search}
-            onNavigate={handleNavigate}
-            defaultOpen={pathname.startsWith('/admin') || hasRole('super_admin', 'admin')}
-          />
+          {user && hasRole('super_admin', 'admin') && (
+            <PortalNavCategoryCard
+              title="Admin Portal"
+              icon="fa-shield-halved"
+              tone="violet"
+              links={ADMIN_PORTAL_LINKS}
+              pathname={pathname}
+              search={search}
+              onNavigate={handleNavigate}
+              defaultOpen={pathname.startsWith('/admin') || hasRole('super_admin', 'admin')}
+            />
+          )}
+
 
           <NavCategoryCard title="Providers">
             <div className="divide-y divide-slate-100">
