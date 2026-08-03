@@ -125,12 +125,12 @@ function AppToastCard({ toast: t }) {
         touchAction: 'pan-y',
         willChange: 'transform, opacity',
       }}
-      className="pointer-events-auto w-[calc(100vw-1.5rem)] sm:w-[360px] max-w-[360px] select-none cursor-grab active:cursor-grabbing"
+      className="pointer-events-auto w-auto max-w-[calc(100vw-1.5rem)] sm:max-w-xl md:max-w-2xl select-none cursor-grab active:cursor-grabbing"
     >
-      <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/95 backdrop-blur-xl border border-slate-200/90 shadow-xl shadow-slate-900/10 hover:shadow-2xl transition-shadow duration-300">
+      <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 py-3 rounded-2xl bg-white/95 backdrop-blur-xl border border-slate-200/90 shadow-xl shadow-slate-900/10 hover:shadow-2xl transition-shadow duration-300">
         {renderIcon()}
 
-        <div className="flex-1 min-w-0 text-sm font-medium text-slate-800 leading-snug break-words">
+        <div className="flex-1 min-w-0 text-xs sm:text-sm font-medium text-slate-800 leading-snug whitespace-normal sm:whitespace-nowrap">
           {resolveValue(t.message, t)}
         </div>
 
@@ -141,7 +141,7 @@ function AppToastCard({ toast: t }) {
               e.stopPropagation();
               toast.dismiss(t.id);
             }}
-            className="shrink-0 -mr-1 flex h-7 w-7 items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100/80 active:scale-90 transition-all duration-150"
+            className="shrink-0 flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100/80 active:scale-90 transition-all duration-150"
             aria-label="Dismiss notification"
           >
             <FaIcon icon="fa-xmark" className="text-xs" />
