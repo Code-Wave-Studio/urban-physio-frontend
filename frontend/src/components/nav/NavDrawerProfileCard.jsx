@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
@@ -301,8 +301,17 @@ function AdminProfileCard({ user, summary, loading, onNavigate }) {
 function ClinicProfileCard({ user, summary, loading, onNavigate }) {
   const [toggling, setToggling] = useState(false);
   const [switchOpen, setSwitchOpen] = useState(false);
-  const { portalRole, canSwitchAdmin, isAdminMode, reload } = useClinicPortal();
-  const [clinicClosed, setClinicClosed] = useState(Boolean(Number(summary.clinicProfile?.is_closed ?? user.is_closed ?? 0)));
+  const { portalRole, canSwitchAdmin, isAdminMode, reload, clinic, clinicId: ctxClinicId } = useClinicPortal();
+  const [clinicClosed, setClinicClosed] = useState(Boolean(Number(summary.clinicProfile?.is_closed ?? clinic?.is_closed ?? user.is_closed ?? 0)));
+
+  useEffect(() => {
+    if (clinic?.is_closed !== undefined) {
+      setClinicClosed(Boolean(Number(clinic.is_closed)));
+    } else if (summary.clinicProfile?.is_closed !== undefined) {
+      setClinicClosed(Boolean(Number(summary.clinicProfile.is_closed)));
+    }
+  }, [clinic?.is_closed, summary.clinicProfile?.is_closed]);
+
   const name =
     user.clinic_name ||
     user.name ||
@@ -310,22 +319,27 @@ function ClinicProfileCard({ user, summary, loading, onNavigate }) {
     'Clinic';
   const logo = resolveMediaUrl(user.avatar || user.logo || user.clinic_logo);
   const notifPath = '/clinic-portal/notifications';
-  const clinicId = user.clinic_id || user.id;
+  const targetClinicId = summary.clinicProfile?.id || ctxClinicId || clinic?.id || user.clinic_id || summary.clinic?.id;
 
   const isOnline = !clinicClosed;
 
   const toggleClinicStatus = async () => {
     if (toggling) return;
+    if (!targetClinicId) {
+      toast.error('No clinic found to update status');
+      return;
+    }
     const next = !isOnline;
     setToggling(true);
     try {
-      if (clinicId) {
-        await clinicPortal.setClinicClosure(clinicId, {
-          is_closed: next ? 0 : 1,
-          closure_reason: next ? '' : 'Temporarily offline',
-        });
-      }
+      await clinicPortal.setClinicClosure(targetClinicId, {
+        is_closed: next ? 0 : 1,
+        closure_reason: next ? '' : 'Temporarily offline',
+      });
       setClinicClosed(!next);
+      if (reload) {
+        await reload(true);
+      }
       toast.success(next ? 'Clinic status: Online - Open for appointments' : 'Clinic status: Offline - Marked as closed');
     } catch (err) {
       toast.error(err.message || 'Could not update clinic status');
