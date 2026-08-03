@@ -892,19 +892,20 @@
     transform: scale(0.94);
   }
 
-  /* Toast stack — below header, clear of menu toggle */
+  /* Toast stack — below header, clear of menu toggle, right-aligned */
   .app-toaster {
     top: calc(var(--site-header-height, 3.5rem) + 0.5rem) !important;
+    left: 0.75rem !important;
+    right: 0.75rem !important;
     z-index: 9999;
+    pointer-events: none;
   }
 
   @media (min-width: 640px) {
     .app-toaster {
       top: calc(var(--site-header-height, 4rem) + 0.75rem) !important;
-      left: auto !important;
-      right: 1rem !important;
-      transform: none !important;
-      width: auto !important;
+      left: 1.25rem !important;
+      right: 1.25rem !important;
     }
   }
 
