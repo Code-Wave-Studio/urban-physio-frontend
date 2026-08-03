@@ -3,11 +3,11 @@ import { todayOpenStatus, resolveClinicHours } from '../../utils/clinicProfileUt
 
 /**
  * Real-time open / closed status from opening hours.
- * @param {{ hours?: object, clinic?: object }} props — pass `clinic` or normalized `hours`
+ * @param {{ hours?: object, clinic?: object, isClosed?: boolean }} props — pass `clinic` or normalized `hours`
  */
-export default function ClinicStatusBadge({ hours, clinic, className = '', prominent = false }) {
+export default function ClinicStatusBadge({ hours, clinic, isClosed = false, className = '', prominent = false }) {
   const resolved = hours ?? resolveClinicHours(clinic);
-  const status = todayOpenStatus(resolved);
+  const status = todayOpenStatus(resolved, new Date(), isClosed);
   const open = status.open;
 
   if (prominent) {
@@ -37,9 +37,9 @@ export default function ClinicStatusBadge({ hours, clinic, className = '', promi
   );
 }
 
-export function ClinicStatusDetail({ hours, clinic, className = '' }) {
+export function ClinicStatusDetail({ hours, clinic, isClosed = false, className = '' }) {
   const resolved = hours ?? resolveClinicHours(clinic);
-  const status = todayOpenStatus(resolved);
+  const status = todayOpenStatus(resolved, new Date(), isClosed);
   return (
     <p
       className={`text-xs sm:text-sm font-medium flex items-center gap-2 ${

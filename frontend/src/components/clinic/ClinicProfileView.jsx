@@ -317,13 +317,13 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
       <div className="relative bg-gradient-to-b from-emerald-50/80 via-white to-slate-50/50 border-b border-slate-200/60">
 
-        <div className="max-w-6xl mx-auto px-4 pt-3 sm:pt-4 pb-6">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 pt-3 sm:pt-4 pb-4 sm:pb-6">
 
           <Link
 
             to="/clinics"
 
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 mb-3 hover:underline"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 mb-2 sm:mb-3 hover:underline"
 
           >
 
@@ -335,11 +335,11 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
 
 
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 sm:gap-6">
 
-            <div className="min-w-0 flex-1 text-left">
+            <div className="min-w-0 flex-1 text-left w-full">
 
-              <div className="flex flex-wrap items-center gap-2 mb-2">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
 
                 {showPartnerClinicBadge(clinic) && <PartnerClinicBadge />}
 
@@ -347,7 +347,7 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
                 {(clinic.is_featured === 1 || clinic.is_featured === '1') && (
 
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide bg-violet-50 text-violet-800 border border-violet-200 px-2.5 py-1 rounded-full">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide bg-violet-50 text-violet-800 border border-violet-200 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full">
 
                     <FaIcon icon="fa-gem" />
 
@@ -361,7 +361,7 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
 
 
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight leading-tight break-words">
 
                 {clinic.name}
 
@@ -369,17 +369,17 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
 
 
-              <p className="text-slate-600 text-sm sm:text-base mt-2 flex items-start gap-2 max-w-2xl">
+              <p className="text-slate-600 text-xs sm:text-sm md:text-base mt-1.5 sm:mt-2 flex items-start gap-1.5 sm:gap-2 max-w-full sm:max-w-2xl">
 
-                <FaIcon icon="fa-location-dot" className="text-emerald-600 mt-1 shrink-0" />
+                <FaIcon icon="fa-location-dot" className="text-emerald-600 mt-0.5 sm:mt-1 shrink-0 text-xs sm:text-sm" />
 
-                <span>{locationLine || 'India'}</span>
+                <span className="break-words">{locationLine || 'India'}</span>
 
               </p>
 
 
 
-              <div className="mt-3">
+              <div className="mt-2 sm:mt-3">
 
                 <ReviewStars rating={rating} count={reviewCount} size="lg" />
 
@@ -387,9 +387,9 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
 
 
-              <ClinicStatusDetail hours={hours} className="mt-3" />
+              <ClinicStatusDetail hours={hours} isClosed={clinic.is_closed === 1 || clinic.is_closed === '1'} className="mt-2 sm:mt-3" />
 
-              <ClinicSocialLinks clinic={clinic} className="mt-3" />
+              <ClinicSocialLinks clinic={clinic} className="mt-2 sm:mt-3" />
 
             </div>
 

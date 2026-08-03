@@ -322,7 +322,12 @@ function formatMinutes(mins) {
 }
 
 /** Today's open/closed status from opening hours. */
-export function todayOpenStatus(hours, now = new Date()) {
+export function todayOpenStatus(hours, now = new Date(), isClosed = false) {
+  // Offline/closed status overrides all availability settings
+  if (isClosed) {
+    return { open: false, text: 'Temporarily offline' };
+  }
+
   const normalized = resolveClinicHours(hours);
   const dayKey = getTodayDayKey(now);
   const slots = normalized[dayKey] || [];

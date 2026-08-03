@@ -150,7 +150,7 @@ export default function Navbar({ beforeLogo = null, headerSpacerClass = '', port
               <Link to="/" className="flex items-center shrink-0" onClick={() => setMobileOpen(false)}>
                 <Logo
                   linkToHome={false}
-                  className="h-9 md:h-10 w-auto max-w-[100px] md:max-w-[120px] object-contain"
+                  className="h-8 sm:h-9 md:h-10 w-auto max-w-[80px] sm:max-w-[100px] md:max-w-[120px] object-contain"
                   showText={false}
                   src={logoSrc || undefined}
                   alt={logoAlt}
