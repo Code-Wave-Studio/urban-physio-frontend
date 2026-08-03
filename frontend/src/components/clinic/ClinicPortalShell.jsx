@@ -61,11 +61,32 @@ function ClinicPortalShellInner({ children, title, subtitle, actions }) {
     >
       <div className="mb-3 sm:mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
-          {title && (
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 break-words">
-              {title}
-            </h1>
-          )}
+          <div className="flex flex-wrap items-center gap-2.5">
+            {title && (
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 break-words">
+                {title}
+              </h1>
+            )}
+            <div className="inline-flex items-center gap-1.5">
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border shadow-2xs ${
+                isAdminMode
+                  ? 'bg-primary-50 text-primary-800 border-primary-200'
+                  : 'bg-amber-50 text-amber-900 border-amber-200'
+              }`}>
+                <FaIcon icon={isAdminMode ? 'fa-user-shield' : 'fa-desktop'} className="text-[11px]" />
+                {isAdminMode ? 'Clinic Admin' : 'Front Desk'}
+              </span>
+              <button
+                type="button"
+                onClick={() => setSwitchOpen(true)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 shadow-2xs transition active:scale-95 cursor-pointer"
+                title="Switch between Clinic Admin and Front Desk modes"
+              >
+                <FaIcon icon="fa-right-left" className="text-[9px] text-slate-500" />
+                <span>Switch</span>
+              </button>
+            </div>
+          </div>
           {subtitle && (
             <p className="text-sm text-slate-500 mt-1 break-words">{subtitle}</p>
           )}

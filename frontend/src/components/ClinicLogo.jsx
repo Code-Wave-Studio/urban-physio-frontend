@@ -20,7 +20,7 @@ export default function ClinicLogo({ clinic, logo, name, size = 'md', className 
       <img
         src={src}
         alt={`${displayName} logo`}
-        className={`${sizeClass} object-cover shrink-0 ring-2 ring-white/80 shadow-sm bg-slate-100 ${className}`}
+        className={`${sizeClass} object-contain p-0.5 shrink-0 ring-2 ring-white/80 shadow-sm bg-white ${className}`}
         loading="lazy"
         decoding="async"
       />

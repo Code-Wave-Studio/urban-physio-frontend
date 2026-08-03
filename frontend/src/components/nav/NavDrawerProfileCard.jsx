@@ -7,6 +7,8 @@ import FaIcon from '../FaIcon';
 import DoctorAvatar from '../DoctorAvatar';
 import PatientAvatar from '../PatientAvatar';
 import { resolveMediaUrl } from '../../utils/mediaUrl';
+import useClinicPortal from '../../hooks/useClinicPortal';
+import ClinicRoleSwitch from '../clinic/ClinicRoleSwitch';
 
 function MiniStat({ label, value, badge }) {
   return (
@@ -298,6 +300,8 @@ function AdminProfileCard({ user, summary, loading, onNavigate }) {
 
 function ClinicProfileCard({ user, summary, loading, onNavigate }) {
   const [toggling, setToggling] = useState(false);
+  const [switchOpen, setSwitchOpen] = useState(false);
+  const { portalRole, canSwitchAdmin, isAdminMode, reload } = useClinicPortal();
   const [clinicClosed, setClinicClosed] = useState(Boolean(Number(summary.clinicProfile?.is_closed ?? user.is_closed ?? 0)));
   const name =
     user.clinic_name ||
@@ -331,19 +335,19 @@ function ClinicProfileCard({ user, summary, loading, onNavigate }) {
   };
 
   return (
-    <div className="nav-drawer-profile-card relative overflow-hidden rounded-2xl border border-white/60 bg-gradient-to-br from-emerald-500/10 via-white to-teal-500/10 p-4 shadow-[0_8px_32px_-12px_rgba(16,185,129,0.3)]">
+    <div className="nav-drawer-profile-card relative overflow-hidden rounded-2xl border border-white/60 bg-gradient-to-br from-emerald-500/10 via-white to-teal-500/10 p-3.5 sm:p-4 shadow-[0_8px_32px_-12px_rgba(16,185,129,0.3)] w-full">
       <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-emerald-200/30 blur-2xl" />
-      <div className="relative flex items-start gap-3">
-        <div className="w-14 h-14 rounded-2xl bg-white border border-emerald-100 flex items-center justify-center text-emerald-600 font-bold text-lg shadow-sm shrink-0 overflow-hidden">
+      <div className="relative flex items-start gap-3 min-w-0">
+        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white border border-emerald-100 flex items-center justify-center text-emerald-600 font-bold text-lg shadow-xs shrink-0 overflow-hidden">
           {logo ? (
-            <img src={logo} alt={name} className="w-full h-full object-cover" />
+            <img src={logo} alt={name} className="w-full h-full object-contain p-0.5" />
           ) : (
             <FaIcon icon="fa-hospital" className="text-xl text-emerald-600" />
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-slate-900 text-lg leading-tight truncate">{name}</p>
-          <p className="text-sm text-slate-500 mt-0.5">Clinic Portal</p>
+          <p className="font-bold text-slate-900 text-base sm:text-lg leading-tight truncate">{name}</p>
+          <p className="text-xs text-slate-500 mt-0.5 truncate">{isAdminMode ? 'Clinic Admin Portal' : 'Front Desk Portal'}</p>
           <Link
             to="/clinic-portal/profile"
             onClick={onNavigate}
@@ -357,7 +361,7 @@ function ClinicProfileCard({ user, summary, loading, onNavigate }) {
           <Link
             to={notifPath}
             onClick={onNavigate}
-            className="relative shrink-0 w-9 h-9 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-500"
+            className="relative shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-500"
           >
             <FaIcon icon="fa-bell" className="text-sm" />
             <span className="absolute -top-1 -right-1 min-w-[1rem] h-4 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold px-0.5">
@@ -375,14 +379,53 @@ function ClinicProfileCard({ user, summary, loading, onNavigate }) {
         type="clinic"
       />
 
+      {/* Mode Switch Option: Clinic Admin ↔ Front Desk */}
+      <div className="relative mt-2.5 flex items-center justify-between gap-2 rounded-xl border border-slate-200/90 bg-white/90 p-2.5 shadow-2xs backdrop-blur-sm">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs shrink-0 ${isAdminMode ? 'bg-primary-100 text-primary-700' : 'bg-amber-100 text-amber-700'}`}>
+            <FaIcon icon={isAdminMode ? 'fa-user-shield' : 'fa-desktop'} />
+          </span>
+          <div className="min-w-0 select-none">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 leading-none">Operating Mode</p>
+            <p className="text-xs font-bold text-slate-800 truncate mt-0.5">
+              {isAdminMode ? 'Clinic Admin' : 'Front Desk'}
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setSwitchOpen(true)}
+          className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition active:scale-95 ${
+            isAdminMode
+              ? 'bg-primary-50 text-primary-800 border-primary-200 hover:bg-primary-100'
+              : 'bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100'
+          }`}
+          title="Switch between Clinic Admin and Front Desk"
+        >
+          <span>Switch</span>
+          <FaIcon icon="fa-right-left" className="text-[9px]" />
+        </button>
+      </div>
+
       <Link
-        to="/clinic-portal"
+        to={isAdminMode ? '/clinic-portal/admin' : '/clinic-portal'}
         onClick={onNavigate}
-        className="relative mt-3 btn-primary w-full text-center text-sm !py-3 inline-flex items-center justify-center gap-2 !bg-emerald-600 hover:!bg-emerald-700 shadow-lg shadow-emerald-600/20"
+        className="relative mt-3 btn-primary w-full text-center text-sm !py-2.5 sm:!py-3 inline-flex items-center justify-center gap-2 !bg-emerald-600 hover:!bg-emerald-700 shadow-lg shadow-emerald-600/20"
       >
         <FaIcon icon="fa-hospital-user" />
-        Open Clinic Portal
+        Open {isAdminMode ? 'Admin Dashboard' : 'Front Desk'}
       </Link>
+
+      <ClinicRoleSwitch
+        open={switchOpen}
+        onClose={() => setSwitchOpen(false)}
+        portalRole={portalRole}
+        canSwitchAdmin={canSwitchAdmin}
+        onSwitched={() => {
+          reload();
+          window.dispatchEvent(new Event('clinic-role-changed'));
+        }}
+      />
     </div>
   );
 }

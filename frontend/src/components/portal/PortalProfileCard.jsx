@@ -83,35 +83,37 @@ export default function PortalProfileCard({
   };
 
   return (
-    <div className={`portal-profile-card rounded-xl border bg-gradient-to-br ${tone} p-2.5`}>
-      <div className="flex items-center gap-2.5">
-        <button
-          type="button"
-          className="portal-avatar-btn relative group shrink-0"
-          onClick={() => allowAvatarUpload && fileRef.current?.click()}
-          aria-label={allowAvatarUpload ? 'Change profile photo' : 'Profile photo'}
-          disabled={!allowAvatarUpload || uploading}
-        >
-          <span className="w-10 h-10 rounded-xl overflow-hidden bg-white border border-white shadow-sm flex items-center justify-center text-slate-500 font-bold text-sm">
-            {src ? (
-              <img src={src} alt="" className="w-full h-full object-cover" />
-            ) : (
-              (name || '?').slice(0, 1).toUpperCase()
-            )}
-          </span>
-          {allowAvatarUpload && (
-            <span className="absolute inset-0 rounded-2xl bg-slate-900/55 text-white opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200 flex items-center justify-center text-[10px] font-semibold">
-              {uploading ? '…' : <FaIcon icon="fa-camera" />}
+    <div className={`portal-profile-card rounded-xl border bg-gradient-to-br ${tone} p-2.5 sm:p-3 w-full max-w-full overflow-hidden`}>
+      <div className="flex items-center justify-between gap-2.5 min-w-0 w-full">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          <button
+            type="button"
+            className="portal-avatar-btn relative group shrink-0"
+            onClick={() => allowAvatarUpload && fileRef.current?.click()}
+            aria-label={allowAvatarUpload ? 'Change profile photo' : 'Profile photo'}
+            disabled={!allowAvatarUpload || uploading}
+          >
+            <span className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl overflow-hidden bg-white border border-slate-100 shadow-xs flex items-center justify-center text-slate-600 font-bold text-sm shrink-0">
+              {src ? (
+                <img src={src} alt="" className="w-full h-full object-contain p-0.5" />
+              ) : (
+                (name || '?').slice(0, 1).toUpperCase()
+              )}
             </span>
+            {allowAvatarUpload && (
+              <span className="absolute inset-0 rounded-xl bg-slate-900/55 text-white opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200 flex items-center justify-center text-[10px] font-semibold">
+                {uploading ? '…' : <FaIcon icon="fa-camera" />}
+              </span>
+            )}
+          </button>
+          {allowAvatarUpload && (
+            <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onFile} />
           )}
-        </button>
-        {allowAvatarUpload && (
-          <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onFile} />
-        )}
 
-        <div className="min-w-0 flex-1">
-          <p className="font-bold text-slate-900 text-sm truncate">{name || 'Account'}</p>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 truncate">{roleLabel}</p>
+          <div className="min-w-0 flex-1">
+            <p className="font-bold text-slate-900 text-xs sm:text-sm truncate leading-tight">{name || 'Account'}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 truncate mt-0.5">{roleLabel}</p>
+          </div>
         </div>
 
         {showPresence && (
@@ -119,14 +121,14 @@ export default function PortalProfileCard({
             type="button"
             onClick={togglePresence}
             disabled={toggling}
-            className="portal-presence-toggle shrink-0 flex flex-col items-end gap-1 active:scale-95 transition-transform duration-200"
+            className="portal-presence-toggle shrink-0 flex flex-col items-end gap-0.5 active:scale-95 transition-transform duration-200"
             aria-pressed={online}
             title={online ? 'Online — tap to go offline' : 'Offline — tap to go online'}
           >
-            <span className={`relative w-11 h-6 rounded-full transition-colors duration-200 ease-in-out ${toggleTone}`}>
+            <span className={`relative w-10 sm:w-11 h-5 sm:h-6 rounded-full transition-colors duration-200 ease-in-out ${toggleTone}`}>
               <span
-                className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200 ease-in-out ${
-                  online ? 'left-5' : 'left-0.5'
+                className={`absolute top-0.5 w-4 sm:w-5 h-4 sm:h-5 rounded-full bg-white shadow-xs transition-all duration-200 ease-in-out ${
+                  online ? 'left-5 sm:left-5' : 'left-0.5'
                 }`}
               />
             </span>
