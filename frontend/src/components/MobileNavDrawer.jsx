@@ -3,6 +3,11 @@ import { Link, useLocation } from 'react-router-dom';
 import FaIcon from './FaIcon';
 import Logo from './Logo';
 import NavDrawerProfileCard from './nav/NavDrawerProfileCard';
+import PortalNavSections from './portal/PortalNavSections';
+import { PATIENT_SECTION_ORDER } from '../constants/patientNav';
+import { DOCTOR_SECTION_ORDER } from '../constants/doctorNav';
+import { CLINIC_SECTION_ORDER } from '../constants/clinicNav';
+import { ADMIN_SECTION_ORDER } from '../constants/adminNav';
 import {
   EXPLORE_LINKS,
   PATIENT_PORTAL_LINKS,
@@ -277,55 +282,51 @@ export default function MobileNavDrawer({
 
           {/* Portal Categories (Below Explore section) — Only show portal matching user role */}
           {user && hasRole('patient') && (
-            <PortalNavCategoryCard
-              title="Patient Portal"
-              icon="fa-user"
-              tone="primary"
-              links={PATIENT_PORTAL_LINKS}
-              pathname={pathname}
-              search={search}
-              onNavigate={handleNavigate}
-              defaultOpen={pathname.startsWith('/patient') || hasRole('patient')}
-            />
+            <NavCategoryCard title="Patient Portal">
+              <PortalNavSections
+                links={PATIENT_PORTAL_LINKS}
+                sectionOrder={PATIENT_SECTION_ORDER}
+                unreadCount={summary.unreadNotifications}
+                onNavigate={handleNavigate}
+                accent="primary"
+              />
+            </NavCategoryCard>
           )}
 
           {user && hasRole('doctor') && (
-            <PortalNavCategoryCard
-              title="Doctor Portal"
-              icon="fa-user-doctor"
-              tone="teal"
-              links={DOCTOR_PORTAL_LINKS}
-              pathname={pathname}
-              search={search}
-              onNavigate={handleNavigate}
-              defaultOpen={pathname.startsWith('/doctor') || hasRole('doctor')}
-            />
+            <NavCategoryCard title="Doctor Portal">
+              <PortalNavSections
+                links={DOCTOR_PORTAL_LINKS}
+                sectionOrder={DOCTOR_SECTION_ORDER}
+                unreadCount={summary.unreadNotifications}
+                onNavigate={handleNavigate}
+                accent="teal"
+              />
+            </NavCategoryCard>
           )}
 
           {user && hasRole('clinic', 'clinic_staff', 'clinic_admin') && (
-            <PortalNavCategoryCard
-              title="Clinic Portal"
-              icon="fa-hospital-user"
-              tone="emerald"
-              links={CLINIC_PORTAL_LINKS}
-              pathname={pathname}
-              search={search}
-              onNavigate={handleNavigate}
-              defaultOpen={pathname.startsWith('/clinic-portal') || hasRole('clinic', 'clinic_staff', 'clinic_admin')}
-            />
+            <NavCategoryCard title="Clinic Portal">
+              <PortalNavSections
+                links={CLINIC_PORTAL_LINKS}
+                sectionOrder={CLINIC_SECTION_ORDER}
+                unreadCount={summary.unreadNotifications}
+                onNavigate={handleNavigate}
+                accent="emerald"
+              />
+            </NavCategoryCard>
           )}
 
           {user && hasRole('super_admin', 'admin') && (
-            <PortalNavCategoryCard
-              title="Admin Portal"
-              icon="fa-shield-halved"
-              tone="violet"
-              links={ADMIN_PORTAL_LINKS}
-              pathname={pathname}
-              search={search}
-              onNavigate={handleNavigate}
-              defaultOpen={pathname.startsWith('/admin') || hasRole('super_admin', 'admin')}
-            />
+            <NavCategoryCard title="Admin Portal">
+              <PortalNavSections
+                links={ADMIN_PORTAL_LINKS}
+                sectionOrder={ADMIN_SECTION_ORDER}
+                unreadCount={summary.unreadNotifications}
+                onNavigate={handleNavigate}
+                accent="primary"
+              />
+            </NavCategoryCard>
           )}
 
 

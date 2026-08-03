@@ -9,7 +9,10 @@ import {
   exercisePrescriptions,
   exercises as exercisesApi,
   treatmentJourney,
+  doctors as doctorsApi,
+  clinicPortal,
 } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 import { formatTime } from '../../utils/appointmentListUtils';
 
 const TABS = [
@@ -610,6 +613,103 @@ function PrescriptionPanel({ room, onReload }) {
   );
 }
 
+function ConsultationAvailabilityToggle({ isDoctorOrAdmin, clinicId }) {
+  const { user, setUser } = useAuth();
+  const [toggling, setToggling] = useState(false);
+
+  const isOnline = Boolean(user?.profile_public ?? 1);
+
+  const toggle = async () => {
+    if (toggling) return;
+    const next = !isOnline;
+    setToggling(true);
+    try {
+      if (clinicId) {
+        await clinicPortal.setClinicClosure(clinicId, {
+          is_closed: next ? 0 : 1,
+          closure_reason: next ? '' : 'Temporarily offline',
+        });
+      } else {
+        await doctorsApi.updateProfile({ profile_public: next ? 1 : 0 });
+      }
+      setUser((u) => (u ? { ...u, profile_public: next ? 1 : 0 } : u));
+      toast.success(next ? 'You are now Online' : 'You are now Offline');
+    } catch (err) {
+      toast.error(err.message || 'Could not update availability status');
+    } finally {
+      setToggling(false);
+    }
+  };
+
+  if (!isDoctorOrAdmin) {
+    return (
+      <div className="inline-flex items-center gap-2.5 rounded-xl border border-slate-200/80 bg-white/90 px-3 py-1.5 shadow-2xs">
+        <span className="relative flex h-2.5 w-2.5 shrink-0">
+          {isOnline && (
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+          )}
+          <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${isOnline ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+        </span>
+        <div className="text-left select-none">
+          <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 leading-none">Doctor Status</p>
+          <p className={`text-xs font-bold leading-tight mt-0.5 ${isOnline ? 'text-emerald-700' : 'text-slate-600'}`}>
+            {isOnline ? 'Online' : 'Offline'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="inline-flex items-center gap-3 rounded-2xl border border-slate-200/90 bg-white/95 p-2 pr-3.5 shadow-xs backdrop-blur-sm">
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={toggling}
+        aria-pressed={isOnline}
+        title={isOnline ? 'Click to switch to Offline' : 'Click to switch to Online'}
+        className={`group relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 ${
+          isOnline ? 'bg-emerald-500' : 'bg-slate-300'
+        }`}
+      >
+        <span className="sr-only">Toggle availability</span>
+        <span
+          className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+            isOnline ? 'translate-x-5' : 'translate-x-0'
+          }`}
+        >
+          {toggling ? (
+            <span className="flex h-full w-full items-center justify-center text-slate-400">
+              <FaIcon icon="fa-spinner" className="fa-spin text-[10px]" />
+            </span>
+          ) : (
+            <span className={`flex h-full w-full items-center justify-center text-[10px] ${isOnline ? 'text-emerald-600' : 'text-slate-400'}`}>
+              <FaIcon icon={isOnline ? 'fa-check' : 'fa-xmark'} />
+            </span>
+          )}
+        </span>
+      </button>
+
+      <div className="text-left select-none cursor-pointer" onClick={toggle}>
+        <div className="flex items-center gap-1.5">
+          <span className="relative flex h-2 w-2 shrink-0">
+            {isOnline && (
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            )}
+            <span className={`relative inline-flex rounded-full h-2 w-2 ${isOnline ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+          </span>
+          <span className={`text-xs font-bold uppercase tracking-wider ${isOnline ? 'text-emerald-700' : 'text-slate-600'}`}>
+            {isOnline ? 'Online' : 'Offline'}
+          </span>
+        </div>
+        <p className="text-[10px] text-slate-400 font-medium truncate">
+          {isOnline ? 'Ready for sessions' : 'Not taking calls'}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 /**
  * Shared Online Consultation Room.
  * @param {{ appointmentId: number|string, backTo: string, layout: (props: {children: React.ReactNode}) => React.ReactNode }} props
@@ -668,11 +768,18 @@ export default function ConsultationRoom({ appointmentId, backTo, layout: Layout
               : ` · Dr. ${room.doctor.first_name} ${room.doctor.last_name}`}
           </p>
         </div>
-        {canStart && room.appointment.google_meet_link && (
-          <button type="button" onClick={() => setTab('video')} className="btn-primary inline-flex items-center gap-2 text-sm self-start">
-            <FaIcon icon="fa-video" /> Join Video Call
-          </button>
-        )}
+
+        <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
+          <ConsultationAvailabilityToggle
+            isDoctorOrAdmin={room.viewer === 'doctor' || room.viewer === 'admin'}
+            clinicId={room.appointment?.clinic_id}
+          />
+          {canStart && room.appointment.google_meet_link && (
+            <button type="button" onClick={() => setTab('video')} className="btn-primary inline-flex items-center gap-2 text-sm">
+              <FaIcon icon="fa-video" /> Join Video Call
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="portal-tabs p-1 rounded-xl bg-slate-100/80">

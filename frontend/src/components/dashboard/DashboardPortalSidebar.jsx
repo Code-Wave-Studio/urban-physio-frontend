@@ -51,7 +51,7 @@ export default function DashboardPortalSidebar({
         ? CLINIC_SPEED_DIAL
         : PATIENT_SPEED_DIAL;
 
-  const showPresence = variant === 'doctor' || variant === 'clinic';
+  const showPresence = false;
   const presenceOnline =
     variant === 'clinic' ? !clinicClosed : Number(user?.profile_public ?? 1) === 1;
 
