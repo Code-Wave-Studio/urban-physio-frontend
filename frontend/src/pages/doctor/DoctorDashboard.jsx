@@ -137,6 +137,7 @@ const QUICK_ACTIONS = [
 
 export default function DoctorDashboard() {
   const [data, setData] = useState(null);
+  const [shortcutsAtTop, setShortcutsAtTop] = useState(false);
 
   useEffect(() => {
     doctors
@@ -303,6 +304,13 @@ export default function DoctorDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Top Shortcuts (if pinned to top) */}
+      {shortcutsAtTop && (
+        <div className="mb-6 md:mb-8">
+          <DoctorQuickWork onPlaceAtTopChange={setShortcutsAtTop} />
+        </div>
+      )}
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6 md:mb-8">
