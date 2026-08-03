@@ -38,6 +38,7 @@ export default function ClinicPortalHome() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(null);
+  const [shortcutsAtTop, setShortcutsAtTop] = useState(false);
 
   const storageKey = `clinic-dash-reception-v1-${clinicId || 'x'}`;
   const layout = useDashboardLayout(storageKey, RECEPTION_WIDGET_DEFS);
@@ -434,6 +435,10 @@ export default function ClinicPortalHome() {
             />
           </div>
 
+          {shortcutsAtTop && (
+            <ClinicQuickWork variant="reception" onPlaceAtTopChange={setShortcutsAtTop} />
+          )}
+
           <DashboardWidgetBoard
             widgets={widgets}
             visibleIds={layout.visibleIds}
@@ -444,7 +449,9 @@ export default function ClinicPortalHome() {
             boardClassName="reception-dash-board"
           />
 
-          <ClinicQuickWork variant="reception" />
+          {!shortcutsAtTop && (
+            <ClinicQuickWork variant="reception" onPlaceAtTopChange={setShortcutsAtTop} />
+          )}
         </>
       )}
     </ClinicPortalShell>

@@ -19,8 +19,22 @@ import PasswordSetupAlert from '../../components/PasswordSetupAlert';
 import FaIcon from '../../components/FaIcon';
 import { admin } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
-import { STATUS_STYLES, TYPE_ICONS, formatTime, formatType, patientLabel } from '../../utils/appointmentListUtils';
 import toast from 'react-hot-toast';
+import CustomizableShortcuts from '../../components/dashboard/CustomizableShortcuts';
+
+const ADMIN_SHORTCUTS = [
+  { to: '/admin/calendar', label: 'Calendar', desc: 'Platform booking schedule', icon: 'fa-calendar-days', tone: 'teal' },
+  { to: '/admin/appointments', label: 'Appointments', desc: 'All bookings & queues', icon: 'fa-calendar-check', tone: 'sky' },
+  { to: '/admin/users?role=doctor', label: 'Doctors', desc: 'Directory & verification', icon: 'fa-user-doctor', tone: 'primary' },
+  { to: '/admin/users?role=patient', label: 'Patients', desc: 'Registered patients', icon: 'fa-users', tone: 'indigo' },
+  { to: '/admin/emergency', label: 'Emergency', desc: '24/7 SOS & triage board', icon: 'fa-kit-medical', tone: 'rose' },
+  { to: '/admin/seo', label: 'SEO Center', desc: 'Page ranks & indexing', icon: 'fa-magnifying-glass-chart', tone: 'violet' },
+  { to: '/admin/home-banners', label: 'Banners & Media', desc: 'Homepage slides & photos', icon: 'fa-images', tone: 'amber' },
+  { to: '/admin/reviews', label: 'Reviews', desc: 'Patient feedback & ratings', icon: 'fa-star', tone: 'orange' },
+  { to: '/admin/treatment-packages', label: 'Packages', desc: 'Catalog & pricing', icon: 'fa-box-open', tone: 'emerald' },
+  { to: '/admin/logs', label: 'Audit Logs', desc: 'System activity & security', icon: 'fa-list-check', tone: 'slate' },
+  { to: '/admin/profile', label: 'Settings', desc: 'Console & profile config', icon: 'fa-sliders', tone: 'cyan' },
+];
 
 ChartJS.register(
   CategoryScale,
@@ -143,6 +157,8 @@ const EMPTY = {
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [shortcutsAtTop, setShortcutsAtTop] = useState(false);
 
   useEffect(() => {
     admin
@@ -307,6 +323,20 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      {/* Top Shortcuts (if pinned to top) */}
+      {shortcutsAtTop && (
+        <div className="mb-6 md:mb-8">
+          <CustomizableShortcuts
+            storageKey="admin"
+            badge="ADMIN CONSOLE"
+            title="Quick Work Shortcuts"
+            subtitle="Customizable shortcuts to manage platform operations and settings"
+            items={ADMIN_SHORTCUTS}
+            onPlaceAtTopChange={setShortcutsAtTop}
+          />
+        </div>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 mb-6 md:mb-8">
         {statCards.map(({ label, value, color, sub }) => (
@@ -317,6 +347,20 @@ export default function AdminDashboard() {
           </div>
         ))}
       </div>
+
+      {/* Default Shortcuts (if not pinned to top) */}
+      {!shortcutsAtTop && (
+        <div className="mb-6 md:mb-8">
+          <CustomizableShortcuts
+            storageKey="admin"
+            badge="ADMIN CONSOLE"
+            title="Quick Work Shortcuts"
+            subtitle="Customizable shortcuts to manage platform operations and settings"
+            items={ADMIN_SHORTCUTS}
+            onPlaceAtTopChange={setShortcutsAtTop}
+          />
+        </div>
+      )}
 
       {/* Alerts */}
       <div className="grid sm:grid-cols-2 gap-4 mb-8">

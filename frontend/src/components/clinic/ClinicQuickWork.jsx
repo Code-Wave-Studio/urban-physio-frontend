@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import FaIcon from '../FaIcon';
+import CustomizableShortcuts from '../dashboard/CustomizableShortcuts';
 
 /**
  * Clinic portal dashboard — Quick Work hub (admin + reception variants).
@@ -133,45 +134,25 @@ function WorkCard({ item }) {
     </Link>
   );
 }
-
-export default function ClinicQuickWork({ variant = 'admin' }) {
+ 
+export default function ClinicQuickWork({ variant = 'admin', onPlaceAtTopChange = null }) {
   const isAdmin = variant === 'admin';
   const groups = isAdmin ? ADMIN_GROUPS : RECEPTION_GROUPS;
 
   return (
     <section className="mt-6 sm:mt-8 md:mt-10" aria-labelledby="clinic-quick-work-heading">
-      <div className="relative overflow-hidden rounded-2xl border border-emerald-100/80 bg-gradient-to-br from-emerald-50/80 via-white to-slate-50 p-4 sm:p-6 md:p-7 shadow-sm">
-        <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-emerald-200/20 blur-2xl pointer-events-none" />
-        <div className="relative mb-5 sm:mb-6">
-          <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-emerald-700">
-            {isAdmin ? 'Admin workspace' : 'Front-desk workspace'}
-          </p>
-          <h2 id="clinic-quick-work-heading" className="text-lg sm:text-xl font-bold text-slate-900 mt-1">
-            Quick Work
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-xl">
-            {isAdmin
-              ? 'Jump to pages you check and update often — ops, clinical tools, reports, and settings.'
-              : 'Jump to pages you use all day — queue, patients, billing, notes, and follow-ups.'}
-          </p>
-        </div>
-
-        <div className="relative space-y-6 sm:space-y-7">
-          {groups.map((group) => (
-            <div key={group.id}>
-              <div className="mb-2.5 sm:mb-3">
-                <h3 className="text-sm sm:text-base font-semibold text-slate-800">{group.title}</h3>
-                <p className="text-[11px] sm:text-xs text-slate-500">{group.blurb}</p>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3 md:gap-4">
-                {group.items.map((item) => (
-                  <WorkCard key={`${item.to}-${item.label}`} item={item} />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <CustomizableShortcuts
+        storageKey={isAdmin ? 'clinic_admin' : 'clinic_reception'}
+        badge={isAdmin ? 'ADMIN WORKSPACE' : 'FRONT-DESK WORKSPACE'}
+        title="Quick Work"
+        subtitle={
+          isAdmin
+            ? 'Jump to pages you check and update often — ops, clinical tools, reports, and settings.'
+            : 'Jump to pages you use all day — queue, patients, billing, notes, and follow-ups.'
+        }
+        groups={groups}
+        onPlaceAtTopChange={onPlaceAtTopChange}
+      />
     </section>
   );
 }

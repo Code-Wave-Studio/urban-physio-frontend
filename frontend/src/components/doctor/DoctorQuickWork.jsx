@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import FaIcon from '../FaIcon';
+import CustomizableShortcuts from '../dashboard/CustomizableShortcuts';
 
 /**
  * Doctor Overview — Quick Work hub.
@@ -207,37 +208,17 @@ function WorkCard({ item }) {
   );
 }
 
-export default function DoctorQuickWork() {
+export default function DoctorQuickWork({ onPlaceAtTopChange = null }) {
   return (
     <section className="mt-8 md:mt-10" aria-labelledby="doctor-quick-work-heading">
-      <div className="relative overflow-hidden rounded-2xl border border-teal-100/80 bg-gradient-to-br from-teal-50/80 via-white to-slate-50 p-4 sm:p-6 md:p-7 shadow-sm">
-        <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-teal-200/20 blur-2xl pointer-events-none" />
-        <div className="relative mb-5 sm:mb-6">
-          <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-teal-700">Daily workspace</p>
-          <h2 id="doctor-quick-work-heading" className="text-lg sm:text-xl font-bold text-slate-900 mt-1">
-            Quick Work
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-xl">
-            Jump to pages you check and update often — slots, patients, fees, and requests.
-          </p>
-        </div>
-
-        <div className="relative space-y-6 sm:space-y-7">
-          {QUICK_WORK_GROUPS.map((group) => (
-            <div key={group.id}>
-              <div className="mb-2.5 sm:mb-3">
-                <h3 className="text-sm sm:text-base font-semibold text-slate-800">{group.title}</h3>
-                <p className="text-[11px] sm:text-xs text-slate-500">{group.blurb}</p>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3 md:gap-4">
-                {group.items.map((item) => (
-                  <WorkCard key={`${item.to}-${item.label}`} item={item} />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <CustomizableShortcuts
+        storageKey="doctor"
+        badge="DAILY WORKSPACE"
+        title="Quick Work"
+        subtitle="Jump to pages you check and update often — slots, patients, fees, and requests."
+        groups={QUICK_WORK_GROUPS}
+        onPlaceAtTopChange={onPlaceAtTopChange}
+      />
     </section>
   );
 }

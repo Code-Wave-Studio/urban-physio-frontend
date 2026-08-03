@@ -50,6 +50,7 @@ export default function ClinicAdminHome() {
   const { clinicId, isAdminMode, loading: boot, can, reload, clinic } = useClinicPortal();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [shortcutsAtTop, setShortcutsAtTop] = useState(false);
 
   const storageKey = `clinic-dash-admin-v1-${clinicId || 'x'}`;
   const layout = useDashboardLayout(storageKey, ADMIN_WIDGET_DEFS);
@@ -384,6 +385,10 @@ export default function ClinicAdminHome() {
             <DashboardKpiCard icon="fa-user-doctor" label="Top therapist" value={k.top_therapist?.name || '—'} tint="primary" />
           </div>
 
+          {shortcutsAtTop && (
+            <ClinicQuickWork variant="admin" onPlaceAtTopChange={setShortcutsAtTop} />
+          )}
+
           <DashboardWidgetBoard
             widgets={widgets}
             visibleIds={layout.visibleIds}
@@ -394,7 +399,9 @@ export default function ClinicAdminHome() {
             boardClassName="admin-dash-board"
           />
 
-          <ClinicQuickWork variant="admin" />
+          {!shortcutsAtTop && (
+            <ClinicQuickWork variant="admin" onPlaceAtTopChange={setShortcutsAtTop} />
+          )}
         </div>
       )}
     </ClinicPortalShell>

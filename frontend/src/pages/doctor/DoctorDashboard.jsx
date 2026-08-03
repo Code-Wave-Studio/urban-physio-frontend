@@ -486,7 +486,7 @@ export default function DoctorDashboard() {
         </div>
       </div>
 
-      <DoctorQuickWork />
+      {!shortcutsAtTop && <DoctorQuickWork onPlaceAtTopChange={setShortcutsAtTop} />}
     </DashboardLayout>
   );
 }

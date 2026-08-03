@@ -125,7 +125,7 @@ function AppToastCard({ toast: t }) {
         touchAction: 'pan-y',
         willChange: 'transform, opacity',
       }}
-      className="pointer-events-auto w-80 sm:w-96 max-w-[calc(100vw-2rem)] select-none cursor-grab active:cursor-grabbing"
+      className="pointer-events-auto w-[calc(100vw-1.5rem)] sm:w-[360px] max-w-[360px] select-none cursor-grab active:cursor-grabbing"
     >
       <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/95 backdrop-blur-xl border border-slate-200/90 shadow-xl shadow-slate-900/10 hover:shadow-2xl transition-shadow duration-300">
         {renderIcon()}

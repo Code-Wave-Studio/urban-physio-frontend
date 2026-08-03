@@ -7,52 +7,21 @@ import FaIcon from '../../components/FaIcon';
 import { appointments, patientReports, patients } from '../../services/api';
 import { PATIENT_NAV } from '../../constants/patientNav';
 import { useAuth } from '../../contexts/AuthContext';
-import { STATUS_STYLES, TYPE_ICONS, formatTime } from '../../utils/appointmentListUtils';
 import toast from 'react-hot-toast';
+import CustomizableShortcuts from '../../components/dashboard/CustomizableShortcuts';
 
-const QUICK = [
-  {
-    to: '/patient/saved',
-    title: 'Saved',
-    desc: 'Doctors, clinics & exercises',
-    icon: 'fa-heart',
-    color: 'from-rose-500 to-pink-600',
-  },
-  {
-    to: '/book',
-    title: 'Book appointment',
-    desc: 'Online, clinic or home visit',
-    icon: 'fa-calendar-plus',
-    color: 'from-orange-500 to-primary-600',
-  },
-  {
-    to: '/patient/video-consultations',
-    title: 'Video consultation',
-    desc: 'Join your online sessions',
-    icon: 'fa-video',
-    color: 'from-emerald-500 to-teal-600',
-  },
-  {
-    to: '/patient/prescriptions',
-    title: 'Prescription & notes',
-    desc: 'Plans & doctor notes',
-    icon: 'fa-file-prescription',
-    color: 'from-violet-500 to-purple-600',
-  },
-  {
-    to: '/patient/progress',
-    title: 'My progress',
-    desc: 'Recovery & pain trend',
-    icon: 'fa-chart-line',
-    color: 'from-sky-500 to-cyan-600',
-  },
-  {
-    to: '/patient/bills',
-    title: 'Bills & payments',
-    desc: 'Invoices, receipts & refunds',
-    icon: 'fa-file-invoice-dollar',
-    color: 'from-amber-500 to-orange-600',
-  },
+const PATIENT_SHORTCUTS = [
+  { to: '/book', label: 'Book Appointment', desc: 'Online, clinic or home visit', icon: 'fa-calendar-plus', tone: 'primary' },
+  { to: '/patient/video-consultations', label: 'Video Call', desc: 'Join online sessions', icon: 'fa-video', tone: 'emerald' },
+  { to: '/patient/prescriptions', label: 'Prescriptions', desc: 'Plans & doctor notes', icon: 'fa-file-prescription', tone: 'violet' },
+  { to: '/patient/progress', label: 'My Progress', desc: 'Recovery & pain trend', icon: 'fa-chart-line', tone: 'sky' },
+  { to: '/patient/exercises', label: 'Exercises', desc: 'Assigned home exercises', icon: 'fa-dumbbell', tone: 'teal' },
+  { to: '/patient/reports', label: 'Medical Reports', desc: 'Scans & lab files', icon: 'fa-folder-open', tone: 'indigo' },
+  { to: '/patient/packages', label: 'My Packages', desc: 'Active treatment packs', icon: 'fa-box-open', tone: 'orange' },
+  { to: '/patient/bills', label: 'Bills & Receipts', desc: 'Invoices & payments', icon: 'fa-file-invoice-dollar', tone: 'amber' },
+  { to: '/patient/wallet', label: 'Health Wallet', desc: 'Balance & credits', icon: 'fa-wallet', tone: 'lime' },
+  { to: '/patient/saved', label: 'Saved Items', desc: 'Doctors, clinics & exercises', icon: 'fa-heart', tone: 'rose' },
+  { to: '/patient/profile', label: 'Profile Settings', desc: 'Medical info & photo', icon: 'fa-user-pen', tone: 'slate' },
 ];
 
 const STAT_CARDS = [
@@ -80,6 +49,7 @@ export default function PatientDashboard() {
   const [loading, setLoading] = useState(true);
   const [preferred, setPreferred] = useState(null);
   const [changingClinic, setChangingClinic] = useState(false);
+  const [shortcutsAtTop, setShortcutsAtTop] = useState(false);
 
   useEffect(() => {
     Promise.all([appointments.list(), patientReports.list(), patients.visitCredits(), patients.preferredClinic().catch(() => null)])
@@ -173,6 +143,20 @@ export default function PatientDashboard() {
         </div>
       </div>
 
+      {/* Top Shortcuts (if pinned to top) */}
+      {shortcutsAtTop && (
+        <div className="mb-5 sm:mb-6">
+          <CustomizableShortcuts
+            storageKey="patient"
+            badge="PATIENT HUB"
+            title="Quick Work Shortcuts"
+            subtitle="Customizable shortcuts to access booking, reports, exercises & wallet"
+            items={PATIENT_SHORTCUTS}
+            onPlaceAtTopChange={setShortcutsAtTop}
+          />
+        </div>
+      )}
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mb-5 sm:mb-6 auto-rows-fr">
         {STAT_CARDS.map((s) => (
           <div
@@ -194,23 +178,19 @@ export default function PatientDashboard() {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-5 sm:mb-6 auto-rows-fr">
-        {QUICK.map((q) => (
-          <Link
-            key={q.to}
-            to={q.to === '/book' ? bookTo : q.to}
-            className="group flex flex-col h-full rounded-xl border border-slate-200/80 bg-white p-3 sm:p-4 hover:border-primary-200/60 hover:shadow-md transition"
-          >
-            <div
-              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br ${q.color} text-white flex items-center justify-center mb-2 shrink-0`}
-            >
-              <FaIcon icon={q.icon} className="text-sm" />
-            </div>
-            <p className="font-semibold text-slate-900 text-xs sm:text-sm leading-snug">{q.title}</p>
-            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 leading-snug flex-1">{q.desc}</p>
-          </Link>
-        ))}
-      </div>
+      {/* Default Shortcuts (if not pinned to top) */}
+      {!shortcutsAtTop && (
+        <div className="mb-5 sm:mb-6">
+          <CustomizableShortcuts
+            storageKey="patient"
+            badge="PATIENT HUB"
+            title="Quick Work Shortcuts"
+            subtitle="Customizable shortcuts to access booking, reports, exercises & wallet"
+            items={PATIENT_SHORTCUTS}
+            onPlaceAtTopChange={setShortcutsAtTop}
+          />
+        </div>
+      )}
 
       {packageCredits.length > 0 && (
         <section className="glass-card !p-4 md:!p-5 mb-6 md:mb-8">
