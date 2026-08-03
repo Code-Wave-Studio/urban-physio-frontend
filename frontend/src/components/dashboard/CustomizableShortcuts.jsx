@@ -179,38 +179,39 @@ export default function CustomizableShortcuts({
           <button
             type="button"
             onClick={togglePlaceAtTop}
-            className={`btn-sm text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-semibold transition-all duration-200 shadow-sm ${
               placeAtTop
-                ? 'bg-emerald-600 text-white shadow-sm hover:bg-emerald-700'
-                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+                ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-600/20'
+                : 'bg-white text-slate-700 border border-slate-200/90 hover:bg-slate-50 hover:border-slate-300'
             }`}
             title="Place shortcuts at top of dashboard"
           >
-            <FaIcon icon="fa-thumbtack" className={`text-xs ${placeAtTop ? 'rotate-45' : ''}`} />
-            {placeAtTop ? 'Top of Dashboard' : 'Pin to Top'}
+            <FaIcon icon="fa-thumbtack" className={`text-xs ${placeAtTop ? 'rotate-45 text-amber-300' : 'text-slate-400'}`} />
+            <span>{placeAtTop ? 'Pinned to Top' : 'Pin to Top'}</span>
           </button>
 
           {/* Edit Layout Mode Toggle */}
           <button
             type="button"
             onClick={() => setIsEditing(!isEditing)}
-            className={`btn-sm text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-semibold transition-all duration-200 shadow-sm ${
               isEditing
-                ? 'bg-slate-900 text-white shadow-sm hover:bg-slate-800'
-                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+                ? 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-900/20'
+                : 'bg-white text-slate-700 border border-slate-200/90 hover:bg-slate-50 hover:border-slate-300'
             }`}
           >
             <FaIcon icon={isEditing ? 'fa-check' : 'fa-sliders'} className="text-xs" />
-            {isEditing ? 'Done Customizing' : 'Customize Layout'}
+            <span>{isEditing ? 'Done Customizing' : 'Customize Layout'}</span>
           </button>
 
           {isEditing && (
             <button
               type="button"
               onClick={resetDefault}
-              className="btn-sm text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 transition-all duration-200 shadow-sm"
             >
-              Reset
+              <FaIcon icon="fa-rotate-left" className="text-xs text-rose-500" />
+              <span>Reset</span>
             </button>
           )}
         </div>

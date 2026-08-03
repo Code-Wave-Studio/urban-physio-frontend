@@ -7,6 +7,7 @@ import FaIcon from '../../components/FaIcon';
 import { appointments, patientReports, patients } from '../../services/api';
 import { PATIENT_NAV } from '../../constants/patientNav';
 import { useAuth } from '../../contexts/AuthContext';
+import { STATUS_STYLES, TYPE_ICONS, formatTime } from '../../utils/appointmentListUtils';
 import toast from 'react-hot-toast';
 import CustomizableShortcuts from '../../components/dashboard/CustomizableShortcuts';
 

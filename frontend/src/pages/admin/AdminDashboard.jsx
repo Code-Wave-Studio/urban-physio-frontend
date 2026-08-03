@@ -19,6 +19,7 @@ import PasswordSetupAlert from '../../components/PasswordSetupAlert';
 import FaIcon from '../../components/FaIcon';
 import { admin } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import { STATUS_STYLES, TYPE_ICONS, formatTime, formatType, patientLabel } from '../../utils/appointmentListUtils';
 import toast from 'react-hot-toast';
 import CustomizableShortcuts from '../../components/dashboard/CustomizableShortcuts';
 
