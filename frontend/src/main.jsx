@@ -3,7 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { Toaster } from 'react-hot-toast';
+import AppToaster from './components/AppToaster';
 import App from './App';
 import LicenseGate from './core/LicenseGate';
 import { AuthProvider } from './contexts/AuthContext';
@@ -83,13 +83,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <LocationSelector />
             <HapticsRoot />
             <FloatingActions />
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              className: 'glass-card !bg-white/90 !backdrop-blur-xl !border-white/80 !text-slate-800 !shadow-lg',
-              style: { padding: '12px 16px' },
-            }}
-          />
+            <AppToaster />
             </PodcastPlayerProvider>
           </LocationProvider>
           </ContactProvider>

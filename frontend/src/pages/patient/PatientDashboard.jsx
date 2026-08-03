@@ -153,42 +153,39 @@ export default function PatientDashboard() {
         </div>
       )}
 
-      <div className="mb-6 md:mb-8 flex flex-col sm:flex-row sm:items-center gap-4">
+      <div className="mb-5 flex items-center gap-3">
         <PatientAvatar
           patient={{
             avatar: user?.avatar,
             first_name: user?.first_name,
             last_name: user?.last_name,
           }}
-          size="xl"
-          className="!rounded-2xl mx-auto sm:mx-0"
+          size="lg"
+          className="!w-12 !h-12 !rounded-xl shrink-0"
         />
-        <div className="text-center sm:text-left min-w-0">
-          <p className="text-xs md:text-sm text-primary-600 font-semibold uppercase tracking-wide">Patient portal</p>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mt-1">Hello, {name}</h1>
-          <p className="text-slate-600 text-sm mt-1 max-w-xl">
-            Manage appointments, upload medical reports, and book your next session in one place.
-          </p>
-          <Link to="/patient/profile" className="inline-flex items-center gap-1 text-sm font-semibold text-primary-600 mt-2 hover:text-primary-800">
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] text-primary-600 font-semibold uppercase tracking-wide">Patient portal</p>
+          <h1 className="text-lg sm:text-xl font-bold text-slate-900 mt-0.5 truncate">Hello, {name}</h1>
+          <Link to="/patient/profile" className="inline-flex items-center gap-1 text-xs font-semibold text-primary-600 mt-0.5 hover:text-primary-800">
             Edit profile & photo
-            <FaIcon icon="fa-chevron-right" className="text-[10px]" />
+            <FaIcon icon="fa-chevron-right" className="text-[8px]" />
           </Link>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mb-5 sm:mb-6 auto-rows-fr">
         {STAT_CARDS.map((s) => (
           <div
             key={s.key}
-            className={`glass-card !p-4 bg-gradient-to-br ${s.gradient} border border-white/80`}
+            className={`glass-card !p-3 sm:!p-4 h-full bg-gradient-to-br ${s.gradient} border border-white/80`}
           >
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${s.iconTone}`}>
-                <FaIcon icon={s.icon} />
+            <div className="flex items-center gap-2.5 h-full">
+              <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shrink-0 ${s.iconTone}`}>
+                <FaIcon icon={s.icon} className="text-sm" />
               </div>
               <div className="min-w-0">
-                <p className="text-[11px] md:text-xs text-slate-500 font-medium truncate">{s.label}</p>
-                <p className="text-xl md:text-2xl font-bold text-slate-900">
+                <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium truncate">{s.label}</p>
+                <p className="text-lg sm:text-xl font-bold text-slate-900 tabular-nums">
                   {loading ? '—' : statValues[s.key]}
                 </p>
               </div>
@@ -197,27 +194,20 @@ export default function PatientDashboard() {
         ))}
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-3 md:gap-4 mb-6 md:mb-8">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-5 sm:mb-6 auto-rows-fr">
         {QUICK.map((q) => (
           <Link
             key={q.to}
             to={q.to === '/book' ? bookTo : q.to}
-            className="group relative overflow-hidden rounded-2xl border border-white/80 bg-white/70 p-4 md:p-5 shadow-sm hover:shadow-lg hover:border-primary-200/60 transition"
+            className="group flex flex-col h-full rounded-xl border border-slate-200/80 bg-white p-3 sm:p-4 hover:border-primary-200/60 hover:shadow-md transition"
           >
             <div
-              className={`absolute -right-4 -top-4 w-24 h-24 rounded-full bg-gradient-to-br ${q.color} opacity-20 group-hover:opacity-30 transition`}
-            />
-            <div
-              className={`w-11 h-11 md:w-12 md:h-12 rounded-2xl bg-gradient-to-br ${q.color} text-white flex items-center justify-center mb-3 shadow-md`}
+              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br ${q.color} text-white flex items-center justify-center mb-2 shrink-0`}
             >
-              <FaIcon icon={q.icon} className="text-base md:text-lg" />
+              <FaIcon icon={q.icon} className="text-sm" />
             </div>
-            <p className="font-bold text-slate-900 text-sm md:text-base">{q.title}</p>
-            <p className="text-xs md:text-sm text-slate-600 mt-0.5">{q.desc}</p>
-            <FaIcon
-              icon="fa-arrow-right"
-              className="absolute bottom-4 md:bottom-5 right-4 md:right-5 text-slate-300 group-hover:text-primary-600 transition"
-            />
+            <p className="font-semibold text-slate-900 text-xs sm:text-sm leading-snug">{q.title}</p>
+            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 leading-snug flex-1">{q.desc}</p>
           </Link>
         ))}
       </div>

@@ -137,7 +137,7 @@ export default function DashboardPortalSidebar({
         </div>
 
         {/* Mobile: profile + speed dial under header */}
-        <div className="lg:hidden px-3 pt-3 space-y-3 shrink-0">
+        <div className="lg:hidden px-3 pt-2.5 space-y-2.5 shrink-0">
           <PortalProfileCard
             name={displayName}
             roleLabel={title}

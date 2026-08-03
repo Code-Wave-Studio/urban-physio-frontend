@@ -83,8 +83,8 @@ export default function PortalProfileCard({
   };
 
   return (
-    <div className={`portal-profile-card rounded-2xl border bg-gradient-to-br ${tone} p-3`}>
-      <div className="flex items-center gap-3">
+    <div className={`portal-profile-card rounded-xl border bg-gradient-to-br ${tone} p-2.5`}>
+      <div className="flex items-center gap-2.5">
         <button
           type="button"
           className="portal-avatar-btn relative group shrink-0"
@@ -92,7 +92,7 @@ export default function PortalProfileCard({
           aria-label={allowAvatarUpload ? 'Change profile photo' : 'Profile photo'}
           disabled={!allowAvatarUpload || uploading}
         >
-          <span className="w-12 h-12 rounded-2xl overflow-hidden bg-white border border-white shadow-sm flex items-center justify-center text-slate-500 font-bold">
+          <span className="w-10 h-10 rounded-xl overflow-hidden bg-white border border-white shadow-sm flex items-center justify-center text-slate-500 font-bold text-sm">
             {src ? (
               <img src={src} alt="" className="w-full h-full object-cover" />
             ) : (

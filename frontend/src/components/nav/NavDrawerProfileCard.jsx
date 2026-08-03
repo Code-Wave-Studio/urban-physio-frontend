@@ -5,12 +5,12 @@ import PatientAvatar from '../PatientAvatar';
 
 function MiniStat({ label, value, badge }) {
   return (
-    <div className="rounded-xl bg-white/70 border border-white/80 px-2.5 py-2 text-center min-w-0 flex-1">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 truncate">{label}</p>
-      <p className="text-base font-bold text-slate-900 mt-0.5 flex items-center justify-center gap-1">
+    <div className="rounded-lg bg-slate-50 border border-slate-100 px-2 py-1.5 text-center min-w-0 flex-1">
+      <p className="text-[9px] font-semibold uppercase tracking-wide text-slate-400 truncate">{label}</p>
+      <p className="text-sm font-bold text-slate-900 mt-0.5 flex items-center justify-center gap-1 tabular-nums">
         {value}
         {badge > 0 && (
-          <span className="inline-flex min-w-[1.125rem] h-[1.125rem] items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1">
+          <span className="inline-flex min-w-[1rem] h-4 items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold px-0.5">
             {badge > 99 ? '99+' : badge}
           </span>
         )}
@@ -57,55 +57,56 @@ function PatientProfileCard({ user, summary, loading, onNavigate }) {
   const notifPath = '/patient/notifications';
 
   return (
-    <div className="nav-drawer-profile-card relative overflow-hidden rounded-2xl border border-white/60 bg-gradient-to-br from-primary-500/10 via-white to-orange-500/10 p-4 shadow-[0_8px_32px_-12px_rgba(249,115,22,0.35)]">
-      <div className="absolute -right-8 -top-8 w-28 h-28 rounded-full bg-primary-200/25 blur-2xl" />
-      <div className="relative flex items-start gap-3">
-        <PatientAvatar patient={user} size="lg" className="!w-14 !h-14 ring-2 ring-white shadow-md" />
+    <div className="nav-drawer-profile-card rounded-xl border border-slate-200/90 bg-white p-3 shadow-sm">
+      <div className="flex items-center gap-2.5">
+        <PatientAvatar patient={user} size="lg" className="!w-11 !h-11 ring-2 ring-slate-100 shrink-0" />
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-slate-900 text-lg leading-tight truncate">{name}</p>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <p className="font-semibold text-slate-900 text-[15px] leading-tight truncate">{name}</p>
+            {summary.hasMembership && (
+              <span className="inline-flex items-center gap-0.5 shrink-0 text-[8px] font-bold uppercase tracking-wide text-amber-800 bg-amber-50 border border-amber-200/80 rounded px-1.5 py-0.5">
+                <FaIcon icon="fa-crown" className="text-[7px]" />
+                Active
+              </span>
+            )}
+          </div>
           <Link
             to="/patient/profile"
             onClick={onNavigate}
-            className="inline-flex items-center gap-1 text-sm font-semibold text-primary-600 mt-0.5 hover:text-primary-800"
+            className="inline-flex items-center gap-0.5 text-xs font-medium text-primary-600 mt-0.5 hover:text-primary-800"
           >
             Edit profile
-            <FaIcon icon="fa-chevron-right" className="text-[10px]" />
+            <FaIcon icon="fa-chevron-right" className="text-[8px]" />
           </Link>
-          {summary.hasMembership && (
-            <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-bold uppercase tracking-wide text-amber-800 bg-amber-100 border border-amber-200 rounded-full px-2 py-0.5">
-              <FaIcon icon="fa-crown" className="text-[9px]" />
-              Active package
-            </span>
-          )}
         </div>
         <Link
           to={notifPath}
           onClick={onNavigate}
-          className="relative shrink-0 w-10 h-10 rounded-xl bg-white/80 border border-white flex items-center justify-center text-slate-600 shadow-sm"
+          className="relative shrink-0 w-9 h-9 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-500"
           aria-label={
             summary.unreadNotifications > 0
               ? `${summary.unreadNotifications} unread notifications`
               : 'Notifications'
           }
         >
-          <FaIcon icon="fa-bell" />
+          <FaIcon icon="fa-bell" className="text-sm" />
           {summary.unreadNotifications > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[1.125rem] h-[1.125rem] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-0.5">
+            <span className="absolute -top-1 -right-1 min-w-[1rem] h-4 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold px-0.5">
               {summary.unreadNotifications > 99 ? '99+' : summary.unreadNotifications}
             </span>
           )}
         </Link>
       </div>
-      <div className="relative flex gap-2 mt-3">
+      <div className="flex gap-2 mt-2.5">
         <MiniStat label="Upcoming" value={loading ? '—' : summary.upcomingAppointments} />
         <MiniStat label="Sessions left" value={loading ? '—' : summary.pendingSessions} />
       </div>
       <Link
         to="/book"
         onClick={onNavigate}
-        className="relative mt-3 btn-primary w-full text-center text-sm !py-3 inline-flex items-center justify-center gap-2 shadow-lg shadow-primary-500/20"
+        className="mt-2.5 btn-primary w-full text-center text-xs !py-2.5 inline-flex items-center justify-center gap-1.5"
       >
-        <FaIcon icon="fa-calendar-plus" />
+        <FaIcon icon="fa-calendar-plus" className="text-xs" />
         Book Appointment
       </Link>
     </div>

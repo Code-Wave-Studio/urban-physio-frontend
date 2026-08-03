@@ -4,7 +4,6 @@ import toast from 'react-hot-toast';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import FaIcon from '../components/FaIcon';
-import SearchAIOverview from '../components/search/SearchAIOverview';
 import SearchFilterChips from '../components/search/SearchFilterChips';
 import SearchDoctorCard from '../components/search/SearchDoctorCard';
 import SearchClinicCard from '../components/search/SearchClinicCard';
@@ -418,8 +417,6 @@ export default function SearchResultsPage() {
                 No exact matches for &ldquo;{q}&rdquo; — showing the closest relevant physiotherapists, clinics and treatments.
               </div>
             )}
-
-            <SearchAIOverview text={data?.ai_overview} parsed={data?.parsed} />
 
             <SearchFilterChips
               filters={results?.filters}

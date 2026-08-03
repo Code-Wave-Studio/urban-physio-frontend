@@ -29,10 +29,8 @@ function isLinkActive(pathname, search, to) {
 
 function NavCategoryCard({ title, children, className = '' }) {
   return (
-    <section
-      className={`rounded-2xl border border-slate-200/80 bg-white shadow-[0_4px_24px_-10px_rgba(15,23,42,0.12)] p-4 ${className}`}
-    >
-      <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3 px-0.5">{title}</h2>
+    <section className={`rounded-xl border border-slate-200/80 bg-white p-3 ${className}`}>
+      <h2 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2 px-0.5">{title}</h2>
       {children}
     </section>
   );
@@ -53,14 +51,14 @@ function NavListItem({ to, label, icon, pathname, search, onNavigate, tone = 'pr
     <Link
       to={to}
       onClick={onNavigate}
-      className={`flex items-center gap-3 py-3 px-1 rounded-xl transition-colors active:scale-[0.99] ${
+      className={`flex items-center gap-2.5 py-2.5 px-1 rounded-lg transition-colors active:scale-[0.99] ${
         active ? 'bg-primary-50/80' : 'hover:bg-slate-50'
       }`}
     >
-      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm ${iconTone}`}>
+      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm ${iconTone}`}>
         <FaIcon icon={icon} />
       </span>
-      <span className={`flex-1 text-[15px] font-medium leading-snug ${active ? 'text-primary-800' : 'text-slate-700'}`}>
+      <span className={`flex-1 text-sm font-medium leading-snug ${active ? 'text-primary-800' : 'text-slate-700'}`}>
         {label}
       </span>
       <FaIcon icon="fa-chevron-right" className="text-[10px] text-slate-300 shrink-0" />
@@ -74,22 +72,19 @@ function SpeedDialTile({ item, onNavigate, unreadCount = 0 }) {
     <Link
       to={item.to}
       onClick={onNavigate}
-      className="group relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-3.5 min-h-[5.5rem] shadow-sm active:scale-[0.98] transition-transform"
+      className="group flex flex-col h-full rounded-xl border border-slate-100 bg-slate-50/50 p-2.5 active:scale-[0.98] transition-transform"
     >
       <div
-        className={`absolute -right-3 -top-3 w-16 h-16 rounded-full bg-gradient-to-br ${item.color} opacity-15 group-active:opacity-25`}
-      />
-      <div
-        className={`relative w-10 h-10 rounded-xl bg-gradient-to-br ${item.color} text-white flex items-center justify-center shadow-md mb-2.5`}
+        className={`relative w-9 h-9 rounded-lg bg-gradient-to-br ${item.color} text-white flex items-center justify-center shrink-0 mb-2`}
       >
-        <FaIcon icon={item.icon} className="text-sm" />
+        <FaIcon icon={item.icon} className="text-xs" />
         {badge > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 min-w-[1.125rem] h-[1.125rem] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-0.5 ring-2 ring-white">
+          <span className="absolute -top-1 -right-1 min-w-[1rem] h-4 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold px-0.5 ring-2 ring-white">
             {badge > 99 ? '99+' : badge}
           </span>
         )}
       </div>
-      <p className="relative text-sm font-bold text-slate-800 leading-tight pr-1">{item.label}</p>
+      <p className="text-xs font-semibold text-slate-700 leading-snug flex-1">{item.label}</p>
     </Link>
   );
 }
@@ -157,7 +152,7 @@ export default function MobileNavDrawer({
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 space-y-5 nav-drawer-scroll">
+        <div className="flex-1 overflow-y-auto overscroll-contain px-3 py-3 space-y-3 nav-drawer-scroll">
           <NavDrawerProfileCard
             user={user}
             hasRole={hasRole}
@@ -173,18 +168,18 @@ export default function MobileNavDrawer({
                 onShowLocation();
                 onClose();
               }}
-              className="w-full flex items-center gap-3 rounded-2xl border border-primary-100 bg-primary-50/60 px-4 py-3 text-sm font-semibold text-primary-800 shadow-sm active:scale-[0.99] transition"
+              className="w-full flex items-center gap-2.5 rounded-xl border border-slate-200/80 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 active:scale-[0.99] transition"
             >
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-primary-600 shadow-sm">
-                <FaIcon icon="fa-location-dot" />
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-50 text-primary-600 shrink-0">
+                <FaIcon icon="fa-location-dot" className="text-sm" />
               </span>
-              <span className="flex-1 text-left truncate">{locationLabel || city.name}</span>
-              <span className="text-xs text-primary-600 font-medium">Change</span>
+              <span className="flex-1 text-left truncate text-[13px]">{locationLabel || city.name}</span>
+              <span className="text-xs text-primary-600 font-semibold shrink-0">Change</span>
             </button>
           )}
 
           <NavCategoryCard title={speedDialTitle}>
-            <div className={`grid ${gridCols} gap-3`}>
+            <div className={`grid ${gridCols} gap-2 auto-rows-fr items-stretch`}>
               {speedDial.map((item) => (
                 <SpeedDialTile
                   key={item.to + item.label}
