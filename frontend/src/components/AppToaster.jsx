@@ -1,12 +1,12 @@
 import { useState, useRef } from 'react';
-import { Toaster, ToastBar, toast, resolveValue } from 'react-hot-toast';
+import { Toaster, toast, resolveValue } from 'react-hot-toast';
 import FaIcon from './FaIcon';
 
 /**
- * Custom Swipeable Toast wrapper for react-hot-toast.
- * Supports right-swipe (touch and mouse drag) to dismiss notifications.
+ * Premium custom Toast card with right-swipe to close, status icons,
+ * and high-end glassmorphism design.
  */
-function SwipeableToastItem({ toast: t }) {
+function AppToastCard({ toast: t }) {
   const [offsetX, setOffsetX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
   const [isDismissing, setIsDismissing] = useState(false);
@@ -28,7 +28,6 @@ function SwipeableToastItem({ toast: t }) {
     const deltaX = clientX - startXRef.current;
     const deltaY = clientY - startYRef.current;
 
-    // Lock direction on initial movement threshold
     if (isHorizontalRef.current === null) {
       if (Math.abs(deltaX) > 6 || Math.abs(deltaY) > 6) {
         if (deltaX > 0 && deltaX > Math.abs(deltaY)) {
@@ -60,7 +59,40 @@ function SwipeableToastItem({ toast: t }) {
     isHorizontalRef.current = null;
   };
 
-  const opacity = isDismissing ? 0 : Math.max(0, 1 - offsetX / 250);
+  // Status icon configuration based on toast type
+  const renderIcon = () => {
+    if (t.icon) return <span className="shrink-0 text-base">{t.icon}</span>;
+
+    switch (t.type) {
+      case 'success':
+        return (
+          <div className="shrink-0 flex items-center justify-center h-7 w-7 rounded-full bg-emerald-100/80 text-emerald-600 border border-emerald-200/70 shadow-sm shadow-emerald-500/10">
+            <FaIcon icon="fa-check" className="text-xs font-bold" />
+          </div>
+        );
+      case 'error':
+        return (
+          <div className="shrink-0 flex items-center justify-center h-7 w-7 rounded-full bg-rose-100/80 text-rose-600 border border-rose-200/70 shadow-sm shadow-rose-500/10">
+            <FaIcon icon="fa-xmark" className="text-xs font-bold" />
+          </div>
+        );
+      case 'loading':
+        return (
+          <div className="shrink-0 flex items-center justify-center h-7 w-7 rounded-full bg-indigo-100/80 text-indigo-600 border border-indigo-200/70 shadow-sm">
+            <FaIcon icon="fa-spinner" className="text-xs animate-spin" />
+          </div>
+        );
+      default:
+        return (
+          <div className="shrink-0 flex items-center justify-center h-7 w-7 rounded-full bg-teal-100/80 text-teal-600 border border-teal-200/70 shadow-sm">
+            <FaIcon icon="fa-info" className="text-xs font-bold" />
+          </div>
+        );
+    }
+  };
+
+  const isExiting = !t.visible || isDismissing;
+  const opacity = isExiting ? 0 : Math.max(0, 1 - offsetX / 250);
 
   return (
     <div
@@ -85,63 +117,53 @@ function SwipeableToastItem({ toast: t }) {
       onPointerUp={handleEnd}
       onPointerCancel={handleEnd}
       style={{
-        transform: `translateX(${offsetX}px)`,
+        transform: `translateX(${offsetX}px) ${isExiting ? 'scale(0.95)' : 'scale(1)'}`,
         opacity: opacity,
         transition: isSwiping
           ? 'none'
-          : 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease-out',
+          : 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease-out',
         touchAction: 'pan-y',
         willChange: 'transform, opacity',
       }}
-      className="w-full select-none cursor-grab active:cursor-grabbing"
+      className="pointer-events-auto w-80 sm:w-96 max-w-[calc(100vw-2rem)] select-none cursor-grab active:cursor-grabbing"
     >
-      <ToastBar toast={t}>
-        {({ icon, message }) => (
-          <div className="flex items-start gap-2.5 w-full min-w-0">
-            {icon && <span className="shrink-0 mt-0.5 leading-none">{icon}</span>}
-            <span className="flex-1 min-w-0 text-sm leading-snug break-words">
-              {resolveValue(message, t)}
-            </span>
-            {t.type !== 'loading' && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toast.dismiss(t.id);
-                }}
-                className="app-toast-dismiss shrink-0 -mr-0.5 -mt-0.5 flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:scale-95 transition"
-                aria-label="Dismiss notification"
-              >
-                <FaIcon icon="fa-xmark" className="text-xs" />
-              </button>
-            )}
-          </div>
+      <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/95 backdrop-blur-xl border border-slate-200/90 shadow-xl shadow-slate-900/10 hover:shadow-2xl transition-shadow duration-300">
+        {renderIcon()}
+
+        <div className="flex-1 min-w-0 text-sm font-medium text-slate-800 leading-snug break-words">
+          {resolveValue(t.message, t)}
+        </div>
+
+        {t.type !== 'loading' && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              toast.dismiss(t.id);
+            }}
+            className="shrink-0 -mr-1 flex h-7 w-7 items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100/80 active:scale-90 transition-all duration-150"
+            aria-label="Dismiss notification"
+          >
+            <FaIcon icon="fa-xmark" className="text-xs" />
+          </button>
         )}
-      </ToastBar>
+      </div>
     </div>
   );
 }
 
 /**
- * Global toast host — every notification sits on top-right below site header,
- * supports right swipe to close, and clear dismiss (×) control.
+ * Global toast host — positioned cleanly on top-right below site header,
+ * with right-swipe to close and premium UI/UX.
  */
 export default function AppToaster() {
   return (
     <Toaster
       position="top-right"
       containerClassName="app-toaster"
-      gutter={8}
-      toastOptions={{
-        className:
-          'app-toast glass-card !bg-white/95 !backdrop-blur-xl !border-slate-200/80 !text-slate-800 !shadow-lg !rounded-xl',
-        style: {
-          padding: '10px 12px',
-          maxWidth: 'min(24rem, calc(100vw - 2.5rem))',
-        },
-      }}
+      gutter={10}
     >
-      {(t) => <SwipeableToastItem toast={t} />}
+      {(t) => <AppToastCard toast={t} />}
     </Toaster>
   );
 }

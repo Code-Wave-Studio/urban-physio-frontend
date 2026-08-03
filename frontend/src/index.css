@@ -892,20 +892,25 @@
     transform: scale(0.94);
   }
 
-  /* Toast stack — below header, clear of menu toggle, right-aligned */
+  /* Toast stack — fixed top-right below site header, clear of menu toggle */
   .app-toaster {
+    position: fixed !important;
     top: calc(var(--site-header-height, 3.5rem) + 0.5rem) !important;
-    left: 0.75rem !important;
-    right: 0.75rem !important;
-    z-index: 9999;
-    pointer-events: none;
+    right: 1rem !important;
+    left: auto !important;
+    bottom: auto !important;
+    z-index: 99999 !important;
+    pointer-events: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
+    max-width: calc(100vw - 2rem) !important;
   }
 
   @media (min-width: 640px) {
     .app-toaster {
       top: calc(var(--site-header-height, 4rem) + 0.75rem) !important;
-      left: 1.25rem !important;
-      right: 1.25rem !important;
+      right: 1.5rem !important;
     }
   }
 
