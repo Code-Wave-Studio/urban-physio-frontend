@@ -197,14 +197,14 @@ export default function MobileNavDrawer({
       <button
         type="button"
         aria-label="Close menu"
-        className={`site-mobile-backdrop fixed inset-0 z-[105] md:hidden bg-slate-900/50 backdrop-blur-[2px] transition-opacity duration-300 ${
+        className={`site-mobile-backdrop fixed inset-0 z-[105] bg-slate-900/50 backdrop-blur-[2px] transition-opacity duration-300 ${
           open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
       />
 
       <div
-        className={`site-mobile-drawer site-mobile-drawer--fullscreen fixed inset-0 z-[108] md:hidden flex flex-col bg-gradient-to-b from-slate-50 via-white to-primary-50/20 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+        className={`site-mobile-drawer fixed top-0 right-0 bottom-0 z-[108] w-[min(26rem,92vw)] flex flex-col bg-gradient-to-b from-slate-50 via-white to-primary-50/20 shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
         aria-hidden={!open}

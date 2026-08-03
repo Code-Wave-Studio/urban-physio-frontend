@@ -1,7 +1,12 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { useAuth } from '../../contexts/AuthContext';
+import { doctors as doctorsApi, clinicPortal } from '../../services/api';
 import FaIcon from '../FaIcon';
 import DoctorAvatar from '../DoctorAvatar';
 import PatientAvatar from '../PatientAvatar';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 
 function MiniStat({ label, value, badge }) {
   return (
@@ -15,6 +20,55 @@ function MiniStat({ label, value, badge }) {
           </span>
         )}
       </p>
+    </div>
+  );
+}
+
+function MasterAvailabilityToggle({ isOnline, onToggle, toggling, type = 'doctor' }) {
+  return (
+    <div className="relative mt-3 flex items-center justify-between gap-2 rounded-xl border border-slate-200/90 bg-white/90 p-2.5 shadow-2xs backdrop-blur-sm">
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="relative flex h-2.5 w-2.5 shrink-0">
+          {isOnline && (
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+          )}
+          <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${isOnline ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+        </span>
+        <div className="min-w-0 select-none">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 leading-none">
+            {type === 'clinic' ? 'Clinic Status' : 'Master Availability'}
+          </p>
+          <p className={`text-xs font-bold leading-tight mt-0.5 ${isOnline ? 'text-emerald-700' : 'text-slate-600'}`}>
+            {isOnline ? 'Online · Active & Available' : 'Offline · Instant Override'}
+          </p>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onToggle}
+        disabled={toggling}
+        aria-pressed={isOnline}
+        title={isOnline ? 'Switch to Offline' : 'Switch to Online'}
+        className={`group relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 ${
+          isOnline ? 'bg-emerald-500' : 'bg-slate-300'
+        }`}
+      >
+        <span
+          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+            isOnline ? 'translate-x-5' : 'translate-x-0'
+          }`}
+        >
+          {toggling ? (
+            <span className="flex h-full w-full items-center justify-center text-slate-400">
+              <FaIcon icon="fa-spinner" className="fa-spin text-[9px]" />
+            </span>
+          ) : (
+            <span className={`flex h-full w-full items-center justify-center text-[9px] ${isOnline ? 'text-emerald-600' : 'text-slate-400'}`}>
+              <FaIcon icon={isOnline ? 'fa-check' : 'fa-xmark'} />
+            </span>
+          )}
+        </span>
+      </button>
     </div>
   );
 }
@@ -114,6 +168,8 @@ function PatientProfileCard({ user, summary, loading, onNavigate }) {
 }
 
 function DoctorProfileCard({ user, summary, loading, onNavigate }) {
+  const { setUser } = useAuth();
+  const [toggling, setToggling] = useState(false);
   const profile = summary.doctorProfile || {};
   const name =
     [profile.first_name || user.first_name, profile.last_name || user.last_name].filter(Boolean).join(' ') ||
@@ -122,6 +178,23 @@ function DoctorProfileCard({ user, summary, loading, onNavigate }) {
   const rating = profile.rating_avg ? Number(profile.rating_avg).toFixed(1) : '—';
   const experience = profile.experience_years ? `${profile.experience_years}+ yrs` : '—';
   const verified = Number(profile.is_verified) === 1;
+
+  const isOnline = Boolean(user?.profile_public ?? profile.profile_public ?? 1);
+
+  const toggleDoctorStatus = async () => {
+    if (toggling) return;
+    const next = !isOnline;
+    setToggling(true);
+    try {
+      await doctorsApi.updateProfile({ profile_public: next ? 1 : 0 });
+      setUser((u) => (u ? { ...u, profile_public: next ? 1 : 0 } : u));
+      toast.success(next ? 'Master status: Online - Available for all bookings' : 'Master status: Offline - Unavailable across all modes');
+    } catch (err) {
+      toast.error(err.message || 'Could not update availability status');
+    } finally {
+      setToggling(false);
+    }
+  };
 
   return (
     <div className="nav-drawer-profile-card relative overflow-hidden rounded-2xl border border-white/60 bg-gradient-to-br from-violet-500/10 via-white to-primary-500/10 p-4 shadow-[0_8px_32px_-12px_rgba(99,102,241,0.3)]">
@@ -148,6 +221,15 @@ function DoctorProfileCard({ user, summary, loading, onNavigate }) {
           </p>
         </div>
       </div>
+
+      {/* Master Online/Offline Toggle */}
+      <MasterAvailabilityToggle
+        isOnline={isOnline}
+        onToggle={toggleDoctorStatus}
+        toggling={toggling}
+        type="doctor"
+      />
+
       <div className="relative flex gap-2 mt-3">
         <MiniStat label="Today" value={loading ? '—' : summary.todayAppointments} />
         <MiniStat label="Pending" value={loading ? '—' : summary.pendingRequests} />
@@ -214,6 +296,97 @@ function AdminProfileCard({ user, summary, loading, onNavigate }) {
   );
 }
 
+function ClinicProfileCard({ user, summary, loading, onNavigate }) {
+  const [toggling, setToggling] = useState(false);
+  const [clinicClosed, setClinicClosed] = useState(Boolean(Number(summary.clinicProfile?.is_closed ?? user.is_closed ?? 0)));
+  const name =
+    user.clinic_name ||
+    user.name ||
+    [user.first_name, user.last_name].filter(Boolean).join(' ') ||
+    'Clinic';
+  const logo = resolveMediaUrl(user.avatar || user.logo || user.clinic_logo);
+  const notifPath = '/clinic-portal/notifications';
+  const clinicId = user.clinic_id || user.id;
+
+  const isOnline = !clinicClosed;
+
+  const toggleClinicStatus = async () => {
+    if (toggling) return;
+    const next = !isOnline;
+    setToggling(true);
+    try {
+      if (clinicId) {
+        await clinicPortal.setClinicClosure(clinicId, {
+          is_closed: next ? 0 : 1,
+          closure_reason: next ? '' : 'Temporarily offline',
+        });
+      }
+      setClinicClosed(!next);
+      toast.success(next ? 'Clinic status: Online - Open for appointments' : 'Clinic status: Offline - Marked as closed');
+    } catch (err) {
+      toast.error(err.message || 'Could not update clinic status');
+    } finally {
+      setToggling(false);
+    }
+  };
+
+  return (
+    <div className="nav-drawer-profile-card relative overflow-hidden rounded-2xl border border-white/60 bg-gradient-to-br from-emerald-500/10 via-white to-teal-500/10 p-4 shadow-[0_8px_32px_-12px_rgba(16,185,129,0.3)]">
+      <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-emerald-200/30 blur-2xl" />
+      <div className="relative flex items-start gap-3">
+        <div className="w-14 h-14 rounded-2xl bg-white border border-emerald-100 flex items-center justify-center text-emerald-600 font-bold text-lg shadow-sm shrink-0 overflow-hidden">
+          {logo ? (
+            <img src={logo} alt={name} className="w-full h-full object-cover" />
+          ) : (
+            <FaIcon icon="fa-hospital" className="text-xl text-emerald-600" />
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-slate-900 text-lg leading-tight truncate">{name}</p>
+          <p className="text-sm text-slate-500 mt-0.5">Clinic Portal</p>
+          <Link
+            to="/clinic-portal/profile"
+            onClick={onNavigate}
+            className="inline-flex items-center gap-0.5 text-xs font-medium text-emerald-600 mt-1 hover:text-emerald-800"
+          >
+            Clinic settings
+            <FaIcon icon="fa-chevron-right" className="text-[8px]" />
+          </Link>
+        </div>
+        {summary.unreadNotifications > 0 && (
+          <Link
+            to={notifPath}
+            onClick={onNavigate}
+            className="relative shrink-0 w-9 h-9 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-500"
+          >
+            <FaIcon icon="fa-bell" className="text-sm" />
+            <span className="absolute -top-1 -right-1 min-w-[1rem] h-4 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold px-0.5">
+              {summary.unreadNotifications > 99 ? '99+' : summary.unreadNotifications}
+            </span>
+          </Link>
+        )}
+      </div>
+
+      {/* Master Online/Offline Toggle */}
+      <MasterAvailabilityToggle
+        isOnline={isOnline}
+        onToggle={toggleClinicStatus}
+        toggling={toggling}
+        type="clinic"
+      />
+
+      <Link
+        to="/clinic-portal"
+        onClick={onNavigate}
+        className="relative mt-3 btn-primary w-full text-center text-sm !py-3 inline-flex items-center justify-center gap-2 !bg-emerald-600 hover:!bg-emerald-700 shadow-lg shadow-emerald-600/20"
+      >
+        <FaIcon icon="fa-hospital-user" />
+        Open Clinic Portal
+      </Link>
+    </div>
+  );
+}
+
 export default function NavDrawerProfileCard({ user, hasRole, summary, loading, onNavigate }) {
   if (!user) return <GuestLoginCard onNavigate={onNavigate} />;
   if (hasRole('super_admin', 'admin')) {
@@ -221,6 +394,9 @@ export default function NavDrawerProfileCard({ user, hasRole, summary, loading, 
   }
   if (hasRole('doctor')) {
     return <DoctorProfileCard user={user} summary={summary} loading={loading} onNavigate={onNavigate} />;
+  }
+  if (hasRole('clinic', 'clinic_staff', 'clinic_admin')) {
+    return <ClinicProfileCard user={user} summary={summary} loading={loading} onNavigate={onNavigate} />;
   }
   if (hasRole('patient')) {
     return <PatientProfileCard user={user} summary={summary} loading={loading} onNavigate={onNavigate} />;

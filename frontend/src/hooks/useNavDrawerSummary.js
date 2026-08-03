@@ -75,6 +75,16 @@ export function useNavDrawerSummary(open, user) {
           return;
         }
 
+        if (role === 'clinic' || role === 'clinic_staff' || role === 'clinic_admin') {
+          const notifRes = await notifications.unreadCount().catch(() => ({ data: { unread_count: 0 } }));
+          if (cancelled) return;
+          setSummary({
+            ...EMPTY,
+            unreadNotifications: notifRes.data?.unread_count ?? 0,
+          });
+          return;
+        }
+
         if (role === 'admin' || role === 'super_admin') {
           const [dashRes, notifRes] = await Promise.all([
             admin.dashboard(),

@@ -42,5 +42,4 @@ export const DOCTOR_NAV = [
   { to: '/doctor/custom-slots', label: 'Custom Slots', icon: 'fa-calendar-plus', section: 'settings' },
   { to: '/doctor/profile', label: 'Profile', icon: 'fa-user-gear', section: 'settings' },
   { to: '/doctor/notifications', label: 'Notifications', icon: 'fa-bell', section: 'settings', notifyKey: true },
-  { action: 'logout', label: 'Logout', icon: 'fa-right-from-bracket', section: 'settings' },
 ];

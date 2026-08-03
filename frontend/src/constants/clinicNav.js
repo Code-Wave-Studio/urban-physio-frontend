@@ -85,7 +85,6 @@ export const CLINIC_ADMIN_NAV = [
   { to: '/clinic-portal/earnings', label: 'Finance', icon: 'fa-sack-dollar', perm: 'earnings.view', section: 'settings_admin' },
   { to: '/clinic-portal/notifications/manage', label: 'Notification Setup', icon: 'fa-bullhorn', perm: 'notifications.manage', section: 'settings_admin' },
   { to: '/clinic-portal/settings/support', label: 'Support Center', icon: 'fa-life-ring', perm: 'dashboard.admin', section: 'settings_admin' },
-  { action: 'logout', label: 'Logout', icon: 'fa-right-from-bracket', section: 'settings_admin' },
 ];
 
 /** Backward-compatible full list (admin). */

@@ -44,5 +44,4 @@ export const PATIENT_NAV = [
   { to: '/patient/notifications', label: 'Notifications', icon: 'fa-bell', section: 'settings', notifyKey: true },
   { to: '/faq', label: 'FAQ', icon: 'fa-circle-question', section: 'settings' },
   { to: '/contact', label: 'Contact Us', icon: 'fa-envelope', section: 'settings' },
-  { action: 'logout', label: 'Logout', icon: 'fa-right-from-bracket', section: 'settings' },
 ];

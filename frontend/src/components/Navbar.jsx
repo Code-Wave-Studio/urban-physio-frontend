@@ -221,29 +221,19 @@ export default function Navbar({ beforeLogo = null, headerSpacerClass = '', port
             <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto">
               {user && <NotificationBell />}
               {!portalMode && (
-              <Link to="/book" className="hidden sm:inline-flex btn-primary text-sm !py-2 !px-4">
-                Book Appointment
-              </Link>
+                <Link to="/book" className="hidden sm:inline-flex btn-primary text-sm !py-2 !px-4">
+                  Book Appointment
+                </Link>
               )}
               {user ? (
                 <>
                   {!portalMode && (
-                  <Link
-                    to={dashboardPath()}
-                    className="hidden md:inline-flex text-sm font-medium text-slate-600 hover:text-primary-600 px-1"
-                  >
-                    {dashboardLabel()}
-                  </Link>
-                  )}
-                  {/* Public site: no Logout in header (use drawer / portal). Portals keep Logout. */}
-                  {portalMode && (
-                    <button
-                      type="button"
-                      onClick={handleLogout}
-                      className="inline-flex btn-outline text-sm !py-1.5 !px-2.5 sm:!py-2 sm:!px-3"
+                    <Link
+                      to={dashboardPath()}
+                      className="hidden md:inline-flex text-sm font-medium text-slate-600 hover:text-primary-600 px-1"
                     >
-                      Logout
-                    </button>
+                      {dashboardLabel()}
+                    </Link>
                   )}
                 </>
               ) : (
@@ -254,34 +244,32 @@ export default function Navbar({ beforeLogo = null, headerSpacerClass = '', port
                   Login
                 </Link>
               )}
-              {!portalMode && (
-                <button
-                  type="button"
-                  className="site-header-menu-btn md:hidden"
-                  onClick={() => setMobileOpen((o) => !o)}
-                  aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
-                  aria-expanded={mobileOpen}
-                >
-                  <FaIcon icon={mobileOpen ? 'fa-xmark' : 'fa-bars'} className="text-lg" />
-                </button>
-              )}
+
+              {/* Universal right-side menu toggle (hamburger) button */}
+              <button
+                type="button"
+                className="site-header-menu-btn"
+                onClick={() => setMobileOpen((o) => !o)}
+                aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+                aria-expanded={mobileOpen}
+              >
+                <FaIcon icon={mobileOpen ? 'fa-xmark' : 'fa-bars'} className="text-lg" />
+              </button>
             </div>
           </div>
         </div>
       </header>
 
-      {!portalMode && (
-        <MobileNavDrawer
-          open={mobileOpen}
-          onClose={() => setMobileOpen(false)}
-          user={user}
-          hasRole={hasRole}
-          city={city}
-          locationLabel={locationLabel}
-          onShowLocation={() => setShowSelector(true)}
-          onLogout={handleLogout}
-        />
-      )}
+      <MobileNavDrawer
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        user={user}
+        hasRole={hasRole}
+        city={city}
+        locationLabel={locationLabel}
+        onShowLocation={() => setShowSelector(true)}
+        onLogout={handleLogout}
+      />
 
       <div
         className={`site-header-spacer shrink-0 ${headerSpacerClass}`}

@@ -69,5 +69,4 @@ export const ADMIN_NAV = [
   { to: '/admin/documents', label: 'Documents', icon: 'fa-folder-tree', section: 'settings_system' },
   { to: '/admin/profile', label: 'Profile', icon: 'fa-user-gear', section: 'settings_system' },
   { to: '/', label: 'View Public Site', icon: 'fa-arrow-up-right-from-square', section: 'settings_system' },
-  { action: 'logout', label: 'Logout', icon: 'fa-right-from-bracket', section: 'settings_system' },
 ];
