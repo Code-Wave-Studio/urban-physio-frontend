@@ -4,6 +4,7 @@ import FaIcon from '../../components/FaIcon';
 import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
 import ClinicCollectPaymentButton from '../../components/clinic/ClinicCollectPaymentButton';
 import ClinicBookingModal from '../../components/clinic/ClinicBookingModal';
+import ClinicRolloverModal from '../../components/clinic/ClinicRolloverModal';
 import AppointmentDateNavigator, { computeRange } from '../../components/clinic/AppointmentDateNavigator';
 import { clinicPortal } from '../../services/api';
 import useClinicPortal from '../../hooks/useClinicPortal';
@@ -47,9 +48,10 @@ export default function ClinicPortalAppointments() {
   const [q,       setQ]       = useState('');
 
   // ── Modals ────────────────────────────────────────────────────────────
-  const [acting,          setActing]          = useState(null);
-  const [bookingOpen,     setBookingOpen]     = useState(false);
-  const [soapAppointment, setSoapAppointment] = useState(null);
+  const [acting,              setActing]              = useState(null);
+  const [bookingOpen,         setBookingOpen]         = useState(false);
+  const [rolloverAppointment, setRolloverAppointment] = useState(null);
+  const [soapAppointment,     setSoapAppointment]     = useState(null);
   const [soap,            setSoap]            = useState({ subjective: '', objective: '', assessment: '', plan: '', visible_to_patient: false });
   const [soapSaving,      setSoapSaving]      = useState(false);
 
@@ -126,19 +128,8 @@ export default function ClinicPortalAppointments() {
     }
   };
 
-  const cancelRollover = async (a) => {
-    if (!window.confirm('Cancel this session and move it to the next available slot?')) return;
-    setActing(a.id);
-    try {
-      const res  = await clinicPortal.cancelWithRollover(clinicId, a.id);
-      const next = res.data || res || {};
-      toast.success(next.slot?.date ? `Rolled over to ${next.slot.date}` : 'Session cancelled and rolled over');
-      load();
-    } catch (e) {
-      toast.error(e.message || 'Rollover failed');
-    } finally {
-      setActing(null);
-    }
+  const cancelRollover = (a) => {
+    setRolloverAppointment(a);
   };
 
   const changeMode = async (a) => {
@@ -496,6 +487,15 @@ export default function ClinicPortalAppointments() {
             </div>
           </form>
         </div>
+      )}
+
+      {rolloverAppointment && (
+        <ClinicRolloverModal
+          appointment={rolloverAppointment}
+          clinicId={clinicId}
+          onClose={() => setRolloverAppointment(null)}
+          onSuccess={() => load()}
+        />
       )}
     </ClinicPortalShell>
   );

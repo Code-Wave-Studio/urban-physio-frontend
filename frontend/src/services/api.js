@@ -760,8 +760,8 @@ export const clinicPortal = {
     api.post(`/clinic-portal/${clinicId}/appointments/${apptId}/check-in`, data),
   changeSessionMode: (clinicId, apptId, data) =>
     api.post(`/clinic-portal/${clinicId}/appointments/${apptId}/change-mode`, data),
-  cancelWithRollover: (clinicId, apptId) =>
-    api.post(`/clinic-portal/${clinicId}/appointments/${apptId}/cancel-rollover`),
+  cancelWithRollover: (clinicId, apptId, data = {}) =>
+    api.post(`/clinic-portal/${clinicId}/appointments/${apptId}/cancel-rollover`, data),
   updateAttribution: (clinicId, apptId, data) =>
     api.patch(`/clinic-portal/${clinicId}/appointments/${apptId}/attribution`, data),
   generateMeeting: (clinicId, apptId, data) =>

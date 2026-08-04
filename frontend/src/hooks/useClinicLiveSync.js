@@ -33,6 +33,7 @@ export default function useClinicLiveSync(clinicId, onEvent, options = {}) {
       if (id > lastIdRef.current) lastIdRef.current = id;
       setLastEventAt(new Date());
       callbackRef.current?.(event);
+      window.dispatchEvent(new Event('notifications-updated'));
     };
 
     const poll = async () => {
