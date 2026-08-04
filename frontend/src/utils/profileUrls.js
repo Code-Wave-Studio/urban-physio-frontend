@@ -56,9 +56,13 @@ export function doctorBookUrl(doctor) {
 }
 
 export function clinicBookUrl(clinic) {
-  if (!clinic?.id) return '/book?type=clinic';
-  return `/book?type=clinic&clinic_id=${clinic.id}`;
+  const id = typeof clinic === 'object' && clinic ? clinic.id : clinic;
+  if (!id) return '/book?type=clinic';
+  return `/book?type=clinic&clinic_id=${id}`;
 }
+
+export const bookClinicUrl = clinicBookUrl;
+export const bookDoctorUrl = doctorBookUrl;
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const FULL_DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
