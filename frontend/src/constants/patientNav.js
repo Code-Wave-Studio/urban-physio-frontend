@@ -1,6 +1,6 @@
 /** Patient portal — architecture categories */
 
-export const PATIENT_SECTION_ORDER = ['visits', 'explore', 'health', 'billing', 'settings'];
+export const PATIENT_SECTION_ORDER = ['visits', 'health', 'billing', 'settings'];
 
 export const PATIENT_SPEED_DIAL = [
   { to: '/book', label: 'Book Appointment', icon: 'fa-calendar-plus', color: 'from-primary-500 to-orange-600' },
@@ -16,14 +16,6 @@ export const PATIENT_NAV = [
   { to: '/patient/appointments', label: 'Appointments', icon: 'fa-calendar-check', section: 'visits' },
   { to: '/patient/video-consultations', label: 'Video Consultation', icon: 'fa-video', section: 'visits' },
   { to: '/emergency/book', label: 'Emergency Care', icon: 'fa-truck-medical', section: 'visits' },
-
-  // Explore
-  { to: '/doctors', label: 'Find Doctors', icon: 'fa-user-doctor', section: 'explore' },
-  { to: '/clinics', label: 'Find Clinics', icon: 'fa-hospital', section: 'explore' },
-  { to: '/book?type=home_visit', label: 'Home Physiotherapy', icon: 'fa-house-medical', section: 'explore' },
-  { to: '/treatments', label: 'Our Services', icon: 'fa-kit-medical', section: 'explore' },
-  { to: '/exercises', label: 'Exercise Library', icon: 'fa-dumbbell', section: 'explore' },
-  { to: '/physiofeed', label: 'PhysioFeed', icon: 'fa-newspaper', section: 'explore' },
 
   // Health Records
   { to: '/patient/exercises', label: 'My Rehab Plan', icon: 'fa-person-walking', section: 'health' },

@@ -153,12 +153,16 @@ export default function ClinicQuickActions({
   const compact = variant === 'card' || variant === 'sheet';
   const showProfile = variant === 'sheet';
 
+  const isClosed = Boolean(Number(clinic.is_closed));
+
   const actions = (
     <>
       {showProfile && (
         <CircleAction to={profileTo} icon="fa-hospital" label="Profile" onClick={wrapNav()} compact={compact} />
       )}
-      <CircleAction to={bookTo} icon="fa-calendar-check" label="Book" onClick={wrapNav()} compact={compact} />
+      {!isClosed && (
+        <CircleAction to={bookTo} icon="fa-calendar-check" label="Book" onClick={wrapNav()} compact={compact} />
+      )}
       {mapUrl && (
         <CircleAction href={mapUrl} icon="fa-diamond-turn-right" label="Directions" external onClick={stopNav} compact={compact} />
       )}

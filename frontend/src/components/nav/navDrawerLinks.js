@@ -5,6 +5,7 @@ export const EXPLORE_LINKS = [
   { to: '/treatments', label: 'Our Services', icon: 'fa-kit-medical' },
   { to: '/exercises', label: 'Exercise Library', icon: 'fa-dumbbell' },
   { to: '/physiofeed', label: 'PhysioFeed', icon: 'fa-newspaper' },
+  { to: '/podcast', label: 'Podcast', icon: 'fa-podcast' },
   { to: '/about', label: 'About Us', icon: 'fa-building' },
 ];
 
@@ -69,9 +70,11 @@ export const CLINIC_SPEED_DIAL = [
 ];
 
 export function speedDialForRole(hasRole) {
-  if (hasRole('super_admin', 'admin')) return ADMIN_SPEED_DIAL;
-  if (hasRole('doctor')) return DOCTOR_SPEED_DIAL;
-  if (hasRole('clinic', 'clinic_staff', 'clinic_admin')) return CLINIC_SPEED_DIAL;
-  if (hasRole('patient')) return PATIENT_SPEED_DIAL;
+  if (typeof hasRole === 'function') {
+    if (hasRole('super_admin', 'admin')) return ADMIN_SPEED_DIAL;
+    if (hasRole('doctor')) return DOCTOR_SPEED_DIAL;
+    if (hasRole('clinic', 'clinic_staff', 'clinic_admin')) return CLINIC_SPEED_DIAL;
+    if (hasRole('patient')) return PATIENT_SPEED_DIAL;
+  }
   return GUEST_SPEED_DIAL;
 }

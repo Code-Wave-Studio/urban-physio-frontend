@@ -130,6 +130,9 @@ import PatientVideoConsultations from './pages/patient/PatientVideoConsultations
 import PatientPrescriptions from './pages/patient/PatientPrescriptions';
 import PatientConsultationPage from './pages/patient/PatientConsultationPage';
 import DoctorConsultationPage from './pages/doctor/DoctorConsultationPage';
+import DoctorConsultationRoomsPage from './pages/doctor/DoctorConsultationRoomsPage';
+import ClinicConsultationPage from './pages/clinic/ClinicConsultationPage';
+import ClinicConsultationRoomsPage from './pages/clinic/ClinicConsultationRoomsPage';
 import PhysioFeed from './pages/PhysioFeed';
 import PhysioFeedDetail from './pages/PhysioFeedDetail';
 import AdminPhysioFeed from './pages/admin/AdminPhysioFeed';
@@ -304,6 +307,7 @@ export default function App() {
 
       <Route path="/doctor" element={<ProtectedRoute roles={['doctor']}><DoctorDashboard /></ProtectedRoute>} />
       <Route path="/doctor/appointments" element={<ProtectedRoute roles={['doctor']}><DoctorAppointments /></ProtectedRoute>} />
+      <Route path="/doctor/consultation-rooms" element={<ProtectedRoute roles={['doctor']}><DoctorConsultationRoomsPage /></ProtectedRoute>} />
       <Route path="/doctor/consultation/:appointmentId" element={<ProtectedRoute roles={['doctor']}><DoctorConsultationPage /></ProtectedRoute>} />
       <Route path="/doctor/profile" element={<ProtectedRoute roles={['doctor']}><DoctorProfile /></ProtectedRoute>} />
       <Route path="/doctor/availability" element={<ProtectedRoute roles={['doctor']}><Navigate to="/doctor/clinic-availability" replace /></ProtectedRoute>} />
@@ -319,6 +323,8 @@ export default function App() {
       <Route path="/clinic-portal/doctors" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicPortalDoctors /></ProtectedRoute>} />
       <Route path="/clinic-portal/documents" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><DocumentsPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/appointments" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicPortalAppointments /></ProtectedRoute>} />
+      <Route path="/clinic-portal/consultation-rooms" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicConsultationRoomsPage /></ProtectedRoute>} />
+      <Route path="/clinic-portal/consultation/:appointmentId" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicConsultationPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/patients" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicPortalPatients /></ProtectedRoute>} />
       <Route path="/clinic-portal/patients/:patientKey" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicPatientDetailPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/earnings" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicPortalEarnings /></ProtectedRoute>} />

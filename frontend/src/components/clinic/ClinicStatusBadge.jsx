@@ -5,9 +5,10 @@ import { todayOpenStatus, resolveClinicHours } from '../../utils/clinicProfileUt
  * Real-time open / closed status from opening hours.
  * @param {{ hours?: object, clinic?: object, isClosed?: boolean }} props — pass `clinic` or normalized `hours`
  */
-export default function ClinicStatusBadge({ hours, clinic, isClosed = false, className = '', prominent = false }) {
+export default function ClinicStatusBadge({ hours, clinic, isClosed, className = '', prominent = false }) {
+  const closed = isClosed ?? Boolean(Number(clinic?.is_closed ?? 0));
   const resolved = hours ?? resolveClinicHours(clinic);
-  const status = todayOpenStatus(resolved, new Date(), isClosed);
+  const status = todayOpenStatus(resolved, new Date(), closed);
   const open = status.open;
 
   if (prominent) {
@@ -37,9 +38,10 @@ export default function ClinicStatusBadge({ hours, clinic, isClosed = false, cla
   );
 }
 
-export function ClinicStatusDetail({ hours, clinic, isClosed = false, className = '' }) {
+export function ClinicStatusDetail({ hours, clinic, isClosed, className = '' }) {
+  const closed = isClosed ?? Boolean(Number(clinic?.is_closed ?? 0));
   const resolved = hours ?? resolveClinicHours(clinic);
-  const status = todayOpenStatus(resolved, new Date(), isClosed);
+  const status = todayOpenStatus(resolved, new Date(), closed);
   return (
     <p
       className={`text-xs sm:text-sm font-medium flex items-center gap-2 ${

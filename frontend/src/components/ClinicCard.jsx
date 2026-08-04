@@ -123,7 +123,7 @@ export default function ClinicCard({ clinic, compact = false, variant = 'listing
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900/65 via-slate-900/15 to-transparent" />
           <div className="absolute top-2.5 left-2.5 right-2.5 flex items-start justify-between gap-2">
-            <ClinicStatusBadge hours={hours} prominent className="!text-white drop-shadow-sm" />
+            <ClinicStatusBadge hours={hours} clinic={clinic} prominent className="!text-white drop-shadow-sm" />
             {clinic.distance_km != null && (
               <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/95 text-sky-800 text-[10px] font-bold shadow-sm">
                 <FaIcon icon="fa-route" className="text-[9px]" />
@@ -154,7 +154,7 @@ export default function ClinicCard({ clinic, compact = false, variant = 'listing
           </p>
 
           <ClinicMiniStats clinic={clinic} />
-          <ClinicStatusDetail hours={hours} />
+          <ClinicStatusDetail hours={hours} clinic={clinic} />
 
           <ClinicTodaySlotsRow clinicId={clinic.id} />
 

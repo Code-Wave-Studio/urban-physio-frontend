@@ -5,6 +5,7 @@ import LocationMapModal from '../../components/LocationMapModal';
 import GlassModal, { GlassModalHeader } from '../../components/GlassModal';
 import FaIcon from '../../components/FaIcon';
 import AdminUserListRow from '../../components/admin/AdminUserListRow';
+import AdminDeleteUserModal from '../../components/admin/AdminDeleteUserModal';
 import { admin } from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -39,6 +40,8 @@ export default function AdminUsers() {
   const [lat, setLat] = useState(null);
   const [lng, setLng] = useState(null);
   const [mapOpen, setMapOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -198,6 +201,27 @@ export default function AdminUsers() {
     }
   };
 
+  const handleDeleteUser = async ({ userId, type, confirm_email }) => {
+    setDeleteLoading(true);
+    try {
+      await admin.deleteUser(userId, { type, confirm_email });
+      toast.success(type === 'permanent' ? 'Account permanently deleted.' : 'Account soft deleted — user is locked out.');
+      setDeleteTarget(null);
+      // Remove from expanded view if open
+      if (expandedId === userId) setExpandedId(null);
+      setDetailsCache((c) => {
+        const next = { ...c };
+        delete next[userId];
+        return next;
+      });
+      load();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err.message || 'Delete failed');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   return (
     <AdminDashboardLayout>
       <div className="mb-6">
@@ -334,6 +358,7 @@ export default function AdminUsers() {
               onOpenLocation={openLocation}
               onApproveServices={approveDoctorServices}
               onRejectServices={rejectDoctorServices}
+              onDelete={setDeleteTarget}
               actionLoading={actionLoading}
             />
           ))}
@@ -395,6 +420,13 @@ export default function AdminUsers() {
           setLat(la);
           setLng(ln);
         }}
+      />
+
+      <AdminDeleteUserModal
+        user={deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteUser}
+        loading={deleteLoading}
       />
     </AdminDashboardLayout>
   );

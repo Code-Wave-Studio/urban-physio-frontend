@@ -33,6 +33,7 @@ export const CLINIC_RECEPTIONIST_NAV = [
   { to: '/clinic-portal/notifications', label: 'Notifications', icon: 'fa-bell', notifyKey: true, perm: 'notifications.view', section: 'operations' },
 
   { to: '/clinic-portal/notes', label: 'Notes', icon: 'fa-note-sticky', perm: 'documents.basic', section: 'clinical_hub' },
+  { to: '/clinic-portal/consultation-rooms', label: 'Consultation Rooms', icon: 'fa-comments', perm: 'appointments.view', section: 'clinical_hub' },
   { to: '/clinic-portal/documents', label: 'Documents', icon: 'fa-folder-tree', perm: 'documents.basic', section: 'clinical_hub' },
 
   { to: '/clinic-portal/billing', label: 'Billing', icon: 'fa-file-invoice-dollar', perm: 'billing.view', section: 'finance' },
@@ -56,6 +57,7 @@ export const CLINIC_ADMIN_NAV = [
 
   // Clinical Hub
   { to: '/clinic-portal/rehab', label: 'Exercise & Rehab', icon: 'fa-dumbbell', perm: 'exercises.manage', section: 'clinical_hub', match: 'prefix' },
+  { to: '/clinic-portal/consultation-rooms', label: 'Consultation Rooms', icon: 'fa-comments', perm: 'appointments.view', section: 'clinical_hub' },
   { to: '/clinic-portal/notes', label: 'Notes', icon: 'fa-note-sticky', perm: 'documents.manage', section: 'clinical_hub' },
   { to: '/clinic-portal/documents', label: 'Documents', icon: 'fa-folder-tree', perm: 'documents.manage', section: 'clinical_hub' },
 

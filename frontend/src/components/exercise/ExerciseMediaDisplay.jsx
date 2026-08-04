@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 import { parseMediaSource } from '../../utils/mediaParser';
+import CustomExercisePlayer from './CustomExercisePlayer';
 
 /**
  * Universal Exercise Media Rendering Component
  *
- * variant="player"     — modal / detail: silent autoplay + loop, no controls
+ * variant="player"     — custom distraction-free player with controls below video
  * variant="thumbnail"  — card grid: static YouTube thumb / covered image / muted loop video
  */
 export default function ExerciseMediaDisplay({
@@ -32,19 +33,14 @@ export default function ExerciseMediaDisplay({
     );
   }
 
-  if (media.type === 'youtube' && media.embedUrl) {
+  if (variant === 'player') {
     return (
-      <div className="relative w-full h-full overflow-hidden bg-slate-950 pointer-events-none select-none">
-        <iframe
-          src={media.embedUrl}
-          title={label}
-          className="absolute inset-0 w-full h-full scale-[1.35] object-cover pointer-events-none border-0"
-          allow="autoplay; encrypted-media; picture-in-picture"
-          allowFullScreen={false}
-          loading="lazy"
-          tabIndex={-1}
-        />
-      </div>
+      <CustomExercisePlayer
+        exercise={exercise}
+        mediaUrl={mediaUrl}
+        title={label}
+        className={className}
+      />
     );
   }
 

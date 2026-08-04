@@ -174,13 +174,19 @@ export default function AppointmentListRow({
 
       {expanded && (
         <div className="border-t border-white/70 bg-white/30 p-3 md:p-4 animate-slide-up">
-          {view === 'doctor' && appt.consultation_type === 'online' && appt.status === 'confirmed' && (
+          {(view === 'doctor' || view === 'clinic' || view === 'patient' || view === 'admin') && (
             <Link
-              to={`/doctor/consultation/${appt.id}`}
-              className="btn-primary text-sm py-2 px-4 inline-flex items-center gap-2 mb-3"
+              to={
+                view === 'patient'
+                  ? `/patient/consultation/${appt.id}`
+                  : view === 'clinic'
+                    ? `/clinic-portal/consultation/${appt.id}`
+                    : `/doctor/consultation/${appt.id}`
+              }
+              className="btn-primary text-xs sm:text-sm py-2 px-3.5 inline-flex items-center gap-2 mb-3 shadow-sm"
             >
-              <FaIcon icon="fa-video" />
-              Open Consultation Room
+              <FaIcon icon="fa-comments" />
+              {appt.status === 'completed' ? 'Reopen Consultation Room' : 'Open Consultation Room'}
             </Link>
           )}
           <AppointmentDetailCard

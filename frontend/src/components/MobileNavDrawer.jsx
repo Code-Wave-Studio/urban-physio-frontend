@@ -182,7 +182,7 @@ export default function MobileNavDrawer({
   const { summary, loading: summaryLoading } = useNavDrawerSummary(open, user);
   const speedDial = speedDialForRole(hasRole);
   const speedDialTitle = user ? 'Speed Dial' : 'Quick access';
-  const gridCols = speedDial.length === 5 ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2';
+  const gridCols = speedDial.length === 5 ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-2';
 
   useEffect(() => {
     if (open && !wasOpen.current) hapticOpen();
@@ -197,14 +197,14 @@ export default function MobileNavDrawer({
       <button
         type="button"
         aria-label="Close menu"
-        className={`site-mobile-backdrop fixed inset-0 z-[105] bg-slate-900/50 backdrop-blur-[2px] transition-opacity duration-300 ${
+        className={`site-mobile-backdrop fixed inset-0 z-[115] bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 ${
           open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
       />
 
       <div
-        className={`site-mobile-drawer fixed top-0 right-0 bottom-0 z-[108] w-[min(26rem,92vw)] flex flex-col bg-gradient-to-b from-slate-50 via-white to-primary-50/20 shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+        className={`site-mobile-drawer fixed top-0 right-0 bottom-0 z-[120] w-full md:w-[26rem] h-full h-[100dvh] max-w-full flex flex-col bg-gradient-to-b from-slate-50 via-white to-primary-50/20 shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
         aria-hidden={!open}
@@ -212,22 +212,25 @@ export default function MobileNavDrawer({
         aria-modal="true"
         aria-label="Navigation menu"
       >
-        {/* Top bar */}
-        <div className="shrink-0 flex items-center justify-between gap-3 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 border-b border-slate-200/60 bg-white/80 backdrop-blur-md">
-          <Link to="/" onClick={handleNavigate} className="shrink-0">
-            <Logo linkToHome={false} className="h-8 w-auto max-w-[110px] object-contain" showText={false} />
+        {/* Fixed top header bar with close button at top-right */}
+        <div className="shrink-0 sticky top-0 z-30 flex items-center justify-between gap-3 px-4 sm:px-6 pt-[max(0.875rem,env(safe-area-inset-top))] pb-3 border-b border-slate-200/80 bg-white/95 backdrop-blur-md shadow-xs">
+          <Link to="/" onClick={handleNavigate} className="flex items-center gap-2.5 shrink-0">
+            <Logo linkToHome={false} className="h-8 md:h-9 w-auto max-w-[120px] object-contain" showText={false} />
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary-600 bg-primary-50 px-2 py-0.5 rounded-md border border-primary-100">
+              Menu
+            </span>
           </Link>
           <button
             type="button"
-            className="site-header-menu-btn shrink-0 !w-10 !h-10"
+            className="site-header-menu-btn shrink-0 !w-10 !h-10 text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 active:scale-95 rounded-full transition flex items-center justify-center shadow-xs"
             onClick={onClose}
             aria-label="Close navigation"
           >
-            <FaIcon icon="fa-xmark" className="text-lg" />
+            <FaIcon icon="fa-xmark" className="text-xl" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto overscroll-contain px-3 py-3 space-y-3 nav-drawer-scroll">
+        <div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6 py-4 space-y-4 nav-drawer-scroll max-w-3xl mx-auto w-full md:max-w-none">
           <NavDrawerProfileCard
             user={user}
             hasRole={hasRole}

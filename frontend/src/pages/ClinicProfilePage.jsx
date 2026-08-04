@@ -7,6 +7,8 @@ import PageMeta, { clinicSchema, breadcrumbSchema } from '../components/seo/Page
 import ClinicProfileView from '../components/clinic/ClinicProfileView';
 import { clinics } from '../services/api';
 import { googleMapsUrl } from '../utils/locationHelpers';
+import { resolveMediaUrl } from '../utils/mediaUrl';
+import { HEALTHCARE_IMAGES } from '../utils/healthcareImages';
 
 export default function ClinicProfilePage({ legacy = false }) {
   const { slug, id } = useParams();
@@ -85,14 +87,30 @@ export default function ClinicProfilePage({ legacy = false }) {
   })();
 
   const websiteUrl = clinic.website_url || clinic.website;
+  const city = clinic.city_name || '';
+  const seoTitle = clinic.seo?.title || `${clinic.name} | Physiotherapy Clinic${city ? ` in ${city}` : ''} | The Urban Physio`;
+  const seoDesc =
+    clinic.seo?.description ||
+    `${clinic.name} is a top-rated physiotherapy clinic${city ? ` in ${city}` : ''}${
+      clinic.address ? ` (${clinic.address})` : ''
+    }.${Number(clinic.rating_avg) > 0 ? ` Rated ${clinic.rating_avg}/5 stars.` : ''} Book appointments online on The Urban Physio.`;
+
+  const rawImage = resolveMediaUrl(clinic.logo || clinic.cover_image) || HEALTHCARE_IMAGES.clinicCover;
 
   return (
     <div className="min-h-screen flex flex-col overflow-x-hidden max-w-[100vw]">
       <PageMeta
-        title={clinic.seo?.title || clinic.name}
-        description={clinic.seo?.description}
+        title={seoTitle}
+        description={seoDesc}
         canonical={canonical}
-        image={clinic.cover_image || clinic.logo}
+        image={rawImage}
+        ogType="business.business"
+        ogTitle={seoTitle}
+        ogDescription={seoDesc}
+        twitterTitle={seoTitle}
+        twitterDescription={seoDesc}
+        twitterImage={rawImage}
+        twitterCard="summary_large_image"
         jsonLd={jsonLd}
       />
       <Navbar />

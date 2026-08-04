@@ -108,14 +108,17 @@ export default function EmergencyBookingWizard() {
   }, [resolvedLocation]);
 
   const loadDoctors = useCallback(async () => {
-    if (!resolvedLocation.hasLocation) return;
     setLoadingDoctors(true);
     try {
       const params = {
-        emergency_type: form.emergency_type,
-        latitude: resolvedLocation.lat,
-        longitude: resolvedLocation.lng,
-        ...(resolvedLocation.cityId ? { city_id: resolvedLocation.cityId } : {}),
+        emergency_type: form.emergency_type || 'online',
+        ...(resolvedLocation.hasLocation
+          ? {
+              latitude: resolvedLocation.lat,
+              longitude: resolvedLocation.lng,
+              ...(resolvedLocation.cityId ? { city_id: resolvedLocation.cityId } : {}),
+            }
+          : {}),
       };
       if (form.emergency_type === 'clinic') {
         const cRes = await emergency.openClinics(params);

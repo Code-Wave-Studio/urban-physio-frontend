@@ -134,10 +134,54 @@ export default function AdminSeoEntityPanel({ entityType, title, defaultOg = '' 
 
   const setField = (key, value) => setForm((f) => ({ ...f, [key]: value }));
 
+  const [urlChecking, setUrlChecking] = useState(false);
+  const [urlStatus, setUrlStatus] = useState(null);
+  const [urlGenerating, setUrlGenerating] = useState(false);
+
   const openRow = (row) => {
     setSelectedId(row.id);
     const { slug } = splitPath(row.page_path);
-    setForm({ ...emptyEntity(), ...row, slug, _origSlug: slug, seo_score: row.seo_score });
+    setUrlStatus(null);
+    setForm({ ...emptyEntity(), ...row, slug, _origSlug: slug, _origPath: row.page_path, seo_score: row.seo_score });
+  };
+
+  const handleAutoGenerateUrl = async () => {
+    if (!form.entity_id || !form.entity_type) return;
+    setUrlGenerating(true);
+    setUrlStatus(null);
+    try {
+      const res = await admin.seoGenerateUrl({
+        entity_type: form.entity_type,
+        entity_id: form.entity_id,
+      });
+      const data = res.data || res || {};
+      if (data.generated_url) {
+        setForm((f) => ({ ...f, page_path: data.generated_url }));
+        toast.success('Auto-generated clean SEO URL');
+      }
+    } catch (e) {
+      toast.error(e.message || 'Could not auto-generate URL');
+    } finally {
+      setUrlGenerating(false);
+    }
+  };
+
+  const handleCheckUrl = async (pathToTest) => {
+    const p = pathToTest || form.page_path;
+    if (!p) return;
+    setUrlChecking(true);
+    try {
+      const res = await admin.seoCheckUrl({
+        path: p,
+        exclude_page_id: selectedId,
+      });
+      const data = res.data || res || {};
+      setUrlStatus(data);
+    } catch (e) {
+      toast.error(e.message || 'URL check failed');
+    } finally {
+      setUrlChecking(false);
+    }
   };
 
   const save = async (e) => {
@@ -157,14 +201,21 @@ export default function AdminSeoEntityPanel({ entityType, title, defaultOg = '' 
       delete payload.entity_id;
       delete payload.page_key;
       delete payload._origSlug;
-      // Only send slug when it actually changed (backend rewrites the URL + adds a 301 redirect).
+      delete payload._origPath;
+
+      if (!payload.page_path || payload.page_path === form._origPath) {
+        delete payload.page_path;
+      }
       if (!payload.slug || payload.slug === form._origSlug) {
         delete payload.slug;
       }
+
       const res = await admin.seoEntityUpdate(selectedId, payload);
       const saved = res.data || res;
-      toast.success('Entity SEO saved');
-      setForm({ ...emptyEntity(), ...saved });
+      toast.success('Entity SEO saved successfully!');
+      const { slug } = splitPath(saved.page_path);
+      setForm({ ...emptyEntity(), ...saved, slug, _origSlug: slug, _origPath: saved.page_path });
+      setUrlStatus(null);
       load();
     } catch (err) {
       toast.error(err.message || 'Save failed');
@@ -295,23 +346,85 @@ export default function AdminSeoEntityPanel({ entityType, title, defaultOg = '' 
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Basic</p>
                 <div className="grid sm:grid-cols-2 gap-3">
                   <input className="input-field sm:col-span-2" value={form.page_label || ''} disabled readOnly />
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-semibold text-slate-500 mb-1">URL slug (editable)</label>
-                    <div className="flex items-stretch rounded-lg border border-slate-200 overflow-hidden bg-white">
-                      <span className="px-2 py-2 bg-slate-50 text-slate-500 font-mono text-xs flex items-center border-r border-slate-200 whitespace-nowrap max-w-[55%] overflow-x-auto">
-                        {splitPath(form.page_path).parent}
+                  <div className="sm:col-span-2 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-semibold text-slate-700">
+                        Custom SEO URL / Public Profile Path (editable)
+                      </label>
+                      {(entityType === 'clinic' || entityType === 'doctor') && (
+                        <button
+                          type="button"
+                          onClick={handleAutoGenerateUrl}
+                          disabled={urlGenerating}
+                          className="text-xs font-semibold text-sky-700 hover:text-sky-800 flex items-center gap-1 transition"
+                        >
+                          <FaIcon icon="fa-wand-magic-sparkles" />
+                          {urlGenerating ? 'Generating…' : 'Auto-Generate Default URL'}
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex items-stretch rounded-lg border border-slate-200 overflow-hidden bg-white shadow-sm">
+                      <span className="px-2.5 py-2 bg-slate-100 text-slate-600 font-mono text-xs flex items-center border-r border-slate-200 font-semibold select-none">
+                        https://theurbanphysio.com
                       </span>
                       <input
-                        className="flex-1 px-2 py-2 font-mono text-xs outline-none min-w-0"
-                        value={form.slug || ''}
-                        placeholder="page-slug"
-                        onChange={(e) => setField('slug', e.target.value)}
+                        className="flex-1 px-3 py-2 font-mono text-xs outline-none min-w-0"
+                        value={form.page_path || ''}
+                        placeholder="/delhi/locality/physiotherapy-clinic/clinic-name"
+                        onChange={(e) => {
+                          setField('page_path', e.target.value);
+                          setUrlStatus(null);
+                        }}
                       />
+                      <button
+                        type="button"
+                        onClick={() => handleCheckUrl()}
+                        disabled={urlChecking || !form.page_path}
+                        className="px-3 py-2 bg-slate-50 hover:bg-slate-100 border-l border-slate-200 text-xs font-medium text-slate-700 transition flex items-center gap-1 shrink-0"
+                        title="Check format & availability"
+                      >
+                        <FaIcon icon={urlChecking ? 'fa-spinner' : 'fa-circle-check'} className={urlChecking ? 'fa-spin' : ''} />
+                        Check Availability
+                      </button>
                     </div>
-                    {form.slug && form.slug !== form._origSlug && (
-                      <p className="text-[11px] text-amber-700 mt-1">
+
+                    {/* URL Status Feedback */}
+                    {urlStatus && (
+                      <div className={`p-2.5 rounded-lg text-xs border flex items-center justify-between gap-2 ${
+                        urlStatus.available
+                          ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                          : 'bg-rose-50 border-rose-200 text-rose-800'
+                      }`}>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <FaIcon icon={urlStatus.available ? 'fa-circle-check' : 'fa-triangle-exclamation'} />
+                          <span className="truncate">
+                            {urlStatus.available
+                              ? 'URL path is valid and available for publish!'
+                              : (urlStatus.reason || 'URL conflict detected.')}
+                          </span>
+                        </div>
+                        {!urlStatus.available && urlStatus.suggested_path && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setField('page_path', urlStatus.suggested_path);
+                              setUrlStatus(null);
+                              toast.success('Applied suggested unique URL');
+                            }}
+                            className="px-2 py-1 bg-white border border-rose-300 rounded font-bold text-[11px] text-rose-700 hover:bg-rose-100 shrink-0"
+                          >
+                            Use Suggested: {urlStatus.suggested_path}
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* URL Path Changed Warning */}
+                    {form.page_path && form._origPath && form.page_path !== form._origPath && (
+                      <p className="text-[11px] text-amber-700 bg-amber-50/80 p-2 rounded-lg border border-amber-200">
                         <FaIcon icon="fa-triangle-exclamation" className="mr-1" />
-                        Slug changed — saving will update the live URL and auto-create a 301 redirect from the old URL.
+                        URL path changed — saving will update the live public profile URL, canonical tags, and automatically create a 301 redirect from <strong>{form._origPath}</strong> to the new URL.
                       </p>
                     )}
                   </div>

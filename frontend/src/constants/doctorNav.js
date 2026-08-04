@@ -14,6 +14,7 @@ export const DOCTOR_NAV = [
   { to: '/doctor', label: 'Overview', icon: 'fa-chart-line', section: 'workspace', match: 'exact' },
   { to: '/doctor/calendar', label: 'Calendar', icon: 'fa-calendar-days', section: 'workspace' },
   { to: '/doctor/appointments', label: 'Appointments', icon: 'fa-calendar-check', section: 'workspace' },
+  { to: '/doctor/consultation-rooms', label: 'Consultation Rooms', icon: 'fa-comments', section: 'workspace' },
   { to: '/doctor/requests', label: 'Reschedule / Cancel', icon: 'fa-inbox', section: 'workspace' },
   { to: '/doctor/patients', label: 'Patients', icon: 'fa-users', section: 'workspace' },
   { to: '/doctor/search', label: 'Advanced Search', icon: 'fa-magnifying-glass-plus', section: 'workspace' },

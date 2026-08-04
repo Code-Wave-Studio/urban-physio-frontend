@@ -61,7 +61,7 @@ export function usePageMeta({
     const fullTitle = title ? (title.includes(SITE) ? title : `${title} | ${SITE}`) : SITE;
     document.title = fullTitle;
 
-    const desc = description || 'Book verified physiotherapists for online, clinic & home visits across India.';
+    const desc = description || 'Book verified physiotherapists for online, clinic & home visits across India. The Urban Physio.';
     upsertMeta('name', 'description', desc);
     if (keywords) upsertMeta('name', 'keywords', keywords);
 
@@ -70,18 +70,31 @@ export function usePageMeta({
     upsertMeta('property', 'og:type', ogType);
     upsertMeta('property', 'og:site_name', SITE);
 
-    const img = image || `${window.location.origin}${DEFAULT_OG}`;
+    const rawImg = image || `${window.location.origin}${DEFAULT_OG}`;
+    const img = rawImg.startsWith('http')
+      ? rawImg
+      : `${window.location.origin}${rawImg.startsWith('/') ? '' : '/'}${rawImg}`;
+
     upsertMeta('property', 'og:image', img);
+    upsertMeta('property', 'og:image:secure_url', img);
+    upsertMeta('property', 'og:image:width', '1200');
+    upsertMeta('property', 'og:image:height', '630');
+    upsertMeta('property', 'og:image:alt', ogTitle || fullTitle);
+
     upsertMeta('name', 'twitter:card', twitterCard || 'summary_large_image');
     upsertMeta('name', 'twitter:title', twitterTitle || fullTitle);
     upsertMeta('name', 'twitter:description', twitterDescription || desc);
     upsertMeta('name', 'twitter:image', twitterImage || img);
+    upsertMeta('name', 'twitter:image:alt', twitterTitle || fullTitle);
     if (twitterSite) upsertMeta('name', 'twitter:site', twitterSite);
 
     if (canonical) {
-      const url = canonical.startsWith('http') ? canonical : `${window.location.origin}${canonical}`;
+      const url = canonical.startsWith('http') ? canonical : `${window.location.origin}${canonical.startsWith('/') ? '' : '/'}${canonical}`;
       upsertLink('canonical', url);
       upsertMeta('property', 'og:url', url);
+    } else if (typeof window !== 'undefined') {
+      upsertLink('canonical', window.location.href);
+      upsertMeta('property', 'og:url', window.location.href);
     }
 
     const robotsContent =

@@ -201,6 +201,7 @@ export default function DoctorProfilePage({ legacy = false }) {
   const minFee = doctorMinFee(doctor, enabled);
   const fullName = `Dr. ${doctor.first_name} ${doctor.last_name}`;
   const locationLine = [doctor.address, doctor.city_name, doctor.state_name].filter(Boolean).join(', ');
+  const isClosed = Boolean(doctor.is_closed || (doctor.profile_public !== undefined && Number(doctor.profile_public) === 0));
 
   const mapUrl = (() => {
     if (doctor.latitude && doctor.longitude) return googleMapsUrl(doctor.latitude, doctor.longitude);
@@ -212,14 +213,32 @@ export default function DoctorProfilePage({ legacy = false }) {
   const photoSlides =
     bannerSlides.length > 0 ? bannerSlides : [{ id: 'fallback', image_url: bannerFallback }];
 
+  const spec = doctor.specialization || 'Physiotherapist';
+  const city = doctor.city_name || '';
+
+  const seoTitle = doctor.seo?.title || `${fullName} | ${spec}${city ? ` in ${city}` : ''} | The Urban Physio`;
+  const seoDesc =
+    doctor.seo?.description ||
+    `${fullName} is a verified ${spec}${city ? ` practicing in ${city}` : ''}${
+      doctor.experience_years ? ` with ${doctor.experience_years}+ years experience` : ''
+    }.${rating > 0 ? ` Rated ${rating}/5 stars.` : ''} Book an online consult, clinic visit, or home visit on The Urban Physio.`;
+
+  const ogImage = resolveMediaUrl(doctor.avatar || doctor.cover_image) || HEALTHCARE_IMAGES.doctorProfile;
+
   return (
     <>
       <PageMeta
-        title={doctor.seo?.title || fullName}
-        description={doctor.seo?.description}
+        title={seoTitle}
+        description={seoDesc}
         canonical={canonical}
-        image={doctor.avatar}
+        image={ogImage}
         ogType="profile"
+        ogTitle={seoTitle}
+        ogDescription={seoDesc}
+        twitterTitle={seoTitle}
+        twitterDescription={seoDesc}
+        twitterImage={ogImage}
+        twitterCard="summary_large_image"
         jsonLd={jsonLd}
       />
       <Navbar />
@@ -253,10 +272,17 @@ export default function DoctorProfilePage({ legacy = false }) {
         <div className="relative max-w-6xl mx-auto px-4 pt-16 sm:pt-20 md:pt-24 pb-8 sm:pb-10 md:pb-12">
           <div className="text-center md:text-left">
             <div className="flex flex-wrap justify-center md:justify-start gap-1.5 sm:gap-2 mb-2 sm:mb-3">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide bg-primary-50 text-primary-800 border border-primary-200 px-3 py-1 rounded-full">
-                <FaIcon icon="fa-circle-check" className="text-primary-600" />
-                Verified physiotherapist
-              </span>
+              {isClosed ? (
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide bg-red-100 text-red-800 border border-red-200 px-3 py-1 rounded-full">
+                  <FaIcon icon="fa-circle-xmark" className="text-red-600" />
+                  Closed · Currently Offline
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide bg-primary-50 text-primary-800 border border-primary-200 px-3 py-1 rounded-full">
+                  <FaIcon icon="fa-circle-check" className="text-primary-600" />
+                  Verified physiotherapist
+                </span>
+              )}
               {(doctor.is_featured === 1 || doctor.is_featured === '1') && (
                 <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1 rounded-full">
                   <FaIcon icon="fa-star" />
@@ -458,8 +484,22 @@ export default function DoctorProfilePage({ legacy = false }) {
             </Section>
 
             <Section title="Appointment availability" icon="fa-calendar-check">
-              <p className="text-sm text-slate-600 mb-3">{formatAvailabilitySummary(doctor.availability)}</p>
-              <ProfileSlotsPreview doctorId={doctor.id} />
+              {isClosed ? (
+                <div className="rounded-xl border border-red-200 bg-red-50/80 p-4 text-center space-y-1">
+                  <p className="text-sm font-bold text-red-700 flex items-center justify-center gap-1.5">
+                    <FaIcon icon="fa-circle-xmark" />
+                    Doctor is Currently Offline
+                  </p>
+                  <p className="text-xs text-red-600">
+                    This physiotherapist is currently offline and not accepting new appointment bookings. Slots will reappear automatically when back online.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm text-slate-600 mb-3">{formatAvailabilitySummary(doctor.availability)}</p>
+                  <ProfileSlotsPreview doctorId={doctor.id} />
+                </>
+              )}
             </Section>
 
             <Section title="Expertise & treatment areas" icon="fa-hand-holding-medical">

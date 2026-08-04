@@ -662,10 +662,37 @@ export default function BookAppointmentWizard() {
             : booking.slots(null, form.appointment_date, form.clinic_id))
         : booking.slots(form.doctor_id, form.appointment_date);
     req
-      .then((res) => setTimeSlots(res.data || []))
-      .catch(() => setTimeSlots([]))
+      .then((res) => {
+        let items = res.data || [];
+        if (isEmergency && items.length === 0) {
+          const now = new Date();
+          const mins = now.getMinutes();
+          const add = (15 - (mins % 15)) || 15;
+          now.setMinutes(mins + add);
+          const emgTime = now.toTimeString().slice(0, 5);
+          items = [{ time: emgTime, available: true, label: `Emergency Immediate (${emgTime})` }];
+        }
+        setTimeSlots(items);
+        if (isEmergency && items.length > 0) {
+          patch({ start_time: items[0].time });
+        }
+      })
+      .catch(() => {
+        if (isEmergency) {
+          const now = new Date();
+          const mins = now.getMinutes();
+          const add = (15 - (mins % 15)) || 15;
+          now.setMinutes(mins + add);
+          const emgTime = now.toTimeString().slice(0, 5);
+          const items = [{ time: emgTime, available: true, label: `Emergency Immediate (${emgTime})` }];
+          setTimeSlots(items);
+          patch({ start_time: emgTime });
+        } else {
+          setTimeSlots([]);
+        }
+      })
       .finally(() => setSlotsLoading(false));
-  }, [form.doctor_id, form.clinic_id, form.consultation_type, form.appointment_date]);
+  }, [form.doctor_id, form.clinic_id, form.consultation_type, form.appointment_date, isEmergency]);
 
   const loadAvailableDates = useCallback(() => {
     if (step !== 2) return;
@@ -695,6 +722,13 @@ export default function BookAppointmentWizard() {
       .catch(() => setAvailableDates([]))
       .finally(() => setAvailableDatesLoading(false));
   }, [step, form.consultation_type, form.doctor_id, form.clinic_id, form.appointment_date]);
+
+  useEffect(() => {
+    if (isEmergency && !form.appointment_date) {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      patch({ appointment_date: todayStr });
+    }
+  }, [isEmergency, form.appointment_date]);
 
   useEffect(() => {
     if (step === 2) loadSlots();

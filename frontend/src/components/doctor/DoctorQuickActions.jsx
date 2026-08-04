@@ -156,12 +156,16 @@ export default function DoctorQuickActions({ doctor, onNavigate, variant = 'shee
   const compact = variant === 'card' || variant === 'sheet';
   const showProfile = variant === 'sheet';
 
+  const isOffline = doctor.is_closed || (doctor.profile_public !== undefined && Number(doctor.profile_public) === 0);
+
   const actions = (
     <>
       {showProfile && (
         <CircleAction to={profileTo} icon="fa-user-doctor" label="Profile" onClick={wrapNav()} compact={compact} />
       )}
-      <CircleAction to={bookTo} icon="fa-calendar-check" label="Book" onClick={wrapNav()} compact={compact} />
+      {!isOffline && (
+        <CircleAction to={bookTo} icon="fa-calendar-check" label="Book" onClick={wrapNav()} compact={compact} />
+      )}
       {mapUrl && (
         <CircleAction href={mapUrl} icon="fa-diamond-turn-right" label="Directions" external onClick={stopNav} compact={compact} />
       )}

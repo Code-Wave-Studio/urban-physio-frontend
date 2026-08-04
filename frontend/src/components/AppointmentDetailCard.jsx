@@ -357,6 +357,32 @@ export default function AppointmentDetailCard({
         <Detail label="Paid at" value={appt.payment_paid_at} />
       </Section>
 
+      {/* Consultation Room Banner */}
+      <div className="p-3.5 bg-primary-50/60 border border-primary-200/80 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-sm">
+        <div>
+          <p className="font-bold text-sm text-slate-900 flex items-center gap-2">
+            <FaIcon icon="fa-comments" className="text-primary-600" />
+            Consultation Room
+          </p>
+          <p className="text-xs text-slate-600 mt-0.5">
+            View chat, documents, rehab plans, and update/edit prescriptions.
+          </p>
+        </div>
+        <Link
+          to={
+            view === 'patient'
+              ? `/patient/consultation/${appt.id}`
+              : view === 'clinic'
+                ? `/clinic-portal/consultation/${appt.id}`
+                : `/doctor/consultation/${appt.id}`
+          }
+          className="btn-primary text-xs py-2 px-4 inline-flex items-center gap-1.5 shrink-0"
+        >
+          <FaIcon icon="fa-arrow-up-right-from-square" />
+          {appt.status === 'completed' ? 'Reopen Consultation Room' : 'Open Consultation Room'}
+        </Link>
+      </div>
+
       <div className="text-xs text-slate-500 flex flex-wrap gap-x-4 gap-y-1 pt-1 border-t border-white/50">
         {appt.created_at && <span>Booked: {appt.created_at}</span>}
         {appt.updated_at && <span>Updated: {appt.updated_at}</span>}

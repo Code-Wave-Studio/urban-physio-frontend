@@ -15,6 +15,7 @@ export default function AdminUserListRow({
   onOpenLocation,
   onApproveServices,
   onRejectServices,
+  onDelete,
   actionLoading,
 }) {
   const name = userLabel(user);
@@ -181,6 +182,18 @@ export default function AdminUserListRow({
             >
               {user.is_active ? 'Deactivate account' : 'Activate account'}
             </button>
+            {/* Delete button — only for doctor / patient roles */}
+            {(user.role_slug === 'doctor' || user.role_slug === 'patient') && onDelete && (
+              <button
+                type="button"
+                disabled={actionLoading}
+                onClick={() => onDelete(user)}
+                className="text-xs px-3 py-1.5 rounded-lg border border-rose-300 text-rose-700 hover:bg-rose-50 font-medium ml-auto flex items-center gap-1.5 transition"
+              >
+                <FaIcon icon="fa-trash-can" />
+                Delete account
+              </button>
+            )}
           </div>
           <AdminUserDetailPanel
             detail={detail}

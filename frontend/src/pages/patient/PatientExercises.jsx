@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../../components/FaIcon';
-import GlassModal, { GlassModalBody, GlassModalFooter, GlassModalHeader } from '../../components/GlassModal';
+import ExerciseBottomSheet from '../../components/exercise/ExerciseBottomSheet';
 import { exercisePrescriptions } from '../../services/api';
 import { PATIENT_NAV } from '../../constants/patientNav';
 import toast from 'react-hot-toast';
@@ -439,178 +439,176 @@ export default function PatientExercises() {
         </>
       )}
 
-      {/* Exercise preview */}
-      <GlassModal open={!!previewEx} onClose={() => setPreviewEx(null)} size="lg">
-        <GlassModalHeader
-          title={previewEx?.exercise_name || 'Exercise'}
-          subtitle={[previewEx?.difficulty, previewEx?.body_area || previewEx?.category].filter(Boolean).join(' · ')}
-          icon="fa-dumbbell"
-          onClose={() => setPreviewEx(null)}
-        />
-        <GlassModalBody>
-          {previewEx && (
-            <div className="space-y-4">
-              {(() => {
-                const yt = youtubeEmbed(previewEx.video_url);
-                if (yt) {
-                  return <iframe title="video" src={yt} className="w-full aspect-video rounded-xl bg-black" allowFullScreen />;
-                }
-                if (previewEx.video_url) {
-                  return (
-                    <video src={previewEx.video_url} controls className="w-full rounded-xl bg-black max-h-[360px]" />
-                  );
-                }
-                if (previewEx.image_url) {
-                  return <img src={previewEx.image_url} alt="" className="w-full max-h-[320px] object-contain rounded-xl bg-slate-50" />;
-                }
-                return null;
-              })()}
+      {/* Exercise preview bottom sheet */}
+      <ExerciseBottomSheet
+        open={!!previewEx}
+        onClose={() => setPreviewEx(null)}
+        title={previewEx?.exercise_name || 'Exercise'}
+        subtitle={[previewEx?.difficulty, previewEx?.body_area || previewEx?.category].filter(Boolean).join(' · ')}
+        icon="fa-dumbbell"
+        footer={
+          <>
+            <button type="button" className="btn-outline text-xs sm:text-sm" onClick={() => setPreviewEx(null)}>Close</button>
+            {previewEx && !previewEx.today_log && (
+              <button type="button" className="btn-primary text-xs sm:text-sm" onClick={() => { setPreviewEx(null); openLog(previewEx, 'completed'); }}>
+                Mark complete
+              </button>
+            )}
+          </>
+        }
+      >
+        {previewEx && (
+          <div className="space-y-4">
+            {(() => {
+              const yt = youtubeEmbed(previewEx.video_url);
+              if (yt) {
+                return <iframe title="video" src={yt} className="w-full aspect-video rounded-xl bg-black" allowFullScreen />;
+              }
+              if (previewEx.video_url) {
+                return (
+                  <video src={previewEx.video_url} controls className="w-full rounded-xl bg-black max-h-[360px]" />
+                );
+              }
+              if (previewEx.image_url) {
+                return <img src={previewEx.image_url} alt="" className="w-full max-h-[320px] object-contain rounded-xl bg-slate-50" />;
+              }
+              return null;
+            })()}
 
-              {previewEx.gallery_images?.length > 0 && (
-                <div className="flex gap-2 overflow-x-auto">
-                  {previewEx.gallery_images.map((url) => (
-                    <img key={url} src={url} alt="" className="h-20 w-20 rounded-lg object-cover shrink-0" />
-                  ))}
-                </div>
-              )}
-
-              <div className="flex flex-wrap gap-2 text-xs">
-                <span className="bg-slate-100 px-2 py-1 rounded-md">{previewEx.sets} sets</span>
-                <span className="bg-slate-100 px-2 py-1 rounded-md">{previewEx.reps} reps</span>
-                {previewEx.hold_seconds && <span className="bg-slate-100 px-2 py-1 rounded-md">Hold {previewEx.hold_seconds}s</span>}
-                <span className="bg-slate-100 px-2 py-1 rounded-md">{previewEx.frequency}</span>
-                {previewEx.equipment && <span className="bg-slate-100 px-2 py-1 rounded-md">{previewEx.equipment}</span>}
-              </div>
-
-              {previewEx.steps?.length > 0 ? (
-                <ol className="list-decimal pl-5 space-y-1.5 text-sm text-slate-700">
-                  {previewEx.steps.map((s, i) => (
-                    <li key={i}>{typeof s === 'string' ? s : s.text || s.step || JSON.stringify(s)}</li>
-                  ))}
-                </ol>
-              ) : (
-                <p className="text-sm text-slate-700 whitespace-pre-wrap">{previewEx.exercise_instructions}</p>
-              )}
-
-              {previewEx.precautions && (
-                <div className="rounded-xl bg-amber-50 border border-amber-100 px-3 py-2.5 text-sm text-amber-900">
-                  <FaIcon icon="fa-triangle-exclamation" className="mr-1.5" />
-                  {previewEx.precautions}
-                </div>
-              )}
-
-              {previewEx.pdf_url && (
-                <a href={previewEx.pdf_url} target="_blank" rel="noreferrer" className="btn-outline inline-flex text-sm">
-                  <FaIcon icon="fa-file-pdf" className="mr-1.5" /> Download PDF instructions
-                </a>
-              )}
-            </div>
-          )}
-        </GlassModalBody>
-        <GlassModalFooter>
-          <button type="button" className="btn-outline" onClick={() => setPreviewEx(null)}>Close</button>
-          {previewEx && !previewEx.today_log && (
-            <button type="button" className="btn-primary" onClick={() => { setPreviewEx(null); openLog(previewEx, 'completed'); }}>
-              Mark complete
-            </button>
-          )}
-        </GlassModalFooter>
-      </GlassModal>
-
-      {/* Log feedback modal */}
-      <GlassModal open={!!logItem} onClose={() => setLogItem(null)} size="md">
-        <form onSubmit={submitLog}>
-          <GlassModalHeader
-            title={logForm.status === 'skipped' ? 'Skip exercise' : 'Complete exercise'}
-            subtitle={logItem?.exercise_name}
-            icon={logForm.status === 'skipped' ? 'fa-forward' : 'fa-check'}
-            onClose={() => setLogItem(null)}
-          />
-          <GlassModalBody>
-            <div className="space-y-4">
-              <div className="flex gap-2">
-                {['completed', 'skipped'].map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setLogForm((f) => ({ ...f, status: s }))}
-                    className={`flex-1 py-2 rounded-xl text-sm font-medium capitalize ${
-                      logForm.status === s ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-600'
-                    }`}
-                  >
-                    {s}
-                  </button>
+            {previewEx.gallery_images?.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto">
+                {previewEx.gallery_images.map((url) => (
+                  <img key={url} src={url} alt="" className="h-20 w-20 rounded-lg object-cover shrink-0" />
                 ))}
               </div>
+            )}
 
-              <div>
-                <label className="text-sm font-medium text-slate-700 mb-2 block">How did it feel?</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { id: 'easy', label: 'Easy', icon: 'fa-face-smile' },
-                    { id: 'moderate', label: 'Moderate', icon: 'fa-face-meh' },
-                    { id: 'painful', label: 'Painful', icon: 'fa-face-frown' },
-                  ].map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => setLogForm((f) => ({ ...f, pain_feeling: opt.id }))}
-                      className={`py-3 rounded-xl text-xs font-semibold border transition ${
-                        logForm.pain_feeling === opt.id
-                          ? opt.id === 'painful'
-                            ? 'bg-rose-600 text-white border-rose-600'
-                            : opt.id === 'easy'
-                              ? 'bg-emerald-600 text-white border-emerald-600'
-                              : 'bg-amber-500 text-white border-amber-500'
-                          : 'bg-slate-50 text-slate-600 border-slate-200'
-                      }`}
-                    >
-                      <FaIcon icon={opt.icon} className="block text-lg mb-1 mx-auto" />
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-slate-700 mb-1.5 block">Notes (optional)</label>
-                <textarea
-                  className="input-field w-full min-h-[72px]"
-                  placeholder="How did it feel?"
-                  value={logForm.feedback}
-                  onChange={(e) => setLogForm((f) => ({ ...f, feedback: e.target.value }))}
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-slate-700 mb-1.5 block">Question for your doctor</label>
-                <input
-                  className="input-field w-full"
-                  placeholder="Optional comment or question"
-                  value={logForm.patient_comment}
-                  onChange={(e) => setLogForm((f) => ({ ...f, patient_comment: e.target.value }))}
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-slate-700 mb-1.5 block">Performance photo/video URL</label>
-                <input
-                  className="input-field w-full"
-                  placeholder="CDN / Cloudinary / S3 URL"
-                  value={logForm.media_url}
-                  onChange={(e) => setLogForm((f) => ({ ...f, media_url: e.target.value }))}
-                />
-              </div>
+            <div className="flex flex-wrap gap-2 text-xs">
+              <span className="bg-slate-100 px-2 py-1 rounded-md">{previewEx.sets} sets</span>
+              <span className="bg-slate-100 px-2 py-1 rounded-md">{previewEx.reps} reps</span>
+              {previewEx.hold_seconds && <span className="bg-slate-100 px-2 py-1 rounded-md">Hold {previewEx.hold_seconds}s</span>}
+              <span className="bg-slate-100 px-2 py-1 rounded-md">{previewEx.frequency}</span>
+              {previewEx.equipment && <span className="bg-slate-100 px-2 py-1 rounded-md">{previewEx.equipment}</span>}
             </div>
-          </GlassModalBody>
-          <GlassModalFooter>
-            <button type="button" className="btn-outline" onClick={() => setLogItem(null)}>Cancel</button>
-            <button type="submit" className="btn-primary" disabled={saving}>
+
+            {previewEx.steps?.length > 0 ? (
+              <ol className="list-decimal pl-5 space-y-1.5 text-sm text-slate-700">
+                {previewEx.steps.map((s, i) => (
+                  <li key={i}>{typeof s === 'string' ? s : s.text || s.step || JSON.stringify(s)}</li>
+                ))}
+              </ol>
+            ) : (
+              <p className="text-sm text-slate-700 whitespace-pre-wrap">{previewEx.exercise_instructions}</p>
+            )}
+
+            {previewEx.precautions && (
+              <div className="rounded-xl bg-amber-50 border border-amber-100 px-3 py-2.5 text-sm text-amber-900">
+                <FaIcon icon="fa-triangle-exclamation" className="mr-1.5" />
+                {previewEx.precautions}
+              </div>
+            )}
+
+            {previewEx.pdf_url && (
+              <a href={previewEx.pdf_url} target="_blank" rel="noreferrer" className="btn-outline inline-flex text-sm">
+                <FaIcon icon="fa-file-pdf" className="mr-1.5" /> Download PDF instructions
+              </a>
+            )}
+          </div>
+        )}
+      </ExerciseBottomSheet>
+
+      {/* Log feedback bottom sheet */}
+      <ExerciseBottomSheet
+        open={!!logItem}
+        onClose={() => setLogItem(null)}
+        title={logForm.status === 'skipped' ? 'Skip exercise' : 'Complete exercise'}
+        subtitle={logItem?.exercise_name}
+        icon={logForm.status === 'skipped' ? 'fa-forward' : 'fa-check'}
+        footer={
+          <>
+            <button type="button" className="btn-outline text-xs sm:text-sm" onClick={() => setLogItem(null)}>Cancel</button>
+            <button type="submit" form="exercise-log-form" className="btn-primary text-xs sm:text-sm" disabled={saving}>
               {saving ? 'Saving…' : 'Save'}
             </button>
-          </GlassModalFooter>
+          </>
+        }
+      >
+        <form id="exercise-log-form" onSubmit={submitLog} className="space-y-4">
+          <div className="flex gap-2">
+            {['completed', 'skipped'].map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setLogForm((f) => ({ ...f, status: s }))}
+                className={`flex-1 py-2 rounded-xl text-sm font-medium capitalize ${
+                  logForm.status === s ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-600'
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-slate-700 mb-2 block">How did it feel?</label>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { id: 'easy', label: 'Easy', icon: 'fa-face-smile' },
+                { id: 'moderate', label: 'Moderate', icon: 'fa-face-meh' },
+                { id: 'painful', label: 'Painful', icon: 'fa-face-frown' },
+              ].map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setLogForm((f) => ({ ...f, pain_feeling: opt.id }))}
+                  className={`py-3 rounded-xl text-xs font-semibold border transition ${
+                    logForm.pain_feeling === opt.id
+                      ? opt.id === 'painful'
+                        ? 'bg-rose-600 text-white border-rose-600'
+                        : opt.id === 'easy'
+                          ? 'bg-emerald-600 text-white border-emerald-600'
+                          : 'bg-amber-500 text-white border-amber-500'
+                      : 'bg-slate-50 text-slate-600 border-slate-200'
+                  }`}
+                >
+                  <FaIcon icon={opt.icon} className="block text-lg mb-1 mx-auto" />
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-slate-700 mb-1.5 block">Notes (optional)</label>
+            <textarea
+              className="input-field w-full min-h-[72px]"
+              placeholder="How did it feel?"
+              value={logForm.feedback}
+              onChange={(e) => setLogForm((f) => ({ ...f, feedback: e.target.value }))}
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-slate-700 mb-1.5 block">Question for your doctor</label>
+            <input
+              className="input-field w-full"
+              placeholder="Optional comment or question"
+              value={logForm.patient_comment}
+              onChange={(e) => setLogForm((f) => ({ ...f, patient_comment: e.target.value }))}
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-slate-700 mb-1.5 block">Performance photo/video URL</label>
+            <input
+              className="input-field w-full"
+              placeholder="CDN / Cloudinary / S3 URL"
+              value={logForm.media_url}
+              onChange={(e) => setLogForm((f) => ({ ...f, media_url: e.target.value }))}
+            />
+          </div>
         </form>
-      </GlassModal>
+      </ExerciseBottomSheet>
     </DashboardLayout>
   );
 }

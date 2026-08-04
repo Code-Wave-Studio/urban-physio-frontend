@@ -20,6 +20,8 @@ export default function DoctorCard({ doctor, compact = false, variant = 'default
 
   const openPreview = () => setPreviewOpen(true);
 
+  const isOffline = doctor.is_closed || (doctor.profile_public !== undefined && Number(doctor.profile_public) === 0);
+
   if (compact) {
     return (
       <>
@@ -33,15 +35,28 @@ export default function DoctorCard({ doctor, compact = false, variant = 'default
           <div className="flex gap-3 items-center">
             <DoctorAvatar doctor={doctor} size="md" />
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-slate-800 text-sm truncate">
-                Dr. {doctor.first_name} {doctor.last_name}
-              </h3>
+              <div className="flex items-center gap-1.5">
+                <h3 className="font-semibold text-slate-800 text-sm truncate">
+                  Dr. {doctor.first_name} {doctor.last_name}
+                </h3>
+                {isOffline && (
+                  <span className="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 rounded px-1.5 py-0.5 shrink-0">
+                    Closed
+                  </span>
+                )}
+              </div>
               <p className="text-primary-600 text-xs truncate">{doctor.specialization}</p>
               <p className="text-slate-600 text-xs font-medium mt-0.5">₹{doctor.consultation_fee}</p>
             </div>
-            <Link to={bookDoctorUrl(doctor.id)} onClick={stopNav} className="btn-primary text-xs py-2 px-3 shrink-0">
-              Book
-            </Link>
+            {isOffline ? (
+              <span className="text-xs px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-400 font-semibold border border-slate-200 shrink-0">
+                Closed
+              </span>
+            ) : (
+              <Link to={bookDoctorUrl(doctor.id)} onClick={stopNav} className="btn-primary text-xs py-2 px-3 shrink-0">
+                Book
+              </Link>
+            )}
           </div>
         </div>
         <DoctorPreview doctor={doctor} open={previewOpen} onClose={() => setPreviewOpen(false)} />
@@ -64,9 +79,16 @@ export default function DoctorCard({ doctor, compact = false, variant = 'default
             <div className="flex gap-4">
               <DoctorAvatar doctor={doctor} size="lg" />
               <div className="min-w-0 flex-1">
-                <h3 className="font-bold text-lg text-slate-900 leading-tight group-hover:text-primary-700 transition-colors">
-                  Dr. {doctor.first_name} {doctor.last_name}
-                </h3>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="font-bold text-lg text-slate-900 leading-tight group-hover:text-primary-700 transition-colors">
+                    Dr. {doctor.first_name} {doctor.last_name}
+                  </h3>
+                  {isOffline && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-red-700 bg-red-50 border border-red-200 rounded-full px-2 py-0.5 shrink-0">
+                      Closed
+                    </span>
+                  )}
+                </div>
                 <p className="text-primary-600 text-sm font-semibold mt-1 line-clamp-2">{doctor.specialization || 'Physiotherapist'}</p>
                 <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-slate-600">
                   <span className="inline-flex items-center gap-1">
@@ -84,6 +106,12 @@ export default function DoctorCard({ doctor, compact = false, variant = 'default
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
+              {isOffline && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-50 text-red-700 text-xs font-semibold border border-red-200">
+                  <FaIcon icon="fa-circle-xmark" className="text-red-500" />
+                  Currently Offline
+                </span>
+              )}
               {rating > 0 ? (
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 text-xs font-semibold border border-amber-100">
                   <FaIcon icon="fa-star" className="text-amber-500" />
@@ -119,14 +147,25 @@ export default function DoctorCard({ doctor, compact = false, variant = 'default
             </div>
 
             <div className="mt-auto pt-5">
-              <Link
-                to={bookDoctorUrl(doctor.id)}
-                onClick={stopNav}
-                className="btn-primary w-full text-center text-sm !py-2.5 inline-flex items-center justify-center gap-2"
-              >
-                <FaIcon icon="fa-calendar-check" className="text-xs btn-icon" />
-                Book
-              </Link>
+              {isOffline ? (
+                <button
+                  type="button"
+                  disabled
+                  className="w-full text-center text-sm py-2.5 rounded-xl font-bold bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <FaIcon icon="fa-clock" />
+                  Closed · Offline
+                </button>
+              ) : (
+                <Link
+                  to={bookDoctorUrl(doctor.id)}
+                  onClick={stopNav}
+                  className="btn-primary w-full text-center text-sm !py-2.5 inline-flex items-center justify-center gap-2"
+                >
+                  <FaIcon icon="fa-calendar-check" className="text-xs btn-icon" />
+                  Book
+                </Link>
+              )}
             </div>
           </div>
         </article>
@@ -147,9 +186,16 @@ export default function DoctorCard({ doctor, compact = false, variant = 'default
         <div className="flex gap-4">
           <DoctorAvatar doctor={doctor} size="lg" />
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-base md:text-lg text-slate-800 group-hover:text-primary-700 transition">
-              Dr. {doctor.first_name} {doctor.last_name}
-            </h3>
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="font-semibold text-base md:text-lg text-slate-800 group-hover:text-primary-700 transition">
+                Dr. {doctor.first_name} {doctor.last_name}
+              </h3>
+              {isOffline && (
+                <span className="text-[10px] font-bold uppercase tracking-wider text-red-700 bg-red-50 border border-red-200 rounded-full px-2 py-0.5 shrink-0">
+                  Closed
+                </span>
+              )}
+            </div>
             <p className="text-primary-600 text-xs md:text-sm font-medium">{doctor.specialization}</p>
             <p className="text-slate-500 text-xs mt-0.5">{doctor.city_name || 'India'}</p>
             <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs">
@@ -163,9 +209,20 @@ export default function DoctorCard({ doctor, compact = false, variant = 'default
           </div>
         </div>
         <div className="mt-3 md:mt-4 flex gap-2">
-          <Link to={bookDoctorUrl(doctor.id)} onClick={stopNav} className="btn-primary flex-1 text-center block text-sm">
-            Book Appointment
-          </Link>
+          {isOffline ? (
+            <button
+              type="button"
+              disabled
+              className="flex-1 text-center py-2 rounded-xl text-sm font-bold bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <FaIcon icon="fa-clock" />
+              Closed · Currently Offline
+            </button>
+          ) : (
+            <Link to={bookDoctorUrl(doctor.id)} onClick={stopNav} className="btn-primary flex-1 text-center block text-sm">
+              Book Appointment
+            </Link>
+          )}
         </div>
       </div>
       <DoctorPreview doctor={doctor} open={previewOpen} onClose={() => setPreviewOpen(false)} />

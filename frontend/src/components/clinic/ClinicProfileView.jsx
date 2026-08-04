@@ -254,6 +254,7 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
   const rating = Number(stats.avg_rating ?? clinic.rating_avg) || computedRating || 0;
 
   const locationLine = [clinic.address, clinic.city_name, clinic.state_name].filter(Boolean).join(', ');
+  const isClosed = Boolean(Number(clinic.is_closed ?? (clinic.is_online === false ? 1 : 0)));
 
   const bannerFallback = resolveMediaUrl(clinic.cover_image || clinic.logo) || HEALTHCARE_IMAGES.clinicProfile;
 
@@ -541,13 +542,27 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
               <p className="text-sm font-bold text-slate-900 mb-3">Book your visit</p>
 
-              <ClinicSlotsPreview clinicId={clinic.id} />
+              {isClosed ? (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-center space-y-1">
+                  <p className="text-xs font-bold text-red-700 flex items-center justify-center gap-1">
+                    <FaIcon icon="fa-circle-xmark" />
+                    Clinic is Closed / Offline
+                  </p>
+                  <p className="text-[11px] text-red-600">
+                    Not accepting bookings right now.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <ClinicSlotsPreview clinicId={clinic.id} />
 
-              <Link to={clinicBookUrl(clinic)} className="btn-primary w-full text-center mt-3 !bg-emerald-600 hover:!bg-emerald-700">
+                  <Link to={clinicBookUrl(clinic)} className="btn-primary w-full text-center mt-3 !bg-emerald-600 hover:!bg-emerald-700">
 
-                Book now
+                    Book now
 
-              </Link>
+                  </Link>
+                </>
+              )}
 
             </div>
 
@@ -603,7 +618,19 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
               <p className="font-bold text-slate-900 text-sm mb-3">Appointment availability</p>
 
-              <ClinicSlotsPreview clinicId={clinic.id} />
+              {isClosed ? (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-center space-y-1">
+                  <p className="text-xs font-bold text-red-700 flex items-center justify-center gap-1">
+                    <FaIcon icon="fa-circle-xmark" />
+                    Clinic is Closed / Offline
+                  </p>
+                  <p className="text-[11px] text-red-600">
+                    Not accepting new appointment bookings at this time.
+                  </p>
+                </div>
+              ) : (
+                <ClinicSlotsPreview clinicId={clinic.id} />
+              )}
 
             </div>
 
