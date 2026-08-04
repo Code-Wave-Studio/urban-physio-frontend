@@ -102,11 +102,47 @@ export function parseMediaSource(exerciseOrUrl) {
     thumbnailUrl: null,
     videoId: null,
     rawUrl: null,
+    sourceMode: 'auto',
   };
 
   const { rawUrl, fallbackImageUrl } = pickRawMediaUrl(exerciseOrUrl);
   if (!rawUrl && !fallbackImageUrl) return empty;
 
+  const sourceMode = typeof exerciseOrUrl === 'object' && exerciseOrUrl
+    ? (exerciseOrUrl.video_source || exerciseOrUrl.video_type || exerciseOrUrl.source_type || 'auto')
+    : 'auto';
+
+  // Force uploaded video mode if video_source === 'upload'
+  if (sourceMode === 'upload' && rawUrl) {
+    const resolved = resolveMediaUrl(rawUrl) || rawUrl;
+    return {
+      type: 'video',
+      url: resolved,
+      embedUrl: null,
+      thumbnailUrl: fallbackImageUrl ? resolveMediaUrl(fallbackImageUrl) : null,
+      videoId: null,
+      rawUrl,
+      sourceMode: 'upload',
+    };
+  }
+
+  // Force YouTube mode if video_source === 'youtube'
+  if (sourceMode === 'youtube' && rawUrl) {
+    const videoId = extractYoutubeId(rawUrl);
+    if (videoId) {
+      return {
+        type: 'youtube',
+        url: rawUrl,
+        embedUrl: buildYoutubeEmbedUrl(videoId),
+        thumbnailUrl: youtubeThumbnailUrl(videoId),
+        videoId,
+        rawUrl,
+        sourceMode: 'youtube',
+      };
+    }
+  }
+
+  // Auto-detection mode
   if (rawUrl) {
     const videoId = extractYoutubeId(rawUrl);
     if (videoId) {
@@ -117,6 +153,7 @@ export function parseMediaSource(exerciseOrUrl) {
         thumbnailUrl: youtubeThumbnailUrl(videoId),
         videoId,
         rawUrl,
+        sourceMode: 'youtube',
       };
     }
   }

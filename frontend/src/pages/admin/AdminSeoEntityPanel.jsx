@@ -351,17 +351,6 @@ export default function AdminSeoEntityPanel({ entityType, title, defaultOg = '' 
                       <label className="block text-xs font-semibold text-slate-700">
                         Custom SEO URL / Public Profile Path (editable)
                       </label>
-                      {(entityType === 'clinic' || entityType === 'doctor') && (
-                        <button
-                          type="button"
-                          onClick={handleAutoGenerateUrl}
-                          disabled={urlGenerating}
-                          className="text-xs font-semibold text-sky-700 hover:text-sky-800 flex items-center gap-1 transition"
-                        >
-                          <FaIcon icon="fa-wand-magic-sparkles" />
-                          {urlGenerating ? 'Generating…' : 'Auto-Generate Default URL'}
-                        </button>
-                      )}
                     </div>
 
                     <div className="flex items-stretch rounded-lg border border-slate-200 overflow-hidden bg-white shadow-sm">
