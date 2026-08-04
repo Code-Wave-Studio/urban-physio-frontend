@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import FaIcon from './FaIcon';
 import { API_BASE } from '../services/api';
 import AppointmentProgressPanel from './AppointmentProgressPanel';
