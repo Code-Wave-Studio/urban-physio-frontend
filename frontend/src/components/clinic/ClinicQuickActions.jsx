@@ -18,11 +18,11 @@ function stopNav(e) {
 
 function CircleAction({ href, to, onClick, icon, label, saved = false, brand = false, external, compact = false }) {
   const base = compact
-    ? 'shrink-0 snap-start flex flex-col items-center gap-0.5 w-[3rem] group transition-transform active:scale-95'
-    : 'shrink-0 snap-start flex flex-col items-center gap-1 w-[3.25rem] group transition-transform active:scale-95';
+    ? 'shrink-0 snap-start flex flex-col items-center gap-1 w-[3.5rem] group transition-transform active:scale-95 py-0.5'
+    : 'shrink-0 snap-start flex flex-col items-center gap-1 w-[3.75rem] group transition-transform active:scale-95 py-0.5';
   const circle = saved
-    ? 'bg-slate-50 text-rose-600 border border-slate-200 shadow-sm group-hover:bg-slate-100'
-    : 'bg-white text-slate-600 border border-slate-200 shadow-sm group-hover:bg-slate-50 group-hover:border-slate-300';
+    ? 'bg-rose-50 text-rose-600 border border-rose-200 shadow-xs group-hover:bg-rose-100'
+    : 'bg-slate-50 text-slate-700 border border-slate-200/80 shadow-xs group-hover:bg-teal-50 group-hover:text-teal-700 group-hover:border-teal-200';
 
   const inner = (
     <>
@@ -34,8 +34,8 @@ function CircleAction({ href, to, onClick, icon, label, saved = false, brand = f
         <FaIcon icon={icon} className={compact ? 'text-xs' : 'text-sm'} brand={brand} />
       </span>
       <span
-        className={`font-semibold text-slate-600 text-center leading-tight truncate ${
-          compact ? 'text-[8px] max-w-[3rem]' : 'text-[9px] max-w-[3.5rem]'
+        className={`font-medium text-slate-700 text-center leading-tight truncate w-full ${
+          compact ? 'text-[10px]' : 'text-[11px]'
         }`}
       >
         {label}
