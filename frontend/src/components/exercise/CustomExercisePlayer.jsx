@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import FaIcon from '../FaIcon';
-import { parseMediaSource, buildYoutubeEmbedUrl } from '../../utils/mediaParser';
+import { parseMediaSource } from '../../utils/mediaParser';
 
 function formatTime(seconds) {
   if (!seconds || isNaN(seconds) || seconds < 0) return '00:00';
@@ -9,18 +9,20 @@ function formatTime(seconds) {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
+const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5];
+
 export default function CustomExercisePlayer({
   exercise,
   mediaUrl,
   title = '',
-  className = 'w-full aspect-video',
+  className = '',
 }) {
   const containerRef = useRef(null);
   const iframeRef = useRef(null);
   const videoRef = useRef(null);
 
   const media = useMemo(() => parseMediaSource(exercise || mediaUrl), [exercise, mediaUrl]);
-  const label = title || (exercise && exercise.name) || 'Exercise Media';
+  const label = title || (exercise && (exercise.name || exercise.exercise_name)) || 'Exercise Video';
 
   const [isPlaying, setIsPlaying] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
@@ -28,93 +30,30 @@ export default function CustomExercisePlayer({
   const [volume, setVolume] = useState(100);
   const [isMuted, setIsMuted] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+  const [iframeError, setIframeError] = useState(false);
 
-  // YouTube embed URL with clean params
-  const cleanYoutubeEmbedUrl = useMemo(() => {
-    if (media.type !== 'youtube' || !media.youtubeId) return null;
-    const params = new URLSearchParams({
-      autoplay: '1',
-      mute: '1',
-      loop: '1',
-      playlist: media.youtubeId,
-      controls: '0',
-      modestbranding: '1',
-      rel: '0',
-      showinfo: '0',
-      iv_load_policy: '3',
-      cc_load_policy: '0',
-      disablekb: '1',
-      fs: '0',
-      playsinline: '1',
-      enablejsapi: '1',
-      origin: typeof window !== 'undefined' ? window.location.origin : '',
-    });
-    return `https://www.youtube.com/embed/${media.youtubeId}?${params.toString()}`;
-  }, [media]);
+  // Clean YouTube Embed URL guaranteed to load and play in all browsers
+  const youtubeEmbedUrl = useMemo(() => {
+    if (media.type !== 'youtube' || !media.videoId) return null;
+    return `https://www.youtube.com/embed/${media.videoId}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${media.videoId}&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`;
+  }, [media, isMuted]);
 
-  // PostMessage command to YouTube iframe
+  // PostMessage helper for YouTube iframe API
   const sendYoutubeCommand = (func, args = []) => {
     if (!iframeRef.current || !iframeRef.current.contentWindow) return;
     try {
-      const message = JSON.stringify({
-        event: 'command',
-        func,
-        args,
-      });
-      iframeRef.current.contentWindow.postMessage(message, '*');
+      iframeRef.current.contentWindow.postMessage(
+        JSON.stringify({ event: 'command', func, args }),
+        '*'
+      );
     } catch {
-      /* ignore cross-origin postMessage errors */
+      /* ignore cross-origin error */
     }
   };
 
-  // Listen to YouTube postMessage events for playback state and time updates
-  useEffect(() => {
-    if (media.type !== 'youtube') return;
-
-    const handleMessage = (event) => {
-      try {
-        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-        if (!data) return;
-
-        if (data.event === 'onStateChange') {
-          // 1 = PLAYING, 2 = PAUSED, 0 = ENDED
-          if (data.info === 1) setIsPlaying(true);
-          if (data.info === 2 || data.info === 0) setIsPlaying(false);
-        }
-
-        if (data.event === 'infoDelivery' && data.info) {
-          if (typeof data.info.currentTime === 'number') {
-            setCurrentTime(data.info.currentTime);
-          }
-          if (typeof data.info.duration === 'number' && data.info.duration > 0) {
-            setDuration(data.info.duration);
-          }
-          if (typeof data.info.volume === 'number') {
-            setVolume(data.info.volume);
-          }
-          if (typeof data.info.muted === 'boolean') {
-            setIsMuted(data.info.muted);
-          }
-        }
-      } catch {
-        /* ignore parse errors */
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-
-    // Request status update periodically
-    const timer = setInterval(() => {
-      sendYoutubeCommand('listening');
-    }, 1000);
-
-    return () => {
-      window.removeEventListener('message', handleMessage);
-      clearInterval(timer);
-    };
-  }, [media]);
-
-  // Track HTML5 video progress
+  // Track HTML5 video progress & state
   useEffect(() => {
     if (media.type !== 'video' || !videoRef.current) return;
     const v = videoRef.current;
@@ -177,21 +116,16 @@ export default function CustomExercisePlayer({
   };
 
   const toggleMute = () => {
+    const newMuted = !isMuted;
+    setIsMuted(newMuted);
     if (media.type === 'youtube') {
-      if (isMuted) {
+      if (newMuted) sendYoutubeCommand('mute');
+      else {
         sendYoutubeCommand('unMute');
-        setIsMuted(false);
-        if (volume === 0) {
-          sendYoutubeCommand('setVolume', [80]);
-          setVolume(80);
-        }
-      } else {
-        sendYoutubeCommand('mute');
-        setIsMuted(true);
+        sendYoutubeCommand('setVolume', [volume || 80]);
       }
     } else if (media.type === 'video' && videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
+      videoRef.current.muted = newMuted;
     }
   };
 
@@ -208,6 +142,16 @@ export default function CustomExercisePlayer({
     } else if (media.type === 'video' && videoRef.current) {
       videoRef.current.volume = newVol / 100;
       videoRef.current.muted = muted;
+    }
+  };
+
+  const handleSpeedChange = (speed) => {
+    setPlaybackSpeed(speed);
+    setShowSpeedMenu(false);
+    if (media.type === 'youtube') {
+      sendYoutubeCommand('setPlaybackRate', [speed]);
+    } else if (media.type === 'video' && videoRef.current) {
+      videoRef.current.playbackRate = speed;
     }
   };
 
@@ -228,10 +172,15 @@ export default function CustomExercisePlayer({
 
   if (!media.type) return null;
 
+  // Fallback for static image or GIF
   if (media.type === 'image') {
     return (
-      <div className="w-full aspect-video rounded-2xl overflow-hidden bg-slate-950 border border-slate-200/80 shadow-md">
-        <img src={media.url} alt={label} className="w-full h-full object-cover" />
+      <div className={`w-full aspect-video rounded-2xl overflow-hidden bg-slate-950 border border-slate-200/80 shadow-md relative group ${className}`}>
+        <img src={media.url} alt={label} className="w-full h-full object-contain bg-slate-900" />
+        <div className="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-full text-[11px] font-semibold text-teal-300 flex items-center gap-1.5 border border-slate-700/50">
+          <FaIcon icon="fa-image" />
+          Exercise Guide Image
+        </div>
       </div>
     );
   }
@@ -239,25 +188,30 @@ export default function CustomExercisePlayer({
   return (
     <div
       ref={containerRef}
-      className="w-full flex flex-col rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 shadow-xl group"
+      className={`w-full flex flex-col rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 shadow-2xl transition-all ${className}`}
     >
-      {/* Video Box Container — Clean video without obstructive overlays */}
-      <div className="relative w-full aspect-video bg-black overflow-hidden flex items-center justify-center">
-        {media.type === 'youtube' && cleanYoutubeEmbedUrl && (
-          <div className="absolute inset-0 w-full h-full scale-[1.12] overflow-hidden pointer-events-none select-none">
-            <iframe
-              ref={iframeRef}
-              src={cleanYoutubeEmbedUrl}
-              title={label}
-              className="w-full h-full object-cover border-0 pointer-events-none"
-              allow="autoplay; encrypted-media; picture-in-picture"
-              allowFullScreen={false}
-              loading="lazy"
-              tabIndex={-1}
-            />
-          </div>
+      {/* Video Container Box */}
+      <div className="relative w-full aspect-video bg-black overflow-hidden flex items-center justify-center group">
+        {/* Top Floating Badge */}
+        <div className="absolute top-3 left-3 z-20 bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-full text-[11px] font-semibold text-teal-300 flex items-center gap-1.5 border border-slate-700/60 shadow-md">
+          <FaIcon icon={media.type === 'youtube' ? 'fa-youtube' : 'fa-circle-play'} brand={media.type === 'youtube'} className={media.type === 'youtube' ? 'text-red-500' : 'text-teal-400'} />
+          <span>{media.type === 'youtube' ? 'YouTube Exercise Video' : 'HD Demonstration Video'}</span>
+        </div>
+
+        {/* YouTube Iframe Player */}
+        {media.type === 'youtube' && youtubeEmbedUrl && !iframeError && (
+          <iframe
+            ref={iframeRef}
+            src={youtubeEmbedUrl}
+            title={label}
+            className="w-full h-full border-0"
+            allow="autoplay; encrypted-media; picture-in-picture; accelerometer; clipboard-write; gyroscope"
+            allowFullScreen
+            onError={() => setIframeError(true)}
+          />
         )}
 
+        {/* HTML5 Native Video Player */}
         {media.type === 'video' && (
           <video
             ref={videoRef}
@@ -267,25 +221,30 @@ export default function CustomExercisePlayer({
             muted={isMuted}
             playsInline
             controls={false}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain bg-black"
           />
+        )}
+
+        {/* Fallback Image overlay if iframe failed */}
+        {iframeError && media.thumbnailUrl && (
+          <img src={media.thumbnailUrl} alt={label} className="w-full h-full object-cover" />
         )}
       </div>
 
-      {/* Custom Control Bar — Positioned BELOW the video */}
-      <div className="w-full bg-slate-900 text-white p-3 sm:p-3.5 flex flex-wrap items-center justify-between gap-2.5 sm:gap-4 shrink-0 border-t border-slate-800">
+      {/* Modern Custom Control Bar Below Video */}
+      <div className="w-full bg-slate-900 text-white p-3 sm:p-3.5 flex flex-wrap items-center justify-between gap-2.5 sm:gap-4 shrink-0 border-t border-slate-800/80">
         {/* Left: Play/Pause Button */}
         <button
           type="button"
           onClick={togglePlay}
-          className="w-9 h-9 rounded-full bg-teal-500 hover:bg-teal-400 text-white flex items-center justify-center shrink-0 transition-transform active:scale-95 shadow-md"
-          aria-label={isPlaying ? 'Pause video' : 'Play video'}
+          className="w-9 h-9 rounded-full bg-gradient-to-tr from-teal-600 to-emerald-500 hover:from-teal-500 hover:to-emerald-400 text-white flex items-center justify-center shrink-0 transition-transform active:scale-95 shadow-md shadow-teal-900/40"
+          aria-label={isPlaying ? 'Pause' : 'Play'}
         >
-          <FaIcon icon={isPlaying ? 'fa-pause' : 'fa-play'} className="text-sm ml-0.5" />
+          <FaIcon icon={isPlaying ? 'fa-pause' : 'fa-play'} className="text-xs ml-0.5" />
         </button>
 
-        {/* Middle: Progress Bar & Duration Counter */}
-        <div className="flex-1 flex items-center gap-2 sm:gap-3 min-w-[140px]">
+        {/* Middle: Seek Slider & Timestamps */}
+        <div className="flex-1 flex items-center gap-2 sm:gap-3 min-w-[130px]">
           <span className="text-[11px] font-mono text-slate-300 shrink-0 font-medium">
             {formatTime(currentTime)}
           </span>
@@ -296,23 +255,53 @@ export default function CustomExercisePlayer({
             step="0.1"
             value={currentTime}
             onChange={handleSeek}
-            className="w-full h-1.5 rounded-lg bg-slate-700 accent-teal-400 cursor-pointer hover:bg-slate-600 transition"
-            aria-label="Seek video progress"
+            className="w-full h-1.5 rounded-lg bg-slate-800 accent-teal-400 cursor-pointer hover:bg-slate-700 transition"
+            aria-label="Seek progress"
           />
           <span className="text-[11px] font-mono text-slate-400 shrink-0 font-medium">
             {formatTime(duration)}
           </span>
         </div>
 
-        {/* Right: Dedicated Volume Control + Fullscreen */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          {/* Volume Group */}
-          <div className="flex items-center gap-1.5 bg-slate-800/80 px-2.5 py-1 rounded-full border border-slate-700/60">
+        {/* Right: Volume, Speed & Fullscreen Controls */}
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          {/* Speed Selector Dropdown */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowSpeedMenu(!showSpeedMenu)}
+              className="px-2 py-1 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-mono font-semibold border border-slate-700/60 transition"
+              aria-label="Playback Speed"
+            >
+              {playbackSpeed}x
+            </button>
+            {showSpeedMenu && (
+              <div className="absolute bottom-full right-0 mb-2 w-24 bg-slate-900 border border-slate-700 rounded-xl shadow-xl p-1 z-30 space-y-0.5">
+                {SPEED_OPTIONS.map((speed) => (
+                  <button
+                    key={speed}
+                    type="button"
+                    onClick={() => handleSpeedChange(speed)}
+                    className={`w-full text-left px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition ${
+                      playbackSpeed === speed
+                        ? 'bg-teal-600 text-white font-bold'
+                        : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                    }`}
+                  >
+                    {speed}x {speed === 1 ? '(Normal)' : ''}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Volume Control */}
+          <div className="flex items-center gap-1.5 bg-slate-800/90 px-2.5 py-1 rounded-full border border-slate-700/60">
             <button
               type="button"
               onClick={toggleMute}
               className="text-slate-300 hover:text-white transition p-0.5"
-              aria-label={isMuted ? 'Unmute volume' : 'Mute volume'}
+              aria-label={isMuted ? 'Unmute' : 'Mute'}
             >
               <FaIcon
                 icon={isMuted || volume === 0 ? 'fa-volume-xmark' : volume < 50 ? 'fa-volume-low' : 'fa-volume-high'}
@@ -325,17 +314,17 @@ export default function CustomExercisePlayer({
               max="100"
               value={isMuted ? 0 : volume}
               onChange={handleVolumeChange}
-              className="w-14 sm:w-20 h-1 rounded-lg bg-slate-600 accent-teal-400 cursor-pointer"
-              aria-label="Volume slider"
+              className="w-12 sm:w-16 h-1 rounded-lg bg-slate-700 accent-teal-400 cursor-pointer"
+              aria-label="Volume"
             />
           </div>
 
-          {/* Fullscreen Button */}
+          {/* Fullscreen Toggle */}
           <button
             type="button"
             onClick={toggleFullscreen}
-            className="w-8 h-8 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition border border-slate-700/60"
-            aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+            className="w-8 h-8 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition border border-slate-700/60"
+            aria-label={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
           >
             <FaIcon icon={isFullscreen ? 'fa-compress' : 'fa-expand'} className="text-xs" />
           </button>

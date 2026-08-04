@@ -131,14 +131,14 @@ export default function ClinicQuickActions({
   const share = async (e) => {
     stopNav(e);
     onNavigate?.();
-    const url = typeof window !== 'undefined' ? window.location.href : '';
+    const fullUrl = `${window.location.origin}${profileTo.startsWith('/') ? '' : '/'}${profileTo}`;
     try {
       if (navigator.share) {
-        await navigator.share({ title: clinic.name, url });
+        await navigator.share({ title: clinic.name, text: `Check out ${clinic.name} on The Urban Physio`, url: fullUrl });
         return;
       }
-      await navigator.clipboard.writeText(url);
-      toast.success('Link copied');
+      await navigator.clipboard.writeText(fullUrl);
+      toast.success('Clinic profile link copied');
     } catch {
       /* cancelled */
     }

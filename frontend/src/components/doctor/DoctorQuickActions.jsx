@@ -135,14 +135,14 @@ export default function DoctorQuickActions({ doctor, onNavigate, variant = 'shee
   const share = async (e) => {
     stopNav(e);
     onNavigate?.();
-    const url = typeof window !== 'undefined' ? window.location.href : '';
+    const fullUrl = `${window.location.origin}${profileTo.startsWith('/') ? '' : '/'}${profileTo}`;
     try {
       if (navigator.share) {
-        await navigator.share({ title: fullName, url });
+        await navigator.share({ title: fullName, text: `Check out ${fullName} on The Urban Physio`, url: fullUrl });
         return;
       }
-      await navigator.clipboard.writeText(url);
-      toast.success('Link copied');
+      await navigator.clipboard.writeText(fullUrl);
+      toast.success('Doctor profile link copied');
     } catch {
       /* cancelled */
     }

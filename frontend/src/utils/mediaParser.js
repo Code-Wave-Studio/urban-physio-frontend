@@ -57,8 +57,12 @@ function pickRawMediaUrl(exerciseOrUrl) {
   let rawUrl =
     exerciseOrUrl.video_url ||
     exerciseOrUrl.media_url ||
+    exerciseOrUrl.youtube_url ||
+    exerciseOrUrl.embed_url ||
     exerciseOrUrl.video ||
     exerciseOrUrl.url ||
+    (exerciseOrUrl.youtube_id ? `https://www.youtube.com/watch?v=${exerciseOrUrl.youtube_id}` : null) ||
+    (exerciseOrUrl.video_id ? `https://www.youtube.com/watch?v=${exerciseOrUrl.video_id}` : null) ||
     null;
   if (typeof rawUrl === 'string') rawUrl = rawUrl.trim() || null;
 
