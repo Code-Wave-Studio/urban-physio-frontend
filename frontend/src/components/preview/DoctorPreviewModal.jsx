@@ -103,19 +103,19 @@ export default function DoctorPreviewModal({ doctor: initialDoctor, open, onClos
   );
 
   const footer = (
-    <div className="flex flex-col gap-3 w-full">
-      <SaveDoctorButton doctor={d} className="w-full" />
-      <div className="flex flex-col-reverse sm:flex-row gap-3 w-full">
+    <div className="flex flex-col gap-2.5 w-full">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 w-full">
+        <SaveDoctorButton doctor={d} className="sm:w-auto" />
         <Link
           to={doctorProfileUrl(d)}
           onClick={(e) => {
             stopNav(e);
             onClose();
           }}
-          className="btn-outline w-full sm:flex-1 text-center !py-3 inline-flex items-center justify-center gap-2"
+          className="btn-outline flex-1 text-center !py-2.5 inline-flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold"
         >
           <FaIcon icon="fa-user" />
-          View full profile
+          Full profile
         </Link>
         <Link
           to={bookDoctorUrl(d.id)}
@@ -123,7 +123,7 @@ export default function DoctorPreviewModal({ doctor: initialDoctor, open, onClos
             stopNav(e);
             onClose();
           }}
-          className="btn-primary w-full sm:flex-1 text-center !py-3 inline-flex items-center justify-center gap-2"
+          className="btn-primary flex-1 text-center !py-2.5 inline-flex items-center justify-center gap-2 text-xs sm:text-sm font-bold shadow-md shadow-primary-900/10"
         >
           <FaIcon icon="fa-calendar-check" />
           Book appointment
@@ -141,7 +141,7 @@ export default function DoctorPreviewModal({ doctor: initialDoctor, open, onClos
       accent="primary"
       header={header}
       footer={footer}
-      panelClassName="max-h-[min(92dvh,820px)]"
+      panelClassName="max-h-[min(86dvh,760px)]"
     >
       {loading && (
         <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/80">

@@ -34,10 +34,10 @@ export default function PreviewModalShell({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-            className="flex flex-col min-h-0 flex-1 max-h-[inherit]"
+            className="flex flex-col h-full max-h-full min-h-0 flex-1 overflow-hidden"
           >
             {header}
-            <GlassModalBody className={`!px-0 !py-0 ${bodyClassName}`}>{children}</GlassModalBody>
+            <GlassModalBody className={`!px-0 !py-0 flex-1 min-h-0 ${bodyClassName}`}>{children}</GlassModalBody>
             {footer && <GlassModalFooter>{footer}</GlassModalFooter>}
           </motion.div>
         </GlassModal>

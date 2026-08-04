@@ -96,19 +96,19 @@ export default function ClinicPreviewModal({ clinic: initialClinic, open, onClos
   );
 
   const footer = (
-    <div className="flex flex-col gap-3 w-full">
-      <SaveClinicButton clinic={c} className="w-full" />
-      <div className="flex flex-col-reverse sm:flex-row gap-3 w-full">
+    <div className="flex flex-col gap-2.5 w-full">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 w-full">
+        <SaveClinicButton clinic={c} className="sm:w-auto" />
         <Link
           to={clinicProfileUrl(c)}
           onClick={(e) => {
             stopNav(e);
             onClose();
           }}
-          className="btn-outline w-full sm:flex-1 text-center !py-3 inline-flex items-center justify-center gap-2"
+          className="btn-outline flex-1 text-center !py-2.5 inline-flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold"
         >
           <FaIcon icon="fa-hospital" />
-          View full profile
+          Full profile
         </Link>
         <Link
           to={bookClinicUrl(c.id)}
@@ -116,18 +116,18 @@ export default function ClinicPreviewModal({ clinic: initialClinic, open, onClos
             stopNav(e);
             onClose();
           }}
-          className="btn-primary w-full sm:flex-1 text-center !py-3 inline-flex items-center justify-center gap-2"
+          className="btn-primary flex-1 text-center !py-2.5 inline-flex items-center justify-center gap-2 text-xs sm:text-sm font-bold shadow-md shadow-primary-900/10"
         >
           <FaIcon icon="fa-calendar-check" />
           Book appointment
         </Link>
       </div>
       {(c.phone || mapUrl) && (
-        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs font-semibold text-slate-600">
+        <div className="flex items-center justify-center gap-x-5 text-xs font-semibold text-slate-600 pt-0.5">
           {c.phone && (
-            <a href={`tel:${c.phone}`} onClick={stopNav} className="hover:text-emerald-700 inline-flex items-center gap-1.5">
-              <FaIcon icon="fa-phone" />
-              Call
+            <a href={`tel:${c.phone}`} onClick={stopNav} className="hover:text-emerald-700 inline-flex items-center gap-1.5 transition">
+              <FaIcon icon="fa-phone" className="text-emerald-600" />
+              Call ({c.phone})
             </a>
           )}
           {mapUrl && (
@@ -136,10 +136,10 @@ export default function ClinicPreviewModal({ clinic: initialClinic, open, onClos
               target="_blank"
               rel="noopener noreferrer"
               onClick={stopNav}
-              className="hover:text-emerald-700 inline-flex items-center gap-1.5"
+              className="hover:text-emerald-700 inline-flex items-center gap-1.5 transition"
             >
-              <FaIcon icon="fa-diamond-turn-right" />
-              Directions
+              <FaIcon icon="fa-diamond-turn-right" className="text-emerald-600" />
+              Get directions
             </a>
           )}
         </div>
@@ -156,8 +156,8 @@ export default function ClinicPreviewModal({ clinic: initialClinic, open, onClos
       accent="emerald"
       header={header}
       footer={footer}
-      panelClassName="max-h-[min(92dvh,820px)]"
-      bodyClassName="!min-h-[12rem]"
+      panelClassName="max-h-[min(86dvh,760px)]"
+      bodyClassName="!min-h-0"
     >
       {loading && (
         <div className="px-5 sm:px-6 py-3 border-b border-slate-100 bg-slate-50/80">

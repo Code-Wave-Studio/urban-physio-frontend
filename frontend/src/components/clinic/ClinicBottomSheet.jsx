@@ -101,7 +101,7 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
           />
 
           {/* Container — Desktop Pop-up Modal / Mobile Bottom Sheet */}
-          <div className="fixed inset-0 z-[125] flex items-end md:items-center justify-center p-0 md:p-6 pointer-events-none">
+          <div className="fixed inset-0 z-[125] flex items-end md:items-center justify-center p-0 md:p-6 pointer-events-none overflow-hidden">
             <motion.div
               ref={sheetRef}
               role="dialog"
