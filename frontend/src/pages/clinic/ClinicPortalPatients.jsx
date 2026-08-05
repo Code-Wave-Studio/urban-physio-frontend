@@ -7,6 +7,7 @@ import BulkInvitePanel from '../../components/clinic/BulkInvitePanel';
 import ClinicOfflinePatientForm from '../../components/clinic/ClinicOfflinePatientForm';
 import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
 import GlassModal, { GlassModalBody, GlassModalHeader } from '../../components/GlassModal';
+import PatientAvatar from '../../components/PatientAvatar';
 import PatientCommandPalette from '../../components/clinic/patients/PatientCommandPalette';
 import PatientFilterDrawer from '../../components/clinic/patients/PatientFilterDrawer';
 import PatientGlanceSheet from '../../components/clinic/patients/PatientGlanceSheet';
@@ -89,12 +90,12 @@ function PatientCard({ patient, privacy, selected, onOpen, onToggleSelect, view 
         </td>
         <td className="px-3 py-3">
           <button type="button" className="flex w-full items-center gap-3 text-left" onClick={() => onOpen(patient)}>
-            <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500/15 to-cyan-400/10 text-xs font-bold text-teal-800">
-              {initials(patient.patient_name)}
+            <div className="relative shrink-0">
+              <PatientAvatar patient={patient} size="sm" className="h-10 w-10 text-xs rounded-xl" />
               {patient.reminder_due ? (
                 <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-white" />
               ) : null}
-            </span>
+            </div>
             <span className="min-w-0">
               <span className="block truncate text-sm font-semibold text-slate-900 group-hover:text-teal-800">
                 {maskName(patient.patient_name, privacy)}
@@ -170,12 +171,12 @@ function PatientCard({ patient, privacy, selected, onOpen, onToggleSelect, view 
       </div>
       <button type="button" className="w-full text-left" onClick={() => onOpen(patient)}>
         <div className="flex items-start gap-3 pr-8">
-          <span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500/20 to-cyan-400/10 text-sm font-bold text-teal-800">
-            {initials(patient.patient_name)}
+          <div className="relative shrink-0">
+            <PatientAvatar patient={patient} size="md" className="h-12 w-12 text-sm rounded-2xl" />
             {patient.reminder_due ? (
               <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-white" />
             ) : null}
-          </span>
+          </div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="truncate text-sm font-semibold text-slate-900 group-hover:text-teal-800">

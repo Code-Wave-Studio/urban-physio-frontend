@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import GlassModal, { GlassModalHeader, GlassModalBody, GlassModalFooter } from '../GlassModal';
 import FaIcon from '../FaIcon';
 import { documents } from '../../services/api';
+import SearchablePatientSelect from './SearchablePatientSelect';
 import {
   ACCEPT_ATTR,
   DOCUMENT_CATEGORIES,
@@ -301,8 +302,11 @@ export default function DocumentUploadModal({
           </div>
           {canTargetPatient && (
             <div>
-              <label className="doc-label">Patient ID (optional)</label>
-              <input className="doc-input" value={form.patient_id} onChange={(e) => setField('patient_id', e.target.value)} placeholder="Link to a patient" />
+              <SearchablePatientSelect
+                value={form.patient_id}
+                onChange={(pid) => setField('patient_id', pid)}
+                label="Link to Patient (optional)"
+              />
             </div>
           )}
           <div>

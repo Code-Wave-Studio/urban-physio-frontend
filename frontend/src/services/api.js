@@ -242,6 +242,7 @@ function normalizeAxiosError(err) {
 export const documents = {
   categories: () => api.get('/documents/categories'),
   list: (params = {}) => api.get('/documents', { params }),
+  sharedPatients: (params = {}) => api.get('/documents/shared-patients', { params }),
   get: (id) => api.get(`/documents/${id}`),
   create: (formData, onUploadProgress) =>
     axios

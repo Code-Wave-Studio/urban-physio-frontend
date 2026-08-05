@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { AnimatePresence, motion, useDragControls, useMotionValue, useTransform } from 'framer-motion';
 import toast from 'react-hot-toast';
 import FaIcon from '../../FaIcon';
+import PatientAvatar from '../../PatientAvatar';
 import { clinicPortal } from '../../../services/api';
 import {
   formatDate,
@@ -119,9 +120,7 @@ export default function PatientGlanceSheet({
   const body = (
     <>
       <div className="flex items-start gap-3">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500/20 to-cyan-400/10 text-sm font-bold text-teal-800">
-          {initials(patient.patient_name)}
-        </span>
+        <PatientAvatar patient={patient} size="md" className="h-12 w-12 text-sm rounded-2xl" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="truncate text-base font-semibold text-slate-900">

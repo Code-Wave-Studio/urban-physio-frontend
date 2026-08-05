@@ -91,14 +91,70 @@ function priorityClass(p) {
   return 'border-emerald-200 bg-emerald-50/80 text-emerald-950';
 }
 
+function toLocalDate(d) {
+  const dt = d instanceof Date ? d : new Date(d);
+  if (isNaN(dt.getTime())) return new Date().toISOString().slice(0, 10);
+  const y = dt.getFullYear();
+  const m = String(dt.getMonth() + 1).padStart(2, '0');
+  const day = String(dt.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 function rangeFromPreset(preset) {
-  const to = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const to = toLocalDate(now);
   if (preset === 'ytd') {
-    return { from: `${new Date().getFullYear()}-01-01`, to };
+    return { from: `${now.getFullYear()}-01-01`, to };
   }
   const days = PRESETS.find((p) => p.id === preset)?.days || 30;
-  const from = new Date(Date.now() - (days - 1) * 86400000).toISOString().slice(0, 10);
-  return { from, to };
+  const fromDate = new Date(now.getTime() - (days - 1) * 86400000);
+  return { from: toLocalDate(fromDate), to };
+}
+
+function formatKey(key) {
+  return String(key || '')
+    .replace(/_/g, ' ')
+    .replace(/\bpct\b/gi, '%')
+    .replace(/\bavg\b/gi, 'Avg.')
+    .replace(/\b(.)/g, (c) => c.toUpperCase());
+}
+
+function formatVal(key, val) {
+  if (val == null) return '—';
+  if (typeof val === 'number') {
+    if (
+      key.includes('revenue') ||
+      key.includes('profit') ||
+      key.includes('expenses') ||
+      key.includes('outstanding') ||
+      key.includes('total') ||
+      key.includes('amount')
+    ) {
+      return money(val);
+    }
+    if (key.includes('pct') || key.includes('rate') || key.includes('adherence') || key.includes('margin')) {
+      return `${val}%`;
+    }
+    return val.toLocaleString('en-IN');
+  }
+  return String(val);
+}
+
+function renderSupportingData(data) {
+  if (!data || typeof data !== 'object' || !Object.keys(data).length) return null;
+  return (
+    <div className="flex flex-wrap gap-1.5 mt-2.5">
+      {Object.entries(data).map(([key, val]) => (
+        <span
+          key={key}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-white/80 text-slate-700 border border-slate-200/80 shadow-xs"
+        >
+          <span className="text-[11px] text-slate-500 font-medium">{formatKey(key)}:</span>
+          <span className="text-slate-900 font-bold">{formatVal(key, val)}</span>
+        </span>
+      ))}
+    </div>
+  );
 }
 
 export default function ClinicAiAnalyticsPage() {
@@ -134,10 +190,11 @@ export default function ClinicAiAnalyticsPage() {
     () => ({
       from: filters.from,
       to: filters.to,
+      view: viewName,
       doctor_id: filters.doctor_id || undefined,
       consultation_type: filters.consultation_type || undefined,
     }),
-    [filters]
+    [filters, viewName]
   );
 
   const applyPreset = (id) => {
@@ -237,7 +294,6 @@ export default function ClinicAiAnalyticsPage() {
         if (Array.isArray(remote) && remote.length) {
           try {
             localStorage.setItem(storageKey, JSON.stringify(remote));
-            // Trigger layout re-read by toggling view key storage via custom event
             window.dispatchEvent(new Event('storage'));
           } catch {
             /* ignore */
@@ -245,7 +301,6 @@ export default function ClinicAiAnalyticsPage() {
         }
       })
       .catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cid, viewName, storageKey]);
 
   const k = dash?.kpis || {};
@@ -257,8 +312,8 @@ export default function ClinicAiAnalyticsPage() {
         {
           label: 'Revenue',
           data: rows.map((d) => Number(d.revenue || 0)),
-          borderColor: DASH_CHART_COLORS?.[0] || '#0d9488',
-          backgroundColor: 'rgba(13,148,136,0.12)',
+          borderColor: DASH_CHART_COLORS?.line?.border || '#ea580c',
+          backgroundColor: DASH_CHART_COLORS?.line?.fill || 'rgba(249,115,22,0.12)',
           fill: true,
           tension: 0.35,
         },
@@ -274,13 +329,13 @@ export default function ClinicAiAnalyticsPage() {
         {
           label: 'Appointments',
           data: rows.map((d) => Number(d.appointments || 0)),
-          backgroundColor: 'rgba(14,165,233,0.55)',
+          backgroundColor: 'rgba(14,165,233,0.75)',
           borderRadius: 6,
         },
         {
           label: 'Lost',
           data: rows.map((d) => Number(d.lost || 0)),
-          backgroundColor: 'rgba(244,63,94,0.45)',
+          backgroundColor: 'rgba(244,63,94,0.65)',
           borderRadius: 6,
         },
       ],
@@ -333,15 +388,16 @@ export default function ClinicAiAnalyticsPage() {
       title: 'Financial KPIs',
       span: 'full',
       node: (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <DashboardKpiCard label="Revenue (range)" value={money(k.revenue_range)} tint="teal" />
-          <DashboardKpiCard label="Expenses" value={money(k.expenses_range)} tint="amber" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <DashboardKpiCard label="Revenue (range)" value={money(k.revenue_range)} tint="teal" icon="fa-indian-rupee-sign" />
+          <DashboardKpiCard label="Expenses" value={money(k.expenses_range)} tint="amber" icon="fa-receipt" />
           <DashboardKpiCard
             label="Net Profit"
             value={money(k.profit_range)}
             tint={Number(k.profit_range) >= 0 ? 'emerald' : 'rose'}
+            icon="fa-chart-line"
           />
-          <DashboardKpiCard label="Outstanding" value={money(k.outstanding)} tint="rose" />
+          <DashboardKpiCard label="Outstanding" value={money(k.outstanding)} tint="rose" icon="fa-clock-rotate-left" />
         </div>
       ),
     },
@@ -350,7 +406,7 @@ export default function ClinicAiAnalyticsPage() {
       title: 'Operations KPIs',
       span: 'full',
       node: (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <DashboardKpiCard label="Today's Appts" value={k.appointments_today ?? '—'} icon="fa-calendar-day" />
           <DashboardKpiCard label="Active Patients" value={k.active_patients ?? '—'} icon="fa-users" />
           <DashboardKpiCard label="New Patients" value={k.new_patients ?? '—'} icon="fa-user-plus" tint="teal" />
@@ -378,7 +434,9 @@ export default function ClinicAiAnalyticsPage() {
       id: 'chart_revenue',
       title: 'Revenue trend',
       node: revChart.labels.length ? (
-        <Line data={revChart} options={dashChartOptions} />
+        <div className="relative h-56 w-full">
+          <Line data={revChart} options={dashChartOptions} />
+        </div>
       ) : (
         <p className="text-sm text-slate-500 py-8 text-center">No revenue points in range.</p>
       ),
@@ -387,7 +445,9 @@ export default function ClinicAiAnalyticsPage() {
       id: 'chart_appointments',
       title: 'Appointment volume',
       node: apptChart.labels.length ? (
-        <Bar data={apptChart} options={dashChartOptions} />
+        <div className="relative h-56 w-full">
+          <Bar data={apptChart} options={dashChartOptions} />
+        </div>
       ) : (
         <p className="text-sm text-slate-500 py-8 text-center">No appointment trend data.</p>
       ),
@@ -397,17 +457,18 @@ export default function ClinicAiAnalyticsPage() {
       title: 'AI insight preview',
       node: (
         <div className="space-y-2 max-h-72 overflow-y-auto">
-          {(dash?.insights_preview || []).map((ins) => (
-            <div key={ins.id} className={`rounded-xl border px-3 py-2 text-sm ${priorityClass(ins.priority)}`}>
+          {(dash?.insights_preview || []).map((ins, i) => (
+            <div key={ins.id || i} className={`rounded-xl border px-3 py-2 text-sm ${priorityClass(ins.priority)}`}>
               <p className="font-semibold">{ins.title}</p>
               <p className="text-xs opacity-80 mt-0.5">{ins.reason}</p>
-              <p className="text-[11px] mt-1 font-medium">→ {ins.suggested_action}</p>
+              {renderSupportingData(ins.supporting_data)}
+              <p className="text-[11px] mt-1.5 font-medium">→ {ins.suggested_action}</p>
             </div>
           ))}
           {!dash?.insights_preview?.length && (
             <p className="text-sm text-slate-500">Insights appear after data loads.</p>
           )}
-          <button type="button" className="text-xs font-semibold text-teal-700" onClick={() => setSection('insights')}>
+          <button type="button" className="text-xs font-semibold text-teal-700 mt-2" onClick={() => setSection('insights')}>
             Open AI Insight Center →
           </button>
         </div>
@@ -457,8 +518,8 @@ export default function ClinicAiAnalyticsPage() {
                 key={p.id}
                 type="button"
                 onClick={() => applyPreset(p.id)}
-                className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold ${
-                  preset === p.id ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-600'
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+                  preset === p.id ? 'bg-teal-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
                 {p.label}
@@ -500,10 +561,10 @@ export default function ClinicAiAnalyticsPage() {
               key={s.id}
               type="button"
               onClick={() => setSection(s.id)}
-              className={`shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold ${
+              className={`shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition ${
                 section === s.id
-                  ? 'bg-teal-600 text-white shadow-sm'
-                  : 'bg-white/70 text-slate-600 border border-slate-100'
+                  ? 'bg-teal-600 text-white shadow-xs'
+                  : 'bg-white/70 text-slate-600 border border-slate-100 hover:bg-slate-50'
               }`}
             >
               <FaIcon icon={s.icon} />
@@ -567,39 +628,40 @@ export default function ClinicAiAnalyticsPage() {
               Virtual Data Analyst — priority insights with reason, supporting data, and suggested actions.
             </p>
             <div className="grid gap-3 md:grid-cols-2">
-              {insights.map((ins) => (
-                <div key={ins.id + ins.title} className={`rounded-2xl border p-4 ${priorityClass(ins.priority)}`}>
+              {insights.map((ins, i) => (
+                <div key={(ins.id || '') + ins.title + i} className={`rounded-2xl border p-4 ${priorityClass(ins.priority)}`}>
                   <div className="flex items-center justify-between gap-2">
                     <p className="font-semibold">{ins.title}</p>
                     <span className="text-[10px] uppercase font-bold tracking-wide opacity-70">{ins.priority}</span>
                   </div>
                   <p className="text-sm mt-2 opacity-90">{ins.reason}</p>
-                  <pre className="text-[10px] mt-2 bg-white/50 rounded-lg p-2 overflow-x-auto">
-                    {JSON.stringify(ins.supporting_data || {}, null, 0)}
-                  </pre>
+                  {renderSupportingData(ins.supporting_data)}
                   <p className="text-xs font-semibold mt-3">Suggested: {ins.suggested_action}</p>
                   <p className="text-[10px] uppercase tracking-wide mt-1 opacity-60">{ins.category}</p>
                 </div>
               ))}
-              {!insights.length && <p className="text-sm text-slate-500 col-span-full text-center py-8">No insights yet.</p>}
+              {!insights.length && <p className="text-sm text-slate-500 col-span-full text-center py-8">No insights yet for the selected period.</p>}
             </div>
           </div>
         )}
 
         {section === 'financial' && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <DashboardKpiCard label="Cash inflow" value={money(financial?.cash_flow?.inflow)} tint="emerald" />
-              <DashboardKpiCard label="Outflow" value={money(financial?.cash_flow?.outflow)} tint="amber" />
-              <DashboardKpiCard label="Net" value={money(financial?.cash_flow?.net)} tint="teal" />
-              <DashboardKpiCard label="Pending dues" value={money(financial?.billing_overview?.pending_amount)} tint="rose" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <DashboardKpiCard label="Cash inflow" value={money(financial?.cash_flow?.inflow)} tint="emerald" icon="fa-arrow-down-left" />
+              <DashboardKpiCard label="Outflow" value={money(financial?.cash_flow?.outflow)} tint="amber" icon="fa-arrow-up-right" />
+              <DashboardKpiCard label="Net" value={money(financial?.cash_flow?.net)} tint="teal" icon="fa-scale-balanced" />
+              <DashboardKpiCard label="Pending dues" value={money(financial?.billing_overview?.pending_amount)} tint="rose" icon="fa-clock-rotate-left" />
             </div>
             <div className="grid lg:grid-cols-2 gap-4">
               <div className="glass-card !p-4">
                 <p className="font-semibold mb-3">Expense breakdown</p>
                 {expenseDonut.labels.length ? (
-                  <div className="max-w-xs mx-auto">
-                    <Doughnut data={expenseDonut} options={{ plugins: { legend: { position: 'bottom' } } }} />
+                  <div className="relative h-64 w-full max-w-xs mx-auto">
+                    <Doughnut
+                      data={expenseDonut}
+                      options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }}
+                    />
                   </div>
                 ) : (
                   <p className="text-sm text-slate-500">No expense data (uses Back Office expenses).</p>
@@ -631,15 +693,19 @@ export default function ClinicAiAnalyticsPage() {
 
         {section === 'appointments' && (
           <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-3">
-              <DashboardKpiCard label="Volume" value={appointments?.kpis?.volume ?? '—'} />
-              <DashboardKpiCard label="Completed" value={appointments?.kpis?.completed ?? '—'} tint="emerald" />
-              <DashboardKpiCard label="Utilization" value={`${appointments?.kpis?.utilization_rate ?? 0}%`} tint="teal" />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <DashboardKpiCard label="Volume" value={appointments?.kpis?.volume ?? '—'} icon="fa-calendar-check" />
+              <DashboardKpiCard label="Completed" value={appointments?.kpis?.completed ?? '—'} tint="emerald" icon="fa-circle-check" />
+              <DashboardKpiCard label="Utilization" value={`${appointments?.kpis?.utilization_rate ?? 0}%`} tint="teal" icon="fa-chart-pie" />
             </div>
             <div className="glass-card !p-4">
               <p className="font-semibold mb-3">Daily volume</p>
-              {apptChart.labels.length ? <Bar data={apptChart} options={dashChartOptions} /> : (
-                <p className="text-sm text-slate-500">No data.</p>
+              {apptChart.labels.length ? (
+                <div className="relative h-64 sm:h-72 w-full">
+                  <Bar data={apptChart} options={dashChartOptions} />
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500 py-6 text-center">No appointment data in selected date range.</p>
               )}
             </div>
             <div className="glass-card !p-4 overflow-x-auto">
@@ -664,30 +730,37 @@ export default function ClinicAiAnalyticsPage() {
                   ))}
                 </tbody>
               </table>
+              {!(appointments?.therapist_occupancy || []).length && (
+                <p className="text-xs text-slate-400 text-center py-4">No occupancy data.</p>
+              )}
             </div>
           </div>
         )}
 
         {section === 'patients' && (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-            <DashboardKpiCard label="Active" value={patients?.kpis?.active_patients ?? '—'} />
-              <DashboardKpiCard label="New" value={patients?.kpis?.new_patients ?? '—'} tint="teal" />
-              <DashboardKpiCard label="Returning" value={patients?.kpis?.returning_patients ?? '—'} tint="emerald" />
-              <DashboardKpiCard label="Retention" value={`${patients?.kpis?.retention_rate ?? 0}%`} />
-              <DashboardKpiCard label="Dropout" value={`${patients?.kpis?.dropout_rate ?? 0}%`} tint="rose" />
-            <DashboardKpiCard label="Avg visits" value={patients?.kpis?.avg_visits ?? '—'} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <DashboardKpiCard label="Active" value={patients?.kpis?.active_patients ?? '—'} icon="fa-users" />
+            <DashboardKpiCard label="New" value={patients?.kpis?.new_patients ?? '—'} tint="teal" icon="fa-user-plus" />
+            <DashboardKpiCard label="Returning" value={patients?.kpis?.returning_patients ?? '—'} tint="emerald" icon="fa-rotate-right" />
+            <DashboardKpiCard label="Retention" value={`${patients?.kpis?.retention_rate ?? 0}%`} icon="fa-user-shield" />
+            <DashboardKpiCard label="Dropout" value={`${patients?.kpis?.dropout_rate ?? 0}%`} tint="rose" icon="fa-user-minus" />
+            <DashboardKpiCard label="Avg visits" value={patients?.kpis?.avg_visits ?? '—'} icon="fa-clipboard-user" />
           </div>
         )}
 
         {section === 'clinical' && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <DashboardKpiCard label="Active HEPs" value={clinical?.hep_kpis?.active_programs ?? '—'} />
-              <DashboardKpiCard label="Avg adherence" value={clinical?.hep_kpis?.avg_adherence != null ? `${clinical.hep_kpis.avg_adherence}%` : '—'} />
-              <DashboardKpiCard label="High pain" value={clinical?.hep_kpis?.high_pain_patients ?? '—'} tint="rose" />
-              <DashboardKpiCard label="Missed today" value={clinical?.hep_kpis?.missed_today ?? '—'} tint="amber" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <DashboardKpiCard label="Active HEPs" value={clinical?.hep_kpis?.active_programs ?? '—'} icon="fa-dumbbell" />
+              <DashboardKpiCard
+                label="Avg adherence"
+                value={clinical?.hep_kpis?.avg_adherence != null ? `${clinical.hep_kpis.avg_adherence}%` : '—'}
+                icon="fa-chart-line"
+              />
+              <DashboardKpiCard label="High pain" value={clinical?.hep_kpis?.high_pain_patients ?? '—'} tint="rose" icon="fa-hospital-user" />
+              <DashboardKpiCard label="Missed today" value={clinical?.hep_kpis?.missed_today ?? '—'} tint="amber" icon="fa-circle-exclamation" />
             </div>
-            <p className="text-xs text-slate-500">{clinical?.note}</p>
+            {clinical?.note && <p className="text-xs text-slate-500">{clinical.note}</p>}
             <Link to="/clinic-portal/rehab?tab=analytics" className="btn-outline text-xs inline-flex">
               Open Exercise &amp; Rehab Analytics
             </Link>
@@ -696,11 +769,11 @@ export default function ClinicAiAnalyticsPage() {
 
         {section === 'communication' && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <DashboardKpiCard label="Messages" value={communication?.kpis?.total_messages ?? '—'} />
-              <DashboardKpiCard label="Delivery" value={`${communication?.kpis?.delivery_rate ?? 0}%`} tint="teal" />
-              <DashboardKpiCard label="Read rate" value={`${communication?.kpis?.read_rate ?? 0}%`} />
-              <DashboardKpiCard label="Failed" value={communication?.kpis?.failed_messages ?? 0} tint="rose" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <DashboardKpiCard label="Messages" value={communication?.kpis?.total_messages ?? '—'} icon="fa-comments" />
+              <DashboardKpiCard label="Delivery" value={`${communication?.kpis?.delivery_rate ?? 0}%`} tint="teal" icon="fa-paper-plane" />
+              <DashboardKpiCard label="Read rate" value={`${communication?.kpis?.read_rate ?? 0}%`} icon="fa-envelope-open-text" />
+              <DashboardKpiCard label="Failed" value={communication?.kpis?.failed_messages ?? 0} tint="rose" icon="fa-triangle-exclamation" />
             </div>
             <Link to="/clinic-portal/communication?tab=analytics" className="btn-outline text-xs inline-flex">
               Open Communication Analytics

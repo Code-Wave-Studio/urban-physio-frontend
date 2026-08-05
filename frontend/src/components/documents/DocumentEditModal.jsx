@@ -4,6 +4,7 @@ import GlassModal, { GlassModalHeader, GlassModalBody, GlassModalFooter } from '
 import FaIcon from '../FaIcon';
 import { documents } from '../../services/api';
 import { ACCEPT_ATTR, DOCUMENT_CATEGORIES, DOCUMENT_STATUSES } from '../../constants/documents';
+import SearchablePatientSelect from './SearchablePatientSelect';
 
 export default function DocumentEditModal({ open, doc, onClose, onSaved }) {
   const [form, setForm] = useState({});
@@ -21,6 +22,7 @@ export default function DocumentEditModal({ open, doc, onClose, onSaved }) {
         tags: (doc.tags || []).join(', '),
         expiry_date: doc.expiry_date || '',
         is_view_only: !!doc.is_view_only,
+        patient_id: doc.patient_id || '',
       });
     }
   }, [doc]);
@@ -95,6 +97,13 @@ export default function DocumentEditModal({ open, doc, onClose, onSaved }) {
           <div>
             <label className="doc-label">Tags (comma separated)</label>
             <input className="doc-input" value={form.tags} onChange={(e) => set('tags', e.target.value)} />
+          </div>
+          <div className="sm:col-span-2">
+            <SearchablePatientSelect
+              value={form.patient_id}
+              onChange={(pid) => set('patient_id', pid)}
+              label="Linked Patient"
+            />
           </div>
           <div className="sm:col-span-2">
             <label className="doc-label">Description</label>

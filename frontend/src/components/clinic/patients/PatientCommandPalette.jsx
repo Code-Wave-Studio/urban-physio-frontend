@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import FaIcon from '../../FaIcon';
+import PatientAvatar from '../../PatientAvatar';
 import {
   formatDate,
   initials,
@@ -135,9 +136,7 @@ export default function PatientCommandPalette({
                           i === idx ? 'bg-teal-50/80' : 'hover:bg-slate-50'
                         }`}
                       >
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500/15 to-cyan-500/10 text-xs font-bold text-teal-800">
-                          {initials(p.patient_name)}
-                        </span>
+                        <PatientAvatar patient={p} size="xs" className="h-9 w-9 text-xs rounded-xl" />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-sm font-semibold text-slate-900">
                             {maskName(p.patient_name, privacy)}

@@ -59,17 +59,21 @@ export default function DashboardKpiCard({
       className={`dash-kpi group relative overflow-hidden text-left ${onClick ? 'cursor-pointer' : ''} ${className}`}
     >
       <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${t.bar}`} />
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-2.5">
         <div className="min-w-0 flex-1">
-          <p className="dash-kpi-label">{label}</p>
-          <p className="dash-kpi-value mt-1.5 truncate">{value}</p>
+          <p className="dash-kpi-label truncate">{label}</p>
+          <p className="dash-kpi-value mt-1.5 text-base sm:text-lg xl:text-xl font-bold text-slate-900 leading-tight break-words">
+            {value}
+          </p>
           {hint != null && hint !== '' && (
-            <p className="text-[11px] text-slate-500 mt-2 truncate font-medium">{hint}</p>
+            <p className="text-[11px] text-slate-500 mt-1.5 truncate font-medium">{hint}</p>
           )}
         </div>
-        <span className={`dash-kpi-icon ${t.chip}`}>
-          <FaIcon icon={icon} />
-        </span>
+        {icon && (
+          <span className={`dash-kpi-icon ${t.chip}`}>
+            <FaIcon icon={icon} />
+          </span>
+        )}
       </div>
     </Tag>
   );
