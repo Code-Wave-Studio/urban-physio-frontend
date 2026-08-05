@@ -8,13 +8,16 @@ import {
   fileColor,
   fileIcon,
   formatBytes,
+  getPrescriptionPreviewUrl,
   isImage,
   isOffice,
   isPdf,
+  isPrescriptionDoc,
   officeViewerUrl,
   saveBlob,
   youtubeEmbed,
 } from '../../constants/documents';
+import PrescriptionDocViewer from './PrescriptionDocViewer';
 
 const ACTION_ICON = {
   uploaded: 'fa-cloud-arrow-up',
@@ -35,19 +38,14 @@ function fmtDateTime(d) {
 }
 
 function Preview({ doc }) {
+  if (isPrescriptionDoc(doc)) {
+    return <PrescriptionDocViewer doc={doc} />;
+  }
+
   if (doc.source === 'link') {
     const yt = doc.link_type === 'youtube' ? youtubeEmbed(doc.file_url) : null;
     if (yt) {
       return <iframe title="preview" src={yt} className="w-full h-full rounded-xl" allowFullScreen />;
-    }
-    const isDocPreview =
-      doc.category === 'prescription' ||
-      doc.category === 'prescriptions' ||
-      doc.link_type === 'document' ||
-      (typeof doc.file_url === 'string' && (doc.file_url.includes('/prescriptions/preview') || doc.file_url.includes('/preview')));
-
-    if (isDocPreview) {
-      return <iframe title="preview" src={doc.file_url} className="w-full h-full rounded-xl bg-white min-h-[500px] border-0" allowFullScreen />;
     }
     return (
       <div className="text-center p-8">
@@ -103,6 +101,11 @@ export default function DocumentPreviewModal({ open, doc, onClose, onChanged, ca
   if (!doc) return null;
 
   const download = async () => {
+    if (isPrescriptionDoc(doc)) {
+      const previewUrl = getPrescriptionPreviewUrl(doc);
+      window.open(previewUrl, '_blank', 'noopener');
+      return;
+    }
     if (doc.source === 'link') {
       window.open(doc.file_url, '_blank', 'noopener');
       return;
@@ -158,7 +161,7 @@ export default function DocumentPreviewModal({ open, doc, onClose, onChanged, ca
 
       <GlassModalBody>
         {tab === 'preview' && (
-          <div className="h-[55vh] flex items-center justify-center bg-slate-50 rounded-xl overflow-hidden">
+          <div className={`${isPrescriptionDoc(doc) ? 'min-h-[550px]' : 'h-[55vh]'} flex items-center justify-center bg-slate-50 rounded-xl overflow-hidden`}>
             <Preview doc={doc} />
           </div>
         )}

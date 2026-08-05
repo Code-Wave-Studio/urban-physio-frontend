@@ -195,3 +195,50 @@ export function saveBlob(blob, filename) {
   a.remove();
   window.URL.revokeObjectURL(url);
 }
+
+export function isPrescriptionDoc(doc) {
+  if (!doc) return false;
+  const cat = (doc.category || '').toLowerCase();
+  if (cat === 'prescription' || cat === 'prescriptions') return true;
+  const title = (doc.title || '').toLowerCase();
+  if (title.includes('prescription') || title.includes('rx-')) return true;
+  const fileUrl = typeof doc.file_url === 'string' ? doc.file_url : '';
+  const linkUrl = typeof doc.link_url === 'string' ? doc.link_url : '';
+  if (fileUrl.includes('/prescriptions/preview') || linkUrl.includes('/prescriptions/preview')) return true;
+  return false;
+}
+
+export function getPrescriptionPreviewUrl(doc) {
+  if (!doc) return '/clinic-portal/prescriptions/preview';
+  const fileUrl = typeof doc.file_url === 'string' ? doc.file_url : '';
+  const linkUrl = typeof doc.link_url === 'string' ? doc.link_url : '';
+  const urlToParse = fileUrl.includes('/prescriptions/preview') ? fileUrl : linkUrl.includes('/prescriptions/preview') ? linkUrl : '';
+
+  let rxParam = '';
+  let patientParam = doc.patient_key || doc.patient_id || '';
+
+  if (urlToParse) {
+    try {
+      const u = new URL(urlToParse, window.location.origin);
+      rxParam = u.searchParams.get('rx') || '';
+      if (!patientParam) patientParam = u.searchParams.get('patient') || '';
+    } catch {
+      /* ignore */
+    }
+  }
+
+  if (!rxParam) {
+    if (doc.rx_number) {
+      rxParam = doc.rx_number;
+    } else {
+      const match = (doc.title || '').match(/RX-\d{4}-\d+/i);
+      if (match) rxParam = match[0];
+    }
+  }
+
+  if (!rxParam) rxParam = 'RX-2026-0041';
+  if (!patientParam) patientParam = 'p-13';
+
+  return `/clinic-portal/prescriptions/preview?rx=${encodeURIComponent(rxParam)}&patient=${encodeURIComponent(patientParam)}`;
+}
+

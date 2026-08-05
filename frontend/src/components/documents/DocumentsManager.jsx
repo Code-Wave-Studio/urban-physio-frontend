@@ -7,6 +7,8 @@ import {
   DATE_FILTERS,
   DOCUMENT_CATEGORIES,
   TYPE_FILTERS,
+  getPrescriptionPreviewUrl,
+  isPrescriptionDoc,
   saveBlob,
 } from '../../constants/documents';
 import DocumentCard from './DocumentCard';
@@ -94,6 +96,11 @@ export default function DocumentsManager({ initialFilters = {} }) {
   const openDoc = (doc) => setPreviewDoc(doc);
 
   const downloadDoc = async (doc) => {
+    if (isPrescriptionDoc(doc)) {
+      const previewUrl = getPrescriptionPreviewUrl(doc);
+      window.open(previewUrl, '_blank', 'noopener');
+      return;
+    }
     if (!canDownload(doc) && doc.source !== 'link') {
       toast.error('This document is view-only');
       return;
