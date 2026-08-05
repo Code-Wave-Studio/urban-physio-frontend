@@ -50,7 +50,23 @@ export default function PatientDashboard() {
   const [loading, setLoading] = useState(true);
   const [preferred, setPreferred] = useState(null);
   const [changingClinic, setChangingClinic] = useState(false);
-  const [shortcutsAtTop, setShortcutsAtTop] = useState(false);
+
+  const dbPlaceAtTop = user?.preferences?.shortcuts?.patient?.placeAtTop;
+  const [shortcutsAtTop, setShortcutsAtTop] = useState(() => {
+    if (typeof dbPlaceAtTop === 'boolean') return dbPlaceAtTop;
+    try {
+      const key = `urbanphysio_shortcuts_patient_u${user?.id || ''}`;
+      const saved = localStorage.getItem(key);
+      if (saved) return JSON.parse(saved).placeAtTop === true;
+    } catch {}
+    return false;
+  });
+
+  useEffect(() => {
+    if (typeof dbPlaceAtTop === 'boolean') {
+      setShortcutsAtTop(dbPlaceAtTop);
+    }
+  }, [dbPlaceAtTop]);
 
   useEffect(() => {
     Promise.all([appointments.list(), patientReports.list(), patients.visitCredits(), patients.preferredClinic().catch(() => null)])

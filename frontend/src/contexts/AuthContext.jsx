@@ -157,6 +157,27 @@ export function AuthProvider({ children }) {
 
   const resetPassword = async (token, password) => auth.resetPassword({ token, password });
 
+  const updatePreferences = useCallback(async (newPrefs) => {
+    try {
+      const res = await auth.updatePreferences(newPrefs);
+      const updatedUser = res?.user || res?.data?.user;
+      if (updatedUser) {
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        return updatedUser;
+      }
+    } catch (err) {
+      console.warn('Could not save preferences to database:', err);
+    }
+    setUser((prev) => {
+      if (!prev) return prev;
+      const mergedPrefs = { ...(prev.preferences || {}), ...newPrefs };
+      const updated = { ...prev, preferences: mergedPrefs };
+      localStorage.setItem('user', JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
   const logout = () => clearSession();
 
   const hasRole = (...roles) => user && roles.includes(user.role_slug);
@@ -178,6 +199,7 @@ export function AuthProvider({ children }) {
         hasRole,
         setUser,
         refreshUser,
+        updatePreferences,
         hasStoredToken,
       }}
     >

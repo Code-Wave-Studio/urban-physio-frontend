@@ -159,7 +159,23 @@ export default function AdminDashboard() {
   const { user } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [shortcutsAtTop, setShortcutsAtTop] = useState(false);
+
+  const dbPlaceAtTop = user?.preferences?.shortcuts?.admin?.placeAtTop;
+  const [shortcutsAtTop, setShortcutsAtTop] = useState(() => {
+    if (typeof dbPlaceAtTop === 'boolean') return dbPlaceAtTop;
+    try {
+      const key = `urbanphysio_shortcuts_admin_u${user?.id || ''}`;
+      const saved = localStorage.getItem(key);
+      if (saved) return JSON.parse(saved).placeAtTop === true;
+    } catch {}
+    return false;
+  });
+
+  useEffect(() => {
+    if (typeof dbPlaceAtTop === 'boolean') {
+      setShortcutsAtTop(dbPlaceAtTop);
+    }
+  }, [dbPlaceAtTop]);
 
   useEffect(() => {
     admin

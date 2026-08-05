@@ -16,6 +16,7 @@ import useDashboardLayout from '../../components/clinic/dashboard/useDashboardLa
 import { clinicPortal } from '../../services/api';
 import useClinicPortal from '../../hooks/useClinicPortal';
 import useClinicLiveSync from '../../hooks/useClinicLiveSync';
+import { useAuth } from '../../contexts/AuthContext';
 import { STATUS_STYLES, formatTime, formatType } from '../../utils/appointmentListUtils';
 
 const RECEPTION_WIDGET_DEFS = [
@@ -34,11 +35,30 @@ function money(n) {
 }
 
 export default function ClinicPortalHome() {
+  const { user } = useAuth() || {};
   const { clinicId, portalReady, isAdminMode, loading: boot, reload, can, clinic } = useClinicPortal();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(null);
-  const [shortcutsAtTop, setShortcutsAtTop] = useState(false);
+
+  const clinicKey = isAdminMode ? 'clinic_admin' : 'clinic_reception';
+  const dbPlaceAtTop = user?.preferences?.shortcuts?.[clinicKey]?.placeAtTop;
+
+  const [shortcutsAtTop, setShortcutsAtTop] = useState(() => {
+    if (typeof dbPlaceAtTop === 'boolean') return dbPlaceAtTop;
+    try {
+      const key = `urbanphysio_shortcuts_${clinicKey}_u${user?.id || ''}`;
+      const saved = localStorage.getItem(key);
+      if (saved) return JSON.parse(saved).placeAtTop === true;
+    } catch {}
+    return false;
+  });
+
+  useEffect(() => {
+    if (typeof dbPlaceAtTop === 'boolean') {
+      setShortcutsAtTop(dbPlaceAtTop);
+    }
+  }, [dbPlaceAtTop]);
 
   const storageKey = `clinic-dash-reception-v1-${clinicId || 'x'}`;
   const layout = useDashboardLayout(storageKey, RECEPTION_WIDGET_DEFS);

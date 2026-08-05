@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import FaIcon from '../FaIcon';
+import { useAuth } from '../../contexts/AuthContext';
 
 const TONE = {
   teal: { grad: 'from-teal-500 to-teal-700', text: 'text-teal-700', soft: 'bg-teal-50', border: 'border-teal-100' },
@@ -21,7 +22,7 @@ const TONE = {
 /**
  * Shared Customizable & Draggable Shortcuts Widget Engine.
  * Allows users to reorder shortcuts, toggle item visibility, place at top of dashboard,
- * and saves choices in localStorage.
+ * and saves choices permanently in DB and localStorage.
  */
 export default function CustomizableShortcuts({
   storageKey = 'default',
@@ -32,12 +33,17 @@ export default function CustomizableShortcuts({
   groups = null,
   onPlaceAtTopChange = null,
 }) {
+  const { user, updatePreferences } = useAuth() || {};
+
   // Flatten items if passed in groups
   const allItems = items.length > 0
     ? items
     : (groups ? groups.flatMap((g) => g.items.map((it) => ({ ...it, category: g.title }))) : []);
 
-  const storageFieldKey = `urbanphysio_shortcuts_${storageKey}`;
+  const userIdStr = user?.id ? `_u${user.id}` : '';
+  const storageFieldKey = `urbanphysio_shortcuts_${storageKey}${userIdStr}`;
+
+  const dbPref = user?.preferences?.shortcuts?.[storageKey];
 
   const [order, setOrder] = useState(() => allItems.map((i) => i.to || i.label));
   const [hiddenItems, setHiddenItems] = useState({});
@@ -46,9 +52,26 @@ export default function CustomizableShortcuts({
   const dragItemRef = useRef(null);
   const dragOverItemRef = useRef(null);
 
-  // Load saved preferences from localStorage
+  // Sync saved preferences from DB / localStorage
   useEffect(() => {
     try {
+      if (dbPref && typeof dbPref === 'object') {
+        if (dbPref.order && Array.isArray(dbPref.order)) {
+          const defaultKeys = allItems.map((i) => i.to || i.label);
+          const validOrder = dbPref.order.filter((k) => defaultKeys.includes(k));
+          const missingKeys = defaultKeys.filter((k) => !validOrder.includes(k));
+          setOrder([...validOrder, ...missingKeys]);
+        }
+        if (dbPref.hidden && typeof dbPref.hidden === 'object') {
+          setHiddenItems(dbPref.hidden);
+        }
+        if (typeof dbPref.placeAtTop === 'boolean') {
+          setPlaceAtTop(dbPref.placeAtTop);
+          if (onPlaceAtTopChange) onPlaceAtTopChange(dbPref.placeAtTop);
+          return;
+        }
+      }
+
       const saved = localStorage.getItem(storageFieldKey);
       if (saved) {
         const parsed = JSON.parse(saved);
@@ -71,9 +94,9 @@ export default function CustomizableShortcuts({
     } catch (e) {
       console.warn('Could not read saved shortcuts config', e);
     }
-  }, [storageKey]);
+  }, [storageKey, user?.id, JSON.stringify(dbPref)]);
 
-  // Save changes to localStorage
+  // Save changes permanently to DB & localStorage
   const saveConfig = (newOrder, newHidden, newPlaceAtTop) => {
     setOrder(newOrder);
     setHiddenItems(newHidden);
@@ -91,6 +114,18 @@ export default function CustomizableShortcuts({
       );
     } catch (e) {
       console.warn('Could not save shortcuts config', e);
+    }
+
+    if (user && updatePreferences) {
+      updatePreferences({
+        shortcuts: {
+          [storageKey]: {
+            order: newOrder,
+            hidden: newHidden,
+            placeAtTop: newPlaceAtTop,
+          },
+        },
+      });
     }
   };
 

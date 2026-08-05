@@ -19,6 +19,7 @@ import PasswordSetupAlert from '../../components/PasswordSetupAlert';
 import FaIcon from '../../components/FaIcon';
 import { doctors } from '../../services/api';
 import { DOCTOR_NAV } from '../../constants/doctorNav';
+import { useAuth } from '../../contexts/AuthContext';
 import { STATUS_STYLES, TYPE_ICONS, formatTime, formatType, patientLabel } from '../../utils/appointmentListUtils';
 import DoctorQuickWork from '../../components/doctor/DoctorQuickWork';
 import toast from 'react-hot-toast';
@@ -136,8 +137,25 @@ const QUICK_ACTIONS = [
 ];
 
 export default function DoctorDashboard() {
+  const { user } = useAuth() || {};
   const [data, setData] = useState(null);
-  const [shortcutsAtTop, setShortcutsAtTop] = useState(false);
+
+  const dbPlaceAtTop = user?.preferences?.shortcuts?.doctor?.placeAtTop;
+  const [shortcutsAtTop, setShortcutsAtTop] = useState(() => {
+    if (typeof dbPlaceAtTop === 'boolean') return dbPlaceAtTop;
+    try {
+      const key = `urbanphysio_shortcuts_doctor_u${user?.id || ''}`;
+      const saved = localStorage.getItem(key);
+      if (saved) return JSON.parse(saved).placeAtTop === true;
+    } catch {}
+    return false;
+  });
+
+  useEffect(() => {
+    if (typeof dbPlaceAtTop === 'boolean') {
+      setShortcutsAtTop(dbPlaceAtTop);
+    }
+  }, [dbPlaceAtTop]);
 
   useEffect(() => {
     doctors
