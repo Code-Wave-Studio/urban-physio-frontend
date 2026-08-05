@@ -64,15 +64,19 @@ function ageFromDob(dob) {
 }
 
 function fmtDate(d) {
-  if (!d) return '—';
+  if (!d || d === 'Invalid Date' || d === '0000-00-00') return '—';
   try {
-    return new Date(String(d).includes('T') ? d : `${d}T12:00:00`).toLocaleDateString('en-IN', {
+    const str = String(d).trim();
+    if (!str || str === 'Invalid Date') return '—';
+    const parsed = new Date(str.includes('T') ? str : `${str}T12:00:00`);
+    if (isNaN(parsed.getTime())) return '—';
+    return parsed.toLocaleDateString('en-IN', {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
     });
   } catch {
-    return String(d).slice(0, 10);
+    return '—';
   }
 }
 

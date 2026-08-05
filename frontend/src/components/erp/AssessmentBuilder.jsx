@@ -120,7 +120,7 @@ function FieldEditor({ field, onChange, onDelete }) {
 }
 
 // ─── SectionEditor ─────────────────────────────────────────────────────────
-function SectionEditor({ section, onChange, onDelete }) {
+function SectionEditor({ section, onChange, onDelete, onMoveUp, onMoveDown, isFirst, isLast }) {
   const addField = () => {
     const newField = { id: `field_${Date.now()}`, label: 'New Field', type: 'text', required: false };
     onChange({ ...section, fields: [...(section.fields || []), newField] });
@@ -138,17 +138,36 @@ function SectionEditor({ section, onChange, onDelete }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-3">
       <div className="flex items-center gap-2">
-        <FaIcon icon="fa-solid fa-grip-vertical" className="text-slate-300 cursor-grab" />
+        <div className="flex flex-col gap-0.5">
+          <button
+            type="button"
+            disabled={isFirst}
+            onClick={onMoveUp}
+            className="p-1 text-slate-400 hover:text-teal-600 disabled:opacity-30 text-[10px]"
+            title="Move Section Up"
+          >
+            <FaIcon icon="fa-solid fa-chevron-up" />
+          </button>
+          <button
+            type="button"
+            disabled={isLast}
+            onClick={onMoveDown}
+            className="p-1 text-slate-400 hover:text-teal-600 disabled:opacity-30 text-[10px]"
+            title="Move Section Down"
+          >
+            <FaIcon icon="fa-solid fa-chevron-down" />
+          </button>
+        </div>
         <input
-          className="flex-1 font-semibold text-sm border rounded-lg px-2 py-1 bg-white"
+          className="flex-1 font-semibold text-sm border rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-teal-400"
           value={section.title}
           onChange={(e) => onChange({ ...section, title: e.target.value })}
         />
-        <label className="flex items-center gap-1 text-xs text-slate-500">
+        <label className="flex items-center gap-1 text-xs text-slate-500 cursor-pointer">
           <input type="checkbox" checked={section.visible !== false} onChange={(e) => onChange({ ...section, visible: e.target.checked })} />
           Visible
         </label>
-        <button type="button" onClick={onDelete} className="p-1.5 text-red-400 hover:text-red-600 transition-colors">
+        <button type="button" onClick={onDelete} className="p-1.5 text-red-400 hover:text-red-600 transition-colors" title="Delete Section">
           <FaIcon icon="fa-solid fa-trash" className="text-xs" />
         </button>
       </div>
@@ -157,7 +176,7 @@ function SectionEditor({ section, onChange, onDelete }) {
           <FieldEditor key={f.id || idx} field={f} onChange={(updated) => updateField(idx, updated)} onDelete={() => deleteField(idx)} />
         ))}
       </div>
-      <button type="button" onClick={addField} className="text-xs text-teal-600 hover:underline flex items-center gap-1">
+      <button type="button" onClick={addField} className="text-xs text-teal-600 font-semibold hover:underline flex items-center gap-1">
         <FaIcon icon="fa-solid fa-plus" /> Add Field
       </button>
     </div>
@@ -391,33 +410,43 @@ export default function AssessmentBuilder({ clinicId, templateId, onSaved }) {
 
   const deleteSection = (idx) => setSchema((prev) => prev.filter((_, i) => i !== idx));
 
+  const moveSection = (idx, direction) => {
+    setSchema((prev) => {
+      const next = [...prev];
+      const target = idx + direction;
+      if (target < 0 || target >= next.length) return prev;
+      const temp = next[idx];
+      next[idx] = next[target];
+      next[target] = temp;
+      return next;
+    });
+  };
+
   if (loading) return <div className="h-40 rounded-2xl bg-slate-100 animate-pulse" />;
 
   const TABS = [
-    { id: 'builder', label: 'Builder' },
-    { id: 'letterhead', label: 'Header / Footer' },
-    { id: 'preview', label: 'Preview Form' },
-    ...(templateId ? [{ id: 'versions', label: 'Versions' }] : []),
+    { id: 'builder', label: 'Form builder' },
+    { id: 'letterhead', label: 'Letterhead & Branding' },
+    { id: 'preview', label: 'Live print preview' },
+    ...(templateId ? [{ id: 'versions', label: 'Version History' }] : []),
   ];
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="glass-card !p-4 flex flex-wrap items-center gap-3">
-        <input
-          className="flex-1 min-w-0 text-lg font-bold border-b-2 border-teal-400 bg-transparent focus:outline-none py-1"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Assessment Name"
-        />
-        <div className="flex flex-wrap items-center gap-2">
-          <span className={`text-xs px-2 py-1 rounded-full font-semibold ${status === 'published' ? 'bg-green-100 text-green-700' : status === 'archived' ? 'bg-slate-100 text-slate-500' : 'bg-amber-100 text-amber-700'}`}>
+      {/* Header bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <input
+            className="font-bold text-lg border-b border-transparent hover:border-slate-300 focus:border-teal-500 focus:outline-none bg-transparent"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Template name…"
+          />
+          <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${status === 'published' ? 'bg-green-100 text-green-700' : status === 'archived' ? 'bg-slate-100 text-slate-500' : 'bg-amber-100 text-amber-700'}`}>
             {status}
           </span>
-          <button type="button" onClick={() => setTab('preview')} className="btn-outline text-sm !py-1.5 inline-flex items-center gap-1.5">
-            <FaIcon icon="fa-solid fa-eye" className="text-xs" />
-            Preview Form
-          </button>
+        </div>
+        <div className="flex items-center gap-2">
           <button type="button" onClick={() => save()} disabled={saving} className="btn-outline text-sm !py-1.5">
             {saving ? 'Saving…' : 'Save Draft'}
           </button>
@@ -456,6 +485,10 @@ export default function AssessmentBuilder({ clinicId, templateId, onSaved }) {
               section={section}
               onChange={(s) => updateSection(idx, s)}
               onDelete={() => deleteSection(idx)}
+              onMoveUp={() => moveSection(idx, -1)}
+              onMoveDown={() => moveSection(idx, 1)}
+              isFirst={idx === 0}
+              isLast={idx === schema.length - 1}
             />
           ))}
           <button

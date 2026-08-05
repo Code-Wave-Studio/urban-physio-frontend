@@ -362,20 +362,109 @@ export default function ClinicPatientDetailPage() {
 
                     <div className="space-y-3">
                       {erpResponses.map((a) => (
-                        <div key={`erp-${a.id}`} className="rounded-xl border border-slate-100 p-3 flex items-center justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="font-semibold text-sm truncate">{a.template_name || 'Assessment'}</p>
-                            <p className="text-xs text-slate-400">
-                              v{a.template_version} · {a.status} · {String(a.created_at || '').slice(0, 10)}
-                            </p>
+                        <div
+                          key={`erp-${a.id}`}
+                          className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-xs flex flex-wrap items-center justify-between gap-3 transition hover:border-teal-300"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                              <p className="font-bold text-sm text-slate-900 truncate">
+                                {a.template_name || 'Physiotherapy Assessment'}
+                              </p>
+                              <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                                v{a.template_version || '1.0'}
+                              </span>
+                              <span
+                                className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-bold ${
+                                  a.status === 'signed' || a.status === 'locked'
+                                    ? 'bg-green-100 text-green-800 border border-green-200'
+                                    : a.status === 'completed'
+                                    ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                                    : 'bg-amber-100 text-amber-800 border border-amber-200'
+                                }`}
+                              >
+                                {a.status || 'draft'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
+                              <span>
+                                <strong className="text-slate-700">Assessed:</strong>{' '}
+                                {a.created_at ? new Date(a.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                              </span>
+                              {a.updated_at && a.updated_at !== a.created_at && (
+                                <span className="text-slate-400">
+                                  (Edited: {new Date(a.updated_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })})
+                                </span>
+                              )}
+                            </div>
                           </div>
-                          <button
-                            type="button"
-                            className="btn-outline text-xs !py-1.5 shrink-0"
-                            onClick={() => setActiveAssessment({ responseId: a.id, templateId: a.template_id })}
-                          >
-                            {a.status === 'signed' || a.status === 'locked' ? 'View' : 'Continue'}
-                          </button>
+
+                          <div className="flex items-center gap-1.5 flex-wrap shrink-0">
+                            <button
+                              type="button"
+                              className="btn-primary text-xs !py-1.5 !px-3 inline-flex items-center gap-1"
+                              onClick={() => setActiveAssessment({ responseId: a.id, templateId: a.template_id })}
+                            >
+                              <FaIcon icon={a.status === 'signed' || a.status === 'locked' ? 'fa-eye' : 'fa-pen-to-square'} className="text-[11px]" />
+                              <span>{a.status === 'signed' || a.status === 'locked' ? 'Preview' : 'Edit'}</span>
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-outline text-xs !py-1.5 !px-2.5 inline-flex items-center gap-1"
+                              title="Print A4 Clinical Report"
+                              onClick={() => setActiveAssessment({ responseId: a.id, templateId: a.template_id })}
+                            >
+                              <FaIcon icon="fa-print" className="text-[11px]" />
+                              <span>Print</span>
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-outline text-xs !py-1.5 !px-2.5 text-teal-700 border-teal-200 bg-teal-50/50 hover:bg-teal-50"
+                              title="Upload Report to Documents Module"
+                              onClick={async () => {
+                                try {
+                                  await erpAssessments.uploadDocument(a.id, { clinic_id: clinicId });
+                                  toast.success('Assessment uploaded to Documents module!');
+                                } catch (e) {
+                                  toast.error(e.message || 'Could not upload to documents');
+                                }
+                              }}
+                            >
+                              <FaIcon icon="fa-file-pdf" className="text-[11px]" />
+                              <span>Save Doc</span>
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-outline text-xs !py-1.5 !px-2 text-slate-500 hover:text-slate-800"
+                              title="Share Link"
+                              onClick={() => {
+                                const url = `${window.location.origin}/clinic-portal/patients/${data.patient_key || patientKey}`;
+                                navigator.clipboard?.writeText(url);
+                                toast.success('Patient Assessment link copied to clipboard!');
+                              }}
+                            >
+                              <FaIcon icon="fa-share-nodes" className="text-[11px]" />
+                            </button>
+                            {a.status !== 'signed' && (
+                              <button
+                                type="button"
+                                className="btn-outline text-xs !py-1.5 !px-2 text-rose-600 border-rose-200 hover:bg-rose-50"
+                                title="Delete Assessment"
+                                onClick={async () => {
+                                  if (!window.confirm('Delete this assessment?')) return;
+                                  try {
+                                    await erpAssessments.deleteResponse(a.id, { clinic_id: clinicId });
+                                    toast.success('Assessment deleted');
+                                    loadErpAssessments();
+                                  } catch (e) {
+                                    toast.error(e.message || 'Could not delete assessment');
+                                  }
+                                }}
+                              >
+                                <FaIcon icon="fa-trash-can" className="text-[11px]" />
+                              </button>
+                            )}
+                          </div>
                         </div>
                       ))}
                       {(data.assessments || []).map((a) => (

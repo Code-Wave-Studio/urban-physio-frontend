@@ -164,9 +164,67 @@ export default function AssessmentResponseForm({ clinicId, responseId, patientKe
   const [chips, setChips]           = useState([]);
   const [saving, setSaving]         = useState(false);
   const [loading, setLoading]       = useState(true);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
   const [otpPhase, setOtpPhase]     = useState(null); // null | 'input' | 'verify'
   const [otpPhone, setOtpPhone]     = useState('');
   const [otp, setOtp]               = useState('');
+
+  const draftKey = `tup_assessment_draft_${clinicId}_${patientKey || 'global'}_${templateId || 'def'}`;
+
+  // Save to localStorage draft on answers update
+  useEffect(() => {
+    if (!loading && !response?.status && Object.keys(answers).length > 0) {
+      try {
+        localStorage.setItem(draftKey, JSON.stringify({ answers, checklist, savedAt: Date.now() }));
+      } catch {
+        /* ignore */
+      }
+    }
+  }, [answers, checklist, loading, response, draftKey]);
+
+  // Session recovery prompt on mount
+  useEffect(() => {
+    if (!loading && !responseId && Object.keys(answers).length === 0) {
+      try {
+        const raw = localStorage.getItem(draftKey);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.answers && Object.keys(parsed.answers).length > 0) {
+            toast(
+              (t) => (
+                <div className="flex items-center gap-3">
+                  <span className="text-xs">Unsaved assessment draft found. Restore session?</span>
+                  <button
+                    onClick={() => {
+                      setAnswers(parsed.answers);
+                      if (parsed.checklist) setChecklist(parsed.checklist);
+                      toast.dismiss(t.id);
+                      toast.success('Draft session restored');
+                    }}
+                    className="bg-teal-600 text-white text-xs px-2.5 py-1 rounded-md font-bold shadow-xs hover:bg-teal-700"
+                  >
+                    Restore
+                  </button>
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem(draftKey);
+                      toast.dismiss(t.id);
+                    }}
+                    className="text-xs text-slate-500 hover:text-slate-700"
+                  >
+                    Discard
+                  </button>
+                </div>
+              ),
+              { duration: 8000 }
+            );
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+  }, [loading, responseId, draftKey, answers]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -216,11 +274,38 @@ export default function AssessmentResponseForm({ clinicId, responseId, patientKe
         toast.success(newStatus === 'completed' ? 'Assessment completed' : 'Saved');
       } else {
         const r = await erpAssessments.createResponse({ template_id: templateId, responses: payloadAnswers, ...resolvePatientIds(patientKey) }, clinicParams);
+        try { localStorage.removeItem(draftKey); } catch { /* ignore */ }
         toast.success('Assessment created');
         onSaved?.(r.id);
       }
     } catch (e) { toast.error(e.message || 'Save failed'); }
     finally { setSaving(false); }
+  };
+
+  const handleUploadToDocuments = async () => {
+    if (!responseId) return toast.error('Please save assessment first');
+    setUploadingDoc(true);
+    try {
+      await erpAssessments.uploadDocument(responseId, clinicParams);
+      toast.success('Assessment report saved to Documents module!');
+    } catch (e) {
+      toast.error(e.message || 'Could not upload to documents');
+    } finally {
+      setUploadingDoc(false);
+    }
+  };
+
+  const handleDeleteResponse = async () => {
+    if (!responseId) return;
+    if (!window.confirm('Are you sure you want to delete this assessment?')) return;
+    try {
+      await erpAssessments.deleteResponse(responseId, clinicParams);
+      toast.success('Assessment deleted');
+      try { localStorage.removeItem(draftKey); } catch { /* ignore */ }
+      onSaved?.(null);
+    } catch (e) {
+      toast.error(e.message || 'Could not delete assessment');
+    }
   };
 
   const sendOtp = async () => {
@@ -254,7 +339,7 @@ export default function AssessmentResponseForm({ clinicId, responseId, patientKe
     <div className="space-y-4">
       {response && (
         <div className="flex flex-wrap items-center gap-2" data-print-hide>
-          <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
+          <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
             isSigned ? 'bg-green-100 text-green-700' :
             isComplete ? 'bg-blue-100 text-blue-700' :
             'bg-amber-100 text-amber-700'
@@ -269,9 +354,31 @@ export default function AssessmentResponseForm({ clinicId, responseId, patientKe
           {isSigned && (
             <span className="text-xs text-slate-400">Signed {String(response.signed_at || '').slice(0, 10)}</span>
           )}
-          <button type="button" className="btn-outline text-xs !py-1.5 ml-auto inline-flex items-center gap-1.5" onClick={() => window.print()}>
-            <FaIcon icon="fa-solid fa-print" /> Print
-          </button>
+          <div className="ml-auto flex items-center gap-2 flex-wrap">
+            <button type="button" className="btn-outline text-xs !py-1.5 inline-flex items-center gap-1.5" onClick={() => window.print()}>
+              <FaIcon icon="fa-solid fa-print" /> Print A4 Report
+            </button>
+            {responseId && (
+              <button
+                type="button"
+                disabled={uploadingDoc}
+                className="btn-outline text-xs !py-1.5 inline-flex items-center gap-1.5 text-teal-700 border-teal-200 bg-teal-50/50 hover:bg-teal-50"
+                onClick={handleUploadToDocuments}
+              >
+                <FaIcon icon={uploadingDoc ? 'fa-solid fa-circle-notch' : 'fa-solid fa-file-pdf'} className={uploadingDoc ? 'animate-spin' : ''} />
+                <span>{uploadingDoc ? 'Uploading...' : 'Save to Documents'}</span>
+              </button>
+            )}
+            {responseId && !isSigned && (
+              <button
+                type="button"
+                className="btn-outline text-xs !py-1.5 inline-flex items-center gap-1.5 text-rose-600 border-rose-200 hover:bg-rose-50"
+                onClick={handleDeleteResponse}
+              >
+                <FaIcon icon="fa-solid fa-trash-can" /> Delete
+              </button>
+            )}
+          </div>
         </div>
       )}
 

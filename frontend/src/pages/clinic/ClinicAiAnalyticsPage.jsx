@@ -17,6 +17,7 @@ import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import FaIcon from '../../components/FaIcon';
 import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
 import DashboardKpiCard from '../../components/clinic/dashboard/DashboardKpiCard';
+import AnalyticsPrintReportModal from '../../components/clinic/dashboard/AnalyticsPrintReportModal';
 import DashboardWidgetBoard, {
   DashboardCustomizeToolbar,
 } from '../../components/clinic/dashboard/DashboardWidgetBoard';
@@ -181,6 +182,10 @@ export default function ClinicAiAnalyticsPage() {
   const [branches, setBranches] = useState(null);
   const [reportType, setReportType] = useState('insights');
   const [viewName, setViewName] = useState('default');
+  const [exporting, setExporting] = useState(false);
+  const [printModalOpen, setPrintModalOpen] = useState(false);
+  const [printReportData, setPrintReportData] = useState(null);
+  const [loadingPrint, setLoadingPrint] = useState(false);
 
   const cid = Number(clinicId);
   const storageKey = `clinic-ai-analytics-v1-${cid || 'x'}-${viewName}`;
@@ -196,6 +201,76 @@ export default function ClinicAiAnalyticsPage() {
     }),
     [filters, viewName]
   );
+
+  const runExport = async () => {
+    if (!cid) return;
+    setExporting(true);
+    try {
+      const res = await clinicPortal.aiExport(cid, { type: reportType, ...filterParams });
+      const data = res?.data || res || {};
+      const headers = data.headers || [];
+      const rows = data.rows || [];
+      const reportTitle = data.report_title || `${reportType.toUpperCase()} Analytics Report`;
+      const clinicName = data.clinic_name || clinic?.name || `Clinic #${cid}`;
+      const dateFrom = filterParams.from || 'All Time';
+      const dateTo = filterParams.to || 'Present';
+      const timestamp = new Date().toLocaleString('en-IN');
+
+      // Create CSV with UTF-8 BOM byte order mark (\uFEFF) for Excel compatibility
+      let csvContent = '\uFEFF';
+
+      // Metadata Header Rows
+      csvContent += `"THE URBAN PHYSIO — ANALYTICS & REPORTING SYSTEM"\n`;
+      csvContent += `"Report Title:","${reportTitle.replace(/"/g, '""')}"\n`;
+      csvContent += `"Clinic / Branch:","${clinicName.replace(/"/g, '""')}"\n`;
+      csvContent += `"Date Range:","${dateFrom} to ${dateTo}"\n`;
+      csvContent += `"Generated On:","${timestamp}"\n\n`;
+
+      // Data Table Headers
+      csvContent += headers.map((h) => `"${String(h).replace(/"/g, '""')}"`).join(',') + '\n';
+
+      // Data Table Rows
+      rows.forEach((row) => {
+        const line = headers
+          .map((h) => {
+            const val = row[h] !== undefined && row[h] !== null ? String(row[h]) : '';
+            return `"${val.replace(/"/g, '""')}"`;
+          })
+          .join(',');
+        csvContent += line + '\n';
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `urban-physio-${reportType}-report-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      toast.success(`${reportTitle} CSV downloaded successfully`);
+    } catch (e) {
+      toast.error(e.message || 'Export failed');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const openPrintStudio = async () => {
+    if (!cid) return;
+    setPrintModalOpen(true);
+    setLoadingPrint(true);
+    try {
+      const res = await clinicPortal.aiExport(cid, { type: reportType, ...filterParams });
+      setPrintReportData(res?.data || res || null);
+    } catch (e) {
+      toast.error(e.message || 'Could not prepare print report');
+      setPrintReportData(null);
+    } finally {
+      setLoadingPrint(false);
+    }
+  };
 
   const applyPreset = (id) => {
     setPreset(id);
@@ -368,17 +443,6 @@ export default function ClinicAiAnalyticsPage() {
       toast.success('Dashboard layout saved');
     } catch (e) {
       toast.error(e.message || 'Could not save layout');
-    }
-  };
-
-  const runExport = async () => {
-    try {
-      const r = await clinicPortal.aiExport(cid, { ...filterParams, type: reportType });
-      const d = r.data || r;
-      downloadCsv(d.headers || [], d.rows || [], `ai-analytics-${reportType}.csv`);
-      toast.success('CSV downloaded');
-    } catch (e) {
-      toast.error(e.message || 'Export failed');
     }
   };
 
@@ -648,8 +712,8 @@ export default function ClinicAiAnalyticsPage() {
         {section === 'financial' && (
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              <DashboardKpiCard label="Cash inflow" value={money(financial?.cash_flow?.inflow)} tint="emerald" icon="fa-arrow-down-left" />
-              <DashboardKpiCard label="Outflow" value={money(financial?.cash_flow?.outflow)} tint="amber" icon="fa-arrow-up-right" />
+              <DashboardKpiCard label="Cash inflow" value={money(financial?.cash_flow?.inflow)} tint="emerald" icon="fa-circle-arrow-down" />
+              <DashboardKpiCard label="Outflow" value={money(financial?.cash_flow?.outflow)} tint="amber" icon="fa-circle-arrow-up" />
               <DashboardKpiCard label="Net" value={money(financial?.cash_flow?.net)} tint="teal" icon="fa-scale-balanced" />
               <DashboardKpiCard label="Pending dues" value={money(financial?.billing_overview?.pending_amount)} tint="rose" icon="fa-clock-rotate-left" />
             </div>
@@ -836,34 +900,84 @@ export default function ClinicAiAnalyticsPage() {
         )}
 
         {section === 'reports' && (
-          <div className="max-w-lg space-y-3">
-            <p className="text-sm text-slate-600">
-              Aggregated CSV exports (Excel-compatible). Existing appointment/revenue CSV remains on{' '}
-              <Link to="/clinic-portal/reports" className="text-teal-700 font-semibold">
-                Classic Reports
+          <div className="space-y-4 max-w-2xl">
+            <div className="glass-card !p-6 space-y-4 shadow-sm border border-slate-200/80">
+              <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                <div className="w-10 h-10 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold text-lg">
+                  <FaIcon icon="fa-file-export" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">Analytics Reports Studio</h3>
+                  <p className="text-xs text-slate-500">
+                    Generate Excel-compatible CSV exports and publication-ready printable reports.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Select Report Type
+                </label>
+                <select className="input-field text-sm" value={reportType} onChange={(e) => setReportType(e.target.value)}>
+                  <option value="insights">AI Virtual Analyst Priority Insights</option>
+                  <option value="finance">Financial &amp; P&amp;L Summary</option>
+                  <option value="appointments">Appointments Volume &amp; Occupancy</option>
+                  <option value="patients">Patient Retention &amp; Demographics</option>
+                  <option value="staff">Staff Performance &amp; Productivity</option>
+                  <option value="clinical">Clinical &amp; Exercise Rehab Analytics</option>
+                  <option value="communication">Communication &amp; Messaging Delivery</option>
+                  <option value="branches">Multi-Branch Performance Comparison</option>
+                </select>
+              </div>
+
+              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 text-xs text-slate-600 space-y-1">
+                <p>
+                  <strong className="text-slate-800">Active Date Range:</strong> {filters.from || 'All time'} &mdash; {filters.to || 'Present'}
+                </p>
+                <p>
+                  <strong className="text-slate-800">Active View:</strong> {viewName}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-3 pt-2">
+                <button
+                  type="button"
+                  className="btn-primary text-sm px-5 py-2.5 flex items-center gap-2 shadow-xs hover:shadow-md disabled:opacity-50"
+                  onClick={runExport}
+                  disabled={exporting}
+                >
+                  <FaIcon icon={exporting ? 'fa-circle-notch' : 'fa-download'} className={exporting ? 'animate-spin' : ''} />
+                  <span>{exporting ? 'Generating CSV...' : 'Download Excel CSV'}</span>
+                </button>
+                <button
+                  type="button"
+                  className="btn-outline text-sm px-5 py-2.5 flex items-center gap-2 hover:bg-slate-50"
+                  onClick={openPrintStudio}
+                >
+                  <FaIcon icon="fa-print" />
+                  <span>Open Print Studio</span>
+                </button>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-500">
+              Need detailed individual billing or patient records CSV? Visit{' '}
+              <Link to="/clinic-portal/reports" className="text-teal-700 font-semibold underline">
+                Classic Reports &amp; Downloads
               </Link>
               .
             </p>
-            <select className="input-field" value={reportType} onChange={(e) => setReportType(e.target.value)}>
-              <option value="insights">AI Insights</option>
-              <option value="finance">Finance / P&amp;L</option>
-              <option value="appointments">Appointments</option>
-              <option value="patients">Patients</option>
-              <option value="staff">Staff</option>
-              <option value="communication">Communication</option>
-            </select>
-            <div className="flex gap-2">
-              <button type="button" className="btn-primary text-sm" onClick={runExport}>
-                <FaIcon icon="fa-download" className="mr-2" />
-                Download CSV
-              </button>
-              <button type="button" className="btn-outline text-sm" onClick={() => window.print()}>
-                Print
-              </button>
-            </div>
           </div>
         )}
       </div>
+
+      {/* Analytics Print Studio Modal */}
+      <AnalyticsPrintReportModal
+        open={printModalOpen}
+        onClose={() => setPrintModalOpen(false)}
+        reportData={printReportData}
+        loading={loadingPrint}
+      />
     </ClinicPortalShell>
   );
 }
