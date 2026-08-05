@@ -12,8 +12,10 @@ import PatientTimelineTab from '../../components/erp/PatientTimelineTab';
 import AssessmentResponseForm from '../../components/erp/AssessmentResponseForm';
 import PackageCard from '../../components/clinic/PackageCard';
 import PatientCommLog from '../../components/clinic/communication/PatientCommLog';
+import PatientAvatar from '../../components/PatientAvatar';
+import PatientPrescriptionsTab from '../../components/clinic/patients/PatientPrescriptionsTab';
 
-const TABS = ['Overview', 'Timeline', 'Assessments', 'Packages', 'Protocols', 'Payments', 'SOAP', 'Documents', 'Reports', 'Communication'];
+const TABS = ['Overview', 'Timeline', 'Assessments', 'Packages', 'Protocols', 'Payments', 'Prescriptions', 'Documents', 'Reports', 'Communication'];
 const money = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 const parse = (value) => {
   if (typeof value !== 'string') return value || {};
@@ -189,6 +191,7 @@ export default function ClinicPatientDetailPage() {
     <ClinicPortalShell
       title={loading ? 'Patient' : name}
       subtitle="Clinical, package and payment history in one place"
+      hideHeaderTitle={true}
       actions={(
         <div className="portal-page-actions">
           <Link to="/clinic-portal/patients" className="btn-outline inline-flex items-center gap-2">
@@ -231,22 +234,24 @@ export default function ClinicPatientDetailPage() {
       ) : (
         <div className="space-y-4">
           <section className="glass-card !p-4 flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xl font-bold">
-              {name.charAt(0).toUpperCase()}
-            </div>
-            <div className="flex-1">
-              <h1 className="font-bold text-lg text-slate-900">{name}</h1>
+            <PatientAvatar
+              patient={{ ...profile, name, avatar: profile.avatar || profile.photo_url || data?.avatar }}
+              size="lg"
+              className="w-16 h-16 rounded-2xl shrink-0"
+            />
+            <div className="flex-1 min-w-0">
+              <h1 className="font-bold text-xl text-slate-900">{name}</h1>
               <p className="text-sm text-slate-500">{profile.phone || 'No phone'} · {profile.email || 'No email'}</p>
-              <p className="text-xs text-slate-400 mt-1">{data.patient_key}</p>
+              <p className="text-xs text-slate-400 mt-1 font-mono">{data.patient_key}</p>
             </div>
             <div className="grid grid-cols-2 gap-3 text-center">
-              <div>
-                <p className="font-bold">{data.appointments?.length || 0}</p>
-                <p className="text-[10px] text-slate-500">Visits</p>
+              <div className="bg-slate-50/80 border border-slate-200/80 rounded-xl p-2.5 min-w-[75px]">
+                <p className="font-extrabold text-slate-900 text-base">{data.appointments?.length || 0}</p>
+                <p className="text-[10px] text-slate-500 font-semibold uppercase">Visits</p>
               </div>
-              <div>
-                <p className="font-bold">{data.packages?.length || 0}</p>
-                <p className="text-[10px] text-slate-500">Packages</p>
+              <div className="bg-slate-50/80 border border-slate-200/80 rounded-xl p-2.5 min-w-[75px]">
+                <p className="font-extrabold text-slate-900 text-base">{data.packages?.length || 0}</p>
+                <p className="text-[10px] text-slate-500 font-semibold uppercase">Packages</p>
               </div>
             </div>
           </section>
@@ -603,16 +608,12 @@ export default function ClinicPatientDetailPage() {
               </>
             )}
 
-            {tab === 'SOAP' && (
-              <div className="space-y-3">
-                {data.soap_notes?.map((note) => (
-                  <div key={note.id} className="rounded-xl border p-4">
-                    <p className="text-xs text-slate-400 mb-3">{String(note.updated_at || note.created_at || '').slice(0, 10)}</p>
-                    <KeyValues data={{ subjective: note.subjective, objective: note.objective, assessment: note.assessment, plan: note.plan }} />
-                  </div>
-                ))}
-                {!data.soap_notes?.length && <Empty>No SOAP notes.</Empty>}
-              </div>
+            {tab === 'Prescriptions' && (
+              <PatientPrescriptionsTab
+                patientKey={data.patient_key || patientKey}
+                patient={profile}
+                clinicId={clinicId}
+              />
             )}
 
             {tab === 'Documents' && (
