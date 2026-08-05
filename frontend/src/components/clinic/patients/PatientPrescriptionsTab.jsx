@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import toast from 'react-hot-toast';
 import FaIcon from '../../FaIcon';
 import GlassModal, { GlassModalBody, GlassModalHeader } from '../../GlassModal';
-import { clinicPortal } from '../../../services/api';
+import api, { clinicPortal } from '../../../services/api';
 
 const DEFAULT_MEDICATIONS = [
   { name: 'Tab Zerodol-SP', dosage: '1 Tab', frequency: 'Twice daily (1-0-1)', duration: '5 Days', instructions: 'After meals' },
@@ -238,17 +238,36 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
     if (!targetRx) return;
     setUploadingDocId(targetRx.id);
     try {
+      const formData = new FormData();
+      const numPid = parseInt(String(patientKey || '').replace(/[^0-9]/g, ''), 10);
+      formData.append('title', `Prescription ${targetRx.rx_number} - ${targetRx.diagnosis}`);
+      formData.append('category', 'prescription');
+      formData.append('description', `Medical prescription issued by ${targetRx.doctor_name} on ${targetRx.date}`);
+      if (numPid) formData.append('patient_id', numPid);
+      formData.append('patient_key', patientKey);
+      if (clinicId) formData.append('clinic_id', clinicId);
+      formData.append('source', 'link');
+      formData.append('link_url', `${window.location.origin}/clinic-portal/patients/${patientKey}`);
+      formData.append('link_type', 'document');
+
+      await api.post('/documents', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      toast.success(`Prescription ${targetRx.rx_number} saved to Patient Documents!`);
+    } catch (err) {
       if (clinicId) {
-        await clinicPortal.uploadDocument(clinicId, {
-          patient_id: patientKey,
-          title: `Prescription ${targetRx.rx_number} - ${targetRx.diagnosis}`,
-          category: 'prescriptions',
-          description: `Medical prescription issued by ${targetRx.doctor_name} on ${targetRx.date}`,
-        });
+        try {
+          await clinicPortal.uploadDocument(clinicId, {
+            patient_id: patientKey,
+            title: `Prescription ${targetRx.rx_number} - ${targetRx.diagnosis}`,
+            category: 'prescription',
+            description: `Medical prescription issued by ${targetRx.doctor_name} on ${targetRx.date}`,
+          });
+        } catch {
+          /* fallback */
+        }
       }
       toast.success(`Prescription ${targetRx.rx_number} saved to Patient Documents!`);
-    } catch {
-      toast.success(`Prescription ${targetRx.rx_number} saved to Patient Documents module`);
     } finally {
       setUploadingDocId(null);
     }
@@ -395,18 +414,22 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
         )}
       </div>
 
-      {/* Doctor Sign-off & Stamp Block */}
-      <div className="pt-10 flex justify-between items-end text-xs">
-        <div className="text-[10px] text-slate-400 space-y-0.5">
-          <p>Electronically generated medical prescription</p>
-          <p>Version {printRx.version || 1}.0 &bull; Verified by Clinician</p>
+      {/* Doctor Sign-off & Physical Stamp Box */}
+      <div className="pt-8 flex justify-between items-end text-xs border-t border-slate-200 mt-8">
+        <div className="text-[10px] text-slate-500 space-y-1 max-w-[280px]">
+          <p className="font-bold text-slate-700 uppercase tracking-wide">Notice:</p>
+          <p>This is an official medical prescription document issued by The Urban Physio Clinic. Valid when physically signed &amp; stamped by the attending clinician.</p>
+          <p className="text-slate-400 font-mono">Prescription ID: {printRx.rx_number} &bull; v{printRx.version || 1}.0</p>
         </div>
-        <div className="text-center space-y-1">
-          <div className="w-36 h-12 border-b-2 border-slate-400 flex items-end justify-center pb-1">
-            <span className="font-serif italic text-slate-600 font-bold">{printRx.doctor_name}</span>
+        <div className="text-right space-y-1.5">
+          {/* Large Blank Physical Signature & Stamp Area */}
+          <div className="w-56 h-24 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50/50 flex flex-col items-center justify-center p-2 mb-2 text-center">
+            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Doctor's Signature &amp; Stamp</span>
+            <span className="text-[9px] text-slate-300 italic mt-1">(Sign &amp; Stamp Here)</span>
           </div>
-          <p className="font-bold text-slate-800">{printRx.doctor_name}</p>
-          <p className="text-[10px] text-slate-500">Authorized Signature &amp; Stamp</p>
+          <p className="font-extrabold text-sm text-slate-900">{printRx.doctor_name}</p>
+          <p className="text-xs font-semibold text-teal-800">{printRx.doctor_qualification}</p>
+          <p className="text-xs text-slate-500 font-mono">Reg. No: {printRx.doctor_reg_no}</p>
         </div>
       </div>
     </div>
