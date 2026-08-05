@@ -977,6 +977,7 @@ export default function ClinicAiAnalyticsPage() {
         onClose={() => setPrintModalOpen(false)}
         reportData={printReportData}
         loading={loadingPrint}
+        clinicDetails={clinic}
       />
     </ClinicPortalShell>
   );
