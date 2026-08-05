@@ -12,6 +12,9 @@ export default function PatientAvatar({ patient, size = 'md', className = '' }) 
     patient?.user_avatar ||
     patient?.profile_photo ||
     patient?.photo_url ||
+    patient?.patient_avatar ||
+    patient?.photo ||
+    patient?.image_url ||
     '';
 
   const src = resolveMediaUrl(rawUrl);

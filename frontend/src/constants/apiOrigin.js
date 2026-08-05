@@ -15,7 +15,7 @@ const LEGACY_HOST = 'mediumorchid-monkey-387815.hostingersite.com';
 export function rewriteLegacyApiUrl(url) {
   if (!url || typeof url !== 'string') return url;
   return url
-    .replace(/https?:\/\/mediumorchid-monkey-387815\.hostingersite\.com/gi, LIVE_API_ORIGIN)
+    .replace(/https?:\/\/([a-z0-9-]+\.)?hostingersite\.com/gi, LIVE_API_ORIGIN)
     .replace(/\/$/, '');
 }
 

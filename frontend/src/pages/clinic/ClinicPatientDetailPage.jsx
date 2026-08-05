@@ -235,7 +235,11 @@ export default function ClinicPatientDetailPage() {
         <div className="space-y-4">
           <section className="glass-card !p-4 flex flex-col sm:flex-row sm:items-center gap-4">
             <PatientAvatar
-              patient={{ ...profile, name, avatar: profile.avatar || profile.photo_url || data?.avatar }}
+              patient={{
+                ...profile,
+                name,
+                avatar: profile.avatar || profile.photo_url || profile.profile_photo || profile.user_avatar || data?.avatar || data?.photo_url || data?.profile_photo || data?._erpOverview?.avatar || data?._erpOverview?.photo_url,
+              }}
               size="lg"
               className="w-16 h-16 rounded-2xl shrink-0"
             />

@@ -27,6 +27,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
   const [prescriptions, setPrescriptions] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [printStudioOpen, setPrintStudioOpen] = useState(false);
   const [editingRx, setEditingRx] = useState(null); // null for create, object for edit
   const [printRx, setPrintRx] = useState(null); // object for printing
   const [printing, setPrinting] = useState(false);
@@ -233,19 +234,21 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
   };
 
   const handleUploadToDocuments = async (rx) => {
-    setUploadingDocId(rx.id);
+    const targetRx = rx || printRx;
+    if (!targetRx) return;
+    setUploadingDocId(targetRx.id);
     try {
       if (clinicId) {
         await clinicPortal.uploadDocument(clinicId, {
           patient_id: patientKey,
-          title: `Prescription ${rx.rx_number} - ${rx.diagnosis}`,
+          title: `Prescription ${targetRx.rx_number} - ${targetRx.diagnosis}`,
           category: 'prescriptions',
-          description: `Medical prescription issued by ${rx.doctor_name} on ${rx.date}`,
+          description: `Medical prescription issued by ${targetRx.doctor_name} on ${targetRx.date}`,
         });
       }
-      toast.success('Prescription uploaded to Patient Documents!');
+      toast.success(`Prescription ${targetRx.rx_number} saved to Patient Documents!`);
     } catch {
-      toast.success('Prescription saved to Patient Documents module');
+      toast.success(`Prescription ${targetRx.rx_number} saved to Patient Documents module`);
     } finally {
       setUploadingDocId(null);
     }
@@ -257,13 +260,17 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
     toast.success(`Share link for ${rx.rx_number} copied to clipboard!`);
   };
 
-  const handlePrint = (rx) => {
+  const openPrintStudio = (rx) => {
     setPrintRx(rx);
+    setPrintStudioOpen(true);
+  };
+
+  const executeBrowserPrint = () => {
     setPrinting(true);
     setTimeout(() => {
       window.print();
       setPrinting(false);
-    }, 200);
+    }, 150);
   };
 
   const filtered = prescriptions.filter((rx) => {
@@ -281,7 +288,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
 
   const printableRxMarkup = printRx && (
     <div id="urban-physio-print-root" className="bg-white p-6 sm:p-8 text-slate-800 space-y-6">
-      {/* Clinic & Doctor Header */}
+      {/* Official Clinic & Doctor Letterhead */}
       <div className="border-b-2 border-teal-600 pb-5 flex flex-wrap justify-between items-start gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5 text-teal-800 font-extrabold text-lg tracking-tight">
@@ -343,7 +350,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
       {/* Rx Medication Table */}
       <div className="space-y-3">
         <div className="flex items-center gap-2 text-teal-800 font-extrabold text-xl">
-          <span className="font-serif italic font-extrabold">Rx</span>
+          <span className="font-serif italic font-extrabold text-2xl">Rx</span>
           <span className="text-xs uppercase font-bold text-slate-400 tracking-wider">Medications &amp; Dosage</span>
         </div>
         <table className="w-full text-left text-xs border-collapse rounded-xl border border-slate-200 overflow-hidden">
@@ -484,8 +491,8 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
                 <button
                   type="button"
                   className="btn-outline text-xs !py-1.5 !px-2.5 inline-flex items-center gap-1"
-                  title="Print A4 Prescription Report"
-                  onClick={() => handlePrint(rx)}
+                  title="Print A4 Prescription PDF Studio"
+                  onClick={() => openPrintStudio(rx)}
                 >
                   <FaIcon icon="fa-print" className="text-[11px]" />
                   <span>Print PDF</span>
@@ -564,6 +571,51 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
           </div>
         )}
       </div>
+
+      {/* Prescription Print Studio Modal */}
+      <GlassModal open={printStudioOpen} onClose={() => setPrintStudioOpen(false)} maxWidth="max-w-4xl">
+        <GlassModalHeader className="no-print border-b border-slate-100 pb-3">
+          <div className="flex items-center justify-between gap-3 w-full pr-8">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold">
+                <FaIcon icon="fa-print" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Prescription Print Studio</h3>
+                <p className="text-xs text-slate-500">Live preview &amp; print dedicated A4 medical prescription document</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleUploadToDocuments(printRx)}
+                disabled={uploadingDocId === printRx?.id}
+                className="btn-outline text-xs px-3.5 py-2 inline-flex items-center gap-1.5 text-teal-800 border-teal-200 bg-teal-50 hover:bg-teal-100"
+              >
+                <FaIcon icon={uploadingDocId === printRx?.id ? 'fa-circle-notch' : 'fa-file-pdf'} className={uploadingDocId === printRx?.id ? 'animate-spin' : ''} />
+                <span>Save to Documents</span>
+              </button>
+              <button
+                type="button"
+                onClick={executeBrowserPrint}
+                disabled={printing}
+                className="btn-primary text-xs px-4 py-2 inline-flex items-center gap-1.5 shadow-md hover:shadow-lg disabled:opacity-50"
+              >
+                <FaIcon icon={printing ? 'fa-circle-notch' : 'fa-print'} className={printing ? 'animate-spin' : ''} />
+                <span>{printing ? 'Preparing...' : 'Print Official Prescription'}</span>
+              </button>
+            </div>
+          </div>
+        </GlassModalHeader>
+
+        <GlassModalBody className="p-4 sm:p-6 overflow-y-auto max-h-[78vh]">
+          {printRx && (
+            <div className="rounded-2xl border border-slate-200 shadow-sm overflow-hidden bg-white">
+              {printableRxMarkup}
+            </div>
+          )}
+        </GlassModalBody>
+      </GlassModal>
 
       {/* Create / Edit Modal */}
       <GlassModal open={modalOpen} onClose={() => setModalOpen(false)} maxWidth="max-w-3xl">
@@ -770,14 +822,60 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
         </GlassModalBody>
       </GlassModal>
 
-      {/* Standalone React Portal for A4 Print Engine */}
+      {/* Standalone React Portal for Dedicated A4 Print Engine */}
       {typeof document !== 'undefined' &&
         createPortal(
-          <div className="tup-print-only-portal">
+          <div className="tup-rx-print-portal">
             {printableRxMarkup}
           </div>,
           document.body
         )}
+
+      {/* Global & Print CSS Engine */}
+      <style>{`
+        .tup-rx-print-portal {
+          display: none;
+        }
+
+        @media print {
+          /* Completely hide website UI elements */
+          body > *:not(.tup-rx-print-portal) {
+            display: none !important;
+          }
+          .tup-rx-print-portal {
+            display: block !important;
+            position: static !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+          }
+          #urban-physio-print-root {
+            padding: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+          }
+          .no-print {
+            display: none !important;
+          }
+          @page {
+            size: A4 portrait;
+            margin: 12mm 10mm 15mm 10mm;
+          }
+          thead {
+            display: table-header-group;
+          }
+          tr {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+          body {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
