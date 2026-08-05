@@ -247,7 +247,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
       formData.append('patient_key', patientKey);
       if (clinicId) formData.append('clinic_id', clinicId);
       formData.append('source', 'link');
-      formData.append('link_url', `${window.location.origin}/clinic-portal/patients/${patientKey}`);
+      formData.append('link_url', `${window.location.origin}/clinic-portal/prescriptions/preview?rx=${targetRx.rx_number}&patient=${patientKey}`);
       formData.append('link_type', 'document');
 
       await api.post('/documents', formData, {

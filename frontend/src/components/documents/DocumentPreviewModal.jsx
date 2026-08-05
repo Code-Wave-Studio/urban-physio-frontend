@@ -40,6 +40,15 @@ function Preview({ doc }) {
     if (yt) {
       return <iframe title="preview" src={yt} className="w-full h-full rounded-xl" allowFullScreen />;
     }
+    const isDocPreview =
+      doc.category === 'prescription' ||
+      doc.category === 'prescriptions' ||
+      doc.link_type === 'document' ||
+      (typeof doc.file_url === 'string' && (doc.file_url.includes('/prescriptions/preview') || doc.file_url.includes('/preview')));
+
+    if (isDocPreview) {
+      return <iframe title="preview" src={doc.file_url} className="w-full h-full rounded-xl bg-white min-h-[500px] border-0" allowFullScreen />;
+    }
     return (
       <div className="text-center p-8">
         <FaIcon icon={fileIcon(doc)} className="text-5xl text-teal-500" />
