@@ -1,5 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
-import toast from 'react-hot-toast';
+import { useEffect, useState } from 'react';
 import FaIcon from '../FaIcon';
 
 function formatDate(dStr) {
@@ -149,14 +148,10 @@ export function PrescriptionA4Sheet({ rx, patientName = '', patientKey = '' }) {
           <p>This is an official medical prescription document issued by The Urban Physio Clinic. Valid when physically signed &amp; stamped by the attending clinician.</p>
           <p className="text-slate-400 font-mono">Prescription ID: {rx.rx_number || 'RX-2026-0041'} &bull; v{rx.version || 1}.0</p>
         </div>
-        <div className="text-right space-y-1.5">
-          <div className="w-56 h-24 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50/50 flex flex-col items-center justify-center p-2 mb-2 text-center">
-            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Doctor's Signature &amp; Stamp</span>
-            <span className="text-[9px] text-slate-300 italic mt-1">(Sign &amp; Stamp Here)</span>
+        <div>
+          <div className="w-56 h-24 border border-slate-300 rounded-lg bg-slate-50/30 flex items-center justify-center p-3 text-center">
+            <span className="text-[11px] uppercase font-bold text-slate-400 tracking-wider">Doctor's Signature &amp; Stamp</span>
           </div>
-          <p className="font-extrabold text-sm text-slate-900">{rx.doctor_name || 'Dr. Priya Sharma'}</p>
-          <p className="text-xs font-semibold text-teal-800">{rx.doctor_qualification || 'PT, MPT (Ortho)'}</p>
-          <p className="text-xs text-slate-500 font-mono">Reg. No: {rx.doctor_reg_no || 'MH-54912'}</p>
         </div>
       </div>
     </div>
@@ -164,19 +159,13 @@ export function PrescriptionA4Sheet({ rx, patientName = '', patientKey = '' }) {
 }
 
 /**
- * Interactive Prescription Document Viewer with PDF Controls (Zoom, Page Nav, Download, Print, Fullscreen)
+ * Clean, Distraction-Free Prescription Document Preview
  */
 export default function PrescriptionDocViewer({ doc, rx: rxProp, rxNumber: rxNumProp, patientKey: patientKeyProp }) {
   const [rx, setRx] = useState(rxProp || null);
   const [patientKey, setPatientKey] = useState(patientKeyProp || doc?.patient_key || 'p-13');
   const [patientName, setPatientName] = useState(doc?.patient_name || '');
-  const [zoom, setZoom] = useState(100); // % scale
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [isFullScreen, setIsFullScreen] = useState(false);
   const [loading, setLoading] = useState(!rxProp);
-
-  const containerRef = useRef(null);
 
   useEffect(() => {
     if (rxProp) {
@@ -274,33 +263,6 @@ export default function PrescriptionDocViewer({ doc, rx: rxProp, rxNumber: rxNum
     setLoading(false);
   }, [doc, rxProp, rxNumProp, patientKeyProp]);
 
-  // Zoom Handlers
-  const handleZoomIn = () => setZoom((z) => Math.min(z + 15, 200));
-  const handleZoomOut = () => setZoom((z) => Math.max(z - 15, 50));
-  const handleResetZoom = () => setZoom(100);
-
-  // Page Handlers
-  const handlePrevPage = () => setCurrentPage((p) => Math.max(p - 1, 1));
-  const handleNextPage = () => setCurrentPage((p) => Math.min(p + 1, totalPages));
-
-  // Print Handler
-  const handlePrint = () => {
-    window.print();
-  };
-
-  // Download Handler
-  const handleDownload = () => {
-    toast.success('Preparing Prescription PDF for download…');
-    setTimeout(() => {
-      window.print();
-    }, 200);
-  };
-
-  // FullScreen Toggle
-  const toggleFullScreen = () => {
-    setIsFullScreen((prev) => !prev);
-  };
-
   if (loading) {
     return (
       <div className="h-64 flex items-center justify-center text-slate-500 font-medium text-sm gap-2">
@@ -311,128 +273,9 @@ export default function PrescriptionDocViewer({ doc, rx: rxProp, rxNumber: rxNum
   }
 
   return (
-    <div
-      className={`flex flex-col bg-slate-900 rounded-2xl overflow-hidden shadow-2xl transition-all ${
-        isFullScreen ? 'fixed inset-0 z-50 rounded-none h-screen w-screen' : 'w-full h-full min-h-[600px]'
-      }`}
-    >
-      {/* Document Control Bar */}
-      <div className="no-print bg-slate-800 text-slate-100 px-4 py-2.5 border-b border-slate-700 flex flex-wrap items-center justify-between gap-3 shrink-0">
-        {/* Left: Document Info */}
-        <div className="flex items-center gap-2.5">
-          <span className="w-7 h-7 rounded-lg bg-teal-600 text-white flex items-center justify-center text-xs font-bold shadow-xs">
-            <FaIcon icon="fa-file-prescription" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-xs font-bold truncate text-slate-100">{rx?.rx_number || 'Prescription Document'}</p>
-            <p className="text-[10px] text-slate-400 truncate">Official A4 Clinical Format &bull; {patientKey}</p>
-          </div>
-        </div>
-
-        {/* Center: Page Navigation & Zoom Controls */}
-        <div className="flex items-center gap-3">
-          {/* Page Navigation */}
-          <div className="flex items-center gap-1 bg-slate-700/80 px-2 py-1 rounded-lg text-xs">
-            <button
-              type="button"
-              onClick={handlePrevPage}
-              disabled={currentPage <= 1}
-              className="px-1.5 py-0.5 rounded text-slate-300 hover:text-white disabled:opacity-40 hover:bg-slate-600 transition"
-              title="Previous Page"
-            >
-              <FaIcon icon="fa-chevron-left text-[10px]" />
-            </button>
-            <span className="text-[11px] font-semibold text-slate-200 px-1">
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              type="button"
-              onClick={handleNextPage}
-              disabled={currentPage >= totalPages}
-              className="px-1.5 py-0.5 rounded text-slate-300 hover:text-white disabled:opacity-40 hover:bg-slate-600 transition"
-              title="Next Page"
-            >
-              <FaIcon icon="fa-chevron-right text-[10px]" />
-            </button>
-          </div>
-
-          {/* Zoom Controls */}
-          <div className="flex items-center gap-1 bg-slate-700/80 px-2 py-1 rounded-lg text-xs">
-            <button
-              type="button"
-              onClick={handleZoomOut}
-              disabled={zoom <= 50}
-              className="px-1.5 py-0.5 rounded text-slate-300 hover:text-white disabled:opacity-40 hover:bg-slate-600 transition"
-              title="Zoom Out"
-            >
-              <FaIcon icon="fa-minus text-[10px]" />
-            </button>
-            <button
-              type="button"
-              onClick={handleResetZoom}
-              className="text-[11px] font-mono font-bold text-teal-400 hover:text-teal-300 px-1.5 py-0.5 rounded hover:bg-slate-600 transition"
-              title="Reset Zoom (100%)"
-            >
-              {zoom}%
-            </button>
-            <button
-              type="button"
-              onClick={handleZoomIn}
-              disabled={zoom >= 200}
-              className="px-1.5 py-0.5 rounded text-slate-300 hover:text-white disabled:opacity-40 hover:bg-slate-600 transition"
-              title="Zoom In"
-            >
-              <FaIcon icon="fa-plus text-[10px]" />
-            </button>
-          </div>
-        </div>
-
-        {/* Right: Actions */}
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleDownload}
-            className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-100 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-xs"
-            title="Download PDF Document"
-          >
-            <FaIcon icon="fa-download" />
-            <span className="hidden sm:inline">Download</span>
-          </button>
-          <button
-            type="button"
-            onClick={handlePrint}
-            className="px-3.5 py-1.5 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-xs font-bold inline-flex items-center gap-1.5 transition shadow-xs"
-            title="Print Official Prescription"
-          >
-            <FaIcon icon="fa-print" />
-            <span>Print</span>
-          </button>
-          <button
-            type="button"
-            onClick={toggleFullScreen}
-            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-700 transition"
-            title={isFullScreen ? 'Exit Full-screen' : 'Full-screen View'}
-          >
-            <FaIcon icon={isFullScreen ? 'fa-compress' : 'fa-expand'} />
-          </button>
-        </div>
-      </div>
-
-      {/* A4 Paper Viewport */}
-      <div
-        ref={containerRef}
-        className="flex-1 overflow-auto bg-slate-900/90 p-4 sm:p-8 flex justify-center items-start min-h-[500px]"
-      >
-        <div
-          style={{
-            transform: `scale(${zoom / 100})`,
-            transformOrigin: 'top center',
-            transition: 'transform 0.15s ease-out',
-          }}
-          className="w-full flex justify-center"
-        >
-          <PrescriptionA4Sheet rx={rx} patientName={patientName} patientKey={patientKey} />
-        </div>
+    <div className="w-full h-full min-h-[500px] overflow-auto bg-slate-900/90 p-4 sm:p-8 flex justify-center items-start rounded-2xl shadow-2xl">
+      <div className="w-full flex justify-center">
+        <PrescriptionA4Sheet rx={rx} patientName={patientName} patientKey={patientKey} />
       </div>
 
       {/* Print Stylesheet */}
