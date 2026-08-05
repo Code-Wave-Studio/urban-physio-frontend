@@ -415,18 +415,14 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
         )}
       </div>
 
-      {/* Doctor Sign-off & Physical Stamp Box */}
+      {/* Doctor Sign-off & Physical Stamp Area */}
       <div className="pt-8 flex justify-between items-end text-xs border-t border-slate-200 mt-8">
         <div className="text-[10px] text-slate-500 space-y-1 max-w-[280px]">
           <p className="font-bold text-slate-700 uppercase tracking-wide">Notice:</p>
           <p>This is an official medical prescription document issued by The Urban Physio Clinic. Valid when physically signed &amp; stamped by the attending clinician.</p>
           <p className="text-slate-400 font-mono">Prescription ID: {printRx.rx_number} &bull; v{printRx.version || 1}.0</p>
         </div>
-        <div>
-          <div className="w-56 h-24 border border-slate-300 rounded-lg bg-slate-50/30 flex items-center justify-center p-3 text-center">
-            <span className="text-[11px] uppercase font-bold text-slate-400 tracking-wider">Doctor's Signature &amp; Stamp</span>
-          </div>
-        </div>
+        <div className="w-64 h-24 shrink-0" aria-hidden="true" />
       </div>
     </div>
   );
