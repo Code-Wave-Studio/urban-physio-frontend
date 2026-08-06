@@ -5,7 +5,7 @@ import LocationMapModal from '../../components/LocationMapModal';
 import GlassModal, { GlassModalHeader } from '../../components/GlassModal';
 import FaIcon from '../../components/FaIcon';
 import AdminUserListRow from '../../components/admin/AdminUserListRow';
-import AdminDeleteUserModal from '../../components/admin/AdminDeleteUserModal';
+import AdminDeleteUserModal from '../../components/admin/AdminDeleteModal';
 import { admin } from '../../services/api';
 import toast from 'react-hot-toast';
 

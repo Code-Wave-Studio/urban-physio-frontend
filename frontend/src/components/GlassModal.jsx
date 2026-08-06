@@ -83,18 +83,30 @@ const ACCENT_ICON = {
   primary: 'bg-primary-100 text-primary-700 border-primary-200/60',
   violet: 'bg-violet-100 text-violet-700 border-violet-200/60',
   cyan: 'bg-cyan-100 text-cyan-700 border-cyan-200/60',
+  amber: 'bg-amber-100 text-amber-700 border-amber-200/60',
+  red: 'bg-rose-100 text-rose-700 border-rose-200/60',
+  rose: 'bg-rose-100 text-rose-700 border-rose-200/60',
+  emerald: 'bg-emerald-100 text-emerald-700 border-emerald-200/60',
 };
 
 const ACCENT_PROGRESS_TRACK = {
   primary: 'bg-primary-100',
   violet: 'bg-violet-100',
   cyan: 'bg-cyan-100',
+  amber: 'bg-amber-100',
+  red: 'bg-rose-100',
+  rose: 'bg-rose-100',
+  emerald: 'bg-emerald-100',
 };
 
 const ACCENT_PROGRESS_FILL = {
   primary: 'bg-primary-500',
   violet: 'bg-violet-500',
   cyan: 'bg-cyan-500',
+  amber: 'bg-amber-500',
+  red: 'bg-rose-500',
+  rose: 'bg-rose-500',
+  emerald: 'bg-emerald-500',
 };
 
 export function GlassModalHeader({
@@ -158,8 +170,8 @@ export function GlassModalProgress({ step, total, accent = 'primary' }) {
   );
 }
 
-export function GlassModalFooter({ children }) {
-  return <div className="glass-modal-footer shrink-0">{children}</div>;
+export function GlassModalFooter({ children, className = '' }) {
+  return <div className={`glass-modal-footer shrink-0 ${className}`}>{children}</div>;
 }
 
 /** Scrollable modal body — use between header and footer for long forms */
