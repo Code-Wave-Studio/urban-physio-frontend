@@ -2,19 +2,6 @@ import { useState, useEffect } from "react";
 import GlassModal, { GlassModalHeader, GlassModalBody, GlassModalFooter } from "../GlassModal";
 import FaIcon from "../FaIcon";
 
-const SOFT_CONSEQUENCES = [
-  "Account is immediately locked - user cannot log in.",
-  "All profile data, appointments, and medical records are preserved.",
-  "User will be hidden from the active users list.",
-  "Account can be restored by an admin at any time.",
-];
-
-const PERM_CONSEQUENCES = [
-  "Account and user profile are permanently erased from the database.",
-  "Doctor profile and all associated clinic/slot records are deleted.",
-  "Appointment and payment history records are preserved (user reference set to NULL).",
-  "This action is completely IRREVERSIBLE - there is no undo.",
-];
 
 export default function AdminDeleteUserModal({ user, onClose, onConfirm, loading }) {
   const [mode, setMode] = useState("soft");
@@ -198,42 +185,6 @@ export default function AdminDeleteUserModal({ user, onClose, onConfirm, loading
           </div>
         </div>
 
-        {/* Consequences Card */}
-        <div
-          className={`p-4 rounded-2xl border transition-all duration-300 ${
-            mode === "permanent"
-              ? "bg-rose-50/70 border-rose-200/90 text-rose-950 shadow-2xs"
-              : "bg-slate-50/90 border-slate-200/80 text-slate-800 shadow-2xs"
-          }`}
-        >
-          <div className="flex items-center gap-2 mb-2.5">
-            <FaIcon
-              icon={mode === "permanent" ? "exclamation-triangle" : "info-circle"}
-              className={`text-xs ${mode === "permanent" ? "text-rose-600" : "text-amber-600"}`}
-            />
-            <span
-              className={`text-xs font-bold uppercase tracking-wider ${
-                mode === "permanent" ? "text-rose-800" : "text-slate-700"
-              }`}
-            >
-              What will happen
-            </span>
-          </div>
-
-          <ul className="space-y-2 text-xs sm:text-sm">
-            {(mode === "soft" ? SOFT_CONSEQUENCES : PERM_CONSEQUENCES).map((c, i) => (
-              <li key={i} className="flex items-start gap-2.5 leading-relaxed">
-                <FaIcon
-                  icon={mode === "permanent" ? "times-circle" : "check-circle"}
-                  className={`text-xs mt-1 shrink-0 ${
-                    mode === "permanent" ? "text-rose-500" : "text-amber-500"
-                  }`}
-                />
-                <span>{c}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
 
         {/* Permanent Delete Email Confirmation Field */}
         {mode === "permanent" && (
