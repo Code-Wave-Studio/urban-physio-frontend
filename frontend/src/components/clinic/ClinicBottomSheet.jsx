@@ -20,6 +20,7 @@ import { bookClinicUrl } from '../../utils/bookUrl';
 import ClinicCoverImage from './ClinicCoverImage';
 import { resolveMediaUrl } from '../../utils/mediaUrl';
 import { setFloatingActionsHidden } from '../../utils/floatingActionsBus';
+import { formatOpeningHoursRows, resolveClinicHours, getTodayDayKey } from '../../utils/clinicProfileUtils';
 
 function stopNav(e) {
   e.stopPropagation();
