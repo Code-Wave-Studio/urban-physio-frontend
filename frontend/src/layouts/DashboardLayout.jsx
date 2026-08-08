@@ -275,9 +275,9 @@ export default function DashboardLayout({
           aria-hidden="true"
         />
 
-        {/* ── Desktop: Primary navigation sidebar ── */}
+        {/* ── Desktop: Primary navigation sidebar (Icon Only Rail) ── */}
         <aside
-          className={`app-shell__primary-nav ${collapsed ? 'app-shell__primary-nav--collapsed' : ''}`}
+          className="app-shell__primary-nav"
           aria-label="Module navigation"
         >
           <div className="primary-nav__profile-wrap">
@@ -286,16 +286,11 @@ export default function DashboardLayout({
                 src={resolveMediaUrl(profileAvatar) || profileAvatar}
                 alt={profileName}
                 className="primary-nav__avatar"
+                title={profileName}
               />
             ) : (
-              <div className="primary-nav__avatar primary-nav__avatar--fallback">
+              <div className="primary-nav__avatar primary-nav__avatar--fallback" title={profileName}>
                 <FaIcon icon="fa-user" className="text-sm" />
-              </div>
-            )}
-            {!collapsed && (
-              <div className="primary-nav__profile-info min-w-0 flex-1">
-                <p className="text-xs font-bold text-slate-800 truncate">{profileName}</p>
-                <p className="text-[10px] text-slate-500 truncate">{profileRole}</p>
               </div>
             )}
           </div>
@@ -305,7 +300,6 @@ export default function DashboardLayout({
             activeSectionId={currentSectionId}
             onSectionClick={handleSectionClick}
             accent={accent}
-            collapsed={collapsed}
           />
 
           <div className="primary-nav__footer">
@@ -313,11 +307,10 @@ export default function DashboardLayout({
               type="button"
               className="primary-nav__toggle"
               onClick={toggleCollapsed}
-              title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              title={collapsed ? 'Show context panel' : 'Hide context panel'}
+              aria-label={collapsed ? 'Show context panel' : 'Hide context panel'}
             >
               <FaIcon icon={collapsed ? 'fa-chevron-right' : 'fa-chevron-left'} className="text-xs" />
-              {!collapsed && <span className="text-xs font-semibold ml-2">Collapse</span>}
             </button>
           </div>
         </aside>

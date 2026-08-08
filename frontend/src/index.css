@@ -2011,21 +2011,13 @@ html {
   }
 
   /* ================================================================
-     3-COLUMN DESKTOP SHELL — Primary rail + Context panel + Workspace
+     3-COLUMN DESKTOP SHELL — Primary Rail (Icon Only) + Context Panel + Workspace
      ================================================================ */
 
   :root {
-    --shell-primary-nav-w: 210px;
-    --shell-primary-nav-w-collapsed: 68px;
+    --shell-primary-nav-w: 68px;
     --shell-context-panel-w: 230px;
     --shell-sidebar-transition: 240ms cubic-bezier(0.2, 0, 0, 1);
-  }
-
-  @media (min-width: 1024px) and (max-width: 1279px) {
-    :root {
-      --shell-primary-nav-w: 190px;
-      --shell-context-panel-w: 210px;
-    }
   }
 
   /* ── Primary nav rail (desktop only) ── */
@@ -2046,12 +2038,7 @@ html {
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.99) 100%);
       border-right: 1px solid rgba(226, 232, 240, 0.8);
       box-shadow: 2px 0 12px -3px rgba(15, 23, 42, 0.04);
-      transition: width var(--shell-sidebar-transition);
       overflow: hidden;
-    }
-
-    .app-shell__primary-nav--collapsed {
-      width: var(--shell-primary-nav-w-collapsed);
     }
 
     /* Hide old sidebar on desktop — replaced by primary nav + context panel */
@@ -2066,7 +2053,7 @@ html {
     }
 
     .app-shell__workspace--ctx-collapsed {
-      margin-left: var(--shell-primary-nav-w-collapsed);
+      margin-left: var(--shell-primary-nav-w);
     }
   }
 
@@ -2074,18 +2061,13 @@ html {
     margin-left: 0 !important;
   }
 
-  /* Primary nav profile header */
+  /* Primary nav profile avatar header */
   .primary-nav__profile-wrap {
     display: flex;
     align-items: center;
-    gap: 0.625rem;
-    padding: 0.875rem 0.875rem 0.75rem;
-    border-bottom: 1px solid rgba(226, 232, 240, 0.6);
-  }
-
-  .app-shell__primary-nav--collapsed .primary-nav__profile-wrap {
     justify-content: center;
     padding: 0.875rem 0.375rem 0.75rem;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.6);
   }
 
   .primary-nav__avatar {
@@ -2112,10 +2094,11 @@ html {
     flex: 1 1 0%;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 0.5rem 0.5rem;
+    padding: 0.5rem 0.375rem;
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    align-items: center;
+    gap: 0.375rem;
     scrollbar-width: none;
   }
 
@@ -2123,14 +2106,13 @@ html {
     display: none;
   }
 
-  /* Primary nav item button */
+  /* Primary nav item button (Icon Only) */
   .primary-nav__item {
     display: flex;
-    flex-direction: row;
     align-items: center;
-    justify-content: flex-start;
-    gap: 0.625rem;
-    padding: 0.5rem 0.625rem;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
     border-radius: 0.75rem;
     cursor: pointer;
     transition: all 180ms ease;
@@ -2138,8 +2120,7 @@ html {
     background: transparent;
     color: #475569;
     position: relative;
-    width: 100%;
-    text-align: left;
+    text-align: center;
   }
 
   .primary-nav__item:hover {
@@ -2158,7 +2139,7 @@ html {
   .primary-nav__item--active::before {
     content: '';
     position: absolute;
-    left: -0.5rem;
+    left: -0.375rem;
     top: 50%;
     transform: translateY(-50%);
     width: 3.5px;
@@ -2176,43 +2157,20 @@ html {
     width: 32px;
     height: 32px;
     border-radius: 0.625rem;
-    font-size: 0.875rem;
+    font-size: 0.9375rem;
     transition: all 180ms ease;
     flex-shrink: 0;
   }
 
   .primary-nav__item:hover .primary-nav__icon {
-    transform: scale(1.05);
+    transform: scale(1.08);
   }
 
   .primary-nav__item--active .primary-nav__icon {
     background: rgba(249, 115, 22, 0.12);
   }
 
-  /* Label styling — allows clean 2-line wrap without truncation */
-  .primary-nav__label {
-    font-size: 0.8125rem; /* 13px */
-    font-weight: 600;
-    line-height: 1.25;
-    color: inherit;
-    white-space: normal;
-    word-break: break-word;
-    overflow-wrap: break-word;
-    flex: 1;
-    min-width: 0;
-  }
-
-  /* Collapsed primary nav item */
-  .primary-nav__item--collapsed {
-    justify-content: center;
-    padding: 0.5rem 0;
-  }
-
-  .primary-nav__item--collapsed::before {
-    left: -0.25rem;
-  }
-
-  /* Sleek Tooltip for collapsed mode */
+  /* Sleek Tooltip for Icon-Only mode */
   .primary-nav__tooltip {
     position: absolute;
     left: calc(100% + 12px);
@@ -2244,7 +2202,7 @@ html {
     border-color: transparent #0f172a transparent transparent;
   }
 
-  .primary-nav__item--collapsed:hover .primary-nav__tooltip {
+  .primary-nav__item:hover .primary-nav__tooltip {
     opacity: 1;
     visibility: visible;
     transform: translateY(-50%) translateX(0);
@@ -2255,21 +2213,17 @@ html {
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    padding: 0.625rem 0.75rem;
-    border-top: 1px solid rgba(226, 232, 240, 0.6);
-  }
-
-  .app-shell__primary-nav--collapsed .primary-nav__footer {
     justify-content: center;
     padding: 0.625rem 0.375rem;
+    border-top: 1px solid rgba(226, 232, 240, 0.6);
   }
 
   .primary-nav__toggle {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    width: 100%;
-    padding: 0.5rem 0.625rem;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
     border-radius: 0.625rem;
     border: 1px solid rgba(226, 232, 240, 0.8);
     background: #ffffff;
