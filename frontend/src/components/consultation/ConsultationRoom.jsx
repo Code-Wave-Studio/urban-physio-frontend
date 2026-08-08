@@ -617,28 +617,44 @@ function PrescriptionPanel({ room, onReload }) {
  * Shared Online Consultation Room.
  * @param {{ appointmentId: number|string, backTo: string, layout: (props: {children: React.ReactNode}) => React.ReactNode }} props
  */
-export default function ConsultationRoom({ appointmentId, backTo, layout: Layout }) {
+export default function ConsultationRoom({ appointmentId, backTo, layout: Layout, embedded = false }) {
   const navigate = useNavigate();
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [tab, setTab] = useState('video');
 
   const load = useCallback((opts = {}) => {
     // Soft refresh keeps the video iframe mounted during prescribe/save.
-    if (!opts.silent) setLoading(true);
+    if (!opts.silent) {
+      setLoading(true);
+      setError(null);
+    }
     consultation
       .room(appointmentId)
-      .then((r) => setRoom(r.data))
+      .then((r) => {
+        setRoom(r.data);
+        setError(null);
+      })
       .catch((e) => {
-        toast.error(e.message || 'Could not open consultation room');
-        navigate(backTo);
+        const msg = e.message || 'Could not open consultation room';
+        setError(msg);
+        toast.error(msg);
+        if (backTo && !embedded) {
+          navigate(backTo);
+        }
       })
       .finally(() => setLoading(false));
-  }, [appointmentId, backTo, navigate]);
+  }, [appointmentId, backTo, embedded, navigate]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    if (appointmentId) {
+      load();
+    } else {
+      setLoading(false);
+      setRoom(null);
+    }
+  }, [appointmentId, load]);
 
   const softReload = useCallback(() => load({ silent: true }), [load]);
 
@@ -647,19 +663,43 @@ export default function ConsultationRoom({ appointmentId, backTo, layout: Layout
     return room.permissions?.can_start_video || room.join?.can_join;
   }, [room]);
 
-  const content = loading || !room ? (
+  if (!appointmentId) {
+    const emptyContent = (
+      <div className="glass-card p-10 text-center text-slate-500">
+        <FaIcon icon="fa-video-slash" className="text-3xl text-slate-300 mb-2" />
+        <p className="font-semibold text-slate-700">No appointment selected</p>
+        <p className="text-xs text-slate-400 mt-1">Select an appointment above to enter the consultation room.</p>
+      </div>
+    );
+    return Layout ? <Layout>{emptyContent}</Layout> : emptyContent;
+  }
+
+  const content = loading ? (
     <div className="glass-card p-12 text-center text-slate-400">
       <FaIcon icon="fa-spinner" className="fa-spin text-2xl" />
       <p className="text-sm mt-2">Opening consultation room…</p>
     </div>
-  ) : (
+  ) : error && !room ? (
+    <div className="glass-card p-10 text-center space-y-3">
+      <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+        <FaIcon icon="fa-triangle-exclamation" className="text-xl" />
+      </div>
+      <p className="font-bold text-slate-800">Could not load Consultation Room</p>
+      <p className="text-xs text-slate-500 max-w-md mx-auto">{error}</p>
+      <button type="button" onClick={() => load()} className="btn-primary text-xs py-2 px-4 inline-flex items-center gap-1.5 mt-2">
+        <FaIcon icon="fa-rotate-right" /> Retry
+      </button>
+    </div>
+  ) : !room ? null : (
     <div className="space-y-4">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-2 mb-1">
-            <Link to={backTo} className="text-sm text-slate-500 hover:text-primary-600">
-              <FaIcon icon="fa-arrow-left" className="mr-1" /> Back
-            </Link>
+            {backTo && !embedded && (
+              <Link to={backTo} className="text-sm text-slate-500 hover:text-primary-600">
+                <FaIcon icon="fa-arrow-left" className="mr-1" /> Back
+              </Link>
+            )}
             <StatusPill join={room.join} status={room.appointment.status} />
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Consultation Room</h1>
@@ -719,5 +759,5 @@ export default function ConsultationRoom({ appointmentId, backTo, layout: Layout
     </div>
   );
 
-  return <Layout>{content}</Layout>;
+  return Layout ? <Layout>{content}</Layout> : content;
 }

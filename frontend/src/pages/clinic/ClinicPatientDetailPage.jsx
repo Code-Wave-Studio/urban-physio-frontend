@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import FaIcon from '../../components/FaIcon';
 import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
 import ClinicBookingModal from '../../components/clinic/ClinicBookingModal';
 import RichSessionCard from '../../components/RichSessionCard';
+import ConsultationRoom from '../../components/consultation/ConsultationRoom';
 import useClinicPortal from '../../hooks/useClinicPortal';
 import { clinicPortal, erpAssessments, exercisePrescriptions } from '../../services/api';
 import PatientOverviewTab from '../../components/erp/PatientOverviewTab';
@@ -15,7 +16,7 @@ import PatientCommLog from '../../components/clinic/communication/PatientCommLog
 import PatientAvatar from '../../components/PatientAvatar';
 import PatientPrescriptionsTab from '../../components/clinic/patients/PatientPrescriptionsTab';
 
-const TABS = ['Overview', 'Timeline', 'Assessments', 'Packages', 'Protocols', 'Payments', 'Prescriptions', 'Documents', 'Reports', 'Communication'];
+const TABS = ['Overview', 'Timeline', 'Assessments', 'Packages', 'Appointment History', 'Payments', 'Prescriptions', 'Documents', 'Reports', 'Consultation Room', 'Communication'];
 const money = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 const parse = (value) => {
   if (typeof value !== 'string') return value || {};
@@ -50,12 +51,19 @@ function normalizePatientKey(raw) {
 export default function ClinicPatientDetailPage() {
   const { patientKey: rawPatientKey } = useParams();
   const patientKey = normalizePatientKey(rawPatientKey);
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab');
+  const initialApptId = searchParams.get('appointmentId');
   const { clinicId, can, loading: boot } = useClinicPortal();
   const [data, setData] = useState(null);
   const [templates, setTemplates] = useState([]);
   const [erpResponses, setErpResponses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState('Overview');
+  const [tab, setTab] = useState(() => (initialTab && TABS.includes(initialTab) ? initialTab : 'Overview'));
+  const [selectedConsultationApptId, setSelectedConsultationApptId] = useState(initialApptId ? Number(initialApptId) : null);
+  const [historyStatusFilter, setHistoryStatusFilter] = useState('all');
+  const [historyTypeFilter, setHistoryTypeFilter] = useState('all');
+  const [showProtocolsSection, setShowProtocolsSection] = useState(false);
   const [booking, setBooking] = useState(false);
   const [bookingSeed, setBookingSeed] = useState({});
   const [activeAssessment, setActiveAssessment] = useState(null); // { responseId?, templateId? }
@@ -121,6 +129,36 @@ export default function ClinicPatientDetailPage() {
     dob: profile.date_of_birth || profile.dob || null,
     photo_url: profile.avatar || profile.photo_url || null,
   }), [profile, name, data, patientKey]);
+
+  const activeConsultationApptId = useMemo(() => {
+    const appts = data?.appointments || [];
+    if (!appts.length) return null;
+    if (selectedConsultationApptId && appts.some((a) => Number(a.id) === Number(selectedConsultationApptId))) {
+      return selectedConsultationApptId;
+    }
+    const preferred = appts.find(
+      (a) =>
+        (a.status === 'confirmed' || a.status === 'pending') &&
+        (a.consultation_type === 'online' || a.appointment_date === new Date().toISOString().slice(0, 10))
+    ) || appts[0];
+    return preferred ? Number(preferred.id) : null;
+  }, [data, selectedConsultationApptId]);
+
+  const openConsultationRoom = (apptId) => {
+    setSelectedConsultationApptId(Number(apptId));
+    setTab('Consultation Room');
+  };
+
+  const filteredAppointments = useMemo(() => {
+    let list = data?.appointments || [];
+    if (historyStatusFilter !== 'all') {
+      list = list.filter((a) => a.status === historyStatusFilter);
+    }
+    if (historyTypeFilter !== 'all') {
+      list = list.filter((a) => a.consultation_type === historyTypeFilter);
+    }
+    return list;
+  }, [data, historyStatusFilter, historyTypeFilter]);
 
   const startAssessment = async (templateId) => {
     if (!templateId) return;
@@ -248,6 +286,7 @@ export default function ClinicPatientDetailPage() {
               <p className="text-sm text-slate-500">{profile.phone || 'No phone'} · {profile.email || 'No email'}</p>
               <p className="text-xs text-slate-400 mt-1 font-mono">{data.patient_key}</p>
             </div>
+
             <div className="grid grid-cols-2 gap-3 text-center">
               <div className="bg-slate-50/80 border border-slate-200/80 rounded-xl p-2.5 min-w-[75px]">
                 <p className="font-extrabold text-slate-900 text-base">{data.appointments?.length || 0}</p>
@@ -266,8 +305,8 @@ export default function ClinicPatientDetailPage() {
                 key={item}
                 type="button"
                 onClick={() => setTab(item)}
-                className={`px-3 py-2 rounded-full text-xs font-semibold ${
-                  tab === item ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-600'
+                className={`px-3 py-2 rounded-full text-xs font-semibold transition ${
+                  tab === item ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'
                 }`}
               >
                 {item}
@@ -530,41 +569,128 @@ export default function ClinicPatientDetailPage() {
               </div>
             )}
 
-            {tab === 'Protocols' && (
-              <div className="space-y-3">
-                {(data.exercise_prescriptions || []).map((rx) => (
-                  <div key={rx.id} className="rounded-xl border border-slate-100 p-4 flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-slate-900 flex items-center gap-2">
-                        {rx.is_protocol == 1 && <FaIcon icon="fa-notes-medical" className="text-teal-600 text-xs" />}
-                        {rx.title}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-1 capitalize">
-                        {rx.publish_status || 'published'} · {rx.status}
-                        {rx.published_at ? ` · published ${String(rx.published_at).slice(0, 10)}` : ''}
-                      </p>
-                      {rx.protocol_goals && <p className="text-xs text-slate-600 mt-2">{rx.protocol_goals}</p>}
-                    </div>
-                    {(rx.publish_status === 'draft') && (
+            {tab === 'Appointment History' && (
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">Status:</span>
+                    <select
+                      className="input-field text-xs py-1 px-2 font-medium bg-white"
+                      value={historyStatusFilter}
+                      onChange={(e) => setHistoryStatusFilter(e.target.value)}
+                    >
+                      <option value="all">All statuses</option>
+                      <option value="scheduled">Scheduled</option>
+                      <option value="confirmed">Confirmed</option>
+                      <option value="pending">Pending</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                      <option value="missed">Missed</option>
+                    </select>
+
+                    <span className="text-xs font-bold text-slate-700 uppercase tracking-wide ml-2">Type:</span>
+                    <select
+                      className="input-field text-xs py-1 px-2 font-medium bg-white"
+                      value={historyTypeFilter}
+                      onChange={(e) => setHistoryTypeFilter(e.target.value)}
+                    >
+                      <option value="all">All types</option>
+                      <option value="clinic">Clinic Visit</option>
+                      <option value="online">Online Consultation</option>
+                      <option value="home_visit">Home Visit</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {can('appointments.manage') && (
                       <button
                         type="button"
-                        className="btn-primary text-xs py-1.5 px-3"
-                        onClick={async () => {
-                          try {
-                            await exercisePrescriptions.publish(rx.id, { is_protocol: true });
-                            toast.success('Protocol published to patient');
-                            load();
-                          } catch (e) {
-                            toast.error(e.message || 'Publish failed');
-                          }
+                        className="btn-primary text-xs py-1.5 px-3 inline-flex items-center gap-1.5"
+                        onClick={() => {
+                          setBookingSeed({ patient: data.patient_key || patientKey });
+                          setBooking(true);
                         }}
                       >
-                        Publish to patient
+                        <FaIcon icon="fa-calendar-plus" /> Book Appointment
                       </button>
                     )}
+                    <button
+                      type="button"
+                      className="btn-outline text-xs py-1.5 px-3 text-slate-600 inline-flex items-center gap-1.5"
+                      onClick={() => setShowProtocolsSection((v) => !v)}
+                    >
+                      <FaIcon icon="fa-notes-medical" />
+                      {showProtocolsSection ? 'Hide Protocols' : `Treatment Protocols (${data.exercise_prescriptions?.length || 0})`}
+                    </button>
                   </div>
-                ))}
-                {!data.exercise_prescriptions?.length && <Empty>No treatment protocols / exercise plans.</Empty>}
+                </div>
+
+                {showProtocolsSection && (
+                  <div className="rounded-2xl border border-teal-200 bg-teal-50/30 p-4 space-y-3">
+                    <h3 className="font-bold text-sm text-teal-900 flex items-center gap-2">
+                      <FaIcon icon="fa-notes-medical" className="text-teal-600" />
+                      Treatment Protocols & Prescribed Exercise Plans
+                    </h3>
+                    {(data.exercise_prescriptions || []).map((rx) => (
+                      <div key={rx.id} className="rounded-xl border border-slate-200 bg-white p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+                        <div>
+                          <p className="font-semibold text-slate-900 flex items-center gap-2">
+                            {rx.is_protocol == 1 && <FaIcon icon="fa-notes-medical" className="text-teal-600 text-xs" />}
+                            {rx.title}
+                          </p>
+                          <p className="text-xs text-slate-500 mt-1 capitalize">
+                            {rx.publish_status || 'published'} · {rx.status}
+                            {rx.published_at ? ` · published ${String(rx.published_at).slice(0, 10)}` : ''}
+                          </p>
+                          {rx.protocol_goals && <p className="text-xs text-slate-600 mt-1.5">{rx.protocol_goals}</p>}
+                        </div>
+                        {rx.publish_status === 'draft' && (
+                          <button
+                            type="button"
+                            className="btn-primary text-xs py-1.5 px-3"
+                            onClick={async () => {
+                              try {
+                                await exercisePrescriptions.publish(rx.id, { is_protocol: true });
+                                toast.success('Protocol published to patient');
+                                load();
+                              } catch (e) {
+                                toast.error(e.message || 'Publish failed');
+                              }
+                            }}
+                          >
+                            Publish to patient
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    {!data.exercise_prescriptions?.length && <Empty>No treatment protocols / exercise plans.</Empty>}
+                  </div>
+                )}
+
+                {filteredAppointments.length === 0 ? (
+                  <Empty>No appointments matching the selected filters.</Empty>
+                ) : (
+                  <div className="space-y-3">
+                    {filteredAppointments.map((appt, idx) => (
+                      <div key={appt.id} className="relative">
+                        <RichSessionCard
+                          session={appt}
+                          index={idx}
+                        />
+                        <div className="mt-2 flex flex-wrap items-center justify-end gap-2 px-1">
+                          <button
+                            type="button"
+                            onClick={() => openConsultationRoom(appt.id)}
+                            className="btn-primary text-xs py-1.5 px-3 inline-flex items-center gap-1.5 shadow-xs"
+                          >
+                            <FaIcon icon="fa-comments" />
+                            {appt.status === 'completed' ? 'Reopen Consultation Room' : 'Open Consultation Room'}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -648,6 +774,35 @@ export default function ClinicPatientDetailPage() {
                   Progress reports can be created and shared from the reports dashboard using this patient key:{' '}
                   <strong>{data.patient_key}</strong>.
                 </p>
+              </div>
+            )}
+
+            {tab === 'Consultation Room' && (
+              <div className="space-y-4">
+                {data.appointments?.length > 0 && (
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <FaIcon icon="fa-video" className="text-primary-600 text-sm" />
+                      <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">Selected Consultation:</span>
+                    </div>
+                    <select
+                      className="input-field text-xs py-1.5 px-3 font-semibold text-slate-800 bg-white border-slate-300 rounded-lg max-w-full sm:max-w-md"
+                      value={activeConsultationApptId || ''}
+                      onChange={(e) => setSelectedConsultationApptId(Number(e.target.value))}
+                    >
+                      {data.appointments.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.booking_id || `Appt #${a.id}`} · {a.appointment_date} ({a.start_time ? String(a.start_time).slice(0, 5) : '—'}) · {String(a.consultation_type || 'online').replace(/_/g, ' ')} · {a.status}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <ConsultationRoom
+                  appointmentId={activeConsultationApptId}
+                  embedded={true}
+                />
               </div>
             )}
 
