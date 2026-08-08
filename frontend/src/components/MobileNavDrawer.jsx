@@ -320,7 +320,7 @@ export default function MobileNavDrawer({
             </NavCategoryCard>
           )}
 
-          {user && hasRole('super_admin', 'admin') && (
+          {user && hasRole('super_admin', 'admin', 'sub_admin') && (
             <NavCategoryCard title="Admin Portal">
               <PortalNavSections
                 links={ADMIN_PORTAL_LINKS}

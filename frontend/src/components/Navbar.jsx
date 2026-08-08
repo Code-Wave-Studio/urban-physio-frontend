@@ -252,10 +252,10 @@ export default function Navbar({ beforeLogo = null, headerSpacerClass = '', port
                 </Link>
               )}
 
-              {/* Universal right-side menu toggle (hamburger) button — hidden on desktop in portal mode */}
+              {/* Universal right-side menu toggle (hamburger) button */}
               <button
                 type="button"
-                className={`site-header-menu-btn ${portalMode ? 'lg:hidden' : ''}`}
+                className="site-header-menu-btn"
                 onClick={() => setMobileOpen((o) => !o)}
                 aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
                 aria-expanded={mobileOpen}

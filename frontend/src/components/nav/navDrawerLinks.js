@@ -71,7 +71,7 @@ export const CLINIC_SPEED_DIAL = [
 
 export function speedDialForRole(hasRole) {
   if (typeof hasRole === 'function') {
-    if (hasRole('super_admin', 'admin')) return ADMIN_SPEED_DIAL;
+    if (hasRole('super_admin', 'admin', 'sub_admin')) return ADMIN_SPEED_DIAL;
     if (hasRole('doctor')) return DOCTOR_SPEED_DIAL;
     if (hasRole('clinic', 'clinic_staff', 'clinic_admin')) return CLINIC_SPEED_DIAL;
     if (hasRole('patient')) return PATIENT_SPEED_DIAL;
