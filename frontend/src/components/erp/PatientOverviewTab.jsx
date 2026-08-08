@@ -87,6 +87,7 @@ export default function PatientOverviewTab({ patientKey, clinicId, initialData, 
   const [activePackage, setActivePkg] = useReducer((_, v) => v, initialData?.active_package || null);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [exerciseAlerts, setExerciseAlerts] = useState([]);
   const snapshotRef = useRef(pickProfile(initialData?.profile || {}));
   const loadedRef = useRef(false);
 
@@ -106,6 +107,19 @@ export default function PatientOverviewTab({ patientKey, clinicId, initialData, 
       // Keep initial / current data
     }
   }, [patientKey, clinicId]);
+
+  useEffect(() => {
+    if (clinicId && patientKey) {
+      import('../../services/api').then(({ clinicPortal }) => {
+        clinicPortal.patientExerciseFeedback(clinicId, patientKey)
+          .then((res) => {
+            const d = res.data || res || {};
+            if (d.alerts?.length) setExerciseAlerts(d.alerts);
+          })
+          .catch(() => {});
+      });
+    }
+  }, [clinicId, patientKey]);
 
   useEffect(() => {
     loadedRef.current = false;
@@ -171,6 +185,27 @@ export default function PatientOverviewTab({ patientKey, clinicId, initialData, 
   return (
     <div className="space-y-5">
       <UnsavedChangesGuard isDirty={editing && state.isDirty} />
+
+      {/* Rule-based Exercise Feedback Alerts Banner */}
+      {exerciseAlerts.length > 0 && (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50/60 p-4 space-y-2">
+          <div className="flex items-center gap-2 text-rose-900 font-bold text-sm">
+            <FaIcon icon="fa-triangle-exclamation" className="text-rose-600" />
+            <span>Exercise Rehabilitation Feedback Alerts ({exerciseAlerts.length})</span>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-2 text-xs">
+            {exerciseAlerts.map((alt) => (
+              <div key={alt.id} className="rounded-xl border border-rose-200 bg-white p-2.5 flex items-start gap-2">
+                <span className={`w-2 h-2 rounded-full mt-1 shrink-0 ${alt.severity === 'critical' ? 'bg-rose-500' : 'bg-amber-500'}`} />
+                <div>
+                  <p className="font-bold text-slate-900">{alt.title}</p>
+                  <p className="text-slate-600 mt-0.5">{alt.message}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>

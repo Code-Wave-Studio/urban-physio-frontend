@@ -759,6 +759,12 @@ export const clinicPortal = {
   submitAssessment: (clinicId, data) => api.post(`/clinic-portal/${clinicId}/assessments`, data),
   patientDetail: (clinicId, patientKey) =>
     api.get(`/clinic-portal/${clinicId}/patients/detail/${patientKey}`),
+  patientExerciseFeedback: (clinicId, patientKey, params) =>
+    api.get(`/clinic-portal/${clinicId}/patients/${patientKey}/exercise-feedback`, { params }),
+  updateExerciseFeedback: (clinicId, logId, data) =>
+    api.put(`/clinic-portal/${clinicId}/exercise-feedback/${logId}`, data),
+  convertFeedbackToClinicalNote: (clinicId, logId) =>
+    api.post(`/clinic-portal/${clinicId}/exercise-feedback/${logId}/convert-to-note`),
   patientAssessments: (clinicId, patientKey) =>
     api.get(`/clinic-portal/${clinicId}/patients/${patientKey}/assessments`),
   createBooking: (clinicId, data) => api.post(`/clinic-portal/${clinicId}/bookings`, data),

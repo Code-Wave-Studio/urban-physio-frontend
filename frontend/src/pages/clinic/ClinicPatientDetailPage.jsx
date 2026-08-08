@@ -12,11 +12,13 @@ import PatientOverviewTab from '../../components/erp/PatientOverviewTab';
 import PatientTimelineTab from '../../components/erp/PatientTimelineTab';
 import AssessmentResponseForm from '../../components/erp/AssessmentResponseForm';
 import PackageCard from '../../components/clinic/PackageCard';
-import PatientCommLog from '../../components/clinic/communication/PatientCommLog';
 import PatientAvatar from '../../components/PatientAvatar';
 import PatientPrescriptionsTab from '../../components/clinic/patients/PatientPrescriptionsTab';
+import PatientClinicalNotesTab from '../../components/clinic/patients/PatientClinicalNotesTab';
+import PatientExerciseFeedbackTab from '../../components/clinic/patients/PatientExerciseFeedbackTab';
+import PatientPaymentsTab from '../../components/clinic/patients/PatientPaymentsTab';
 
-const TABS = ['Overview', 'Timeline', 'Assessments', 'Packages', 'Appointment History', 'Payments', 'Prescriptions', 'Documents', 'Reports', 'Consultation Room', 'Communication'];
+const TABS = ['Overview', 'Clinical Notes', 'Exercise Feedback', 'Timeline', 'Assessments', 'Packages', 'Appointment History', 'Payments', 'Prescriptions', 'Documents', 'Reports', 'Consultation Room', 'Communication'];
 const money = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 const parse = (value) => {
   if (typeof value !== 'string') return value || {};
@@ -321,6 +323,25 @@ export default function ClinicPatientDetailPage() {
                 clinicId={clinicId}
                 initialData={data._erpOverview}
                 onSaved={() => load()}
+              />
+            )}
+
+            {tab === 'Clinical Notes' && (
+              <PatientClinicalNotesTab
+                clinicId={clinicId}
+                patientKey={data.patient_key || patientKey}
+                appointments={data.appointments || []}
+              />
+            )}
+
+            {tab === 'Exercise Feedback' && (
+              <PatientExerciseFeedbackTab
+                clinicId={clinicId}
+                patientKey={data.patient_key || patientKey}
+                onConvertToNoteSuccess={() => {
+                  setTab('Clinical Notes');
+                  load();
+                }}
               />
             )}
 
@@ -695,47 +716,12 @@ export default function ClinicPatientDetailPage() {
             )}
 
             {tab === 'Payments' && (
-              <>
-                {!data.payments?.length ? (
-                  <Empty>No payments recorded.</Empty>
-                ) : (
-                  <>
-                    <div className="portal-mobile-list !p-0 space-y-3">
-                      {(data.payments || []).map((pay) => (
-                        <article key={pay.id} className="rounded-xl border border-slate-100 p-3 flex justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold">{pay.booking_id || '—'}</p>
-                            <p className="text-xs text-slate-500">{String(pay.created_at || pay.appointment_date || '').slice(0, 10)} · <span className="capitalize">{pay.status || '—'}</span></p>
-                          </div>
-                          <p className="font-semibold text-emerald-700 shrink-0">{money(pay.amount)}</p>
-                        </article>
-                      ))}
-                    </div>
-                    <div className="portal-desktop-table portal-table-wrap">
-                      <table className="w-full text-sm text-left">
-                        <thead className="text-[11px] uppercase text-slate-500 bg-slate-50">
-                          <tr>
-                            <th className="px-3 py-2">Date</th>
-                            <th className="px-3 py-2">Booking</th>
-                            <th className="px-3 py-2">Status</th>
-                            <th className="px-3 py-2 text-right">Amount</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {(data.payments || []).map((pay) => (
-                            <tr key={pay.id} className="border-t">
-                              <td className="px-3 py-3 whitespace-nowrap">{String(pay.created_at || pay.appointment_date || '').slice(0, 10)}</td>
-                              <td className="px-3 py-3">{pay.booking_id || '—'}</td>
-                              <td className="px-3 py-3 capitalize">{pay.status || '—'}</td>
-                              <td className="px-3 py-3 text-right font-semibold">{money(pay.amount)}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </>
-                )}
-              </>
+              <PatientPaymentsTab
+                clinicId={clinicId}
+                patientKey={data.patient_key || patientKey}
+                data={data}
+                onRefresh={load}
+              />
             )}
 
             {tab === 'Prescriptions' && (
