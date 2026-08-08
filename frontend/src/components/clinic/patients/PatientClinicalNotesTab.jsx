@@ -15,6 +15,17 @@ const NOTE_TYPE_MAP = Object.fromEntries(NOTE_TYPES.map((t) => [t.id, t]));
 
 const TAG_PALETTE = ['#0d9488', '#0284c7', '#7c3aed', '#db2777', '#ea580c', '#ca8a04', '#64748b'];
 
+function ModalScrollLock({ children }) {
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+  return children;
+}
+
 function stripHtml(html) {
   const d = document.createElement('div');
   d.innerHTML = html || '';
@@ -300,210 +311,227 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
 
       {/* Editor Modal */}
       {showEditor && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-xs overflow-y-auto transition-opacity"
-          onClick={(e) => e.target === e.currentTarget && setShowEditor(false)}
-        >
-          <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-slate-100 my-auto flex flex-col max-h-[90vh] overflow-hidden transform transition-all">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-600">
-                  <FaIcon icon="fa-pen-to-square" className="text-sm" />
+        <ModalScrollLock>
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 md:p-8 bg-slate-950/60 backdrop-blur-md overflow-y-auto transition-opacity animate-in fade-in duration-200"
+            onClick={(e) => e.target === e.currentTarget && setShowEditor(false)}
+          >
+            <div className="relative w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-slate-100/90 my-auto flex flex-col max-h-[85vh] sm:max-h-[90vh] overflow-hidden transform transition-all animate-in zoom-in-95 duration-200">
+              {/* Sticky Top Header */}
+              <div className="px-6 py-4.5 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-teal-50 border border-teal-100/80 flex items-center justify-center text-teal-600 shadow-xs">
+                    <FaIcon icon="fa-pen-to-square" className="text-sm" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 text-base sm:text-lg leading-snug">
+                      {editingId ? 'Edit Clinical Note' : 'Add Clinical Note'}
+                    </h3>
+                    <p className="text-xs text-slate-500 font-normal">Record clinical observations, assessments & treatment plans</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-bold text-slate-900 text-base">
-                    {editingId ? 'Edit Clinical Note' : 'Add Clinical Note'}
-                  </h3>
-                  <p className="text-[11px] text-slate-500">Record clinical observations, assessments & treatment plans</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-                onClick={() => setShowEditor(false)}
-              >
-                <FaIcon icon="fa-xmark" className="text-base" />
-              </button>
-            </div>
-
-            {/* Modal Scrollable Form Body */}
-            <form onSubmit={saveNote} className="p-6 overflow-y-auto space-y-4">
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    Title <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Day 3 Post-op Quadriceps Rehabilitation"
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium transition-all"
-                    value={form.title}
-                    onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    Note Type <span className="text-rose-500">*</span>
-                  </label>
-                  <select
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium transition-all"
-                    value={form.note_type}
-                    onChange={(e) => setForm((p) => ({ ...p, note_type: e.target.value }))}
-                  >
-                    {NOTE_TYPES.map((t) => (
-                      <option key={t.id} value={t.id}>{t.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">Therapist / Doctor Name</label>
-                  <input
-                    type="text"
-                    placeholder="Doctor or Therapist Name"
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
-                    value={form.therapist_name}
-                    onChange={(e) => setForm((p) => ({ ...p, therapist_name: e.target.value }))}
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">Appointment Reference <span className="text-slate-400 font-normal">(Optional)</span></label>
-                  <select
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
-                    value={form.appointment_id}
-                    onChange={(e) => setForm((p) => ({ ...p, appointment_id: e.target.value }))}
-                  >
-                    <option value="">None / General Note</option>
-                    {appointments.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.booking_id || `Appt #${a.id}`} · {a.appointment_date} ({a.start_time?.slice(0, 5) || '—'})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <button
+                  type="button"
+                  className="w-9 h-9 rounded-full bg-slate-100/80 hover:bg-slate-200/80 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-all duration-200 hover:rotate-90"
+                  onClick={() => setShowEditor(false)}
+                  title="Close modal"
+                >
+                  <FaIcon icon="fa-xmark" className="text-sm" />
+                </button>
               </div>
 
-              {/* Rich Editor Toolbar */}
-              <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">
-                  Note Content <span className="text-rose-500">*</span>
-                </label>
-                <div className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/50 transition-all focus-within:ring-2 focus-within:ring-teal-500/20 focus-within:border-teal-500">
-                  <div className="flex flex-wrap items-center gap-1 p-2 border-b border-slate-200 bg-slate-100/70 text-xs">
-                    <button type="button" onClick={() => execCmd('formatBlock', '<h1>')} title="Heading 1" className="px-2 py-1 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 font-bold text-slate-800 transition-colors">H1</button>
-                    <button type="button" onClick={() => execCmd('formatBlock', '<h2>')} title="Heading 2" className="px-2 py-1 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 font-bold text-xs text-slate-800 transition-colors">H2</button>
-                    <div className="h-4 w-px bg-slate-300 mx-1" />
-                    <button type="button" onClick={() => execCmd('bold')} title="Bold" className="px-2.5 py-1 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 font-bold text-slate-800 transition-colors">B</button>
-                    <button type="button" onClick={() => execCmd('italic')} title="Italic" className="px-2.5 py-1 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 italic text-slate-800 transition-colors">I</button>
-                    <button type="button" onClick={() => execCmd('underline')} title="Underline" className="px-2.5 py-1 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 underline text-slate-800 transition-colors">U</button>
-                    <div className="h-4 w-px bg-slate-300 mx-1" />
-                    <button type="button" onClick={() => execCmd('insertUnorderedList')} title="Bullet List" className="p-1.5 px-2.5 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 transition-colors">
-                      <FaIcon icon="fa-list-ul" />
-                    </button>
-                    <button type="button" onClick={() => execCmd('insertOrderedList')} title="Numbered List" className="p-1.5 px-2.5 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 transition-colors">
-                      <FaIcon icon="fa-list-ol" />
-                    </button>
-                    <button type="button" onClick={insertChecklist} title="Checklist Item" className="p-1.5 px-2.5 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 transition-colors">
-                      <FaIcon icon="fa-square-check" />
-                    </button>
-                    <button type="button" onClick={insertLink} title="Insert Link" className="p-1.5 px-2.5 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 transition-colors">
-                      <FaIcon icon="fa-link" />
-                    </button>
+              {/* Scrollable Form Body Container */}
+              <form onSubmit={saveNote} className="flex flex-col flex-1 overflow-hidden">
+                <div className="p-6 overflow-y-auto flex-1 space-y-4 sm:space-y-5">
+                  <div className="grid sm:grid-cols-2 gap-4 sm:gap-5">
+                    <div>
+                      <label className="text-xs font-semibold text-slate-700 block mb-1.5">
+                        Title <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Day 3 Post-op Quadriceps Rehabilitation"
+                        className="w-full rounded-2xl border border-slate-200 bg-slate-50/30 px-4 py-3 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 font-medium transition-all shadow-xs"
+                        value={form.title}
+                        onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold text-slate-700 block mb-1.5">
+                        Note Type <span className="text-rose-500">*</span>
+                      </label>
+                      <select
+                        className="w-full rounded-2xl border border-slate-200 bg-slate-50/30 px-4 py-3 text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 font-medium transition-all shadow-xs"
+                        value={form.note_type}
+                        onChange={(e) => setForm((p) => ({ ...p, note_type: e.target.value }))}
+                      >
+                        {NOTE_TYPES.map((t) => (
+                          <option key={t.id} value={t.id}>{t.label}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold text-slate-700 block mb-1.5">Therapist / Doctor Name</label>
+                      <input
+                        type="text"
+                        placeholder="Doctor or Therapist Name"
+                        className="w-full rounded-2xl border border-slate-200 bg-slate-50/30 px-4 py-3 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 font-medium transition-all shadow-xs"
+                        value={form.therapist_name}
+                        onChange={(e) => setForm((p) => ({ ...p, therapist_name: e.target.value }))}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold text-slate-700 block mb-1.5">
+                        Appointment Reference <span className="text-slate-400 font-normal">(Optional)</span>
+                      </label>
+                      <select
+                        className="w-full rounded-2xl border border-slate-200 bg-slate-50/30 px-4 py-3 text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 font-medium transition-all shadow-xs"
+                        value={form.appointment_id}
+                        onChange={(e) => setForm((p) => ({ ...p, appointment_id: e.target.value }))}
+                      >
+                        <option value="">None / General Note</option>
+                        {appointments.map((a) => (
+                          <option key={a.id} value={a.id}>
+                            {a.booking_id || `Appt #${a.id}`} · {a.appointment_date} ({a.start_time?.slice(0, 5) || '—'})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
 
-                  <div
-                    ref={editorRef}
-                    contentEditable
-                    className="min-h-[140px] max-h-[260px] p-4 text-sm focus:outline-none bg-white overflow-y-auto leading-relaxed text-slate-800"
-                    onInput={() => {
-                      if (editorRef.current) {
-                        setForm((p) => ({ ...p, body_html: editorRef.current.innerHTML }));
-                      }
-                    }}
-                  />
-                </div>
-              </div>
+                  {/* Rich Editor Toolbar */}
+                  <div>
+                    <label className="text-xs font-semibold text-slate-700 block mb-1.5">
+                      Note Content <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/30 transition-all focus-within:ring-4 focus-within:ring-teal-500/10 focus-within:border-teal-500 shadow-xs">
+                      <div className="flex flex-wrap items-center gap-1 p-2 border-b border-slate-200/80 bg-slate-100/70 text-xs">
+                        <button type="button" onClick={() => execCmd('formatBlock', '<h1>')} title="Heading 1" className="px-2.5 py-1 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 font-bold text-slate-800 transition-colors">H1</button>
+                        <button type="button" onClick={() => execCmd('formatBlock', '<h2>')} title="Heading 2" className="px-2.5 py-1 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 font-bold text-xs text-slate-800 transition-colors">H2</button>
+                        <div className="h-4 w-px bg-slate-300 mx-1" />
+                        <button type="button" onClick={() => execCmd('bold')} title="Bold" className="px-2.5 py-1 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 font-bold text-slate-800 transition-colors">B</button>
+                        <button type="button" onClick={() => execCmd('italic')} title="Italic" className="px-2.5 py-1 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 italic text-slate-800 transition-colors">I</button>
+                        <button type="button" onClick={() => execCmd('underline')} title="Underline" className="px-2.5 py-1 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 underline text-slate-800 transition-colors">U</button>
+                        <div className="h-4 w-px bg-slate-300 mx-1" />
+                        <button type="button" onClick={() => execCmd('insertUnorderedList')} title="Bullet List" className="p-1.5 px-2.5 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 transition-colors">
+                          <FaIcon icon="fa-list-ul" />
+                        </button>
+                        <button type="button" onClick={() => execCmd('insertOrderedList')} title="Numbered List" className="p-1.5 px-2.5 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 transition-colors">
+                          <FaIcon icon="fa-list-ol" />
+                        </button>
+                        <button type="button" onClick={insertChecklist} title="Checklist Item" className="p-1.5 px-2.5 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 transition-colors">
+                          <FaIcon icon="fa-square-check" />
+                        </button>
+                        <button type="button" onClick={insertLink} title="Insert Link" className="p-1.5 px-2.5 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 transition-colors">
+                          <FaIcon icon="fa-link" />
+                        </button>
+                      </div>
 
-              {/* Tags & Attachments */}
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">Tags</label>
-                  <div className="flex gap-2 mb-2">
+                      <div
+                        ref={editorRef}
+                        contentEditable
+                        className="min-h-[140px] max-h-[260px] p-4 text-sm focus:outline-none bg-white overflow-y-auto leading-relaxed text-slate-800"
+                        onInput={() => {
+                          if (editorRef.current) {
+                            setForm((p) => ({ ...p, body_html: editorRef.current.innerHTML }));
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Tags & Attachments */}
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-semibold text-slate-700 block mb-1.5">Tags</label>
+                      <div className="flex gap-2 mb-2">
+                        <input
+                          type="text"
+                          placeholder="Add tag and press Enter"
+                          className="w-full rounded-2xl border border-slate-200 bg-slate-50/30 px-3.5 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all shadow-xs"
+                          value={tagInput}
+                          onChange={(e) => setTagInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              addTag();
+                            }
+                          }}
+                        />
+                        <button type="button" onClick={addTag} className="px-4 py-2 rounded-2xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-all shadow-xs">Add</button>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {form.tags.map((t, idx) => (
+                          <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-white shadow-xs" style={{ backgroundColor: t.color }}>
+                            {t.label}
+                            <button type="button" onClick={() => removeTag(idx)} className="hover:opacity-80 font-bold">×</button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold text-slate-700 block mb-1.5">
+                        Attachment Link <span className="text-slate-400 font-normal">(Optional)</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="https://... or document URL"
+                        className="w-full rounded-2xl border border-slate-200 bg-slate-50/30 px-4 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all shadow-xs"
+                        value={form.attachment_url}
+                        onChange={(e) => setForm((p) => ({ ...p, attachment_url: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sticky Bottom Footer */}
+                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+                  <label className="inline-flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer select-none">
                     <input
-                      type="text"
-                      placeholder="Add tag and press Enter"
-                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
-                      value={tagInput}
-                      onChange={(e) => setTagInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          addTag();
-                        }
-                      }}
+                      type="checkbox"
+                      className="rounded-lg text-teal-600 focus:ring-teal-500 h-4 w-4 border-slate-300"
+                      checked={form.is_pinned}
+                      onChange={(e) => setForm((p) => ({ ...p, is_pinned: e.target.checked }))}
                     />
-                    <button type="button" onClick={addTag} className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">Add</button>
+                    Pin note to top of patient clinical notes
+                  </label>
+
+                  <div className="flex items-center gap-3 justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setShowEditor(false)}
+                      className="px-5 py-2.5 sm:py-3 rounded-2xl border border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all shadow-xs"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="px-6 py-2.5 sm:py-3 rounded-2xl bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white text-xs sm:text-sm font-semibold shadow-md shadow-teal-600/20 disabled:opacity-60 transition-all flex items-center gap-2"
+                    >
+                      {saving ? (
+                        <>
+                          <FaIcon icon="fa-spinner" className="animate-spin text-xs" />
+                          Saving Note…
+                        </>
+                      ) : (
+                        <>
+                          <FaIcon icon="fa-check" className="text-xs" />
+                          {editingId ? 'Update Clinical Note' : 'Save Clinical Note'}
+                        </>
+                      )}
+                    </button>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {form.tags.map((t, idx) => (
-                      <span key={idx} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-white shadow-xs" style={{ backgroundColor: t.color }}>
-                        {t.label}
-                        <button type="button" onClick={() => removeTag(idx)} className="hover:opacity-80 font-bold">×</button>
-                      </span>
-                    ))}
-                  </div>
                 </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">Attachment Link <span className="text-slate-400 font-normal">(Optional)</span></label>
-                  <input
-                    type="text"
-                    placeholder="https://... or document URL"
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
-                    value={form.attachment_url}
-                    onChange={(e) => setForm((p) => ({ ...p, attachment_url: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              {/* Pin & Footer Actions */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-slate-100">
-                <label className="inline-flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    className="rounded-md text-teal-600 focus:ring-teal-500 h-4 w-4 border-slate-300"
-                    checked={form.is_pinned}
-                    onChange={(e) => setForm((p) => ({ ...p, is_pinned: e.target.checked }))}
-                  />
-                  Pin note to top of patient clinical notes
-                </label>
-
-                <div className="flex items-center gap-3 justify-end">
-                  <button type="button" onClick={() => setShowEditor(false)} className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
-                    Cancel
-                  </button>
-                  <button type="submit" disabled={saving} className="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white text-xs font-semibold shadow-sm shadow-teal-600/20 disabled:opacity-60 transition-all flex items-center gap-2">
-                    {saving ? (
-                      <>
-                        <FaIcon icon="fa-spinner" className="animate-spin text-xs" />
-                        Saving Note…
-                      </>
-                    ) : (
-                      <>
-                        <FaIcon icon="fa-check" className="text-xs" />
-                        {editingId ? 'Update Clinical Note' : 'Save Clinical Note'}
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
-        </div>
+        </ModalScrollLock>
       )}
 
       {/* Notes List */}
@@ -651,71 +679,74 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
 
       {/* Note Detail Modal */}
       {detailModalNote && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-xs overflow-y-auto transition-opacity"
-          onClick={(e) => e.target === e.currentTarget && setDetailModalNote(null)}
-        >
-          <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-100 my-auto flex flex-col max-h-[85vh] overflow-hidden transform transition-all">
-            {/* Header */}
-            <div className="flex items-start justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-              <div>
-                <span className="text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full bg-teal-50 border border-teal-100 text-teal-700">
-                  {detailModalNote.note_type?.replace(/_/g, ' ')}
-                </span>
-                <h3 className="font-bold text-slate-900 text-base sm:text-lg mt-1.5">{detailModalNote.title}</h3>
-                <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-2">
-                  <span>{detailModalNote.created_at ? new Date(detailModalNote.created_at).toLocaleString('en-IN') : '—'}</span>
-                  <span>·</span>
-                  <span className="font-medium text-slate-700">{detailModalNote.therapist_name || 'Therapist'}</span>
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setDetailModalNote(null)}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-              >
-                <FaIcon icon="fa-xmark" className="text-base" />
-              </button>
-            </div>
-
-            {/* Scrollable Body */}
-            <div className="p-6 overflow-y-auto space-y-4">
-              <div
-                className="prose prose-slate max-w-none text-xs sm:text-sm leading-relaxed text-slate-800"
-                dangerouslySetInnerHTML={{ __html: detailModalNote.body_html || detailModalNote.body_text }}
-              />
-
-              {detailModalNote.attachment_url && (
-                <div className="rounded-xl border border-slate-200 p-3.5 bg-slate-50 flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold text-slate-700">Attachment File</p>
-                    <p className="text-[11px] text-slate-500 truncate max-w-md">{detailModalNote.attachment_url}</p>
-                  </div>
-                  <a
-                    href={detailModalNote.attachment_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium inline-flex items-center gap-1.5 shrink-0 transition-colors"
-                  >
-                    <FaIcon icon="fa-arrow-up-right-from-square" className="text-[10px]" />
-                    Open Attachment
-                  </a>
+        <ModalScrollLock>
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 md:p-8 bg-slate-950/60 backdrop-blur-md overflow-y-auto transition-opacity animate-in fade-in duration-200"
+            onClick={(e) => e.target === e.currentTarget && setDetailModalNote(null)}
+          >
+            <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-100/90 my-auto flex flex-col max-h-[85vh] sm:max-h-[90vh] overflow-hidden transform transition-all animate-in zoom-in-95 duration-200">
+              {/* Sticky Top Header */}
+              <div className="px-6 py-4.5 border-b border-slate-100 bg-slate-50/70 flex items-start justify-between shrink-0">
+                <div>
+                  <span className="text-[10px] uppercase font-bold px-3 py-1 rounded-full bg-teal-50 border border-teal-100 text-teal-700">
+                    {detailModalNote.note_type?.replace(/_/g, ' ')}
+                  </span>
+                  <h3 className="font-bold text-slate-900 text-base sm:text-lg leading-snug mt-2">{detailModalNote.title}</h3>
+                  <p className="text-xs text-slate-500 mt-1 flex items-center gap-2">
+                    <span>{detailModalNote.created_at ? new Date(detailModalNote.created_at).toLocaleString('en-IN') : '—'}</span>
+                    <span>·</span>
+                    <span className="font-semibold text-slate-700">{detailModalNote.therapist_name || 'Therapist'}</span>
+                  </p>
                 </div>
-              )}
-            </div>
+                <button
+                  type="button"
+                  onClick={() => setDetailModalNote(null)}
+                  className="w-9 h-9 rounded-full bg-slate-100/80 hover:bg-slate-200/80 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-all duration-200 hover:rotate-90 shrink-0"
+                  title="Close modal"
+                >
+                  <FaIcon icon="fa-xmark" className="text-sm" />
+                </button>
+              </div>
 
-            {/* Footer */}
-            <div className="flex items-center justify-end px-6 py-3.5 border-t border-slate-100 bg-slate-50/50">
-              <button
-                type="button"
-                onClick={() => setDetailModalNote(null)}
-                className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-sm transition-colors"
-              >
-                Close
-              </button>
+              {/* Scrollable Body Container */}
+              <div className="p-6 sm:p-7 overflow-y-auto flex-1 space-y-5">
+                <div
+                  className="prose prose-slate max-w-none text-xs sm:text-sm leading-relaxed text-slate-800"
+                  dangerouslySetInnerHTML={{ __html: detailModalNote.body_html || detailModalNote.body_text }}
+                />
+
+                {detailModalNote.attachment_url && (
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 flex items-center justify-between gap-3 shadow-xs">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold text-slate-900">Attachment File</p>
+                      <p className="text-xs text-slate-500 truncate mt-0.5">{detailModalNote.attachment_url}</p>
+                    </div>
+                    <a
+                      href={detailModalNote.attachment_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold inline-flex items-center gap-2 shrink-0 shadow-xs transition-colors"
+                    >
+                      <FaIcon icon="fa-arrow-up-right-from-square" className="text-xs" />
+                      Open File
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              {/* Sticky Bottom Footer */}
+              <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/70 flex items-center justify-end shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setDetailModalNote(null)}
+                  className="px-6 py-2.5 sm:py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold shadow-sm transition-colors"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        </ModalScrollLock>
       )}
     </div>
   );

@@ -3,6 +3,17 @@ import toast from 'react-hot-toast';
 import FaIcon from '../../FaIcon';
 import { clinicPortal } from '../../../services/api';
 
+function ModalScrollLock({ children }) {
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+  return children;
+}
+
 export default function PatientExerciseFeedbackTab({ clinicId, patientKey, onConvertToNoteSuccess }) {
   const [feedbackList, setFeedbackList] = useState([]);
   const [summary, setSummary] = useState({ total: 0, high_pain_count: 0, skipped_count: 0, pending_count: 0 });
@@ -358,102 +369,107 @@ export default function PatientExerciseFeedbackTab({ clinicId, patientKey, onCon
 
       {/* Reply & Internal Note Modal */}
       {replyModalLog && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-xs overflow-y-auto transition-opacity"
-          onClick={(e) => e.target === e.currentTarget && setReplyModalLog(null)}
-        >
-          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-100 my-auto flex flex-col overflow-hidden transform transition-all">
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-600">
-                  <FaIcon icon="fa-reply" className="text-sm" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900 text-base">Therapist Response & Note</h3>
-                  <p className="text-[11px] text-slate-500">Provide exercise guidance & internal team observations</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setReplyModalLog(null)}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-              >
-                <FaIcon icon="fa-xmark" className="text-base" />
-              </button>
-            </div>
-
-            {/* Form Body */}
-            <form onSubmit={saveReplyAndNote} className="p-6 space-y-4">
-              <div className="bg-slate-50 border border-slate-200/80 p-3.5 rounded-2xl text-xs space-y-1">
-                <div className="flex items-center justify-between">
-                  <p className="font-bold text-slate-900 text-xs">{replyModalLog.exercise_name}</p>
-                  <span className="text-[10px] font-medium text-slate-500">Date: {replyModalLog.log_date}</span>
-                </div>
-                {replyModalLog.patient_comment && (
-                  <div className="border-t border-slate-200/60 pt-2 mt-2">
-                    <p className="text-[11px] text-slate-500 uppercase font-bold tracking-wider mb-0.5">Patient Comment:</p>
-                    <p className="text-slate-700 italic bg-white p-2 rounded-xl border border-slate-100">"{replyModalLog.patient_comment}"</p>
+        <ModalScrollLock>
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 md:p-8 bg-slate-950/60 backdrop-blur-md overflow-y-auto transition-opacity animate-in fade-in duration-200"
+            onClick={(e) => e.target === e.currentTarget && setReplyModalLog(null)}
+          >
+            <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-100/90 my-auto flex flex-col max-h-[85vh] sm:max-h-[90vh] overflow-hidden transform transition-all animate-in zoom-in-95 duration-200">
+              {/* Sticky Top Header */}
+              <div className="px-6 py-4.5 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-teal-50 border border-teal-100/80 flex items-center justify-center text-teal-600 shadow-xs">
+                    <FaIcon icon="fa-reply" className="text-sm" />
                   </div>
-                )}
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">
-                  Reply to Patient <span className="text-slate-400 font-normal">(Visible on Patient Portal)</span>
-                </label>
-                <textarea
-                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 resize-none transition-all"
-                  rows={3}
-                  placeholder="Type guidance or exercise adjustment instructions..."
-                  value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">
-                  Internal Note <span className="text-purple-600 font-normal">(Clinic Staff Only)</span>
-                </label>
-                <textarea
-                  className="w-full rounded-xl border border-purple-200 bg-purple-50/20 px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 resize-none transition-all"
-                  rows={2}
-                  placeholder="Internal observations or notes for team..."
-                  value={internalNoteText}
-                  onChange={(e) => setInternalNoteText(e.target.value)}
-                />
-              </div>
-
-              {/* Footer Actions */}
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 mt-6">
+                  <div>
+                    <h3 className="font-bold text-slate-900 text-base sm:text-lg leading-snug">Therapist Response & Note</h3>
+                    <p className="text-xs text-slate-500 font-normal">Provide exercise guidance & internal team observations</p>
+                  </div>
+                </div>
                 <button
                   type="button"
                   onClick={() => setReplyModalLog(null)}
-                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                  className="w-9 h-9 rounded-full bg-slate-100/80 hover:bg-slate-200/80 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-all duration-200 hover:rotate-90"
+                  title="Close modal"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submittingAction}
-                  className="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white text-xs font-semibold shadow-sm shadow-teal-600/20 disabled:opacity-60 transition-all flex items-center gap-2"
-                >
-                  {submittingAction ? (
-                    <>
-                      <FaIcon icon="fa-spinner" className="animate-spin text-xs" />
-                      Saving Response…
-                    </>
-                  ) : (
-                    <>
-                      <FaIcon icon="fa-check" className="text-xs" />
-                      Save Response & Note
-                    </>
-                  )}
+                  <FaIcon icon="fa-xmark" className="text-sm" />
                 </button>
               </div>
-            </form>
+
+              {/* Scrollable Form Body Container */}
+              <form onSubmit={saveReplyAndNote} className="flex flex-col flex-1 overflow-hidden">
+                <div className="p-6 overflow-y-auto flex-1 space-y-4 sm:space-y-5">
+                  <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl text-xs space-y-1.5 shadow-xs">
+                    <div className="flex items-center justify-between">
+                      <p className="font-bold text-slate-900 text-xs sm:text-sm">{replyModalLog.exercise_name}</p>
+                      <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-200/70 text-slate-700">Date: {replyModalLog.log_date}</span>
+                    </div>
+                    {replyModalLog.patient_comment && (
+                      <div className="border-t border-slate-200/60 pt-2.5 mt-2">
+                        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Patient Comment:</p>
+                        <p className="text-slate-700 italic bg-white p-3 rounded-xl border border-slate-100 text-xs shadow-2xs">"{replyModalLog.patient_comment}"</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-slate-700 block mb-1.5">
+                      Reply to Patient <span className="text-slate-400 font-normal">(Visible on Patient Portal)</span>
+                    </label>
+                    <textarea
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50/30 px-4 py-3 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 resize-none transition-all shadow-xs"
+                      rows={3}
+                      placeholder="Type guidance or exercise adjustment instructions..."
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-slate-700 block mb-1.5">
+                      Internal Note <span className="text-purple-600 font-normal">(Clinic Staff Only)</span>
+                    </label>
+                    <textarea
+                      className="w-full rounded-2xl border border-purple-200/80 bg-purple-50/30 px-4 py-3 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 resize-none transition-all shadow-xs"
+                      rows={2}
+                      placeholder="Internal observations or notes for team..."
+                      value={internalNoteText}
+                      onChange={(e) => setInternalNoteText(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Sticky Bottom Footer */}
+                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/70 flex items-center justify-end gap-3 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setReplyModalLog(null)}
+                    className="px-5 py-2.5 sm:py-3 rounded-2xl border border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all shadow-xs"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submittingAction}
+                    className="px-6 py-2.5 sm:py-3 rounded-2xl bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white text-xs sm:text-sm font-semibold shadow-md shadow-teal-600/20 disabled:opacity-60 transition-all flex items-center gap-2"
+                  >
+                    {submittingAction ? (
+                      <>
+                        <FaIcon icon="fa-spinner" className="animate-spin text-xs" />
+                        Saving Response…
+                      </>
+                    ) : (
+                      <>
+                        <FaIcon icon="fa-check" className="text-xs" />
+                        Save Response & Note
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
+        </ModalScrollLock>
       )}
     </div>
   );
