@@ -149,7 +149,7 @@ export default function Navbar({ beforeLogo = null, headerSpacerClass = '', port
           scrolled ? 'glass-nav--scrolled' : ''
         }`}
       >
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+        <div className={portalMode ? 'w-full px-3 sm:px-4 lg:px-6' : 'max-w-7xl mx-auto px-3 sm:px-4 lg:px-8'}>
           <div className="flex items-center h-14 sm:h-16 w-full">
             {/* Logo + optional admin sidebar toggle */}
             <div className="flex items-center gap-2 shrink-0">
@@ -252,10 +252,10 @@ export default function Navbar({ beforeLogo = null, headerSpacerClass = '', port
                 </Link>
               )}
 
-              {/* Universal right-side menu toggle (hamburger) button */}
+              {/* Universal right-side menu toggle (hamburger) button — hidden on desktop in portal mode */}
               <button
                 type="button"
-                className="site-header-menu-btn"
+                className={`site-header-menu-btn ${portalMode ? 'lg:hidden' : ''}`}
                 onClick={() => setMobileOpen((o) => !o)}
                 aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
                 aria-expanded={mobileOpen}

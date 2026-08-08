@@ -1762,4 +1762,251 @@ html {
   .doc-chip--idle {
     @apply border-slate-200 bg-white/70 text-slate-600 hover:border-primary-200;
   }
+
+  /* ================================================================
+     APPLICATION SHELL — Persistent sidebar + workspace layout
+     ================================================================ */
+
+  :root {
+    --shell-sidebar-w: 264px;
+    --shell-sidebar-w-collapsed: 0px;
+    --shell-sidebar-transition: 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  @media (min-width: 1024px) {
+    :root {
+      --shell-sidebar-w-collapsed: 60px;
+    }
+  }
+
+  /* Outer shell container — fills viewport, no overflow */
+  .app-shell {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100dvh;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Body area below the header */
+  .app-shell__body {
+    display: flex;
+    flex: 1 1 0%;
+    min-height: 0;
+    padding-top: var(--site-header-height, 3.5rem);
+    position: relative;
+  }
+
+  /* Sidebar — persistent left panel */
+  .app-shell__sidebar {
+    position: fixed;
+    top: var(--site-header-height, 3.5rem);
+    left: 0;
+    bottom: 0;
+    width: var(--shell-sidebar-w);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.92) 0%,
+      rgba(255, 247, 237, 0.7) 40%,
+      rgba(255, 255, 255, 0.88) 100%
+    );
+    backdrop-filter: blur(20px) saturate(1.5);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    border-right: 1px solid rgba(226, 232, 240, 0.7);
+    box-shadow: 4px 0 24px -8px rgba(15, 23, 42, 0.06);
+    transition: width var(--shell-sidebar-transition),
+                transform var(--shell-sidebar-transition);
+    overflow: hidden;
+  }
+
+  .app-shell__sidebar-scroll {
+    flex: 1 1 0%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0.75rem;
+    min-height: 0;
+  }
+
+  .app-shell__sidebar-footer {
+    flex-shrink: 0;
+    padding: 0.5rem 0.75rem 0.75rem;
+    border-top: 1px solid rgba(226, 232, 240, 0.5);
+  }
+
+  /* Sidebar collapsed state */
+  .app-shell__sidebar--collapsed {
+    width: var(--shell-sidebar-w-collapsed);
+  }
+
+  /* On mobile/tablet: sidebar hidden off-screen */
+  @media (max-width: 1023px) {
+    .app-shell__sidebar {
+      transform: translateX(-100%);
+      width: var(--shell-sidebar-w);
+      z-index: 200;
+    }
+
+    .app-shell__sidebar--mobile-open {
+      transform: translateX(0);
+      box-shadow: 8px 0 32px -4px rgba(15, 23, 42, 0.12);
+    }
+  }
+
+  /* Sidebar mobile overlay backdrop */
+  .app-shell__sidebar-overlay {
+    display: none;
+  }
+
+  @media (max-width: 1023px) {
+    .app-shell__sidebar-overlay {
+      display: block;
+      position: fixed;
+      inset: 0;
+      z-index: 199;
+      background: rgba(15, 23, 42, 0.3);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 200ms ease;
+    }
+
+    .app-shell__sidebar-overlay--visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
+  /* Main workspace */
+  .app-shell__workspace {
+    flex: 1 1 0%;
+    min-width: 0;
+    min-height: 0;
+    margin-left: var(--shell-sidebar-w);
+    transition: margin-left var(--shell-sidebar-transition);
+  }
+
+  .app-shell__workspace--collapsed {
+    margin-left: var(--shell-sidebar-w-collapsed);
+  }
+
+  @media (max-width: 1023px) {
+    .app-shell__workspace,
+    .app-shell__workspace--collapsed {
+      margin-left: 0;
+    }
+  }
+
+  /* Sidebar toggle button */
+  .shell-sidebar-toggle {
+    @apply flex items-center justify-center w-8 h-8 rounded-lg
+           text-slate-500 hover:text-primary-600 hover:bg-primary-50/80
+           transition-all duration-200 active:scale-95;
+  }
+
+  @media (min-width: 1024px) {
+    .shell-sidebar-toggle--main-menu {
+      display: none;
+    }
+  }
+
+  /* ── Portal nav link (sidebar) ── */
+  .portal-nav-link {
+    @apply flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-sm text-slate-600
+           transition-all duration-200 ease-micro;
+  }
+
+  .portal-nav-link:hover {
+    @apply bg-white/80 text-slate-800;
+  }
+
+  .portal-nav-link-icon {
+    @apply w-7 h-7 rounded-lg bg-slate-100/80 flex items-center justify-center shrink-0
+           transition-colors duration-200;
+  }
+
+  /* Active variants */
+  .portal-nav-link--active-primary {
+    @apply bg-primary-50/90 text-primary-800 font-semibold;
+  }
+
+  .portal-nav-link--active-primary .portal-nav-link-icon {
+    @apply bg-primary-100 text-primary-600;
+  }
+
+  .portal-nav-link--active-teal {
+    @apply bg-teal-50/90 text-teal-800 font-semibold;
+  }
+
+  .portal-nav-link--active-teal .portal-nav-link-icon {
+    @apply bg-teal-100 text-teal-600;
+  }
+
+  .portal-nav-link--active-emerald {
+    @apply bg-emerald-50/90 text-emerald-800 font-semibold;
+  }
+
+  .portal-nav-link--active-emerald .portal-nav-link-icon {
+    @apply bg-emerald-100 text-emerald-600;
+  }
+
+  /* Collapsed sidebar: hide labels, center icons */
+  @media (min-width: 1024px) {
+    .app-shell__sidebar--collapsed .portal-nav-link {
+      justify-content: center;
+      padding: 0.5rem;
+    }
+
+    .app-shell__sidebar--collapsed .portal-nav-link > span:not(.portal-nav-link-icon) {
+      display: none;
+    }
+
+    .app-shell__sidebar--collapsed .portal-nav-accordion-trigger > span:not(:first-child) {
+      display: none;
+    }
+
+    .app-shell__sidebar--collapsed .portal-nav-accordion-trigger {
+      justify-content: center;
+      padding: 0.5rem;
+    }
+
+    .app-shell__sidebar--collapsed .portal-nav-sections .portal-nav-accordion {
+      border: none;
+      background: transparent;
+    }
+
+    .app-shell__sidebar--collapsed .portal-profile-card,
+    .app-shell__sidebar--collapsed .portal-speed-dial,
+    .app-shell__sidebar--collapsed .app-shell__sidebar-footer > *:not(.shell-sidebar-toggle) {
+      display: none;
+    }
+  }
+
+  /* Context quick-actions bar */
+  .context-quick-actions {
+    @apply flex items-center gap-2 px-4 py-2.5 border-t border-slate-200/60
+           bg-white/80 backdrop-blur-lg overflow-x-auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .context-quick-actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .context-quick-action-btn {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold
+           text-slate-600 bg-white/90 border border-slate-200/80 shadow-xs
+           hover:bg-primary-50 hover:text-primary-700 hover:border-primary-200
+           transition-all duration-200 active:scale-95 whitespace-nowrap shrink-0;
+  }
+
+  /* Portal header — full width in shell mode */
+  .app-shell .glass-nav > div {
+    max-width: none;
+  }
 }
