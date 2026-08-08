@@ -298,180 +298,211 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
         </button>
       </div>
 
-      {/* Editor Drawer/Modal */}
+      {/* Editor Modal */}
       {showEditor && (
-        <div className="rounded-2xl border border-teal-200 bg-white p-4 sm:p-5 shadow-lg space-y-4 transition-all">
-          <div className="flex items-center justify-between border-b pb-3">
-            <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
-              <FaIcon icon="fa-pen-to-square" className="text-teal-600 text-sm" />
-              {editingId ? 'Edit Clinical Note' : 'Add Clinical Note'}
-            </h3>
-            <button
-              type="button"
-              className="text-slate-400 hover:text-slate-600 text-sm p-1"
-              onClick={() => setShowEditor(false)}
-            >
-              <FaIcon icon="fa-xmark" />
-            </button>
-          </div>
-
-          <form onSubmit={saveNote} className="space-y-3.5">
-            <div className="grid sm:grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">Title *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Day 3 Post-op Quadriceps Rehabilitation"
-                  className="input-field text-xs py-2 w-full"
-                  value={form.title}
-                  onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">Note Type *</label>
-                <select
-                  className="input-field text-xs py-2 w-full font-medium"
-                  value={form.note_type}
-                  onChange={(e) => setForm((p) => ({ ...p, note_type: e.target.value }))}
-                >
-                  {NOTE_TYPES.map((t) => (
-                    <option key={t.id} value={t.id}>{t.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">Therapist / Doctor Name</label>
-                <input
-                  type="text"
-                  placeholder="Doctor or Therapist Name"
-                  className="input-field text-xs py-2 w-full"
-                  value={form.therapist_name}
-                  onChange={(e) => setForm((p) => ({ ...p, therapist_name: e.target.value }))}
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">Appointment Reference (Optional)</label>
-                <select
-                  className="input-field text-xs py-2 w-full"
-                  value={form.appointment_id}
-                  onChange={(e) => setForm((p) => ({ ...p, appointment_id: e.target.value }))}
-                >
-                  <option value="">None / General Note</option>
-                  {appointments.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.booking_id || `Appt #${a.id}`} · {a.appointment_date} ({a.start_time?.slice(0, 5) || '—'})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Rich Editor Toolbar */}
-            <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">Note Content *</label>
-              <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50/50">
-                <div className="flex flex-wrap items-center gap-1 p-1.5 border-b border-slate-200 bg-slate-100/70 text-xs">
-                  <button type="button" onClick={() => execCmd('formatBlock', '<h1>')} title="Heading 1" className="px-2 py-1 bg-white rounded border hover:bg-slate-50 font-bold">H1</button>
-                  <button type="button" onClick={() => execCmd('formatBlock', '<h2>')} title="Heading 2" className="px-2 py-1 bg-white rounded border hover:bg-slate-50 font-bold text-xs">H2</button>
-                  <div className="h-4 w-px bg-slate-300 mx-1" />
-                  <button type="button" onClick={() => execCmd('bold')} title="Bold" className="px-2 py-1 bg-white rounded border hover:bg-slate-50 font-bold">B</button>
-                  <button type="button" onClick={() => execCmd('italic')} title="Italic" className="px-2 py-1 bg-white rounded border hover:bg-slate-50 italic">I</button>
-                  <button type="button" onClick={() => execCmd('underline')} title="Underline" className="px-2 py-1 bg-white rounded border hover:bg-slate-50 underline">U</button>
-                  <div className="h-4 w-px bg-slate-300 mx-1" />
-                  <button type="button" onClick={() => execCmd('insertUnorderedList')} title="Bullet List" className="px-2 py-1 bg-white rounded border hover:bg-slate-50">
-                    <FaIcon icon="fa-list-ul" />
-                  </button>
-                  <button type="button" onClick={() => execCmd('insertOrderedList')} title="Numbered List" className="px-2 py-1 bg-white rounded border hover:bg-slate-50">
-                    <FaIcon icon="fa-list-ol" />
-                  </button>
-                  <button type="button" onClick={insertChecklist} title="Checklist Item" className="px-2 py-1 bg-white rounded border hover:bg-slate-50">
-                    <FaIcon icon="fa-square-check" />
-                  </button>
-                  <button type="button" onClick={insertLink} title="Insert Link" className="px-2 py-1 bg-white rounded border hover:bg-slate-50">
-                    <FaIcon icon="fa-link" />
-                  </button>
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-xs overflow-y-auto transition-opacity"
+          onClick={(e) => e.target === e.currentTarget && setShowEditor(false)}
+        >
+          <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-slate-100 my-auto flex flex-col max-h-[90vh] overflow-hidden transform transition-all">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-600">
+                  <FaIcon icon="fa-pen-to-square" className="text-sm" />
                 </div>
-
-                <div
-                  ref={editorRef}
-                  contentEditable
-                  className="min-h-[140px] max-h-[300px] p-3 text-sm focus:outline-none bg-white overflow-y-auto leading-relaxed text-slate-800"
-                  onInput={() => {
-                    if (editorRef.current) {
-                      setForm((p) => ({ ...p, body_html: editorRef.current.innerHTML }));
-                    }
-                  }}
-                />
+                <div>
+                  <h3 className="font-bold text-slate-900 text-base">
+                    {editingId ? 'Edit Clinical Note' : 'Add Clinical Note'}
+                  </h3>
+                  <p className="text-[11px] text-slate-500">Record clinical observations, assessments & treatment plans</p>
+                </div>
               </div>
+              <button
+                type="button"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                onClick={() => setShowEditor(false)}
+              >
+                <FaIcon icon="fa-xmark" className="text-base" />
+              </button>
             </div>
 
-            {/* Tags & Attachments */}
-            <div className="grid sm:grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">Tags</label>
-                <div className="flex gap-2 mb-2">
+            {/* Modal Scrollable Form Body */}
+            <form onSubmit={saveNote} className="p-6 overflow-y-auto space-y-4">
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">
+                    Title <span className="text-rose-500">*</span>
+                  </label>
                   <input
                     type="text"
-                    placeholder="Add tag and press enter"
-                    className="input-field text-xs py-1.5 flex-1"
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addTag();
+                    required
+                    placeholder="e.g. Day 3 Post-op Quadriceps Rehabilitation"
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium transition-all"
+                    value={form.title}
+                    onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">
+                    Note Type <span className="text-rose-500">*</span>
+                  </label>
+                  <select
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium transition-all"
+                    value={form.note_type}
+                    onChange={(e) => setForm((p) => ({ ...p, note_type: e.target.value }))}
+                  >
+                    {NOTE_TYPES.map((t) => (
+                      <option key={t.id} value={t.id}>{t.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">Therapist / Doctor Name</label>
+                  <input
+                    type="text"
+                    placeholder="Doctor or Therapist Name"
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                    value={form.therapist_name}
+                    onChange={(e) => setForm((p) => ({ ...p, therapist_name: e.target.value }))}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">Appointment Reference <span className="text-slate-400 font-normal">(Optional)</span></label>
+                  <select
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                    value={form.appointment_id}
+                    onChange={(e) => setForm((p) => ({ ...p, appointment_id: e.target.value }))}
+                  >
+                    <option value="">None / General Note</option>
+                    {appointments.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.booking_id || `Appt #${a.id}`} · {a.appointment_date} ({a.start_time?.slice(0, 5) || '—'})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Rich Editor Toolbar */}
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Note Content <span className="text-rose-500">*</span>
+                </label>
+                <div className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/50 transition-all focus-within:ring-2 focus-within:ring-teal-500/20 focus-within:border-teal-500">
+                  <div className="flex flex-wrap items-center gap-1 p-2 border-b border-slate-200 bg-slate-100/70 text-xs">
+                    <button type="button" onClick={() => execCmd('formatBlock', '<h1>')} title="Heading 1" className="px-2 py-1 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 font-bold text-slate-800 transition-colors">H1</button>
+                    <button type="button" onClick={() => execCmd('formatBlock', '<h2>')} title="Heading 2" className="px-2 py-1 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 font-bold text-xs text-slate-800 transition-colors">H2</button>
+                    <div className="h-4 w-px bg-slate-300 mx-1" />
+                    <button type="button" onClick={() => execCmd('bold')} title="Bold" className="px-2.5 py-1 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 font-bold text-slate-800 transition-colors">B</button>
+                    <button type="button" onClick={() => execCmd('italic')} title="Italic" className="px-2.5 py-1 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 italic text-slate-800 transition-colors">I</button>
+                    <button type="button" onClick={() => execCmd('underline')} title="Underline" className="px-2.5 py-1 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 underline text-slate-800 transition-colors">U</button>
+                    <div className="h-4 w-px bg-slate-300 mx-1" />
+                    <button type="button" onClick={() => execCmd('insertUnorderedList')} title="Bullet List" className="p-1.5 px-2.5 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 transition-colors">
+                      <FaIcon icon="fa-list-ul" />
+                    </button>
+                    <button type="button" onClick={() => execCmd('insertOrderedList')} title="Numbered List" className="p-1.5 px-2.5 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 transition-colors">
+                      <FaIcon icon="fa-list-ol" />
+                    </button>
+                    <button type="button" onClick={insertChecklist} title="Checklist Item" className="p-1.5 px-2.5 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 transition-colors">
+                      <FaIcon icon="fa-square-check" />
+                    </button>
+                    <button type="button" onClick={insertLink} title="Insert Link" className="p-1.5 px-2.5 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 transition-colors">
+                      <FaIcon icon="fa-link" />
+                    </button>
+                  </div>
+
+                  <div
+                    ref={editorRef}
+                    contentEditable
+                    className="min-h-[140px] max-h-[260px] p-4 text-sm focus:outline-none bg-white overflow-y-auto leading-relaxed text-slate-800"
+                    onInput={() => {
+                      if (editorRef.current) {
+                        setForm((p) => ({ ...p, body_html: editorRef.current.innerHTML }));
                       }
                     }}
                   />
-                  <button type="button" onClick={addTag} className="btn-outline text-xs py-1.5 px-3">Add</button>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {form.tags.map((t, idx) => (
-                    <span key={idx} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-white" style={{ backgroundColor: t.color }}>
-                      {t.label}
-                      <button type="button" onClick={() => removeTag(idx)} className="hover:opacity-80">×</button>
-                    </span>
-                  ))}
                 </div>
               </div>
 
-              <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">Attachment Link (Optional)</label>
-                <input
-                  type="text"
-                  placeholder="https://... or document URL"
-                  className="input-field text-xs py-1.5 w-full"
-                  value={form.attachment_url}
-                  onChange={(e) => setForm((p) => ({ ...p, attachment_url: e.target.value }))}
-                />
-              </div>
-            </div>
+              {/* Tags & Attachments */}
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">Tags</label>
+                  <div className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      placeholder="Add tag and press Enter"
+                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          addTag();
+                        }
+                      }}
+                    />
+                    <button type="button" onClick={addTag} className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">Add</button>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {form.tags.map((t, idx) => (
+                      <span key={idx} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-white shadow-xs" style={{ backgroundColor: t.color }}>
+                        {t.label}
+                        <button type="button" onClick={() => removeTag(idx)} className="hover:opacity-80 font-bold">×</button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
 
-            <div className="flex items-center justify-between pt-2">
-              <label className="inline-flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="rounded text-teal-600 focus:ring-teal-500"
-                  checked={form.is_pinned}
-                  onChange={(e) => setForm((p) => ({ ...p, is_pinned: e.target.checked }))}
-                />
-                Pin note to top of patient profile
-              </label>
-
-              <div className="flex gap-2">
-                <button type="button" onClick={() => setShowEditor(false)} className="btn-outline text-xs py-2 px-4">
-                  Cancel
-                </button>
-                <button type="submit" disabled={saving} className="btn-primary text-xs py-2 px-5">
-                  {saving ? 'Saving...' : editingId ? 'Update Note' : 'Save Note'}
-                </button>
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">Attachment Link <span className="text-slate-400 font-normal">(Optional)</span></label>
+                  <input
+                    type="text"
+                    placeholder="https://... or document URL"
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                    value={form.attachment_url}
+                    onChange={(e) => setForm((p) => ({ ...p, attachment_url: e.target.value }))}
+                  />
+                </div>
               </div>
-            </div>
-          </form>
+
+              {/* Pin & Footer Actions */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-slate-100">
+                <label className="inline-flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    className="rounded-md text-teal-600 focus:ring-teal-500 h-4 w-4 border-slate-300"
+                    checked={form.is_pinned}
+                    onChange={(e) => setForm((p) => ({ ...p, is_pinned: e.target.checked }))}
+                  />
+                  Pin note to top of patient clinical notes
+                </label>
+
+                <div className="flex items-center gap-3 justify-end">
+                  <button type="button" onClick={() => setShowEditor(false)} className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+                    Cancel
+                  </button>
+                  <button type="submit" disabled={saving} className="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white text-xs font-semibold shadow-sm shadow-teal-600/20 disabled:opacity-60 transition-all flex items-center gap-2">
+                    {saving ? (
+                      <>
+                        <FaIcon icon="fa-spinner" className="animate-spin text-xs" />
+                        Saving Note…
+                      </>
+                    ) : (
+                      <>
+                        <FaIcon icon="fa-check" className="text-xs" />
+                        {editingId ? 'Update Clinical Note' : 'Save Clinical Note'}
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
@@ -620,36 +651,66 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
 
       {/* Note Detail Modal */}
       {detailModalNote && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-2xl w-full space-y-4 max-h-[85vh] overflow-y-auto">
-            <div className="flex items-start justify-between gap-3 border-b pb-3">
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-xs overflow-y-auto transition-opacity"
+          onClick={(e) => e.target === e.currentTarget && setDetailModalNote(null)}
+        >
+          <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-100 my-auto flex flex-col max-h-[85vh] overflow-hidden transform transition-all">
+            {/* Header */}
+            <div className="flex items-start justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
               <div>
-                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                <span className="text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full bg-teal-50 border border-teal-100 text-teal-700">
                   {detailModalNote.note_type?.replace(/_/g, ' ')}
                 </span>
-                <h3 className="font-bold text-slate-900 text-lg mt-1">{detailModalNote.title}</h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {detailModalNote.created_at ? new Date(detailModalNote.created_at).toLocaleString('en-IN') : '—'} · {detailModalNote.therapist_name || 'Therapist'}
+                <h3 className="font-bold text-slate-900 text-base sm:text-lg mt-1.5">{detailModalNote.title}</h3>
+                <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-2">
+                  <span>{detailModalNote.created_at ? new Date(detailModalNote.created_at).toLocaleString('en-IN') : '—'}</span>
+                  <span>·</span>
+                  <span className="font-medium text-slate-700">{detailModalNote.therapist_name || 'Therapist'}</span>
                 </p>
               </div>
-              <button type="button" onClick={() => setDetailModalNote(null)} className="p-1 text-slate-400 hover:text-slate-600">
-                <FaIcon icon="fa-xmark" className="text-lg" />
+              <button
+                type="button"
+                onClick={() => setDetailModalNote(null)}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              >
+                <FaIcon icon="fa-xmark" className="text-base" />
               </button>
             </div>
 
-            <div className="prose prose-slate max-w-none text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: detailModalNote.body_html || detailModalNote.body_text }} />
+            {/* Scrollable Body */}
+            <div className="p-6 overflow-y-auto space-y-4">
+              <div
+                className="prose prose-slate max-w-none text-xs sm:text-sm leading-relaxed text-slate-800"
+                dangerouslySetInnerHTML={{ __html: detailModalNote.body_html || detailModalNote.body_text }}
+              />
 
-            {detailModalNote.attachment_url && (
-              <div className="rounded-xl border border-slate-200 p-3 bg-slate-50">
-                <p className="text-xs font-semibold text-slate-700 mb-1">Attachment</p>
-                <a href={detailModalNote.attachment_url} target="_blank" rel="noopener noreferrer" className="text-xs text-teal-700 hover:underline flex items-center gap-1.5">
-                  <FaIcon icon="fa-paperclip" /> {detailModalNote.attachment_url}
-                </a>
-              </div>
-            )}
+              {detailModalNote.attachment_url && (
+                <div className="rounded-xl border border-slate-200 p-3.5 bg-slate-50 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold text-slate-700">Attachment File</p>
+                    <p className="text-[11px] text-slate-500 truncate max-w-md">{detailModalNote.attachment_url}</p>
+                  </div>
+                  <a
+                    href={detailModalNote.attachment_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium inline-flex items-center gap-1.5 shrink-0 transition-colors"
+                  >
+                    <FaIcon icon="fa-arrow-up-right-from-square" className="text-[10px]" />
+                    Open Attachment
+                  </a>
+                </div>
+              )}
+            </div>
 
-            <div className="flex justify-end pt-2">
-              <button type="button" onClick={() => setDetailModalNote(null)} className="btn-primary text-xs py-2 px-5">
+            {/* Footer */}
+            <div className="flex items-center justify-end px-6 py-3.5 border-t border-slate-100 bg-slate-50/50">
+              <button
+                type="button"
+                onClick={() => setDetailModalNote(null)}
+                className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-sm transition-colors"
+              >
                 Close
               </button>
             </div>

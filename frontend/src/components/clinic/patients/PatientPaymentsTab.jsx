@@ -205,28 +205,44 @@ export default function PatientPaymentsTab({ clinicId, patientKey, data, onRefre
 
       {/* Record Manual Payment Modal */}
       {showRecordModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full space-y-4">
-            <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
-                <FaIcon icon="fa-hand-holding-dollar" className="text-emerald-600 text-sm" />
-                Record Manual Payment
-              </h3>
-              <button type="button" onClick={() => setShowRecordModal(false)} className="text-slate-400 hover:text-slate-600 text-sm p-1">
-                <FaIcon icon="fa-xmark" />
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-xs overflow-y-auto transition-opacity"
+          onClick={(e) => e.target === e.currentTarget && setShowRecordModal(false)}
+        >
+          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-100 my-auto flex flex-col overflow-hidden transform transition-all">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                  <FaIcon icon="fa-hand-holding-dollar" className="text-sm" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-base">Record Manual Payment</h3>
+                  <p className="text-[11px] text-slate-500">Collect offline cash, card, UPI or cheque payment</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowRecordModal(false)}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              >
+                <FaIcon icon="fa-xmark" className="text-base" />
               </button>
             </div>
 
-            <form onSubmit={submitRecordPayment} className="space-y-3.5">
+            {/* Form Body */}
+            <form onSubmit={submitRecordPayment} className="p-6 space-y-4">
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">Select Appointment *</label>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Select Appointment <span className="text-rose-500">*</span>
+                </label>
                 <select
                   required
-                  className="input-field text-xs py-2 w-full font-medium"
+                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium transition-all"
                   value={selectedApptId}
                   onChange={(e) => handleApptChange(e.target.value)}
                 >
-                  <option value="">-- Choose Appointment --</option>
+                  <option value="">-- Select Unpaid or Pending Appointment --</option>
                   {appointments.map((a) => (
                     <option key={a.id} value={a.id}>
                       {a.booking_id || `Appt #${a.id}`} · {a.appointment_date} · {money(a.amount)} ({a.payment_status || 'unpaid'})
@@ -235,62 +251,94 @@ export default function PatientPaymentsTab({ clinicId, patientKey, data, onRefre
                 </select>
               </div>
 
-              <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">Amount Collected (₹) *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  required
-                  placeholder="e.g. 500"
-                  className="input-field text-xs py-2 w-full font-bold text-slate-900"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">
+                    Amount Collected (₹) <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-2.5 text-xs font-bold text-slate-400">₹</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      placeholder="500"
+                      className="w-full rounded-xl border border-slate-200 pl-8 pr-3.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">
+                    Payment Method <span className="text-rose-500">*</span>
+                  </label>
+                  <select
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium transition-all"
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                  >
+                    <option value="cash">💵 Cash</option>
+                    <option value="card">💳 Credit / Debit Card</option>
+                    <option value="upi">📱 UPI / QR Code</option>
+                    <option value="bank_transfer">🏦 Bank Transfer / NEFT</option>
+                    <option value="cheque">📝 Cheque</option>
+                  </select>
+                </div>
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">Payment Method *</label>
-                <select
-                  className="input-field text-xs py-2 w-full font-medium"
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                >
-                  <option value="cash">Cash</option>
-                  <option value="card">Credit / Debit Card</option>
-                  <option value="upi">UPI / QR Code</option>
-                  <option value="bank_transfer">Bank Transfer / NEFT</option>
-                  <option value="cheque">Cheque</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">Reference / Transaction Number (Optional)</label>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Reference / Transaction No. <span className="text-slate-400 font-normal">(Optional)</span>
+                </label>
                 <input
                   type="text"
-                  placeholder="e.g. UPI/123456789 or Receipt #"
-                  className="input-field text-xs py-2 w-full font-mono"
+                  placeholder="e.g. UPI/987654321 or Receipt #1042"
+                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 font-mono placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
                   value={referenceNumber}
                   onChange={(e) => setReferenceNumber(e.target.value)}
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">Payment Notes (Optional)</label>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Payment Notes <span className="text-slate-400 font-normal">(Optional)</span>
+                </label>
                 <textarea
-                  className="input-field text-xs w-full py-1.5 resize-none"
+                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 resize-none transition-all"
                   rows={2}
-                  placeholder="e.g. Collected at reception desk"
+                  placeholder="e.g. Received cash at reception counter..."
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                 />
               </div>
 
-              <div className="flex gap-2 justify-end pt-2">
-                <button type="button" onClick={() => setShowRecordModal(false)} className="btn-outline text-xs py-2 px-4">
+              {/* Footer Actions */}
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowRecordModal(false)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                >
                   Cancel
                 </button>
-                <button type="submit" disabled={recording} className="btn-primary text-xs py-2 px-5">
-                  {recording ? 'Recording...' : 'Record Payment'}
+                <button
+                  type="submit"
+                  disabled={recording}
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-semibold shadow-sm shadow-emerald-600/20 disabled:opacity-60 transition-all flex items-center gap-2"
+                >
+                  {recording ? (
+                    <>
+                      <FaIcon icon="fa-spinner" className="animate-spin text-xs" />
+                      Recording Payment…
+                    </>
+                  ) : (
+                    <>
+                      <FaIcon icon="fa-check" className="text-xs" />
+                      Save & Record Payment
+                    </>
+                  )}
                 </button>
               </div>
             </form>

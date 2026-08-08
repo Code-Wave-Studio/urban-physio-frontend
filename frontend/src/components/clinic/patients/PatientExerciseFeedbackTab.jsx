@@ -358,42 +358,65 @@ export default function PatientExerciseFeedbackTab({ clinicId, patientKey, onCon
 
       {/* Reply & Internal Note Modal */}
       {replyModalLog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-lg w-full space-y-4">
-            <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
-                <FaIcon icon="fa-reply" className="text-teal-600 text-sm" />
-                Therapist Response & Internal Note
-              </h3>
-              <button type="button" onClick={() => setReplyModalLog(null)} className="text-slate-400 hover:text-slate-600 text-sm p-1">
-                <FaIcon icon="fa-xmark" />
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-xs overflow-y-auto transition-opacity"
+          onClick={(e) => e.target === e.currentTarget && setReplyModalLog(null)}
+        >
+          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-100 my-auto flex flex-col overflow-hidden transform transition-all">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-600">
+                  <FaIcon icon="fa-reply" className="text-sm" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-base">Therapist Response & Note</h3>
+                  <p className="text-[11px] text-slate-500">Provide exercise guidance & internal team observations</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReplyModalLog(null)}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              >
+                <FaIcon icon="fa-xmark" className="text-base" />
               </button>
             </div>
 
-            <form onSubmit={saveReplyAndNote} className="space-y-3">
-              <div className="bg-slate-50 p-3 rounded-xl text-xs space-y-1">
-                <p className="font-bold text-slate-900">{replyModalLog.exercise_name}</p>
-                <p className="text-slate-600">Log Date: {replyModalLog.log_date}</p>
+            {/* Form Body */}
+            <form onSubmit={saveReplyAndNote} className="p-6 space-y-4">
+              <div className="bg-slate-50 border border-slate-200/80 p-3.5 rounded-2xl text-xs space-y-1">
+                <div className="flex items-center justify-between">
+                  <p className="font-bold text-slate-900 text-xs">{replyModalLog.exercise_name}</p>
+                  <span className="text-[10px] font-medium text-slate-500">Date: {replyModalLog.log_date}</span>
+                </div>
                 {replyModalLog.patient_comment && (
-                  <p className="text-slate-700 italic border-t pt-1 mt-1">"{replyModalLog.patient_comment}"</p>
+                  <div className="border-t border-slate-200/60 pt-2 mt-2">
+                    <p className="text-[11px] text-slate-500 uppercase font-bold tracking-wider mb-0.5">Patient Comment:</p>
+                    <p className="text-slate-700 italic bg-white p-2 rounded-xl border border-slate-100">"{replyModalLog.patient_comment}"</p>
+                  </div>
                 )}
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">Reply to Patient</label>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Reply to Patient <span className="text-slate-400 font-normal">(Visible on Patient Portal)</span>
+                </label>
                 <textarea
-                  className="input-field text-xs w-full py-2 resize-none"
+                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 resize-none transition-all"
                   rows={3}
-                  placeholder="Type guidance or instructions for the patient..."
+                  placeholder="Type guidance or exercise adjustment instructions..."
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">Internal Note (Clinic Staff Only)</label>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Internal Note <span className="text-purple-600 font-normal">(Clinic Staff Only)</span>
+                </label>
                 <textarea
-                  className="input-field text-xs w-full py-2 resize-none bg-purple-50/30"
+                  className="w-full rounded-xl border border-purple-200 bg-purple-50/20 px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 resize-none transition-all"
                   rows={2}
                   placeholder="Internal observations or notes for team..."
                   value={internalNoteText}
@@ -401,12 +424,31 @@ export default function PatientExerciseFeedbackTab({ clinicId, patientKey, onCon
                 />
               </div>
 
-              <div className="flex gap-2 justify-end pt-2">
-                <button type="button" onClick={() => setReplyModalLog(null)} className="btn-outline text-xs py-2 px-4">
+              {/* Footer Actions */}
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setReplyModalLog(null)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                >
                   Cancel
                 </button>
-                <button type="submit" disabled={submittingAction} className="btn-primary text-xs py-2 px-5">
-                  {submittingAction ? 'Saving...' : 'Save Response'}
+                <button
+                  type="submit"
+                  disabled={submittingAction}
+                  className="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white text-xs font-semibold shadow-sm shadow-teal-600/20 disabled:opacity-60 transition-all flex items-center gap-2"
+                >
+                  {submittingAction ? (
+                    <>
+                      <FaIcon icon="fa-spinner" className="animate-spin text-xs" />
+                      Saving Response…
+                    </>
+                  ) : (
+                    <>
+                      <FaIcon icon="fa-check" className="text-xs" />
+                      Save Response & Note
+                    </>
+                  )}
                 </button>
               </div>
             </form>
