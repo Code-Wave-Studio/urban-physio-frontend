@@ -269,21 +269,7 @@ export default function MobileNavDrawer({
             </div>
           </NavCategoryCard>
 
-          <NavCategoryCard title="Explore">
-            <div className="divide-y divide-slate-100">
-              {EXPLORE_LINKS.map((link) => (
-                <NavListItem
-                  key={link.to + link.label}
-                  {...link}
-                  pathname={pathname}
-                  search={search}
-                  onNavigate={handleNavigate}
-                />
-              ))}
-            </div>
-          </NavCategoryCard>
-
-          {/* Portal Categories (Below Explore section) — Only show portal matching user role */}
+          {/* Portal Categories (Right after Speed Dial) — Only show portal matching user role */}
           {user && hasRole('patient') && (
             <NavCategoryCard title="Patient Portal">
               <PortalNavSections
@@ -331,6 +317,20 @@ export default function MobileNavDrawer({
               />
             </NavCategoryCard>
           )}
+
+          <NavCategoryCard title="Explore">
+            <div className="divide-y divide-slate-100">
+              {EXPLORE_LINKS.map((link) => (
+                <NavListItem
+                  key={link.to + link.label}
+                  {...link}
+                  pathname={pathname}
+                  search={search}
+                  onNavigate={handleNavigate}
+                />
+              ))}
+            </div>
+          </NavCategoryCard>
 
 
           <NavCategoryCard title="Providers">

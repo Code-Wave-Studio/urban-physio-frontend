@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import FaIcon from '../components/FaIcon';
-import PortalNavSections from '../components/portal/PortalNavSections';
 import PortalProfileCard from '../components/portal/PortalProfileCard';
 import PortalSpeedDial from '../components/portal/PortalSpeedDial';
 import ContextQuickActions from '../components/portal/ContextQuickActions';
@@ -35,20 +34,6 @@ const ACCENT_MAP = {
 };
 
 const STORAGE_KEY = 'urbanphysio_sidebar_collapsed';
-
-function useMediaQuery(query) {
-  const [matches, setMatches] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return window.matchMedia(query).matches;
-  });
-  useEffect(() => {
-    const mql = window.matchMedia(query);
-    const handler = (e) => setMatches(e.matches);
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
-  }, [query]);
-  return matches;
-}
 
 function PortalCreditFooter() {
   return (
@@ -90,11 +75,10 @@ export default function DashboardLayout({
   clinicClosed = false,
 }) {
   const hasPortalNav = Array.isArray(links) && links.length > 0;
-  const isDesktop = useMediaQuery('(min-width: 1024px)');
   const { pathname } = useLocation();
   const { user, hasRole } = useAuth() || {};
 
-  /* Context panel collapse state — persisted in localStorage */
+  /* Context panel collapse state — persisted in localStorage (desktop only) */
   const [collapsed, setCollapsed] = useState(() => {
     try {
       return localStorage.getItem(STORAGE_KEY) === '1';
@@ -103,9 +87,6 @@ export default function DashboardLayout({
     }
   });
 
-  /* Mobile sidebar open state */
-  const [mobileOpen, setMobileOpen] = useState(false);
-
   const toggleCollapsed = useCallback(() => {
     setCollapsed((prev) => {
       const next = !prev;
@@ -113,29 +94,6 @@ export default function DashboardLayout({
       return next;
     });
   }, []);
-
-  /* Close mobile sidebar on route change */
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
-
-  /* Close mobile sidebar on escape */
-  useEffect(() => {
-    if (!mobileOpen) return;
-    const onKey = (e) => { if (e.key === 'Escape') setMobileOpen(false); };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [mobileOpen]);
-
-  /* Body scroll lock for mobile sidebar */
-  useEffect(() => {
-    if (mobileOpen && !isDesktop) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => { document.body.style.overflow = ''; };
-  }, [mobileOpen, isDesktop]);
 
   const sectionOrder = SECTION_ORDER_MAP[variant] || [];
   const accent = ACCENT_MAP[variant] || 'primary';
@@ -191,29 +149,17 @@ export default function DashboardLayout({
     }
   }, [collapsed]);
 
-  /* Sidebar toggle rendered before logo in Navbar */
+  /* Sidebar collapse toggle rendered before logo in Navbar (desktop only) */
   const sidebarToggle = hasPortalNav ? (
-    <div className="flex items-center gap-1">
-      {/* Desktop: toggle context panel visibility */}
-      <button
-        type="button"
-        className="shell-sidebar-toggle hidden lg:flex"
-        onClick={toggleCollapsed}
-        aria-label={collapsed ? 'Show navigation panel' : 'Collapse navigation panel'}
-        title={collapsed ? 'Show navigation panel' : 'Collapse navigation panel'}
-      >
-        <FaIcon icon={collapsed ? 'fa-bars' : 'fa-angles-left'} className="text-sm" />
-      </button>
-      {/* Mobile/tablet: open sidebar drawer */}
-      <button
-        type="button"
-        className="shell-sidebar-toggle lg:hidden"
-        onClick={() => setMobileOpen(true)}
-        aria-label="Open navigation"
-      >
-        <FaIcon icon="fa-bars" className="text-sm" />
-      </button>
-    </div>
+    <button
+      type="button"
+      className="shell-sidebar-toggle hidden lg:flex"
+      onClick={toggleCollapsed}
+      aria-label={collapsed ? 'Show navigation panel' : 'Collapse navigation panel'}
+      title={collapsed ? 'Show navigation panel' : 'Collapse navigation panel'}
+    >
+      <FaIcon icon={collapsed ? 'fa-bars' : 'fa-angles-left'} className="text-sm" />
+    </button>
   ) : null;
 
   /* Workspace class names */
@@ -246,7 +192,7 @@ export default function DashboardLayout({
     );
   }
 
-  /* Shared profile card props — same data for both desktop context panel and mobile drawer */
+  /* Shared profile card props for desktop context panel */
   const profileCardProps = {
     name: profileName,
     roleLabel: profileRole,
@@ -257,7 +203,7 @@ export default function DashboardLayout({
     clinicId,
   };
 
-  /* --- Portal layout with 3-column shell --- */
+  /* --- Portal layout with desktop 3-column shell --- */
   return (
     <div className="app-shell">
       <Navbar
@@ -268,14 +214,7 @@ export default function DashboardLayout({
       />
 
       <div className="app-shell__body">
-        {/* Sidebar overlay (mobile) */}
-        <div
-          className={`app-shell__sidebar-overlay ${mobileOpen && !isDesktop ? 'app-shell__sidebar-overlay--visible' : ''}`}
-          onClick={() => setMobileOpen(false)}
-          aria-hidden="true"
-        />
-
-        {/* ── Desktop: Primary navigation sidebar (Icon Only Rail) ── */}
+        {/* ── Desktop ONLY: Primary navigation sidebar (Icon Only Rail) ── */}
         <aside
           className="app-shell__primary-nav"
           aria-label="Module navigation"
@@ -315,7 +254,7 @@ export default function DashboardLayout({
           </div>
         </aside>
 
-        {/* ── Desktop: Context panel ── */}
+        {/* ── Desktop ONLY: Context panel ── */}
         <aside
           className={`app-shell__context-panel ${collapsed ? 'app-shell__context-panel--hidden' : ''}`}
           aria-label={currentSection?.label || 'Section navigation'}
@@ -349,48 +288,7 @@ export default function DashboardLayout({
           )}
         </aside>
 
-        {/* ── Mobile: Full sidebar drawer (preserves existing mobile behavior) ── */}
-        <aside
-          className={`app-shell__sidebar ${mobileOpen && !isDesktop ? 'app-shell__sidebar--mobile-open' : ''}`}
-          aria-label="Portal navigation"
-        >
-          <div className="app-shell__sidebar-scroll">
-            <div className="mb-3">
-              <PortalProfileCard {...profileCardProps} />
-            </div>
-
-            {speedDialItems.length > 0 && (
-              <div className="mb-3">
-                <PortalSpeedDial
-                  items={speedDialItems}
-                  onNavigate={() => setMobileOpen(false)}
-                />
-              </div>
-            )}
-
-            <PortalNavSections
-              links={links}
-              sectionOrder={sectionOrder}
-              accent={accent}
-              onNavigate={() => setMobileOpen(false)}
-              open={true}
-            />
-          </div>
-
-          <div className="app-shell__sidebar-footer">
-            {sidebarFooter}
-            <button
-              type="button"
-              className="shell-sidebar-toggle w-full mt-2 justify-center text-slate-400 hover:text-slate-600"
-              onClick={() => setMobileOpen(false)}
-            >
-              <FaIcon icon="fa-xmark" className="text-base mr-1.5" />
-              <span className="text-xs font-medium">Close</span>
-            </button>
-          </div>
-        </aside>
-
-        {/* ── Workspace ── */}
+        {/* ── Workspace (Full width on tablet/mobile, margin-left on desktop) ── */}
         <div className={workspaceClass}>
           <main className={`mx-auto py-4 sm:py-6 animate-fade-in min-w-0 ${
             fluid
@@ -408,3 +306,4 @@ export default function DashboardLayout({
     </div>
   );
 }
+

@@ -1798,87 +1798,10 @@ html {
     position: relative;
   }
 
-  /* Sidebar — persistent left panel */
-  .app-shell__sidebar {
-    position: fixed;
-    top: var(--site-header-height, 3.5rem);
-    left: 0;
-    bottom: 0;
-    width: var(--shell-sidebar-w);
-    z-index: 100;
-    display: flex;
-    flex-direction: column;
-    background: linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.92) 0%,
-      rgba(255, 247, 237, 0.7) 40%,
-      rgba(255, 255, 255, 0.88) 100%
-    );
-    backdrop-filter: blur(20px) saturate(1.5);
-    -webkit-backdrop-filter: blur(20px) saturate(1.5);
-    border-right: 1px solid rgba(226, 232, 240, 0.7);
-    box-shadow: 4px 0 24px -8px rgba(15, 23, 42, 0.06);
-    transition: width var(--shell-sidebar-transition),
-                transform var(--shell-sidebar-transition);
-    overflow: hidden;
-  }
-
-  .app-shell__sidebar-scroll {
-    flex: 1 1 0%;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 0.75rem;
-    min-height: 0;
-  }
-
-  .app-shell__sidebar-footer {
-    flex-shrink: 0;
-    padding: 0.5rem 0.75rem 0.75rem;
-    border-top: 1px solid rgba(226, 232, 240, 0.5);
-  }
-
-  /* Sidebar collapsed state */
-  .app-shell__sidebar--collapsed {
-    width: var(--shell-sidebar-w-collapsed);
-  }
-
-  /* On mobile/tablet: sidebar hidden off-screen */
-  @media (max-width: 1023px) {
-    .app-shell__sidebar {
-      transform: translateX(-100%);
-      width: var(--shell-sidebar-w);
-      z-index: 200;
-    }
-
-    .app-shell__sidebar--mobile-open {
-      transform: translateX(0);
-      box-shadow: 8px 0 32px -4px rgba(15, 23, 42, 0.12);
-    }
-  }
-
-  /* Sidebar mobile overlay backdrop */
+  /* Legacy sidebar overlay & drawer — completely hidden (replaced by desktop primary rail + context panel and mobile right-side drawer) */
+  .app-shell__sidebar,
   .app-shell__sidebar-overlay {
-    display: none;
-  }
-
-  @media (max-width: 1023px) {
-    .app-shell__sidebar-overlay {
-      display: block;
-      position: fixed;
-      inset: 0;
-      z-index: 199;
-      background: rgba(15, 23, 42, 0.3);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 200ms ease;
-    }
-
-    .app-shell__sidebar-overlay--visible {
-      opacity: 1;
-      pointer-events: auto;
-    }
+    display: none !important;
   }
 
   /* Main workspace */
