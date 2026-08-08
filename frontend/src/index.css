@@ -1145,8 +1145,15 @@
 
   /* Touch-friendly tab strips */
   .portal-tabs {
-    @apply flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1;
+    @apply flex flex-wrap gap-1.5 w-full min-w-0 pb-1;
+    overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .portal-tabs::-webkit-scrollbar {
+    display: none;
   }
 
   .portal-tabs > button,

@@ -13,7 +13,7 @@ import { ClinicPortalProvider } from '../../contexts/ClinicPortalContext';
  * Header/sidebar always use the company (The Urban Physio) logo — not the clinic brand logo.
  * Broadcast lives on Communication / Notification Setup — not on every page header.
  */
-function ClinicPortalShellInner({ children, title, subtitle, actions, hideHeaderTitle = false }) {
+function ClinicPortalShellInner({ children, title, subtitle, actions, hideHeaderTitle = false, fluid = false }) {
   const {
     portalRole,
     permissions,
@@ -58,6 +58,7 @@ function ClinicPortalShellInner({ children, title, subtitle, actions, hideHeader
       sidebarFooter={modeSwitch}
       clinicId={clinicId || clinic?.id || null}
       clinicClosed={Boolean(Number(clinic?.is_closed))}
+      fluid={fluid}
     >
       {(!hideHeaderTitle || actions) && (
         <div className="mb-3 sm:mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -125,10 +126,10 @@ function ClinicPortalShellInner({ children, title, subtitle, actions, hideHeader
   );
 }
 
-export default function ClinicPortalShell({ children, title, subtitle, actions, hideHeaderTitle = false }) {
+export default function ClinicPortalShell({ children, title, subtitle, actions, hideHeaderTitle = false, fluid = false }) {
   return (
     <ClinicPortalProvider>
-      <ClinicPortalShellInner title={title} subtitle={subtitle} actions={actions} hideHeaderTitle={hideHeaderTitle}>
+      <ClinicPortalShellInner title={title} subtitle={subtitle} actions={actions} hideHeaderTitle={hideHeaderTitle} fluid={fluid}>
         {children}
       </ClinicPortalShellInner>
     </ClinicPortalProvider>

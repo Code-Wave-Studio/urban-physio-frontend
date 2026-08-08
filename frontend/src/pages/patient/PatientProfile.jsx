@@ -154,15 +154,15 @@ export default function PatientProfile() {
 
   if (loading) {
     return (
-      <DashboardLayout links={PATIENT_NAV} variant="patient">
-        <div className="glass-card h-64 animate-pulse max-w-2xl" />
+      <DashboardLayout links={PATIENT_NAV} variant="patient" fluid={true}>
+        <div className="glass-card h-64 animate-pulse w-full" />
       </DashboardLayout>
     );
   }
 
   return (
-    <DashboardLayout links={PATIENT_NAV} variant="patient">
-      <div className="max-w-2xl">
+    <DashboardLayout links={PATIENT_NAV} variant="patient" fluid={true}>
+      <div className="w-full min-w-0">
         <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Profile settings</h1>
         <p className="text-slate-600 text-sm mt-1 mb-5 md:mb-6">
           Personal details auto-fill when you book. Set a primary address for home visits.

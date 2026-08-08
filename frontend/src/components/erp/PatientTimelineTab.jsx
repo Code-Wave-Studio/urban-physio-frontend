@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import toast from 'react-hot-toast';
 import FaIcon from '../FaIcon';
 import { erpPatient } from '../../services/api';
@@ -60,7 +61,9 @@ function AddEventModal({ patientKey, onSave, onClose }) {
     } finally { setSaving(false); }
   };
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 md:p-8 bg-slate-950/60 backdrop-blur-md overflow-y-auto transition-opacity animate-in fade-in duration-200"
       onClick={(e) => e.target === e.currentTarget && onClose()}
@@ -160,7 +163,8 @@ function AddEventModal({ patientKey, onSave, onClose }) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

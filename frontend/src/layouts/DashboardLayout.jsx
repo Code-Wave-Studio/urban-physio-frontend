@@ -32,6 +32,7 @@ export default function DashboardLayout({
   children,
   brandLogoSrc = null,
   brandLogoAlt = 'The Urban Physio',
+  fluid = false,
 }) {
   return (
     <div className="min-h-screen relative admin-shell">
@@ -42,7 +43,11 @@ export default function DashboardLayout({
       />
 
       <div className="admin-main-wrap">
-        <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 animate-fade-in min-w-0">
+        <main className={`mx-auto py-4 sm:py-6 animate-fade-in min-w-0 ${
+          fluid 
+            ? 'w-full max-w-none px-3 sm:px-6 lg:px-8' 
+            : 'max-w-7xl px-3 sm:px-4 lg:px-8'
+        }`}>
           {children}
           <PortalCreditFooter />
         </main>

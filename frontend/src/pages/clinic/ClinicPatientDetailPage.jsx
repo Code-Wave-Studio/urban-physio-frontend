@@ -233,6 +233,7 @@ export default function ClinicPatientDetailPage() {
       title={loading ? 'Patient' : name}
       subtitle="Clinical, package and payment history in one place"
       hideHeaderTitle={true}
+      fluid={true}
       actions={(
         <div className="portal-page-actions">
           <Link to="/clinic-portal/patients" className="btn-outline inline-flex items-center gap-2">

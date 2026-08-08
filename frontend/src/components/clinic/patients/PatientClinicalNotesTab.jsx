@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import toast from 'react-hot-toast';
 import FaIcon from '../../FaIcon';
 import { clinicPortal } from '../../../services/api';
@@ -310,7 +311,7 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
       </div>
 
       {/* Editor Modal */}
-      {showEditor && (
+      {showEditor && typeof document !== 'undefined' && createPortal(
         <ModalScrollLock>
           <div
             className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 md:p-8 bg-slate-950/60 backdrop-blur-md overflow-y-auto transition-opacity animate-in fade-in duration-200"
@@ -678,7 +679,7 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
       )}
 
       {/* Note Detail Modal */}
-      {detailModalNote && (
+      {detailModalNote && typeof document !== 'undefined' && createPortal(
         <ModalScrollLock>
           <div
             className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 md:p-8 bg-slate-950/60 backdrop-blur-md overflow-y-auto transition-opacity animate-in fade-in duration-200"
@@ -746,7 +747,8 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
               </div>
             </div>
           </div>
-        </ModalScrollLock>
+        </ModalScrollLock>,
+        document.body
       )}
     </div>
   );
