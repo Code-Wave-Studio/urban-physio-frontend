@@ -2015,8 +2015,17 @@ html {
      ================================================================ */
 
   :root {
-    --shell-primary-nav-w: 72px;
-    --shell-context-panel-w: 240px;
+    --shell-primary-nav-w: 210px;
+    --shell-primary-nav-w-collapsed: 68px;
+    --shell-context-panel-w: 230px;
+    --shell-sidebar-transition: 240ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  @media (min-width: 1024px) and (max-width: 1279px) {
+    :root {
+      --shell-primary-nav-w: 190px;
+      --shell-context-panel-w: 210px;
+    }
   }
 
   /* ── Primary nav rail (desktop only) ── */
@@ -2034,10 +2043,15 @@ html {
       bottom: 0;
       width: var(--shell-primary-nav-w);
       z-index: 101;
-      background: linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(249,250,251,0.99) 100%);
-      border-right: 1px solid rgba(226,232,240,0.5);
-      box-shadow: 1px 0 8px -2px rgba(15,23,42,0.03);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.99) 100%);
+      border-right: 1px solid rgba(226, 232, 240, 0.8);
+      box-shadow: 2px 0 12px -3px rgba(15, 23, 42, 0.04);
+      transition: width var(--shell-sidebar-transition);
       overflow: hidden;
+    }
+
+    .app-shell__primary-nav--collapsed {
+      width: var(--shell-primary-nav-w-collapsed);
     }
 
     /* Hide old sidebar on desktop — replaced by primary nav + context panel */
@@ -2048,10 +2062,11 @@ html {
     /* Desktop workspace margins for 3-column layout */
     .app-shell__workspace {
       margin-left: calc(var(--shell-primary-nav-w) + var(--shell-context-panel-w));
+      transition: margin-left var(--shell-sidebar-transition);
     }
 
     .app-shell__workspace--ctx-collapsed {
-      margin-left: var(--shell-primary-nav-w);
+      margin-left: var(--shell-primary-nav-w-collapsed);
     }
   }
 
@@ -2059,31 +2074,37 @@ html {
     margin-left: 0 !important;
   }
 
-  /* Primary nav profile avatar */
+  /* Primary nav profile header */
   .primary-nav__profile-wrap {
     display: flex;
     align-items: center;
+    gap: 0.625rem;
+    padding: 0.875rem 0.875rem 0.75rem;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+  }
+
+  .app-shell__primary-nav--collapsed .primary-nav__profile-wrap {
     justify-content: center;
-    padding: 0.875rem 0.5rem 0.625rem;
-    border-bottom: 1px solid rgba(226,232,240,0.35);
+    padding: 0.875rem 0.375rem 0.75rem;
   }
 
   .primary-nav__avatar {
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid rgba(249,115,22,0.25);
-    box-shadow: 0 2px 8px -2px rgba(249,115,22,0.15);
+    border: 2px solid rgba(249, 115, 22, 0.25);
+    box-shadow: 0 2px 6px -1px rgba(249, 115, 22, 0.15);
+    flex-shrink: 0;
   }
 
   .primary-nav__avatar--fallback {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, rgba(249,115,22,0.08), rgba(234,88,12,0.12));
-    color: rgba(249,115,22,0.65);
-    border-color: rgba(249,115,22,0.2);
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.1), rgba(234, 88, 12, 0.15));
+    color: #ea580c;
+    border-color: rgba(249, 115, 22, 0.25);
   }
 
   /* Primary nav section list */
@@ -2091,7 +2112,10 @@ html {
     flex: 1 1 0%;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 0.375rem 0;
+    padding: 0.5rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
     scrollbar-width: none;
   }
 
@@ -2102,54 +2126,59 @@ html {
   /* Primary nav item button */
   .primary-nav__item {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: 0.1875rem;
-    padding: 0.5rem 0.25rem;
-    margin: 0.0625rem 0.375rem;
+    justify-content: flex-start;
+    gap: 0.625rem;
+    padding: 0.5rem 0.625rem;
     border-radius: 0.75rem;
     cursor: pointer;
     transition: all 180ms ease;
-    border: none;
+    border: 1px solid transparent;
     background: transparent;
-    color: #94a3b8;
+    color: #475569;
     position: relative;
-    width: calc(100% - 0.75rem);
+    width: 100%;
+    text-align: left;
   }
 
   .primary-nav__item:hover {
-    background: rgba(249,115,22,0.06);
-    color: #64748b;
+    background: rgba(248, 250, 252, 1);
+    border-color: rgba(226, 232, 240, 0.8);
+    color: #0f172a;
   }
 
   .primary-nav__item--active {
-    background: rgba(249,115,22,0.08);
+    background: #ffffff;
+    border-color: rgba(249, 115, 22, 0.25);
     color: #ea580c;
+    box-shadow: 0 2px 8px -2px rgba(249, 115, 22, 0.12);
   }
 
   .primary-nav__item--active::before {
     content: '';
     position: absolute;
-    left: -0.375rem;
+    left: -0.5rem;
     top: 50%;
     transform: translateY(-50%);
-    width: 3px;
-    height: 22px;
+    width: 3.5px;
+    height: 20px;
     border-radius: 0 3px 3px 0;
     background: linear-gradient(180deg, #f97316, #ea580c);
-    box-shadow: 1px 0 6px rgba(249,115,22,0.3);
+    box-shadow: 1px 0 6px rgba(249, 115, 22, 0.35);
   }
 
-  /* Primary nav icon container */
+  /* Icon container */
   .primary-nav__icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
-    border-radius: 0.5rem;
-    font-size: 0.8125rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 0.625rem;
+    font-size: 0.875rem;
     transition: all 180ms ease;
+    flex-shrink: 0;
   }
 
   .primary-nav__item:hover .primary-nav__icon {
@@ -2157,21 +2186,68 @@ html {
   }
 
   .primary-nav__item--active .primary-nav__icon {
-    background: rgba(249,115,22,0.12);
+    background: rgba(249, 115, 22, 0.12);
   }
 
-  /* Primary nav label */
+  /* Label styling — allows clean 2-line wrap without truncation */
   .primary-nav__label {
-    font-size: 0.5625rem;
+    font-size: 0.8125rem; /* 13px */
     font-weight: 600;
-    text-align: center;
-    line-height: 1.15;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.25;
+    color: inherit;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Collapsed primary nav item */
+  .primary-nav__item--collapsed {
+    justify-content: center;
+    padding: 0.5rem 0;
+  }
+
+  .primary-nav__item--collapsed::before {
+    left: -0.25rem;
+  }
+
+  /* Sleek Tooltip for collapsed mode */
+  .primary-nav__tooltip {
+    position: absolute;
+    left: calc(100% + 12px);
+    top: 50%;
+    transform: translateY(-50%) translateX(-4px);
+    background: #0f172a;
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.5rem;
     white-space: nowrap;
-    letter-spacing: 0.01em;
-    transition: color 180ms ease;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.2);
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 160ms ease, transform 160ms ease;
+    z-index: 130;
+  }
+
+  .primary-nav__tooltip::before {
+    content: '';
+    position: absolute;
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent #0f172a transparent transparent;
+  }
+
+  .primary-nav__item--collapsed:hover .primary-nav__tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(-50%) translateX(0);
   }
 
   /* Primary nav footer (collapse toggle) */
@@ -2179,27 +2255,39 @@ html {
     flex-shrink: 0;
     display: flex;
     align-items: center;
+    padding: 0.625rem 0.75rem;
+    border-top: 1px solid rgba(226, 232, 240, 0.6);
+  }
+
+  .app-shell__primary-nav--collapsed .primary-nav__footer {
     justify-content: center;
-    padding: 0.5rem;
-    border-top: 1px solid rgba(226,232,240,0.35);
+    padding: 0.625rem 0.375rem;
   }
 
   .primary-nav__toggle {
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    border-radius: 0.5rem;
-    border: none;
-    background: transparent;
-    color: #94a3b8;
+    justify-content: flex-start;
+    width: 100%;
+    padding: 0.5rem 0.625rem;
+    border-radius: 0.625rem;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    background: #ffffff;
+    color: #64748b;
     cursor: pointer;
     transition: all 180ms ease;
   }
 
+  .app-shell__primary-nav--collapsed .primary-nav__toggle {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+
   .primary-nav__toggle:hover {
-    background: rgba(249,115,22,0.08);
+    background: rgba(249, 115, 22, 0.08);
+    border-color: rgba(249, 115, 22, 0.25);
     color: #ea580c;
   }
 
@@ -2220,17 +2308,22 @@ html {
       z-index: 100;
       background: linear-gradient(
         180deg,
-        rgba(255, 255, 255, 0.94) 0%,
-        rgba(255, 247, 237, 0.65) 40%,
-        rgba(255, 255, 255, 0.9) 100%
+        rgba(255, 255, 255, 0.96) 0%,
+        rgba(255, 247, 237, 0.6) 40%,
+        rgba(255, 255, 255, 0.94) 100%
       );
       backdrop-filter: blur(20px) saturate(1.5);
       -webkit-backdrop-filter: blur(20px) saturate(1.5);
-      border-right: 1px solid rgba(226, 232, 240, 0.65);
+      border-right: 1px solid rgba(226, 232, 240, 0.7);
       box-shadow: 3px 0 20px -6px rgba(15, 23, 42, 0.05);
-      transition: transform var(--shell-sidebar-transition),
+      transition: left var(--shell-sidebar-transition),
+                  transform var(--shell-sidebar-transition),
                   opacity var(--shell-sidebar-transition);
       overflow: hidden;
+    }
+
+    .app-shell__primary-nav--collapsed + .app-shell__context-panel {
+      left: var(--shell-primary-nav-w-collapsed);
     }
 
     .app-shell__context-panel--hidden {

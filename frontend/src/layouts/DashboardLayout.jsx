@@ -275,8 +275,11 @@ export default function DashboardLayout({
           aria-hidden="true"
         />
 
-        {/* ── Desktop: Primary icon rail ── */}
-        <aside className="app-shell__primary-nav" aria-label="Module navigation">
+        {/* ── Desktop: Primary navigation sidebar ── */}
+        <aside
+          className={`app-shell__primary-nav ${collapsed ? 'app-shell__primary-nav--collapsed' : ''}`}
+          aria-label="Module navigation"
+        >
           <div className="primary-nav__profile-wrap">
             {profileAvatar ? (
               <img
@@ -289,6 +292,12 @@ export default function DashboardLayout({
                 <FaIcon icon="fa-user" className="text-sm" />
               </div>
             )}
+            {!collapsed && (
+              <div className="primary-nav__profile-info min-w-0 flex-1">
+                <p className="text-xs font-bold text-slate-800 truncate">{profileName}</p>
+                <p className="text-[10px] text-slate-500 truncate">{profileRole}</p>
+              </div>
+            )}
           </div>
 
           <PrimarySidebarNav
@@ -296,6 +305,7 @@ export default function DashboardLayout({
             activeSectionId={currentSectionId}
             onSectionClick={handleSectionClick}
             accent={accent}
+            collapsed={collapsed}
           />
 
           <div className="primary-nav__footer">
@@ -303,10 +313,11 @@ export default function DashboardLayout({
               type="button"
               className="primary-nav__toggle"
               onClick={toggleCollapsed}
-              title={collapsed ? 'Show panel' : 'Hide panel'}
-              aria-label={collapsed ? 'Show navigation panel' : 'Hide navigation panel'}
+              title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
               <FaIcon icon={collapsed ? 'fa-chevron-right' : 'fa-chevron-left'} className="text-xs" />
+              {!collapsed && <span className="text-xs font-semibold ml-2">Collapse</span>}
             </button>
           </div>
         </aside>
