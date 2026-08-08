@@ -86,7 +86,7 @@ export default function DashboardLayout({
   clinicId = null,
   clinicClosed = false,
 }) {
-  const hasPortalNav = Array.isArray(links) && links.length > 0;
+  const hasPortalNav = variant !== 'admin' && Array.isArray(links) && links.length > 0;
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const { pathname } = useLocation();
   const { user, hasRole } = useAuth() || {};
