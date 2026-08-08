@@ -255,10 +255,14 @@ function ExercisePanel({ room, onReload }) {
     try {
       await exercisePrescriptions.create({
         patient_id: room.patient.id,
+        doctor_id: room.doctor?.id,
+        clinic_id: room.appointment?.clinic_id || undefined,
+        appointment_id: room.appointment?.id,
         title: form.title || 'Home exercise plan',
         diagnosis_notes: form.diagnosis_notes,
         therapist_notes: form.therapist_notes,
         start_date: form.start_date,
+        publish_status: 'published',
         exercises: form.exercises
           .filter((e) => e.exercise_id)
           .map((e) => ({
