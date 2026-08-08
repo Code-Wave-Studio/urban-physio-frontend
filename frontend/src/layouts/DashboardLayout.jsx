@@ -6,10 +6,13 @@ import PortalNavSections from '../components/portal/PortalNavSections';
 import PortalProfileCard from '../components/portal/PortalProfileCard';
 import PortalSpeedDial from '../components/portal/PortalSpeedDial';
 import ContextQuickActions from '../components/portal/ContextQuickActions';
+import PrimarySidebarNav from '../components/portal/PrimarySidebarNav';
+import ContextPanel from '../components/portal/ContextPanel';
 import { useAuth } from '../contexts/AuthContext';
 import { CODEWAVE_LICENSE_MARKER, CODEWAVE_URL } from '../core/codewaveLicense';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import { speedDialForRole } from '../components/nav/navDrawerLinks';
+import { groupPortalNav, isNavLinkActive } from '../constants/portalArchitecture';
 
 /* Section ordering per variant */
 import { PATIENT_SECTION_ORDER } from '../constants/patientNav';
@@ -79,19 +82,19 @@ export default function DashboardLayout({
   brandLogoSrc = null,
   brandLogoAlt = 'The Urban Physio',
   fluid = false,
-  /* Portal sidebar props — already passed by consumers but previously ignored */
+  /* Portal sidebar props */
   links,
   variant = 'patient',
   sidebarFooter = null,
   clinicId = null,
   clinicClosed = false,
 }) {
-  const hasPortalNav = variant !== 'admin' && Array.isArray(links) && links.length > 0;
+  const hasPortalNav = Array.isArray(links) && links.length > 0;
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const { pathname } = useLocation();
   const { user, hasRole } = useAuth() || {};
 
-  /* Collapse state — persisted in localStorage */
+  /* Context panel collapse state — persisted in localStorage */
   const [collapsed, setCollapsed] = useState(() => {
     try {
       return localStorage.getItem(STORAGE_KEY) === '1';
@@ -137,6 +140,32 @@ export default function DashboardLayout({
   const sectionOrder = SECTION_ORDER_MAP[variant] || [];
   const accent = ACCENT_MAP[variant] || 'primary';
 
+  /* Group nav into sections for 3-column layout */
+  const sections = useMemo(
+    () => groupPortalNav(links || [], sectionOrder),
+    [links, sectionOrder],
+  );
+
+  /* Determine active section from current route */
+  const activeSectionId = useMemo(() => {
+    for (const section of sections) {
+      if (section.items.some((item) => item.to && isNavLinkActive(pathname, item))) {
+        return section.id;
+      }
+    }
+    return sections[0]?.id;
+  }, [sections, pathname]);
+
+  /* Manual section override — clicking a primary nav icon selects that section */
+  const [selectedSection, setSelectedSection] = useState(null);
+  const currentSectionId = selectedSection || activeSectionId;
+  const currentSection = sections.find((s) => s.id === currentSectionId) || sections[0];
+
+  /* Reset manual selection when route changes (auto-detect takes over) */
+  useEffect(() => {
+    setSelectedSection(null);
+  }, [pathname]);
+
   /* Profile info for sidebar card */
   const profileName = user?.name || user?.full_name || 'Account';
   const profileRole = useMemo(() => {
@@ -153,33 +182,29 @@ export default function DashboardLayout({
     return speedDialForRole(hasRole);
   }, [hasRole]);
 
-  const sidebarIsVisible = hasPortalNav && (isDesktop || mobileOpen);
-  const sidebarClassname = [
-    'app-shell__sidebar',
-    collapsed && isDesktop ? 'app-shell__sidebar--collapsed' : '',
-    mobileOpen && !isDesktop ? 'app-shell__sidebar--mobile-open' : '',
-  ].filter(Boolean).join(' ');
+  /* Handle section click in primary nav */
+  const handleSectionClick = useCallback((sectionId) => {
+    setSelectedSection(sectionId);
+    if (collapsed) {
+      setCollapsed(false);
+      try { localStorage.setItem(STORAGE_KEY, '0'); } catch {}
+    }
+  }, [collapsed]);
 
-  const workspaceClassname = [
-    'app-shell__workspace',
-    hasPortalNav && collapsed && isDesktop ? 'app-shell__workspace--collapsed' : '',
-    !hasPortalNav ? 'app-shell__workspace--collapsed' : '',
-  ].filter(Boolean).join(' ');
-
-  /* Sidebar toggle as the beforeLogo element in Navbar */
+  /* Sidebar toggle rendered before logo in Navbar */
   const sidebarToggle = hasPortalNav ? (
     <div className="flex items-center gap-1">
-      {/* Desktop: collapse/expand toggle */}
+      {/* Desktop: toggle context panel visibility */}
       <button
         type="button"
         className="shell-sidebar-toggle hidden lg:flex"
         onClick={toggleCollapsed}
-        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        aria-label={collapsed ? 'Show navigation panel' : 'Collapse navigation panel'}
+        title={collapsed ? 'Show navigation panel' : 'Collapse navigation panel'}
       >
         <FaIcon icon={collapsed ? 'fa-bars' : 'fa-angles-left'} className="text-sm" />
       </button>
-      {/* Mobile/tablet: open sidebar as drawer */}
+      {/* Mobile/tablet: open sidebar drawer */}
       <button
         type="button"
         className="shell-sidebar-toggle lg:hidden"
@@ -190,6 +215,13 @@ export default function DashboardLayout({
       </button>
     </div>
   ) : null;
+
+  /* Workspace class names */
+  const workspaceClass = [
+    'app-shell__workspace',
+    hasPortalNav && collapsed ? 'app-shell__workspace--ctx-collapsed' : '',
+    !hasPortalNav ? 'app-shell__workspace--no-nav' : '',
+  ].filter(Boolean).join(' ');
 
   /* --- No portal nav: original simple layout --- */
   if (!hasPortalNav) {
@@ -214,7 +246,18 @@ export default function DashboardLayout({
     );
   }
 
-  /* --- Portal layout with sidebar --- */
+  /* Shared profile card props — same data for both desktop context panel and mobile drawer */
+  const profileCardProps = {
+    name: profileName,
+    roleLabel: profileRole,
+    avatarUrl: resolveMediaUrl(profileAvatar) || profileAvatar,
+    accent,
+    showPresence: variant === 'clinic' || variant === 'doctor',
+    presenceOnline: variant === 'clinic' ? !clinicClosed : true,
+    clinicId,
+  };
+
+  /* --- Portal layout with 3-column shell --- */
   return (
     <div className="app-shell">
       <Navbar
@@ -232,23 +275,86 @@ export default function DashboardLayout({
           aria-hidden="true"
         />
 
-        {/* Sidebar */}
-        <aside className={sidebarClassname} aria-label="Portal navigation">
-          <div className="app-shell__sidebar-scroll">
+        {/* ── Desktop: Primary icon rail ── */}
+        <aside className="app-shell__primary-nav" aria-label="Module navigation">
+          <div className="primary-nav__profile-wrap">
+            {profileAvatar ? (
+              <img
+                src={resolveMediaUrl(profileAvatar) || profileAvatar}
+                alt={profileName}
+                className="primary-nav__avatar"
+              />
+            ) : (
+              <div className="primary-nav__avatar primary-nav__avatar--fallback">
+                <FaIcon icon="fa-user" className="text-sm" />
+              </div>
+            )}
+          </div>
+
+          <PrimarySidebarNav
+            sections={sections}
+            activeSectionId={currentSectionId}
+            onSectionClick={handleSectionClick}
+            accent={accent}
+          />
+
+          <div className="primary-nav__footer">
+            <button
+              type="button"
+              className="primary-nav__toggle"
+              onClick={toggleCollapsed}
+              title={collapsed ? 'Show panel' : 'Hide panel'}
+              aria-label={collapsed ? 'Show navigation panel' : 'Hide navigation panel'}
+            >
+              <FaIcon icon={collapsed ? 'fa-chevron-right' : 'fa-chevron-left'} className="text-xs" />
+            </button>
+          </div>
+        </aside>
+
+        {/* ── Desktop: Context panel ── */}
+        <aside
+          className={`app-shell__context-panel ${collapsed ? 'app-shell__context-panel--hidden' : ''}`}
+          aria-label={currentSection?.label || 'Section navigation'}
+        >
+          <div className="app-shell__context-panel-scroll">
             {/* Profile card */}
             <div className="mb-3">
-              <PortalProfileCard
-                name={profileName}
-                roleLabel={profileRole}
-                avatarUrl={resolveMediaUrl(profileAvatar) || profileAvatar}
-                accent={accent}
-                showPresence={variant === 'clinic' || variant === 'doctor'}
-                presenceOnline={variant === 'clinic' ? !clinicClosed : true}
-                clinicId={clinicId}
-              />
+              <PortalProfileCard {...profileCardProps} />
             </div>
 
             {/* Speed dial */}
+            {speedDialItems.length > 0 && (
+              <div className="mb-3">
+                <PortalSpeedDial items={speedDialItems} onNavigate={() => {}} />
+              </div>
+            )}
+
+            {/* Section navigation */}
+            <ContextPanel
+              section={currentSection}
+              accent={accent}
+              onNavigate={() => {}}
+            />
+          </div>
+
+          {/* Context panel footer — role switch, etc. */}
+          {sidebarFooter && (
+            <div className="app-shell__context-panel-footer">
+              {sidebarFooter}
+            </div>
+          )}
+        </aside>
+
+        {/* ── Mobile: Full sidebar drawer (preserves existing mobile behavior) ── */}
+        <aside
+          className={`app-shell__sidebar ${mobileOpen && !isDesktop ? 'app-shell__sidebar--mobile-open' : ''}`}
+          aria-label="Portal navigation"
+        >
+          <div className="app-shell__sidebar-scroll">
+            <div className="mb-3">
+              <PortalProfileCard {...profileCardProps} />
+            </div>
+
             {speedDialItems.length > 0 && (
               <div className="mb-3">
                 <PortalSpeedDial
@@ -258,35 +364,30 @@ export default function DashboardLayout({
               </div>
             )}
 
-            {/* Navigation sections */}
             <PortalNavSections
               links={links}
               sectionOrder={sectionOrder}
               accent={accent}
               onNavigate={() => setMobileOpen(false)}
-              open={!collapsed || !isDesktop}
+              open={true}
             />
           </div>
 
-          {/* Sidebar footer — role switch (clinic), or collapse toggle */}
           <div className="app-shell__sidebar-footer">
             {sidebarFooter}
-            {/* Close button for mobile sidebar */}
-            {!isDesktop && (
-              <button
-                type="button"
-                className="shell-sidebar-toggle w-full mt-2 justify-center text-slate-400 hover:text-slate-600"
-                onClick={() => setMobileOpen(false)}
-              >
-                <FaIcon icon="fa-xmark" className="text-base mr-1.5" />
-                <span className="text-xs font-medium">Close</span>
-              </button>
-            )}
+            <button
+              type="button"
+              className="shell-sidebar-toggle w-full mt-2 justify-center text-slate-400 hover:text-slate-600"
+              onClick={() => setMobileOpen(false)}
+            >
+              <FaIcon icon="fa-xmark" className="text-base mr-1.5" />
+              <span className="text-xs font-medium">Close</span>
+            </button>
           </div>
         </aside>
 
-        {/* Workspace */}
-        <div className={workspaceClassname}>
+        {/* ── Workspace ── */}
+        <div className={workspaceClass}>
           <main className={`mx-auto py-4 sm:py-6 animate-fade-in min-w-0 ${
             fluid
               ? 'w-full max-w-none px-3 sm:px-6 lg:px-8'

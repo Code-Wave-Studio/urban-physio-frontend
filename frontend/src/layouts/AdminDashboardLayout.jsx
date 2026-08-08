@@ -1,10 +1,10 @@
 import DashboardLayout from './DashboardLayout';
+import { ADMIN_NAV } from '../constants/adminNav';
 
 export default function AdminDashboardLayout({ children }) {
   return (
-    <DashboardLayout links={[]} variant="admin">
+    <DashboardLayout links={ADMIN_NAV} variant="admin">
       {children}
     </DashboardLayout>
   );
 }
-
