@@ -60,8 +60,11 @@ export default function PatientPaymentsTab({ clinicId, patientKey, data, onRefre
       await clinicPortal.billingCollect(clinicId, {
         appointment_id: Number(selectedApptId),
         amount: numAmount,
+        method: paymentMethod,
         payment_method: paymentMethod,
+        channel: 'offline',
         payment_channel: 'offline',
+        reference_number: referenceNumber.trim() || null,
         transaction_id: referenceNumber.trim() || null,
         notes: notes.trim() || null,
       });

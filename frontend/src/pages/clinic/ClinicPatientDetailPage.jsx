@@ -17,6 +17,7 @@ import PatientPrescriptionsTab from '../../components/clinic/patients/PatientPre
 import PatientClinicalNotesTab from '../../components/clinic/patients/PatientClinicalNotesTab';
 import PatientExerciseFeedbackTab from '../../components/clinic/patients/PatientExerciseFeedbackTab';
 import PatientPaymentsTab from '../../components/clinic/patients/PatientPaymentsTab';
+import PatientCommLog from '../../components/clinic/communication/PatientCommLog';
 
 const TABS = ['Overview', 'Clinical Notes', 'Exercise Feedback', 'Timeline', 'Assessments', 'Packages', 'Appointment History', 'Payments', 'Prescriptions', 'Documents', 'Reports', 'Consultation Room', 'Communication'];
 const money = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
