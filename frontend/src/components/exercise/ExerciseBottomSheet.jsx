@@ -47,13 +47,13 @@ export default function ExerciseBottomSheet({
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end md:justify-center md:items-center p-0 md:p-4">
+        <div className="fixed inset-0 z-50 flex flex-col justify-end md:justify-center md:items-center pt-16 sm:pt-20 pb-3 sm:pb-4 px-0 sm:px-4 md:px-6">
           {/* Backdrop — background page remains visible behind sheet */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.15 }}
             onClick={onClose}
             className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity"
             aria-hidden="true"
@@ -65,12 +65,12 @@ export default function ExerciseBottomSheet({
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0.1, bottom: 0.9 }}
             onDragEnd={handleDragEnd}
-            initial={{ y: '100%', opacity: 0.9 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: '100%', opacity: 0 }}
-            transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-            className={`relative z-10 w-full bg-white rounded-t-3xl md:rounded-3xl shadow-2xl border border-slate-200/80 flex flex-col overflow-hidden transition-all duration-300 md:max-w-xl md:max-h-[85vh] ${
-              isExpanded ? 'h-[95vh]' : maxHeight
+            initial={{ y: 16, opacity: 0, scale: 0.97 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: 16, opacity: 0, scale: 0.97 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className={`relative z-10 w-full bg-white rounded-t-3xl md:rounded-3xl shadow-2xl border border-slate-200/80 flex flex-col overflow-hidden transition-all duration-200 md:max-w-xl max-h-[calc(100dvh-5rem)] md:max-h-[min(calc(100dvh-5.5rem),840px)] ${
+              isExpanded ? 'h-[calc(100dvh-5rem)]' : maxHeight
             } ${className}`}
           >
             {/* Mobile Drag Handle Bar */}

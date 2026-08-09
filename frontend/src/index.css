@@ -282,21 +282,18 @@
     box-shadow: 0 8px 24px -8px rgb(249 115 22 / 0.2);
   }
 
-  /* Modals / popups — light frosted overlay + white glass panel */
+  /* Modals / popups — light frosted overlay + crisp white panel */
   .glass-modal-backdrop {
-    @apply backdrop-blur-xl;
-    background: linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.72) 0%,
-      rgba(255, 237, 213, 0.55) 45%,
-      rgba(255, 247, 237, 0.65) 100%
-    );
+    @apply backdrop-blur-sm transition-opacity;
+    background: rgba(15, 23, 42, 0.48);
+    animation: fadeIn 0.18s ease-out forwards;
   }
 
   .glass-modal-panel {
-    @apply flex flex-col rounded-2xl md:rounded-3xl overflow-hidden animate-slide-up
-           bg-white/85 backdrop-blur-2xl border border-white/90
-           shadow-2xl shadow-primary-900/10 ring-1 ring-white/70;
+    @apply flex flex-col rounded-2xl md:rounded-3xl overflow-hidden
+           bg-white border border-slate-200/90
+           shadow-2xl shadow-slate-950/20;
+    animation: modalPop 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
   .glass-modal-panel.overflow-visible-panel {

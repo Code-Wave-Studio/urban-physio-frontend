@@ -88,7 +88,7 @@ export default function DoctorBottomSheet({ doctor: initialDoctor, open, onClose
             role="dialog"
             aria-modal="true"
             aria-labelledby="doctor-sheet-title"
-            className="fixed inset-x-0 bottom-0 z-[125] flex flex-col h-[min(96dvh,calc(100dvh-env(safe-area-inset-top,0px)-0.5rem))]"
+            className="fixed inset-x-0 bottom-0 z-[125] flex flex-col h-[min(90dvh,calc(100dvh-5rem))]"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}

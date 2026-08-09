@@ -71,10 +71,10 @@ export default function GlassModal({
         onClick={() => closeOnBackdrop && !preventClose && onClose()}
       />
 
-      <div className="fixed inset-0 overflow-hidden pointer-events-none p-2 sm:p-6 md:p-8 flex items-center justify-center">
-        <div className={`flex h-full max-h-full w-full items-stretch sm:items-center justify-center ${className}`}>
+      <div className="fixed inset-0 overflow-hidden pointer-events-none pt-16 sm:pt-20 pb-4 px-3 sm:px-6 md:px-8 flex items-start sm:items-center justify-center">
+        <div className={`flex h-full max-h-full w-full items-start sm:items-center justify-center ${className}`}>
           <div
-            className={`glass-modal-panel relative w-full my-0 sm:my-auto max-h-[100dvh] sm:max-h-[min(calc(100dvh-2.5rem),900px)] ${widthClass} pointer-events-auto flex flex-col rounded-none sm:rounded-2xl md:rounded-3xl ${panelClassName}`}
+            className={`glass-modal-panel relative w-full my-auto max-h-[calc(100dvh-5rem)] sm:max-h-[min(calc(100dvh-6rem),860px)] ${widthClass} pointer-events-auto flex flex-col rounded-2xl md:rounded-3xl ${panelClassName}`}
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
           >
