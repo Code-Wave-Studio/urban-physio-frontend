@@ -49,6 +49,7 @@ function resolveActionsForRoute(pathname, variant) {
 
   /* Doctor portal routes */
   if (variant === 'doctor') {
+    if (/^\/doctor\/patients\/[^/]+/.test(pathname)) return PATIENT_PROFILE_ACTIONS;
     if (pathname.startsWith('/doctor/calendar') || pathname.startsWith('/doctor/appointments')) {
       return [
         { label: 'Calendar', icon: 'fa-calendar-days', to: '/doctor/calendar' },

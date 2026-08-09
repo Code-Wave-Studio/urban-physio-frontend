@@ -115,6 +115,18 @@ export default function PatientExerciseFeedbackTab({ clinicId, patientKey, onCon
     }
   };
 
+  const [showFilters, setShowFilters] = useState(false);
+
+  const activeFilterCount = [painFilter, statusFilter, reviewStatusFilter, dateFrom, dateTo].filter(Boolean).length;
+
+  const clearAllFilters = () => {
+    setPainFilter('');
+    setStatusFilter('');
+    setReviewStatusFilter('');
+    setDateFrom('');
+    setDateTo('');
+  };
+
   return (
     <div className="space-y-4">
       {/* Rule-based Exercise Feedback Alerts */}
@@ -169,63 +181,109 @@ export default function PatientExerciseFeedbackTab({ clinicId, patientKey, onCon
         </div>
       </div>
 
-      {/* Filters Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
-        <div className="flex flex-wrap items-center gap-2 flex-1 min-w-[260px]">
-          {/* Search */}
-          <div className="relative flex-1 min-w-[140px]">
+      {/* Compact & Collapsible Filter Bar */}
+      <div className="bg-slate-50 p-2.5 sm:p-3 rounded-2xl border border-slate-200/80 space-y-2.5 transition-all">
+        {/* Main Search Row */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 min-w-0">
             <FaIcon icon="fa-magnifying-glass" className="absolute left-3 top-2.5 text-xs text-slate-400" />
             <input
               type="text"
               placeholder="Search exercise or feedback..."
-              className="input-field text-xs pl-8 py-1.5 bg-white w-full"
+              className="input-field text-xs pl-8 pr-3 py-1.5 bg-white w-full rounded-xl border-slate-200"
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />
           </div>
 
-          {/* Pain filter */}
-          <select
-            className="input-field text-xs py-1.5 px-2 bg-white"
-            value={painFilter}
-            onChange={(e) => setPainFilter(e.target.value)}
+          <button
+            type="button"
+            onClick={() => setShowFilters((prev) => !prev)}
+            className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition cursor-pointer ${
+              showFilters || activeFilterCount > 0
+                ? 'bg-orange-50 text-orange-800 border-orange-200 hover:bg-orange-100'
+                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
+            }`}
           >
-            <option value="">All Pain Scores</option>
-            <option value="7">Severe Pain (≥7)</option>
-            <option value="4">Moderate Pain (≥4)</option>
-            <option value="1">Mild Pain (≥1)</option>
-          </select>
+            <FaIcon icon="fa-sliders" className="text-xs" />
+            <span>Filters</span>
+            {activeFilterCount > 0 && (
+              <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-orange-600 text-white text-[10px] font-bold">
+                {activeFilterCount}
+              </span>
+            )}
+            <FaIcon icon={showFilters ? 'fa-chevron-up' : 'fa-chevron-down'} className="text-[9px] opacity-70 ml-0.5" />
+          </button>
 
-          {/* Completion Status */}
-          <select
-            className="input-field text-xs py-1.5 px-2 bg-white"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="">All Statuses</option>
-            <option value="completed">Completed</option>
-            <option value="skipped">Skipped</option>
-          </select>
-
-          {/* Review Status */}
-          <select
-            className="input-field text-xs py-1.5 px-2 bg-white"
-            value={reviewStatusFilter}
-            onChange={(e) => setReviewStatusFilter(e.target.value)}
-          >
-            <option value="">All Review Statuses</option>
-            <option value="pending">Pending Review</option>
-            <option value="reviewed">Reviewed</option>
-          </select>
-
-          {/* Date Range */}
-          <input
-            type="date"
-            className="input-field text-xs py-1.5 px-2 bg-white"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-          />
+          {activeFilterCount > 0 && (
+            <button
+              type="button"
+              onClick={clearAllFilters}
+              className="shrink-0 text-xs font-medium text-slate-500 hover:text-slate-800 underline underline-offset-2 px-1 cursor-pointer"
+            >
+              Clear
+            </button>
+          )}
         </div>
+
+        {/* Collapsible Filter Panel (Hidden by default) */}
+        {showFilters && (
+          <div className="pt-2 border-t border-slate-200/60 grid grid-cols-2 sm:grid-cols-4 gap-2 animate-in fade-in slide-in-from-top-1 duration-150">
+            {/* Pain filter */}
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Pain Score</label>
+              <select
+                className="input-field text-xs py-1 px-2 bg-white w-full rounded-lg"
+                value={painFilter}
+                onChange={(e) => setPainFilter(e.target.value)}
+              >
+                <option value="">All Pain Scores</option>
+                <option value="7">Severe Pain (≥7)</option>
+                <option value="4">Moderate Pain (≥4)</option>
+                <option value="1">Mild Pain (≥1)</option>
+              </select>
+            </div>
+
+            {/* Completion Status */}
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Completion</label>
+              <select
+                className="input-field text-xs py-1 px-2 bg-white w-full rounded-lg"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="">All Statuses</option>
+                <option value="completed">Completed</option>
+                <option value="skipped">Skipped</option>
+              </select>
+            </div>
+
+            {/* Review Status */}
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Review</label>
+              <select
+                className="input-field text-xs py-1 px-2 bg-white w-full rounded-lg"
+                value={reviewStatusFilter}
+                onChange={(e) => setReviewStatusFilter(e.target.value)}
+              >
+                <option value="">All Review Statuses</option>
+                <option value="pending">Pending Review</option>
+                <option value="reviewed">Reviewed</option>
+              </select>
+            </div>
+
+            {/* Date Range */}
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Date</label>
+              <input
+                type="date"
+                className="input-field text-xs py-1 px-2 bg-white w-full rounded-lg"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Feedback List */}

@@ -179,7 +179,7 @@ export default function DashboardLayout({
           logoAlt={brandLogoAlt}
         />
         <div className="admin-main-wrap">
-          <main className={`mx-auto py-4 sm:py-6 animate-fade-in min-w-0 ${
+          <main className={`mx-auto pt-3 sm:pt-4 pb-6 animate-fade-in min-w-0 ${
             fluid
               ? 'w-full max-w-none px-3 sm:px-6 lg:px-8'
               : 'max-w-7xl px-3 sm:px-4 lg:px-8'
@@ -290,7 +290,7 @@ export default function DashboardLayout({
 
         {/* ── Workspace (Full width on tablet/mobile, margin-left on desktop) ── */}
         <div className={workspaceClass}>
-          <main className={`mx-auto py-4 sm:py-6 animate-fade-in min-w-0 ${
+          <main className={`mx-auto pt-3 sm:pt-4 pb-6 animate-fade-in min-w-0 ${
             fluid
               ? 'w-full max-w-none px-3 sm:px-6 lg:px-8'
               : 'max-w-7xl px-3 sm:px-4 lg:px-8'

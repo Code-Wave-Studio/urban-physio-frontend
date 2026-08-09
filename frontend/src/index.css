@@ -1447,6 +1447,22 @@
     @apply hidden md:block;
   }
 
+  /* Single-line horizontally scrollable portal tabs across all devices */
+  .portal-tabs {
+    @apply flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-1 -mx-1 px-1;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .portal-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .portal-tabs > button,
+  .portal-tabs > a {
+    @apply shrink-0;
+  }
+
   /* Sticky mobile ops strip under page header */
   .portal-mobile-ops {
     @apply flex lg:hidden gap-2 overflow-x-auto pb-1 -mx-1 px-1 mb-4;
@@ -1794,7 +1810,7 @@ html {
     display: flex;
     flex: 1 1 0%;
     min-height: 0;
-    padding-top: var(--site-header-height, 3.5rem);
+    padding-top: 0;
     position: relative;
   }
 

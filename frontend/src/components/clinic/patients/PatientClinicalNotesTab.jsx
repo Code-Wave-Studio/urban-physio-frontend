@@ -247,67 +247,119 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
   const toggleExpand = (id) => {
     setExpandedNotes((prev) => ({ ...prev, [id]: !prev[id] }));
   };
+  const [showFilters, setShowFilters] = useState(false);
+  const activeFilterCount = [noteTypeFilter, therapistFilter, dateFilter].filter(Boolean).length;
+
+  const clearAllFilters = () => {
+    setNoteTypeFilter('');
+    setTherapistFilter('');
+    setDateFilter('');
+  };
 
   return (
     <div className="space-y-4">
-      {/* Header Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
-        <div className="flex flex-wrap items-center gap-2 flex-1 min-w-[260px]">
+      {/* Compact & Collapsible Header Controls */}
+      <div className="bg-slate-50 p-2.5 sm:p-3 rounded-2xl border border-slate-200/80 space-y-2.5 transition-all">
+        {/* Top Search & Actions Row */}
+        <div className="flex items-center gap-2">
           {/* Search */}
-          <div className="relative flex-1 min-w-[150px]">
+          <div className="relative flex-1 min-w-0">
             <FaIcon icon="fa-magnifying-glass" className="absolute left-3 top-2.5 text-xs text-slate-400" />
             <input
               type="text"
               placeholder="Search clinical notes..."
-              className="input-field text-xs pl-8 py-1.5 bg-white w-full"
+              className="input-field text-xs pl-8 pr-3 py-1.5 bg-white w-full rounded-xl border-slate-200"
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />
           </div>
 
-          {/* Note Type Filter */}
-          <select
-            className="input-field text-xs py-1.5 px-2 bg-white"
-            value={noteTypeFilter}
-            onChange={(e) => setNoteTypeFilter(e.target.value)}
+          <button
+            type="button"
+            onClick={() => setShowFilters((prev) => !prev)}
+            className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition cursor-pointer ${
+              showFilters || activeFilterCount > 0
+                ? 'bg-orange-50 text-orange-800 border-orange-200 hover:bg-orange-100'
+                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
+            }`}
           >
-            <option value="">All Note Types</option>
-            {NOTE_TYPES.map((t) => (
-              <option key={t.id} value={t.id}>{t.label}</option>
-            ))}
-          </select>
+            <FaIcon icon="fa-sliders" className="text-xs" />
+            <span>Filters</span>
+            {activeFilterCount > 0 && (
+              <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-orange-600 text-white text-[10px] font-bold">
+                {activeFilterCount}
+              </span>
+            )}
+            <FaIcon icon={showFilters ? 'fa-chevron-up' : 'fa-chevron-down'} className="text-[9px] opacity-70 ml-0.5" />
+          </button>
 
-          {/* Therapist Filter */}
-          {uniqueTherapists.length > 0 && (
-            <select
-              className="input-field text-xs py-1.5 px-2 bg-white"
-              value={therapistFilter}
-              onChange={(e) => setTherapistFilter(e.target.value)}
+          {activeFilterCount > 0 && (
+            <button
+              type="button"
+              onClick={clearAllFilters}
+              className="shrink-0 text-xs font-medium text-slate-500 hover:text-slate-800 underline underline-offset-2 px-1 cursor-pointer"
             >
-              <option value="">All Therapists</option>
-              {uniqueTherapists.map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
+              Clear
+            </button>
           )}
 
-          {/* Date Filter */}
-          <input
-            type="date"
-            className="input-field text-xs py-1.5 px-2 bg-white"
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-          />
+          <button
+            type="button"
+            onClick={openNewNote}
+            className="btn-primary text-xs !py-1.5 !px-3 shrink-0 inline-flex items-center gap-1.5"
+          >
+            <FaIcon icon="fa-plus" />
+            <span>Add Note</span>
+          </button>
         </div>
 
-        <button
-          type="button"
-          className="btn-primary text-xs py-2 px-3.5 inline-flex items-center gap-1.5 shadow-xs"
-          onClick={openNewNote}
-        >
-          <FaIcon icon="fa-plus" />
-          <span>New Clinical Note</span>
-        </button>
+        {/* Collapsible Filter Panel (Hidden by default) */}
+        {showFilters && (
+          <div className="pt-2 border-t border-slate-200/60 grid grid-cols-2 sm:grid-cols-3 gap-2 animate-in fade-in slide-in-from-top-1 duration-150">
+            {/* Note Type Filter */}
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Note Type</label>
+              <select
+                className="input-field text-xs py-1 px-2 bg-white w-full rounded-lg"
+                value={noteTypeFilter}
+                onChange={(e) => setNoteTypeFilter(e.target.value)}
+              >
+                <option value="">All Note Types</option>
+                {NOTE_TYPES.map((t) => (
+                  <option key={t.id} value={t.id}>{t.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Therapist Filter */}
+            {uniqueTherapists.length > 0 && (
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Therapist</label>
+                <select
+                  className="input-field text-xs py-1 px-2 bg-white w-full rounded-lg"
+                  value={therapistFilter}
+                  onChange={(e) => setTherapistFilter(e.target.value)}
+                >
+                  <option value="">All Therapists</option>
+                  {uniqueTherapists.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Date Filter */}
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Date</label>
+              <input
+                type="date"
+                className="input-field text-xs py-1 px-2 bg-white w-full rounded-lg"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Editor Modal */}
@@ -532,7 +584,8 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
               </form>
             </div>
           </div>
-        </ModalScrollLock>
+        </ModalScrollLock>,
+        document.body
       )}
 
       {/* Notes List */}

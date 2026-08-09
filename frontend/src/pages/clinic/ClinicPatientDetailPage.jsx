@@ -18,6 +18,7 @@ import PatientClinicalNotesTab from '../../components/clinic/patients/PatientCli
 import PatientExerciseFeedbackTab from '../../components/clinic/patients/PatientExerciseFeedbackTab';
 import PatientPaymentsTab from '../../components/clinic/patients/PatientPaymentsTab';
 import PatientCommLog from '../../components/clinic/communication/PatientCommLog';
+import CustomizableTabBar from '../../components/patient/CustomizableTabBar';
 
 const TABS = ['Overview', 'Clinical Notes', 'Exercise Feedback', 'Timeline', 'Assessments', 'Packages', 'Appointment History', 'Payments', 'Prescriptions', 'Documents', 'Reports', 'Consultation Room', 'Communication'];
 const money = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
@@ -54,7 +55,7 @@ function normalizePatientKey(raw) {
 export default function ClinicPatientDetailPage() {
   const { patientKey: rawPatientKey } = useParams();
   const patientKey = normalizePatientKey(rawPatientKey);
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get('tab');
   const initialApptId = searchParams.get('appointmentId');
   const { clinicId, can, loading: boot } = useClinicPortal();
@@ -63,6 +64,30 @@ export default function ClinicPatientDetailPage() {
   const [erpResponses, setErpResponses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState(() => (initialTab && TABS.includes(initialTab) ? initialTab : 'Overview'));
+
+  const urlTab = searchParams.get('tab');
+
+  /* Sync active tab state whenever URL search param ?tab= changes (e.g. from quick action buttons) */
+  useEffect(() => {
+    if (urlTab && TABS.includes(urlTab)) {
+      setTab(urlTab);
+    }
+  }, [urlTab]);
+
+  const handleSelectTab = useCallback(
+    (selectedTab) => {
+      setTab(selectedTab);
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.set('tab', selectedTab);
+          return next;
+        },
+        { replace: true }
+      );
+    },
+    [setSearchParams]
+  );
   const [selectedConsultationApptId, setSelectedConsultationApptId] = useState(initialApptId ? Number(initialApptId) : null);
   const [historyStatusFilter, setHistoryStatusFilter] = useState('all');
   const [historyTypeFilter, setHistoryTypeFilter] = useState('all');
@@ -228,6 +253,39 @@ export default function ClinicPatientDetailPage() {
     [data]
   );
 
+  const tabDotStatus = useMemo(() => {
+    if (!data) return {};
+    const status = {};
+
+    // Payments: check for outstanding balance
+    const outstanding = Number(data.summary?.outstanding || data._erpOverview?.outstanding || 0);
+    if (outstanding > 0) {
+      status['Payments'] = { hasDot: true, color: 'bg-amber-500', title: `Outstanding due: ₹${outstanding.toLocaleString('en-IN')}` };
+    }
+
+    // Assessments: active assessment or responses exist
+    if (activeAssessment || (erpResponses && erpResponses.length > 0)) {
+      status['Assessments'] = { hasDot: true, color: 'bg-teal-500', title: 'Assessments available' };
+    }
+
+    // Packages: active packages present
+    if ((data.packages || []).some((p) => p.status === 'active')) {
+      status['Packages'] = { hasDot: true, color: 'bg-emerald-500', title: 'Active package' };
+    }
+
+    // Appointment History: upcoming scheduled appointments
+    if ((data.appointments || []).some((a) => a.status === 'scheduled' || a.status === 'confirmed')) {
+      status['Appointment History'] = { hasDot: true, color: 'bg-blue-500', title: 'Upcoming visits' };
+    }
+
+    // Consultation Room: active session selected
+    if (selectedConsultationApptId) {
+      status['Consultation Room'] = { hasDot: true, color: 'bg-rose-500 animate-pulse', title: 'Consultation active' };
+    }
+
+    return status;
+  }, [data, activeAssessment, erpResponses, selectedConsultationApptId]);
+
   return (
     <ClinicPortalShell
       title={loading ? 'Patient' : name}
@@ -303,20 +361,13 @@ export default function ClinicPatientDetailPage() {
             </div>
           </section>
 
-          <div className="portal-tabs">
-            {TABS.map((item) => (
-              <button
-                key={item}
-                type="button"
-                onClick={() => setTab(item)}
-                className={`px-3 py-2 rounded-full text-xs font-semibold transition ${
-                  tab === item ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'
-                }`}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
+          <CustomizableTabBar
+            defaultTabs={TABS}
+            activeTab={tab}
+            onSelectTab={handleSelectTab}
+            dotStatus={tabDotStatus}
+            storageKey="patient_detail_tabs"
+          />
 
           <section className="glass-card !p-3 sm:!p-4 md:!p-5 min-w-0">
             {tab === 'Overview' && (

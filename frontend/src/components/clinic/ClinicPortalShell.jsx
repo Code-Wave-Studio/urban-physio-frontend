@@ -61,7 +61,7 @@ function ClinicPortalShellInner({ children, title, subtitle, actions, hideHeader
       fluid={fluid}
     >
       {(!hideHeaderTitle || actions) && (
-        <div className="mb-3 sm:mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="mb-2.5 sm:mb-3.5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           {!hideHeaderTitle && (
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2.5">
