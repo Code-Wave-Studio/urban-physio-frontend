@@ -17,6 +17,7 @@ import PatientPrescriptionsTab from '../../components/clinic/patients/PatientPre
 import PatientClinicalNotesTab from '../../components/clinic/patients/PatientClinicalNotesTab';
 import PatientExerciseFeedbackTab from '../../components/clinic/patients/PatientExerciseFeedbackTab';
 import PatientPaymentsTab from '../../components/clinic/patients/PatientPaymentsTab';
+import PatientDocumentsTab from '../../components/clinic/patients/PatientDocumentsTab';
 import PatientCommLog from '../../components/clinic/communication/PatientCommLog';
 import CustomizableTabBar from '../../components/patient/CustomizableTabBar';
 
@@ -786,21 +787,12 @@ export default function ClinicPatientDetailPage() {
             )}
 
             {tab === 'Documents' && (
-              <div>
-                <div className="flex justify-between">
-                  <h2 className="font-bold">Documents</h2>
-                  <Link to="/clinic-portal/documents" className="btn-outline text-xs !py-2">Open document manager</Link>
-                </div>
-                <div className="mt-4">
-                  {data.documents?.map((doc) => (
-                    <div key={doc.id} className="border-t py-3 text-sm flex justify-between">
-                      <span>{doc.title || doc.file_name || 'Document'}</span>
-                      <span className="text-slate-400">{String(doc.created_at || '').slice(0, 10)}</span>
-                    </div>
-                  ))}
-                  {!data.documents?.length && <Empty>No documents.</Empty>}
-                </div>
-              </div>
+              <PatientDocumentsTab
+                patientKey={data.patient_key || patientKey}
+                patient={profile}
+                clinicId={clinicId}
+                initialDocs={data.documents || []}
+              />
             )}
 
             {tab === 'Reports' && (

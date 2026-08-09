@@ -64,10 +64,35 @@ export default function DocumentsManager({ initialFilters = {} }) {
     if (initialFilters.patient_id) params.patient_id = initialFilters.patient_id;
     documents
       .list(params)
-      .then((res) => setItems(res.data?.items || []))
+      .then((res) => {
+        let apiItems = res.data?.items || [];
+        let localDocs = [];
+        try {
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('tup_patient_documents_')) {
+              const stored = JSON.parse(localStorage.getItem(key) || '[]');
+              if (Array.isArray(stored)) {
+                // If patient view, only show items with is_shared !== false
+                const visible = role === 'patient' ? stored.filter((d) => d.is_shared !== false) : stored;
+                localDocs.push(...visible);
+              }
+            }
+          }
+        } catch {
+          /* ignore */
+        }
+        const map = new Map();
+        [...localDocs, ...apiItems].forEach((item) => {
+          if (item.id && !map.has(String(item.id))) {
+            map.set(String(item.id), item);
+          }
+        });
+        setItems(Array.from(map.values()));
+      })
       .catch((e) => toast.error(e.message || 'Could not load documents'))
       .finally(() => setLoading(false));
-  }, [tab, debouncedQ, filters.category, filters.type, filters.range, filters.status, initialFilters.appointment_id, initialFilters.patient_id]);
+  }, [tab, debouncedQ, filters.category, filters.type, filters.range, filters.status, initialFilters.appointment_id, initialFilters.patient_id, role]);
 
   useEffect(() => {
     load();
