@@ -267,7 +267,7 @@ export default function ClinicInvoiceGeneratorPage() {
   };
 
   const brandColor = settings?.brand_color || clinic?.brand_color || '#0d9488';
-  const logo = settings?.logo_url || clinic?.logo_url || clinic?.logo;
+  const logo = resolveMediaUrl(settings?.logo_url || clinic?.logo_url || clinic?.logo);
   const upiId = gatewayForm.gateway_upi_vpa || gatewayForm.upi_id || settings?.upi_id || '';
 
   const upiQrUrl = useMemo(() => {

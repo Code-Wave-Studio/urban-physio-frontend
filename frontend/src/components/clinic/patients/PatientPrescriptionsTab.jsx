@@ -781,11 +781,11 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
       </div>
 
       {/* Prescription Print Studio Modal */}
-      <GlassModal open={printStudioOpen} onClose={() => setPrintStudioOpen(false)} maxWidth="max-w-4xl">
+      <GlassModal open={printStudioOpen} onClose={() => setPrintStudioOpen(false)} maxWidth="max-w-5xl">
         <GlassModalHeader className="no-print border-b border-slate-100 pb-3">
-          <div className="flex items-center justify-between gap-3 w-full pr-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full pr-6 sm:pr-8">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold">
+              <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold shrink-0">
                 <FaIcon icon="fa-print" />
               </div>
               <div>
@@ -793,7 +793,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
                 <p className="text-xs text-slate-500">Live preview &amp; print dedicated A4 physiotherapy care plan document</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
                 onClick={() => handleUploadToDocuments(printRx)}
@@ -816,9 +816,9 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
           </div>
         </GlassModalHeader>
 
-        <GlassModalBody className="p-4 sm:p-6 overflow-y-auto max-h-[78vh]">
+        <GlassModalBody className="p-2 sm:p-5 overflow-y-auto max-h-[82vh] bg-slate-50/70">
           {printRx && (
-            <div className="rounded-2xl border border-slate-200 shadow-sm overflow-hidden bg-white">
+            <div className="mx-auto max-w-[900px] rounded-2xl border border-slate-200 shadow-md overflow-x-auto bg-white p-2 sm:p-4">
               {printableRxMarkup}
             </div>
           )}
@@ -826,7 +826,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
       </GlassModal>
 
       {/* Create / Edit Modal */}
-      <GlassModal open={modalOpen} onClose={() => setModalOpen(false)} maxWidth="max-w-4xl">
+      <GlassModal open={modalOpen} onClose={() => setModalOpen(false)} maxWidth="max-w-5xl">
         <GlassModalHeader className="border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-teal-100 text-teal-800 flex items-center justify-center font-bold">

@@ -8,6 +8,11 @@ const SIZES = {
   md: 'max-w-lg',
   lg: 'max-w-2xl',
   xl: 'max-w-4xl',
+  '2xl': 'max-w-5xl',
+  '3xl': 'max-w-6xl',
+  '4xl': 'max-w-7xl',
+  '5xl': 'max-w-[1200px]',
+  full: 'max-w-full',
 };
 
 /**
@@ -18,6 +23,7 @@ export default function GlassModal({
   onClose,
   children,
   size = 'md',
+  maxWidth,
   titleId,
   closeOnBackdrop = true,
   preventClose = false,
@@ -48,6 +54,8 @@ export default function GlassModal({
 
   if (!open) return null;
 
+  const widthClass = maxWidth || SIZES[size] || SIZES.md;
+
   return createPortal(
     <div
       className="fixed inset-0"
@@ -63,10 +71,10 @@ export default function GlassModal({
         onClick={() => closeOnBackdrop && !preventClose && onClose()}
       />
 
-      <div className="fixed inset-0 overflow-hidden pointer-events-none p-0 sm:p-6 md:p-8 flex items-center justify-center">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none p-2 sm:p-6 md:p-8 flex items-center justify-center">
         <div className={`flex h-full max-h-full w-full items-stretch sm:items-center justify-center ${className}`}>
           <div
-            className={`glass-modal-panel relative w-full my-0 sm:my-auto max-h-[100dvh] sm:max-h-[min(calc(100dvh-3.5rem),820px)] ${SIZES[size] || SIZES.md} pointer-events-auto flex flex-col rounded-none sm:rounded-2xl md:rounded-3xl ${panelClassName}`}
+            className={`glass-modal-panel relative w-full my-0 sm:my-auto max-h-[100dvh] sm:max-h-[min(calc(100dvh-2.5rem),900px)] ${widthClass} pointer-events-auto flex flex-col rounded-none sm:rounded-2xl md:rounded-3xl ${panelClassName}`}
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
           >

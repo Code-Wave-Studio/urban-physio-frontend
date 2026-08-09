@@ -59,6 +59,8 @@ function ClinicPortalShellInner({ children, title, subtitle, actions, hideHeader
       clinicId={clinicId || clinic?.id || null}
       clinicClosed={Boolean(Number(clinic?.is_closed))}
       fluid={fluid}
+      clinicLogo={clinic?.logo_url || clinic?.logo || clinic?.profile_image}
+      clinicName={clinic?.name}
     >
       {(!hideHeaderTitle || actions) && (
         <div className="mb-2.5 sm:mb-3.5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

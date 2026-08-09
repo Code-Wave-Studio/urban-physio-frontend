@@ -143,14 +143,10 @@ function PortalNavCategoryCard({
 
 function SpeedDialTile({ item, onNavigate, unreadCount = 0 }) {
   const badge = item.notifyKey ? unreadCount : 0;
-  return (
-    <Link
-      to={item.to}
-      onClick={onNavigate}
-      className="group flex flex-col h-full rounded-xl border border-slate-100 bg-slate-50/50 p-2.5 active:scale-[0.98] transition-transform"
-    >
+  const inner = (
+    <>
       <div
-        className={`relative w-9 h-9 rounded-lg bg-gradient-to-br ${item.color} text-white flex items-center justify-center shrink-0 mb-2`}
+        className={`relative w-9 h-9 rounded-lg bg-gradient-to-br ${item.color || 'from-primary-500 to-orange-600'} text-white flex items-center justify-center shrink-0 mb-2`}
       >
         <FaIcon icon={item.icon} className="text-xs" />
         {badge > 0 && (
@@ -160,6 +156,33 @@ function SpeedDialTile({ item, onNavigate, unreadCount = 0 }) {
         )}
       </div>
       <p className="text-xs font-semibold text-slate-700 leading-snug flex-1">{item.label}</p>
+    </>
+  );
+
+  const base = "group flex flex-col h-full rounded-xl border border-slate-100 bg-slate-50/50 p-2.5 active:scale-[0.98] transition-transform text-left";
+
+  if (item.action) {
+    return (
+      <button
+        type="button"
+        className={base}
+        onClick={() => {
+          if (item.action === 'book') {
+            window.dispatchEvent(new CustomEvent('clinic-fab-open', { detail: { mode: 'booking' } }));
+          } else if (item.action === 'new-patient') {
+            window.dispatchEvent(new CustomEvent('clinic-fab-open', { detail: { mode: 'patient' } }));
+          }
+          onNavigate?.();
+        }}
+      >
+        {inner}
+      </button>
+    );
+  }
+
+  return (
+    <Link to={item.to || '#'} onClick={onNavigate} className={base}>
+      {inner}
     </Link>
   );
 }

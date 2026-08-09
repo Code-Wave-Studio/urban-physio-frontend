@@ -11,7 +11,7 @@ export default function ClinicLogo({ clinic, logo, name, size = 'md', className 
     xl: 'w-24 h-24 text-2xl rounded-2xl',
   };
   const sizeClass = sizes[size] || sizes.md;
-  const src = resolveMediaUrl(logo ?? clinic?.logo);
+  const src = resolveMediaUrl(logo ?? clinic?.logo ?? clinic?.logo_url ?? clinic?.profile_image);
   const displayName = name ?? clinic?.name ?? 'Clinic';
   const initial = displayName.trim()[0]?.toUpperCase() || 'C';
 

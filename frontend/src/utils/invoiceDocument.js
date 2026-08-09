@@ -69,6 +69,9 @@ export function buildInvoiceHtml(data) {
       </div>`
       : '';
 
+  const logoRaw = s.logo_url || s.logo || s.clinic_logo || data.clinic_logo;
+  const logoSrc = resolveMediaUrl(logoRaw);
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -89,7 +92,7 @@ export function buildInvoiceHtml(data) {
     <div style="background:linear-gradient(135deg,#0284c7,#0369a1);color:#fff;padding:28px 32px;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;">
         <div>
-          ${s.logo_url ? `<img src="${esc(s.logo_url)}" alt="" style="max-height:48px;margin-bottom:12px;" />` : ''}
+          ${logoSrc ? `<img src="${esc(logoSrc)}" alt="" style="max-height:48px;max-width:200px;object-fit:contain;margin-bottom:12px;display:block;" />` : ''}
           <h1 style="margin:0;font-size:26px;font-weight:800;">${esc(s.business_name || 'The Urban Physio')}</h1>
           ${s.tagline ? `<p style="margin:6px 0 0;opacity:.9;font-size:14px;">${esc(s.tagline)}</p>` : ''}
         </div>

@@ -73,6 +73,8 @@ export default function DashboardLayout({
   sidebarFooter = null,
   clinicId = null,
   clinicClosed = false,
+  clinicLogo = null,
+  clinicName = null,
 }) {
   const hasPortalNav = Array.isArray(links) && links.length > 0;
   const { pathname } = useLocation();
@@ -125,20 +127,40 @@ export default function DashboardLayout({
   }, [pathname]);
 
   /* Profile info for sidebar card */
-  const profileName = user?.name || user?.full_name || 'Account';
+  const profileName = clinicName || user?.clinic?.name || user?.name || user?.full_name || 'Account';
+  const profileAvatar =
+    clinicLogo ||
+    user?.clinic_logo ||
+    user?.clinic?.logo ||
+    user?.clinic?.logo_url ||
+    user?.logo ||
+    user?.logo_url ||
+    user?.avatar ||
+    user?.avatar_url ||
+    null;
+
   const profileRole = useMemo(() => {
     if (variant === 'clinic') return 'Clinic Portal';
     if (variant === 'doctor') return 'Physiotherapist';
     if (variant === 'admin') return 'Administrator';
     return 'Patient';
   }, [variant]);
-  const profileAvatar = user?.avatar || user?.avatar_url || null;
 
-  /* Speed dial items */
+  /* Speed dial items & action handler */
   const speedDialItems = useMemo(() => {
     if (!hasRole) return [];
     return speedDialForRole(hasRole);
   }, [hasRole]);
+
+  const handleSpeedDialAction = useCallback((action) => {
+    if (action === 'book') {
+      window.dispatchEvent(new CustomEvent('clinic-fab-open', { detail: { mode: 'booking' } }));
+    } else if (action === 'new-patient') {
+      window.dispatchEvent(new CustomEvent('clinic-fab-open', { detail: { mode: 'patient' } }));
+    } else if (action === 'help' || action === 'support') {
+      window.dispatchEvent(new CustomEvent('clinic-fab-open', { detail: { mode: 'support' } }));
+    }
+  }, []);
 
   /* Handle section click in primary nav */
   const handleSectionClick = useCallback((sectionId) => {
@@ -268,7 +290,7 @@ export default function DashboardLayout({
             {/* Speed dial */}
             {speedDialItems.length > 0 && (
               <div className="mb-3">
-                <PortalSpeedDial items={speedDialItems} onNavigate={() => {}} />
+                <PortalSpeedDial items={speedDialItems} onAction={handleSpeedDialAction} onNavigate={() => {}} />
               </div>
             )}
 

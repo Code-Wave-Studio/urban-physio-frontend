@@ -125,7 +125,7 @@ export default function DashboardPortalSidebar({
           <PortalProfileCard
             name={displayName}
             roleLabel={title}
-            avatarUrl={avatarUrl || user?.avatar}
+            avatarUrl={avatarUrl || user?.clinic_logo || user?.clinic?.logo || user?.clinic?.logo_url || user?.logo || user?.avatar}
             accent={accent}
             showPresence={showPresence}
             presenceOnline={presenceOnline}
@@ -141,7 +141,7 @@ export default function DashboardPortalSidebar({
           <PortalProfileCard
             name={displayName}
             roleLabel={title}
-            avatarUrl={avatarUrl || user?.avatar}
+            avatarUrl={avatarUrl || user?.clinic_logo || user?.clinic?.logo || user?.clinic?.logo_url || user?.logo || user?.avatar}
             accent={accent}
             showPresence={showPresence}
             presenceOnline={presenceOnline}
