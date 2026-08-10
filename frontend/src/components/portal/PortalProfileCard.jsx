@@ -18,6 +18,7 @@ export default function PortalProfileCard({
   allowAvatarUpload = false,
   onAvatarUpdated,
   clinicId,
+  inHeader = false,
 }) {
   const fileRef = useRef(null);
   const [online, setOnline] = useState(presenceOnline);
@@ -35,10 +36,10 @@ export default function PortalProfileCard({
 
   const tone =
     accent === 'teal'
-      ? 'from-teal-50/80 via-white to-emerald-50/50 border-teal-200/80'
+      ? 'from-teal-50/90 via-white to-emerald-50/60 border-teal-200/90'
       : accent === 'emerald'
-        ? 'from-emerald-50/80 via-white to-teal-50/50 border-emerald-200/80'
-        : 'from-slate-50/90 via-white to-primary-50/40 border-slate-200/90';
+        ? 'from-emerald-50/90 via-white to-teal-50/60 border-emerald-200/90'
+        : 'from-slate-50/90 via-white to-primary-50/50 border-slate-200/90';
 
   const toggleTone = online
     ? 'bg-emerald-500'
@@ -86,6 +87,74 @@ export default function PortalProfileCard({
       setUploading(false);
     }
   };
+
+  if (inHeader) {
+    return (
+      <div className={`portal-profile-card portal-profile-card--header rounded-xl border bg-gradient-to-br ${tone} px-2 py-1 sm:px-3 sm:py-1.5 min-w-0 max-w-[200px] xs:max-w-[260px] sm:max-w-[340px] md:max-w-[400px] overflow-hidden shadow-2xs transition-all duration-200 shrink`}>
+        <div className="flex items-center justify-between gap-2 min-w-0 w-full">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <button
+              type="button"
+              className="portal-avatar-btn relative group shrink-0"
+              onClick={() => allowAvatarUpload && fileRef.current?.click()}
+              aria-label={allowAvatarUpload ? 'Change profile photo' : 'Profile photo'}
+              disabled={!allowAvatarUpload || uploading}
+            >
+              <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg overflow-hidden bg-white border border-slate-200/90 shadow-2xs flex items-center justify-center text-slate-700 font-bold text-xs shrink-0">
+                {!imgError && src ? (
+                  <img
+                    src={src}
+                    alt={name || ''}
+                    className="w-full h-full object-contain p-0.5 rounded-md"
+                    onError={() => setImgError(true)}
+                  />
+                ) : (
+                  <span className="font-bold text-primary-700 text-xs sm:text-sm">
+                    {(name || '?').slice(0, 1).toUpperCase()}
+                  </span>
+                )}
+              </span>
+              {allowAvatarUpload && (
+                <span className="absolute inset-0 rounded-lg bg-slate-900/55 text-white opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200 flex items-center justify-center text-[9px] font-semibold">
+                  {uploading ? '…' : <FaIcon icon="fa-camera" />}
+                </span>
+              )}
+            </button>
+            {allowAvatarUpload && (
+              <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onFile} />
+            )}
+
+            <div className="min-w-0 flex-1">
+              <p className="font-bold text-slate-900 text-xs sm:text-sm truncate leading-snug" title={name}>{name || 'Account'}</p>
+              <p className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-slate-500 truncate font-mono leading-none mt-0.5">{roleLabel}</p>
+            </div>
+          </div>
+
+          {showPresence && (
+            <button
+              type="button"
+              onClick={togglePresence}
+              disabled={toggling}
+              className="portal-presence-toggle shrink-0 flex flex-col items-end gap-0.5 active:scale-95 transition-transform duration-200 cursor-pointer pl-1"
+              aria-pressed={online}
+              title={online ? 'Online — tap to go offline' : 'Offline — tap to go online'}
+            >
+              <span className={`relative w-8 sm:w-9 h-4 sm:h-4.5 rounded-full transition-colors duration-200 ease-in-out ${toggleTone}`}>
+                <span
+                  className={`absolute top-0.5 w-3 sm:w-3.5 h-3 sm:h-3.5 rounded-full bg-white shadow-2xs transition-all duration-200 ease-in-out ${
+                    online ? 'left-4.5 sm:left-5' : 'left-0.5'
+                  }`}
+                />
+              </span>
+              <span className={`text-[8px] sm:text-[9px] font-extrabold uppercase tracking-tight ${online ? 'text-emerald-700' : 'text-slate-500'}`}>
+                {online ? 'ONLINE' : 'OFFLINE'}
+              </span>
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`portal-profile-card rounded-2xl border bg-gradient-to-br ${tone} p-2.5 sm:p-3 w-full max-w-full overflow-hidden shadow-2xs transition-all duration-200`}>

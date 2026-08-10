@@ -5,6 +5,7 @@ import FaIcon from '../../components/FaIcon';
 import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
 import useClinicPortal from '../../hooks/useClinicPortal';
 import { clinicPortal } from '../../services/api';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 
 function money(n) {
   return `₹${Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

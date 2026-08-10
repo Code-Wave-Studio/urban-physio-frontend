@@ -6,6 +6,7 @@ import FaIcon from './FaIcon';
 import Logo from './Logo';
 import MobileNavDrawer from './MobileNavDrawer';
 import NotificationBell from './NotificationBell';
+import PortalProfileCard from './portal/PortalProfileCard';
 import { setFloatingActionsHidden } from '../utils/floatingActionsBus';
 
 const PRIMARY_NAV_LINKS = [
@@ -32,7 +33,15 @@ const MORE_NAV_LINKS = [
  * Public site header — same on home, booking, login, and portals (portals add sidebar toggle via beforeLogo).
  * @param {{ beforeLogo?: import('react').ReactNode, headerSpacerClass?: string, portalMode?: boolean }} props
  */
-export default function Navbar({ beforeLogo = null, headerSpacerClass = '', portalMode = false, logoSrc = null, logoAlt = 'The Urban Physio' }) {
+export default function Navbar({
+  beforeLogo = null,
+  headerSpacerClass = '',
+  portalMode = false,
+  logoSrc = null,
+  logoAlt = 'The Urban Physio',
+  portalProfileProps = null,
+  portalProfileCard = null,
+}) {
   const { pathname, search } = useLocation();
   const { user, logout, hasRole } = useAuth();
   const { city, setShowSelector, locationLabel } = useLocationContext();
@@ -151,18 +160,24 @@ export default function Navbar({ beforeLogo = null, headerSpacerClass = '', port
       >
         <div className={portalMode ? 'w-full px-3 sm:px-4 lg:px-6' : 'max-w-7xl mx-auto px-3 sm:px-4 lg:px-8'}>
           <div className="flex items-center h-14 sm:h-16 w-full">
-            {/* Logo + optional admin sidebar toggle */}
-            <div className="flex items-center gap-2 shrink-0">
+            {/* Logo or Portal Profile Card + optional admin sidebar toggle */}
+            <div className="flex items-center gap-2 min-w-0 shrink">
               {beforeLogo}
-              <Link to="/" className="flex items-center shrink-0" onClick={() => setMobileOpen(false)}>
-                <Logo
-                  linkToHome={false}
-                  className="h-8 sm:h-9 md:h-10 w-auto max-w-[80px] sm:max-w-[100px] md:max-w-[120px] object-contain"
-                  showText={false}
-                  src={logoSrc || undefined}
-                  alt={logoAlt}
-                />
-              </Link>
+              {portalProfileCard ? (
+                portalProfileCard
+              ) : portalMode && portalProfileProps ? (
+                <PortalProfileCard {...portalProfileProps} inHeader />
+              ) : !portalMode ? (
+                <Link to="/" className="flex items-center shrink-0" onClick={() => setMobileOpen(false)}>
+                  <Logo
+                    linkToHome={false}
+                    className="h-8 sm:h-9 md:h-10 w-auto max-w-[80px] sm:max-w-[100px] md:max-w-[120px] object-contain"
+                    showText={false}
+                    src={logoSrc || undefined}
+                    alt={logoAlt}
+                  />
+                </Link>
+              ) : null}
             </div>
 
             {/* Tablet + desktop public navigation (hidden inside portals — use sidebar) */}
