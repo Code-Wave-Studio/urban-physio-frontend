@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import FaIcon from './FaIcon';
 import Logo from './Logo';
 import PortalLink from './portal/PortalLink';
@@ -182,9 +182,9 @@ function SpeedDialTile({ item, onNavigate, unreadCount = 0 }) {
   }
 
   return (
-    <Link to={item.to || '#'} onClick={onNavigate} className={base}>
+    <PortalLink to={item.to || '#'} onClick={onNavigate} className={base}>
       {inner}
-    </Link>
+    </PortalLink>
   );
 }
 
@@ -238,12 +238,12 @@ export default function MobileNavDrawer({
       >
         {/* Fixed top header bar with close button at top-right */}
         <div className="shrink-0 sticky top-0 z-30 flex items-center justify-between gap-3 px-4 sm:px-6 pt-[max(0.875rem,env(safe-area-inset-top))] pb-3 border-b border-slate-200/80 bg-white/95 backdrop-blur-md shadow-xs">
-          <Link to="/" onClick={handleNavigate} className="flex items-center gap-2.5 shrink-0">
+          <PortalLink to="/" onClick={handleNavigate} className="flex items-center gap-2.5 shrink-0">
             <Logo linkToHome={false} className="h-8 md:h-9 w-auto max-w-[120px] object-contain" showText={false} />
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary-600 bg-primary-50 px-2 py-0.5 rounded-md border border-primary-100">
               Menu
             </span>
-          </Link>
+          </PortalLink>
           <button
             type="button"
             className="site-header-menu-btn shrink-0 !w-10 !h-10 text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 active:scale-95 rounded-full transition flex items-center justify-center shadow-xs"
