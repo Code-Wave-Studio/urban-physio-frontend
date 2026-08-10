@@ -97,6 +97,12 @@ export function usePageMeta({
       upsertMeta('property', 'og:url', window.location.href);
     }
 
+    if (typeof window !== 'undefined') {
+      upsertLink('icon', `${window.location.origin}/favicon.ico`);
+      upsertLink('shortcut icon', `${window.location.origin}/favicon.ico`);
+      upsertLink('apple-touch-icon', `${window.location.origin}/apple-touch-icon.png`);
+    }
+
     const robotsContent =
       robots ||
       `${noindex ? 'noindex' : 'index'}, ${nofollow ? 'nofollow' : 'follow'}`;

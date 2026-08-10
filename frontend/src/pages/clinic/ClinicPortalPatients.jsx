@@ -248,7 +248,7 @@ function PatientCard({ patient, privacy, selected, onOpen, onToggleSelect, view 
 }
 
 export default function ClinicPortalPatients() {
-  const { clinicId, loading: bootLoading } = useClinicPortal();
+  const { clinic, clinicId, loading: bootLoading } = useClinicPortal();
   const [rows, setRows] = useState([]);
   const [meta, setMeta] = useState({ page: 1, pages: 1, total: 0, per_page: 36 });
   const [stats, setStats] = useState({

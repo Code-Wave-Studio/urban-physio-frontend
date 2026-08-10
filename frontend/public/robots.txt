@@ -42,5 +42,6 @@ Disallow: /book/
 Disallow: /c/
 Disallow: /pay/
 
-# XML sitemap on API subdomain (frontend is Cloudflare Pages — no PHP under /backend)
+# XML sitemaps
+Sitemap: https://theurbanphysio.com/sitemap.xml
 Sitemap: https://api.theurbanphysio.com/backend/api/sitemap.php
