@@ -389,14 +389,53 @@ export default function ClinicInvoiceGeneratorPage() {
       }
     }
 
-    const w = window.open('', '_blank', 'noopener,noreferrer,width=900,height=1000');
-    if (!w) {
-      toast.error('Allow pop-ups to print / share PDF');
-      return;
+    let w = null;
+    try {
+      w = window.open('', '_blank', 'width=900,height=1000');
+    } catch (err) {
+      w = null;
     }
-    w.document.open();
-    w.document.write(html);
-    w.document.close();
+
+    if (w && !w.closed) {
+      try {
+        w.document.open();
+        w.document.write(html);
+        w.document.close();
+        setTimeout(() => {
+          try {
+            w.focus();
+            w.print();
+          } catch (e) {}
+        }, 250);
+        return;
+      } catch (err) {}
+    }
+
+    // Fallback: Invisible iframe printing if popup blocked
+    try {
+      let iframe = document.getElementById('tup-invoice-print-frame');
+      if (!iframe) {
+        iframe = document.createElement('iframe');
+        iframe.id = 'tup-invoice-print-frame';
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        document.body.appendChild(iframe);
+      }
+      const doc = iframe.contentWindow.document;
+      doc.open();
+      doc.write(html);
+      doc.close();
+      setTimeout(() => {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      }, 300);
+    } catch (e) {
+      toast.error('Allow pop-ups to print / share PDF');
+    }
   };
 
   const shareWhatsApp = () => {

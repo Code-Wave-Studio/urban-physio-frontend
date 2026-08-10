@@ -212,24 +212,68 @@ export default function ClinicPortalAppointments() {
   };
 
   const printSlip = (a) => {
-    const w = window.open('', '_blank', 'width=420,height=600');
-    if (!w) return;
-    w.document.write(`<!doctype html><html><head><title>Appointment slip</title>
+    const htmlDoc = `<!doctype html><html><head><title>Appointment slip</title>
       <style>body{font-family:system-ui,sans-serif;padding:24px;color:#0f172a}
       h1{font-size:18px;margin:0 0 8px}p{margin:4px 0;font-size:13px}
       .box{border:1px solid #cbd5e1;border-radius:12px;padding:16px;margin-top:12px}</style></head><body>
       <h1>The Urban Physio — Appointment Slip</h1>
       <div class="box">
-        <p><strong>${a.patient_name || 'Patient'}</strong></p>
+        <p><strong>${(a.patient_name || 'Patient').replace(/</g, '')}</strong></p>
         <p>Booking: ${a.booking_id || a.id}</p>
-        <p>Doctor: ${a.doctor_name || '—'}</p>
+        <p>Doctor: ${(a.doctor_name || '—').replace(/</g, '')}</p>
         <p>Date: ${a.appointment_date} · ${fmtApptTime(a.start_time)}</p>
         <p>Type: ${formatType(a.consultation_type)}</p>
         <p>Status: ${a.status}</p>
         <p>Amount: ${money(a.amount)} (${a.payment_status || 'unpaid'})</p>
       </div>
-      <script>window.print()</script></body></html>`);
-    w.document.close();
+      </body></html>`;
+
+    let w = null;
+    try {
+      w = window.open('', '_blank', 'width=420,height=600');
+    } catch (e) {
+      w = null;
+    }
+
+    if (w && !w.closed) {
+      try {
+        w.document.open();
+        w.document.write(htmlDoc);
+        w.document.close();
+        setTimeout(() => {
+          try {
+            w.focus();
+            w.print();
+          } catch (e) {}
+        }, 250);
+        return;
+      } catch (e) {}
+    }
+
+    try {
+      let iframe = document.getElementById('tup-slip-print-frame');
+      if (!iframe) {
+        iframe = document.createElement('iframe');
+        iframe.id = 'tup-slip-print-frame';
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        document.body.appendChild(iframe);
+      }
+      const doc = iframe.contentWindow.document;
+      doc.open();
+      doc.write(htmlDoc);
+      doc.close();
+      setTimeout(() => {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      }, 300);
+    } catch (e) {
+      toast.error('Allow pop-ups to print slips');
+    }
   };
 
   // ── Grouped view for Agenda / Day (group by date then time) ───────────

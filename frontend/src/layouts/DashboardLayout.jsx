@@ -243,21 +243,20 @@ export default function DashboardLayout({
           className="app-shell__primary-nav"
           aria-label="Module navigation"
         >
-          <div className="primary-nav__logo-wrap py-2.5 px-1 flex flex-col items-center justify-center shrink-0 border-b border-slate-200/70 mb-2">
-            <Link to="/" className="flex flex-col items-center justify-center group" title="The Urban Physio">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-primary-600 via-primary-700 to-teal-700 p-1 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform duration-200">
+          <div className="primary-nav__logo-wrap py-3 px-1 flex items-center justify-center shrink-0 border-b border-slate-200/60 mb-2">
+            <Link to="/" className="flex items-center justify-center group" title="The Urban Physio">
+              <div className="w-10 h-10 rounded-xl bg-white border border-slate-200/90 p-1 flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform duration-200">
                 <img
                   src={SITE_LOGO_SRC}
-                  alt="TUP Logo"
-                  className="w-full h-full object-contain filter drop-shadow"
+                  alt="The Urban Physio"
+                  className="w-full h-full object-contain"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                     if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.classList.remove('hidden');
                   }}
                 />
-                <span className="hidden font-black text-[10px] text-white tracking-tighter leading-none">TUP</span>
+                <span className="hidden font-black text-xs text-primary-700 tracking-tighter leading-none">TUP</span>
               </div>
-              <span className="text-[9px] font-black uppercase text-primary-700 tracking-wider mt-1 group-hover:text-teal-700 transition-colors leading-none">TUP</span>
             </Link>
           </div>
 

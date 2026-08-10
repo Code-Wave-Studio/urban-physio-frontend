@@ -430,24 +430,69 @@ export default function ClinicPortalPatients() {
       toast.error('Select a patient first');
       return;
     }
-    const html = targets
+    const htmlCards = targets
       .map(
         (p) => `
-      <div style="border:2px solid #94a3b8;padding:12px 16px;margin:8px;width:280px;font-family:system-ui;border-radius:8px;background:#fff">
-        <div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em">Clinic Patient Label</div>
-        <div style="font-weight:700;font-size:15px;color:#0f172a;margin-top:2px">${(p.patient_name || 'Patient').replace(/</g, '')}</div>
-        <div style="font-size:12px;color:#475569;margin-top:4px">Phone: ${(p.phone || '').replace(/</g, '')}</div>
-        <div style="font-size:11px;color:#64748b;margin-top:2px">ID: ${patientKey(p)}</div>
+      <div style="border:2px solid #64748b;padding:14px 18px;margin:10px auto;width:280px;font-family:system-ui,-apple-system,sans-serif;border-radius:10px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);page-break-inside:avoid;break-inside:avoid;">
+        <div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Clinic Patient Label</div>
+        <div style="font-weight:700;font-size:16px;color:#0f172a;margin-top:3px">${(p.patient_name || p.name || 'Patient').replace(/</g, '')}</div>
+        <div style="font-size:12px;color:#334155;margin-top:5px"><strong>Phone:</strong> ${(p.phone || '—').replace(/</g, '')}</div>
+        ${p.email ? `<div style="font-size:11px;color:#475569;margin-top:2px"><strong>Email:</strong> ${p.email.replace(/</g, '')}</div>` : ''}
+        <div style="font-size:11px;color:#64748b;margin-top:4px"><strong>Patient ID:</strong> ${patientKey(p)}</div>
       </div>`
       )
       .join('');
-    const w = window.open('', '_blank', 'noopener,noreferrer,width=480,height=640');
-    if (!w) {
-      toast.error('Allow pop-ups to print labels');
-      return;
+
+    const fullDoc = `<!DOCTYPE html><html><head><title>Patient Labels</title><style>@page{margin:10mm;}body{margin:0;padding:10px;background:#fff;font-family:system-ui,sans-serif;}</style></head><body>${htmlCards}</body></html>`;
+
+    // Try popup window first (without noopener/noreferrer so document is writable)
+    let w = null;
+    try {
+      w = window.open('', '_blank', 'width=520,height=650');
+    } catch (e) {
+      w = null;
     }
-    w.document.write(`<html><head><title>Patient labels</title></head><body onload="print()">${html}</body></html>`);
-    w.document.close();
+
+    if (w && !w.closed) {
+      try {
+        w.document.open();
+        w.document.write(fullDoc);
+        w.document.close();
+        setTimeout(() => {
+          try {
+            w.focus();
+            w.print();
+          } catch (err) {}
+        }, 250);
+        return;
+      } catch (err) {}
+    }
+
+    // Fallback: Invisible iframe printing if popup is blocked by Chrome/browser settings
+    try {
+      let iframe = document.getElementById('tup-label-print-frame');
+      if (!iframe) {
+        iframe = document.createElement('iframe');
+        iframe.id = 'tup-label-print-frame';
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        document.body.appendChild(iframe);
+      }
+      const doc = iframe.contentWindow.document;
+      doc.open();
+      doc.write(fullDoc);
+      doc.close();
+      setTimeout(() => {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      }, 300);
+    } catch (e) {
+      toast.error('Pop-up blocked. Please allow pop-ups to print labels.');
+    }
   };
 
   const runDelete = async () => {
