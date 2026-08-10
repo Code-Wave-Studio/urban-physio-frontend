@@ -424,31 +424,249 @@ export default function ClinicPortalPatients() {
     setLabelOpen(true);
   };
 
+  const formatPatientLabelInfo = (p, privacySetting = false) => {
+    const clinicName = (clinic?.name || 'The Urban Physio Clinic').toUpperCase();
+    const clinicLoc = [clinic?.locality, clinic?.city_name || clinic?.city].filter(Boolean).join(', ');
+    const pName = maskName(p.patient_name || p.name || 'Patient', privacySetting);
+    const pId = patientKey(p);
+    const phone = maskPhone(p.phone, privacySetting) || '—';
+    const email = maskEmail(p.email, privacySetting) || '';
+
+    const age = p.age || (p.dob ? new Date().getFullYear() - new Date(p.dob).getFullYear() : null);
+    const gender = p.gender || p.sex || null;
+    const blood = p.blood_group ? `Blood: ${p.blood_group}` : null;
+    const ageSexList = [age ? `${age} Yrs` : null, gender, blood].filter(Boolean);
+    const ageSex = ageSexList.length > 0 ? ageSexList.join(' · ') : 'Age/Sex: —';
+
+    const address = [p.address || p.locality, p.city].filter(Boolean).join(', ');
+    const status = p.portal_status || p.status || 'Active';
+    const dateStr = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+    return {
+      clinicName,
+      clinicLoc,
+      pName,
+      pId,
+      phone,
+      email,
+      ageSex,
+      address,
+      status,
+      dateStr,
+    };
+  };
+
   const printLabel = () => {
     const targets = selectedList.length ? selectedList : glance ? [glance] : [];
     if (!targets.length) {
       toast.error('Select a patient first');
       return;
     }
+
     const htmlCards = targets
-      .map(
-        (p) => `
-      <div style="border:2px solid #64748b;padding:14px 18px;margin:10px auto;width:280px;font-family:system-ui,-apple-system,sans-serif;border-radius:10px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1);page-break-inside:avoid;break-inside:avoid;">
-        <div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Clinic Patient Label</div>
-        <div style="font-weight:700;font-size:16px;color:#0f172a;margin-top:3px">${(p.patient_name || p.name || 'Patient').replace(/</g, '')}</div>
-        <div style="font-size:12px;color:#334155;margin-top:5px"><strong>Phone:</strong> ${(p.phone || '—').replace(/</g, '')}</div>
-        ${p.email ? `<div style="font-size:11px;color:#475569;margin-top:2px"><strong>Email:</strong> ${p.email.replace(/</g, '')}</div>` : ''}
-        <div style="font-size:11px;color:#64748b;margin-top:4px"><strong>Patient ID:</strong> ${patientKey(p)}</div>
-      </div>`
-      )
+      .map((p) => {
+        const info = formatPatientLabelInfo(p, privacy);
+        return `
+      <div class="patient-label-sticker">
+        <div class="sticker-header">
+          <div>
+            <div class="clinic-brand-name">${info.clinicName}</div>
+            ${info.clinicLoc ? `<div class="clinic-location">${info.clinicLoc}</div>` : ''}
+          </div>
+          <span class="sticker-type-badge">PATIENT ID</span>
+        </div>
+
+        <div class="sticker-body">
+          <div class="patient-title-row">
+            <span class="patient-full-name">${info.pName}</span>
+            <span class="patient-mrn-badge">${info.pId}</span>
+          </div>
+          <div class="patient-demographics">${info.ageSex}</div>
+        </div>
+
+        <div class="sticker-contact-box">
+          <div class="contact-line"><strong>Phone:</strong> ${info.phone}</div>
+          ${info.email ? `<div class="contact-line email-line"><strong>Email:</strong> ${info.email}</div>` : ''}
+          ${info.address ? `<div class="contact-line"><strong>Address:</strong> ${info.address}</div>` : ''}
+        </div>
+
+        <div class="sticker-footer">
+          <div>
+            <div class="barcode-graphic">
+              <span class="b2"></span><span class="b1"></span><span class="b3"></span><span class="b1"></span>
+              <span class="b2"></span><span class="b4"></span><span class="b1"></span><span class="b2"></span>
+              <span class="b3"></span><span class="b1"></span><span class="b2"></span><span class="b4"></span>
+            </div>
+            <div class="issue-timestamp">Issued: ${info.dateStr}</div>
+          </div>
+          <span class="status-pill">${info.status}</span>
+        </div>
+      </div>`;
+      })
       .join('');
 
-    const fullDoc = `<!DOCTYPE html><html><head><title>Patient Labels</title><style>@page{margin:10mm;}body{margin:0;padding:10px;background:#fff;font-family:system-ui,sans-serif;}</style></head><body>${htmlCards}</body></html>`;
+    const fullDoc = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Patient Labels — ${clinic?.name || 'Clinic'}</title>
+  <style>
+    @page { margin: 8mm; size: auto; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 12px;
+      background: #ffffff;
+      color: #0f172a;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .patient-label-sticker {
+      border: 2px solid #0f172a;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin: 0 auto 16px auto;
+      width: 100%;
+      max-width: 340px;
+      background: #ffffff;
+      page-break-inside: avoid;
+      break-inside: avoid;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .sticker-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1.5px solid #cbd5e1;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+    .clinic-brand-name {
+      font-size: 11px;
+      font-weight: 800;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      line-height: 1.2;
+    }
+    .clinic-location {
+      font-size: 9px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+    .sticker-type-badge {
+      font-size: 9px;
+      font-weight: 800;
+      background: #f1f5f9;
+      color: #334155;
+      padding: 2px 7px;
+      border-radius: 5px;
+      border: 1px solid #cbd5e1;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+    .sticker-body {
+      margin-bottom: 10px;
+    }
+    .patient-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .patient-full-name {
+      font-size: 16px;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.25;
+      word-break: break-word;
+    }
+    .patient-mrn-badge {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11px;
+      font-weight: 700;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 2px 7px;
+      border-radius: 5px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .patient-demographics {
+      font-size: 11px;
+      font-weight: 600;
+      color: #475569;
+      margin-top: 4px;
+    }
+    .sticker-contact-box {
+      font-size: 11px;
+      color: #334155;
+      background: #f8fafc;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 10px;
+      line-height: 1.45;
+    }
+    .contact-line {
+      margin-top: 2px;
+    }
+    .contact-line:first-child {
+      margin-top: 0;
+    }
+    .email-line {
+      word-break: break-all;
+    }
+    .sticker-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-top: 1px dashed #cbd5e1;
+      padding-top: 8px;
+    }
+    .barcode-graphic {
+      display: flex;
+      align-items: center;
+      gap: 1.5px;
+      height: 20px;
+      margin-bottom: 2px;
+    }
+    .barcode-graphic span {
+      display: inline-block;
+      height: 100%;
+      background: #0f172a;
+    }
+    .b1 { width: 1px; }
+    .b2 { width: 2px; }
+    .b3 { width: 3px; }
+    .b4 { width: 4px; }
+    .issue-timestamp {
+      font-size: 9px;
+      color: #64748b;
+    }
+    .status-pill {
+      font-size: 9px;
+      font-weight: 700;
+      color: #047857;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      padding: 2px 7px;
+      border-radius: 5px;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  ${htmlCards}
+</body>
+</html>`;
 
     // Try popup window first (without noopener/noreferrer so document is writable)
     let w = null;
     try {
-      w = window.open('', '_blank', 'width=520,height=650');
+      w = window.open('', '_blank', 'width=540,height=680');
     } catch (e) {
       w = null;
     }
@@ -983,53 +1201,101 @@ export default function ClinicPortalPatients() {
         </GlassModalBody>
       </GlassModal>
 
-      <GlassModal open={labelOpen} onClose={() => setLabelOpen(false)} size="md">
+      <GlassModal open={labelOpen} onClose={() => setLabelOpen(false)} size="lg">
         <GlassModalHeader
-          title="Patient label preview"
-          subtitle="Printable patient sticker / wristband labels"
+          title="Patient Label Preview"
+          subtitle="Printable patient sticker & wristband identification labels"
           icon="fa-print"
           onClose={() => setLabelOpen(false)}
         />
         <GlassModalBody>
-          <div className="flex justify-between items-center mb-3">
-            <p className="text-xs text-slate-500 font-medium">
-              Showing labels for {selectedList.length || (glance ? 1 : 0)} patient(s)
-            </p>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 pb-3 border-b border-slate-200">
+            <div>
+              <p className="text-sm font-bold text-slate-900">
+                Showing labels for {selectedList.length || (glance ? 1 : 0)} patient(s)
+              </p>
+              <p className="text-xs text-slate-500">
+                Formatted for standard clinic sticker printers &amp; thermal wristbands
+              </p>
+            </div>
             <button
               type="button"
               onClick={printLabel}
-              className="btn-primary text-xs !py-1.5 !px-3 inline-flex items-center gap-1.5 cursor-pointer"
+              className="btn-primary text-xs !py-2 !px-4 inline-flex items-center gap-2 cursor-pointer shadow-sm shrink-0"
             >
               <FaIcon icon="fa-print" className="text-xs" />
               Print Labels
             </button>
           </div>
-          <div className="grid sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto p-1 bg-slate-100/70 rounded-xl border border-slate-200/80">
-            {(selectedList.length ? selectedList : glance ? [glance] : []).map((p) => (
-              <div
-                key={patientKey(p)}
-                className="bg-white border-2 border-slate-300 rounded-xl p-3 shadow-xs space-y-1 select-none font-sans"
-              >
-                <div className="flex justify-between items-start border-b border-slate-200 pb-1.5 mb-1.5">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Clinic Patient Label</p>
-                    <p className="font-extrabold text-slate-900 text-sm">{maskName(p.patient_name, privacy)}</p>
+
+          <div className="grid sm:grid-cols-2 gap-4 max-h-[55vh] overflow-y-auto p-3 bg-slate-100/80 rounded-2xl border border-slate-200/90">
+            {(selectedList.length ? selectedList : glance ? [glance] : []).map((p) => {
+              const info = formatPatientLabelInfo(p, privacy);
+              return (
+                <div
+                  key={patientKey(p)}
+                  className="bg-white border-2 border-slate-900/80 rounded-2xl p-4 shadow-sm space-y-3 select-none font-sans relative hover:border-teal-600 transition-colors"
+                >
+                  {/* Header */}
+                  <div className="flex justify-between items-start border-b border-slate-200 pb-2.5">
+                    <div>
+                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-900">
+                        {info.clinicName}
+                      </p>
+                      {info.clinicLoc && (
+                        <p className="text-[10px] text-slate-500 font-medium">{info.clinicLoc}</p>
+                      )}
+                    </div>
+                    <span className="text-[9px] font-extrabold uppercase tracking-wider bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md border border-slate-200 shrink-0">
+                      PATIENT ID
+                    </span>
                   </div>
-                  <span className="text-[10px] font-mono font-bold bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 border border-slate-200">
-                    {patientKey(p)}
-                  </span>
+
+                  {/* Name & ID */}
+                  <div>
+                    <div className="flex justify-between items-start gap-2">
+                      <h3 className="font-extrabold text-slate-900 text-base leading-tight break-words">
+                        {info.pName}
+                      </h3>
+                      <span className="text-xs font-mono font-bold bg-slate-900 text-white px-2 py-0.5 rounded shrink-0 shadow-2xs">
+                        {info.pId}
+                      </span>
+                    </div>
+                    <p className="text-xs font-semibold text-slate-600 mt-1">{info.ageSex}</p>
+                  </div>
+
+                  {/* Contact details */}
+                  <div className="text-xs text-slate-700 bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 space-y-1">
+                    <p><strong>Phone:</strong> {info.phone}</p>
+                    {info.email && <p className="break-all"><strong>Email:</strong> {info.email}</p>}
+                    {info.address && <p className="truncate"><strong>Address:</strong> {info.address}</p>}
+                  </div>
+
+                  {/* Barcode & Date */}
+                  <div className="flex justify-between items-end border-t border-dashed border-slate-300 pt-2.5">
+                    <div>
+                      <div className="flex items-center gap-0.5 h-4 mb-1 opacity-85" aria-hidden="true">
+                        <span className="w-0.5 h-full bg-slate-900"></span>
+                        <span className="w-px h-full bg-slate-900"></span>
+                        <span className="w-1 h-full bg-slate-900"></span>
+                        <span className="w-px h-full bg-slate-900"></span>
+                        <span className="w-0.5 h-full bg-slate-900"></span>
+                        <span className="w-1.5 h-full bg-slate-900"></span>
+                        <span className="w-px h-full bg-slate-900"></span>
+                        <span className="w-0.5 h-full bg-slate-900"></span>
+                        <span className="w-1 h-full bg-slate-900"></span>
+                        <span className="w-px h-full bg-slate-900"></span>
+                        <span className="w-0.5 h-full bg-slate-900"></span>
+                      </div>
+                      <p className="text-[10px] text-slate-400 font-medium">Issued: {info.dateStr}</p>
+                    </div>
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+                      {info.status}
+                    </span>
+                  </div>
                 </div>
-                <div className="text-xs text-slate-700 space-y-0.5">
-                  {p.phone && <p><strong>Phone:</strong> {maskPhone(p.phone, privacy)}</p>}
-                  {p.email && <p className="truncate"><strong>Email:</strong> {maskEmail(p.email, privacy)}</p>}
-                  {p.portal_status && (
-                    <p className="text-[11px] capitalize text-slate-500">
-                      <strong>Status:</strong> {p.portal_status}
-                    </p>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </GlassModalBody>
       </GlassModal>

@@ -102,13 +102,13 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
           />
 
           {/* Container — Desktop Pop-up Modal / Mobile Bottom Sheet */}
-          <div className="fixed inset-0 z-[125] flex items-end md:items-center justify-center pt-16 sm:pt-20 pb-2 md:pb-6 px-0 md:px-6 pointer-events-none overflow-hidden">
+          <div className="fixed inset-0 z-[125] flex items-end md:items-center justify-center p-2 sm:p-4 md:p-6 pointer-events-none overflow-hidden">
             <motion.div
               ref={sheetRef}
               role="dialog"
               aria-modal="true"
               aria-labelledby="clinic-sheet-title"
-              className="pointer-events-auto w-full md:max-w-3xl lg:max-w-4xl h-[calc(100dvh-5rem)] md:h-[min(calc(100dvh-6rem),740px)] flex flex-col bg-white rounded-t-[2rem] md:rounded-[2.25rem] shadow-2xl shadow-slate-950/30 border border-slate-200/90 overflow-hidden"
+              className="pointer-events-auto w-full md:max-w-3xl lg:max-w-4xl max-h-[calc(100dvh-2.5rem)] md:max-h-[min(calc(100dvh-3.5rem),740px)] flex flex-col bg-white rounded-t-[2rem] md:rounded-[2.25rem] shadow-2xl shadow-slate-950/30 border border-slate-200/90 overflow-hidden"
               initial={{ y: '100%', opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}

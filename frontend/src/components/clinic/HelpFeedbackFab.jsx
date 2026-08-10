@@ -342,7 +342,7 @@ export default function HelpFeedbackFab() {
         size="sm"
         zIndex={10000}
         titleId="help-feedback-title"
-        panelClassName="!max-h-[100dvh] sm:!max-h-[min(calc(100dvh-3rem),720px)]"
+        panelClassName="max-h-[calc(100dvh-2.5rem)] sm:max-h-[min(calc(100dvh-3.5rem),720px)]"
       >
         <GlassModalHeader
           titleId="help-feedback-title"

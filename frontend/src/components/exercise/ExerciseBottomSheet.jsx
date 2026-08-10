@@ -47,7 +47,7 @@ export default function ExerciseBottomSheet({
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end md:justify-center md:items-center pt-16 sm:pt-20 pb-3 sm:pb-4 px-0 sm:px-4 md:px-6">
+        <div className="fixed inset-0 z-50 flex flex-col justify-end md:justify-center md:items-center p-2 sm:p-4 md:p-6">
           {/* Backdrop — background page remains visible behind sheet */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -69,7 +69,7 @@ export default function ExerciseBottomSheet({
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 16, opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className={`relative z-10 w-full bg-white rounded-t-3xl md:rounded-3xl shadow-2xl border border-slate-200/80 flex flex-col overflow-hidden transition-all duration-200 md:max-w-xl max-h-[calc(100dvh-5rem)] md:max-h-[min(calc(100dvh-5.5rem),840px)] ${
+            className={`relative z-10 w-full bg-white rounded-t-3xl md:rounded-3xl shadow-2xl border border-slate-200/80 flex flex-col overflow-hidden transition-all duration-200 md:max-w-xl max-h-[calc(100dvh-2.5rem)] md:max-h-[min(calc(100dvh-3.5rem),840px)] ${
               isExpanded ? 'h-[calc(100dvh-5rem)]' : maxHeight
             } ${className}`}
           >

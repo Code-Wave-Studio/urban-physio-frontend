@@ -404,7 +404,7 @@ export default function AdvancedBookingWizard({
       zIndex={10000}
       titleId="book-appointment-title"
       preventClose={saving}
-      panelClassName="!max-h-[100dvh] sm:!max-h-[min(calc(100dvh-2.5rem),820px)]"
+      panelClassName="max-h-[calc(100dvh-2.5rem)] sm:max-h-[min(calc(100dvh-3.5rem),820px)]"
     >
       <GlassModalHeader
         titleId="book-appointment-title"

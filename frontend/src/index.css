@@ -292,7 +292,8 @@
   .glass-modal-panel {
     @apply flex flex-col rounded-2xl md:rounded-3xl overflow-hidden
            bg-white border border-slate-200/90
-           shadow-2xl shadow-slate-950/20;
+           shadow-2xl shadow-slate-950/20
+           max-h-[calc(100dvh-2.5rem)] sm:max-h-[min(calc(100dvh-3.5rem),840px)];
     animation: modalPop 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
