@@ -984,7 +984,7 @@
 
   /* Portal architecture — categorized accordion + speed dial */
   .portal-nav-link {
-    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600;
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 w-full text-left cursor-pointer select-none border-0 bg-transparent;
     transition:
       transform 0.2s ease-in-out,
       background-color 0.2s ease-in-out,
@@ -1853,7 +1853,7 @@ html {
   /* ── Portal nav link (sidebar) ── */
   .portal-nav-link {
     @apply flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-sm text-slate-600
-           transition-all duration-200 ease-micro;
+           transition-all duration-200 ease-micro w-full text-left cursor-pointer select-none border-0 bg-transparent;
   }
 
   .portal-nav-link:hover {

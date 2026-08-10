@@ -12,10 +12,21 @@ function slugifyText(value, fallback = 'india') {
 
 function localitySlugFromAddress(address, cityName, citySlug) {
   const city = citySlug || slugifyText(cityName);
-  const raw = String(address || '')
-    .split(/[,\-|/]/)
+  const parts = String(address || '')
+    .split(/[,;]+/)
     .map((part) => part.trim())
-    .find(Boolean);
+    .filter(Boolean);
+
+  let raw = '';
+  for (const part of parts) {
+    // Skip building / unit / door / plot / flat / shop number prefixes (e.g. "D-15", "No. 12", "Plot 4")
+    if (/^(d-?\d+|no\.?\s*\d+|plot\s*\d+|flat\s*\d+|shop\s*\d+|building\s*\w+|door\s*\d+|\#?\d+[a-z]?)$/i.test(part)) {
+      continue;
+    }
+    raw = part;
+    break;
+  }
+
   if (!raw) return 'city-centre';
   const locality = slugifyText(raw, 'city-centre');
   // Avoid /noida/noida/... when address starts with the city name (or is empty)
@@ -27,10 +38,12 @@ function localitySlugFromAddress(address, cityName, citySlug) {
 
 export function doctorProfileUrl(doctor) {
   if (!doctor) return '/doctors';
+  if (doctor.page_path) return doctor.page_path;
+  if (doctor.canonical_path) return doctor.canonical_path;
   if (doctor.slug) {
     const citySlug = doctor.city_slug || slugifyText(doctor.city_name);
     const localitySlug =
-      doctor.locality_slug || localitySlugFromAddress(doctor.address, doctor.city_name, citySlug);
+      doctor.locality_slug || doctor.locality || localitySlugFromAddress(doctor.address, doctor.city_name, citySlug);
     return `/${encodeURIComponent(citySlug)}/${encodeURIComponent(localitySlug)}/physiotherapists/${encodeURIComponent(doctor.slug)}`;
   }
   if (doctor.id) return `/doctors/${doctor.id}`;
@@ -39,10 +52,12 @@ export function doctorProfileUrl(doctor) {
 
 export function clinicProfileUrl(clinic) {
   if (!clinic) return '/clinics';
+  if (clinic.page_path) return clinic.page_path;
+  if (clinic.canonical_path) return clinic.canonical_path;
   if (clinic.slug) {
     const citySlug = clinic.city_slug || slugifyText(clinic.city_name);
     const localitySlug =
-      clinic.locality_slug || localitySlugFromAddress(clinic.address, clinic.city_name, citySlug);
+      clinic.locality_slug || clinic.locality || localitySlugFromAddress(clinic.address, clinic.city_name, citySlug);
     return `/${encodeURIComponent(citySlug)}/${encodeURIComponent(localitySlug)}/physiotherapy-clinic/${encodeURIComponent(clinic.slug)}`;
   }
   if (clinic.id) return `/clinic/id/${clinic.id}`;

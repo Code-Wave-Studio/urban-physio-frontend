@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { doctors as doctorsApi, clinicPortal } from '../../services/api';
 import FaIcon from '../FaIcon';
 import DoctorAvatar from '../DoctorAvatar';
 import PatientAvatar from '../PatientAvatar';
+import PortalLink from '../portal/PortalLink';
 import { resolveMediaUrl } from '../../utils/mediaUrl';
 import useClinicPortal from '../../hooks/useClinicPortal';
 import ClinicRoleSwitch from '../clinic/ClinicRoleSwitch';
@@ -89,20 +89,20 @@ function GuestLoginCard({ onNavigate }) {
         </div>
       </div>
       <div className="relative grid grid-cols-2 gap-2 mt-4">
-        <Link
+        <PortalLink
           to="/patient/login"
           onClick={onNavigate}
           className="btn-primary text-center text-sm !py-2.5 !px-3"
         >
           Patient login
-        </Link>
-        <Link
+        </PortalLink>
+        <PortalLink
           to="/doctor/login"
           onClick={onNavigate}
           className="btn-outline text-center text-sm !py-2.5 !px-3"
         >
           Doctor login
-        </Link>
+        </PortalLink>
       </div>
     </div>
   );
@@ -126,16 +126,16 @@ function PatientProfileCard({ user, summary, loading, onNavigate }) {
               </span>
             )}
           </div>
-          <Link
+          <PortalLink
             to="/patient/profile"
             onClick={onNavigate}
             className="inline-flex items-center gap-0.5 text-xs font-medium text-primary-600 mt-0.5 hover:text-primary-800"
           >
             Edit profile
             <FaIcon icon="fa-chevron-right" className="text-[8px]" />
-          </Link>
+          </PortalLink>
         </div>
-        <Link
+        <PortalLink
           to={notifPath}
           onClick={onNavigate}
           className="relative shrink-0 w-9 h-9 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-500"
@@ -151,20 +151,20 @@ function PatientProfileCard({ user, summary, loading, onNavigate }) {
               {summary.unreadNotifications > 99 ? '99+' : summary.unreadNotifications}
             </span>
           )}
-        </Link>
+        </PortalLink>
       </div>
       <div className="flex gap-2 mt-2.5">
         <MiniStat label="Upcoming" value={loading ? '—' : summary.upcomingAppointments} />
         <MiniStat label="Sessions left" value={loading ? '—' : summary.pendingSessions} />
       </div>
-      <Link
+      <PortalLink
         to="/book"
         onClick={onNavigate}
         className="mt-2.5 btn-primary w-full text-center text-xs !py-2.5 inline-flex items-center justify-center gap-1.5"
       >
         <FaIcon icon="fa-calendar-plus" className="text-xs" />
         Book Appointment
-      </Link>
+      </PortalLink>
     </div>
   );
 }
@@ -241,14 +241,14 @@ function DoctorProfileCard({ user, summary, loading, onNavigate }) {
           badge={summary.unreadNotifications}
         />
       </div>
-      <Link
+      <PortalLink
         to="/doctor/appointments"
         onClick={onNavigate}
         className="relative mt-3 btn-primary w-full text-center text-sm !py-3 inline-flex items-center justify-center gap-2 shadow-lg shadow-primary-500/20"
       >
         <FaIcon icon="fa-calendar-check" />
         Manage Appointments
-      </Link>
+      </PortalLink>
     </div>
   );
 }
@@ -268,7 +268,7 @@ function AdminProfileCard({ user, summary, loading, onNavigate }) {
           <p className="text-sm text-slate-500 mt-0.5">Platform administrator</p>
         </div>
         {summary.unreadNotifications > 0 && (
-          <Link
+          <PortalLink
             to="/admin/notifications"
             onClick={onNavigate}
             className="relative shrink-0 w-10 h-10 rounded-xl bg-white/80 border border-white flex items-center justify-center text-slate-600 shadow-sm"
@@ -277,7 +277,7 @@ function AdminProfileCard({ user, summary, loading, onNavigate }) {
             <span className="absolute -top-1 -right-1 min-w-[1.125rem] h-[1.125rem] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-0.5">
               {summary.unreadNotifications > 99 ? '99+' : summary.unreadNotifications}
             </span>
-          </Link>
+          </PortalLink>
         )}
       </div>
       <div className="relative grid grid-cols-2 gap-2 mt-3">
@@ -286,14 +286,14 @@ function AdminProfileCard({ user, summary, loading, onNavigate }) {
         <MiniStat label="Doctors" value={loading ? '—' : summary.totalDoctors} />
         <MiniStat label="Pending" value={loading ? '—' : summary.adminPendingRequests} />
       </div>
-      <Link
+      <PortalLink
         to="/admin"
         onClick={onNavigate}
         className="relative mt-3 btn-primary w-full text-center text-sm !py-3 inline-flex items-center justify-center gap-2 shadow-lg shadow-primary-500/20"
       >
         <FaIcon icon="fa-gauge-high" />
         Open Dashboard
-      </Link>
+      </PortalLink>
     </div>
   );
 }
@@ -362,17 +362,17 @@ function ClinicProfileCard({ user, summary, loading, onNavigate }) {
         <div className="flex-1 min-w-0">
           <p className="font-bold text-slate-900 text-base sm:text-lg leading-tight truncate">{name}</p>
           <p className="text-xs text-slate-500 mt-0.5 truncate">{isAdminMode ? 'Clinic Admin Portal' : 'Front Desk Portal'}</p>
-          <Link
+          <PortalLink
             to="/clinic-portal/profile"
             onClick={onNavigate}
             className="inline-flex items-center gap-0.5 text-xs font-medium text-emerald-600 mt-1 hover:text-emerald-800"
           >
             Clinic settings
             <FaIcon icon="fa-chevron-right" className="text-[8px]" />
-          </Link>
+          </PortalLink>
         </div>
         {summary.unreadNotifications > 0 && (
-          <Link
+          <PortalLink
             to={notifPath}
             onClick={onNavigate}
             className="relative shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-500"
@@ -381,7 +381,7 @@ function ClinicProfileCard({ user, summary, loading, onNavigate }) {
             <span className="absolute -top-1 -right-1 min-w-[1rem] h-4 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold px-0.5">
               {summary.unreadNotifications > 99 ? '99+' : summary.unreadNotifications}
             </span>
-          </Link>
+          </PortalLink>
         )}
       </div>
 
@@ -421,14 +421,14 @@ function ClinicProfileCard({ user, summary, loading, onNavigate }) {
         </button>
       </div>
 
-      <Link
+      <PortalLink
         to={isAdminMode ? '/clinic-portal/admin' : '/clinic-portal'}
         onClick={onNavigate}
         className="relative mt-3 btn-primary w-full text-center text-sm !py-2.5 sm:!py-3 inline-flex items-center justify-center gap-2 !bg-emerald-600 hover:!bg-emerald-700 shadow-lg shadow-emerald-600/20"
       >
         <FaIcon icon="fa-hospital-user" />
         Open {isAdminMode ? 'Admin Dashboard' : 'Front Desk'}
-      </Link>
+      </PortalLink>
 
       <ClinicRoleSwitch
         open={switchOpen}

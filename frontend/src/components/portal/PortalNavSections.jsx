@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import FaIcon from '../FaIcon';
+import PortalLink from './PortalLink';
 import { groupPortalNav, isNavLinkActive, TONE_CLASSES } from '../../constants/portalArchitecture';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -70,14 +71,14 @@ export default function PortalNavSections({
           <span className="portal-nav-link-icon">
             <FaIcon icon={link.icon} className="text-sm" />
           </span>
-          <span className="truncate flex-1">{link.label}</span>
+          <span className="truncate flex-1 text-left">{link.label}</span>
         </button>
       );
     }
 
     const active = isNavLinkActive(pathname, link);
     return (
-      <Link
+      <PortalLink
         key={`${link.to}-${link.label}`}
         to={link.to}
         onClick={onNavigate}
@@ -87,7 +88,7 @@ export default function PortalNavSections({
         <span className="portal-nav-link-icon">
           <FaIcon icon={link.icon} className="text-sm" />
         </span>
-        <span className="truncate flex-1">{link.label}</span>
+        <span className="truncate flex-1 text-left">{link.label}</span>
         {link.notifyKey && unreadCount > 0 && (
           <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
             {unreadCount > 99 ? '99+' : unreadCount}
@@ -96,7 +97,7 @@ export default function PortalNavSections({
         {active && !link.notifyKey && (
           <FaIcon icon="fa-chevron-right" className="ml-auto text-xs opacity-80 shrink-0" />
         )}
-      </Link>
+      </PortalLink>
     );
   };
 

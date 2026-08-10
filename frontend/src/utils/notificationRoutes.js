@@ -44,6 +44,7 @@ export function getNotificationPath(notification, roleSlug) {
     if (type.startsWith('emergency_')) {
       if (role === 'patient') return `/patient/appointments${q}`;
       if (role === 'doctor') return `/doctor/emergency${q}`;
+      if (role === 'clinic') return `/clinic-portal/appointments${q}`;
       return `/admin/emergency${q}`;
     }
     if (role === 'patient') return `/patient/appointments${q}`;
@@ -62,6 +63,9 @@ export function getNotificationPath(notification, roleSlug) {
       }
       return '/doctor/requests?status=pending';
     }
+    if (role === 'clinic') {
+      return `/clinic-portal/appointments${appointmentQuery(data)}`;
+    }
     if (data.request_type === 'doctor_change') {
       return '/admin/appointment-requests?status=pending';
     }
@@ -74,7 +78,7 @@ export function getNotificationPath(notification, roleSlug) {
     return '/admin/clinics';
   }
 
-  if (type === 'clinic_join_request' || type === 'clinic_invite') {
+  if (type === 'clinic_join_request' || type === 'clinic_invite' || type === 'clinic_removed') {
     if (role === 'clinic') return '/clinic-portal/team';
     if (role === 'doctor') return '/doctor/clinics';
     return '/admin/clinics';
@@ -97,6 +101,7 @@ export function getNotificationPath(notification, roleSlug) {
   if (type === 'patient_report_uploaded') {
     if (role === 'patient') return '/patient/reports';
     if (role === 'doctor') return '/doctor/patients';
+    if (role === 'clinic') return '/clinic-portal/patients';
     return '/admin/users';
   }
 
@@ -128,8 +133,9 @@ export function getNotificationPath(notification, roleSlug) {
     return '/admin/users';
   }
 
-  if (type === 'review_submitted') {
+  if (type === 'review_submitted' || type === 'review_received' || type === 'review_negative') {
     if (role === 'doctor') return '/doctor';
+    if (role === 'clinic') return '/clinic-portal/reviews';
     return '/admin/reviews';
   }
 

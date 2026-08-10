@@ -246,12 +246,12 @@ export default function DashboardLayout({
               <img
                 src={resolveMediaUrl(profileAvatar) || profileAvatar}
                 alt={profileName}
-                className="primary-nav__avatar"
+                className="primary-nav__avatar object-contain bg-white p-0.5"
                 title={profileName}
               />
             ) : (
               <div className="primary-nav__avatar primary-nav__avatar--fallback" title={profileName}>
-                <FaIcon icon="fa-user" className="text-sm" />
+                <FaIcon icon={variant === 'clinic' ? 'fa-hospital' : 'fa-user'} className="text-sm" />
               </div>
             )}
           </div>

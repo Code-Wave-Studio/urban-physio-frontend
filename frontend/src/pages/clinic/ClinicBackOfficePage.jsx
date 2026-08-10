@@ -622,6 +622,17 @@ export default function ClinicBackOfficePage() {
     }
   };
 
+  const deleteCategory = async (cat) => {
+    if (!window.confirm(`Delete category "${cat.name}"?`)) return;
+    try {
+      await clinicPortal.boDeleteCategory(cid, cat.id);
+      loadMeta();
+      toast.success('Category deleted');
+    } catch (e) {
+      toast.error(e.message || 'Delete failed');
+    }
+  };
+
   const addSupplier = async () => {
     if (!supName.trim()) return;
     try {
@@ -631,6 +642,17 @@ export default function ClinicBackOfficePage() {
       toast.success('Supplier added');
     } catch (e) {
       toast.error(e.message || 'Failed');
+    }
+  };
+
+  const deleteSupplier = async (sup) => {
+    if (!window.confirm(`Delete supplier "${sup.name}"?`)) return;
+    try {
+      await clinicPortal.boDeleteSupplier(cid, sup.id);
+      loadMeta();
+      toast.success('Supplier deleted');
+    } catch (e) {
+      toast.error(e.message || 'Delete failed');
     }
   };
 
@@ -1250,17 +1272,37 @@ export default function ClinicBackOfficePage() {
           <div className="grid md:grid-cols-2 gap-4">
             <div className="glass-card !p-4 space-y-3">
               <p className="font-semibold">Inventory categories</p>
-              <ul className="text-sm space-y-1 max-h-40 overflow-y-auto">
-                {categories.map((c) => (
-                  <li key={c.id} className="text-slate-700">
-                    {c.name}
-                  </li>
-                ))}
-              </ul>
+              {!categories.length ? (
+                <p className="text-xs text-slate-400">No categories added yet.</p>
+              ) : (
+                <ul className="text-sm space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                  {categories.map((c) => (
+                    <li key={c.id} className="flex items-center justify-between text-slate-700 bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-lg">
+                      <span className="truncate font-medium">{c.name}</span>
+                      {canManage && (
+                        <button
+                          type="button"
+                          onClick={() => deleteCategory(c)}
+                          className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition p-1 shrink-0 ml-2"
+                          title={`Delete ${c.name}`}
+                        >
+                          <FaIcon icon="fa-trash" className="text-xs" />
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
               {canManage && (
-                <div className="flex gap-2">
-                  <input className="input-field flex-1" placeholder="New category" value={catName} onChange={(e) => setCatName(e.target.value)} />
-                  <button type="button" className="btn-primary text-xs" onClick={addCategory}>
+                <div className="flex gap-2 pt-1">
+                  <input
+                    className="input-field flex-1 text-sm"
+                    placeholder="New category"
+                    value={catName}
+                    onChange={(e) => setCatName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') addCategory(); }}
+                  />
+                  <button type="button" className="btn-primary text-xs shrink-0" onClick={addCategory}>
                     Add
                   </button>
                 </div>
@@ -1268,17 +1310,44 @@ export default function ClinicBackOfficePage() {
             </div>
             <div className="glass-card !p-4 space-y-3">
               <p className="font-semibold">Suppliers</p>
-              <ul className="text-sm space-y-1 max-h-40 overflow-y-auto">
-                {suppliers.map((s) => (
-                  <li key={s.id} className="text-slate-700">
-                    {s.name}
-                  </li>
-                ))}
-              </ul>
+              {!suppliers.length ? (
+                <p className="text-xs text-slate-400">No suppliers added yet.</p>
+              ) : (
+                <ul className="text-sm space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                  {suppliers.map((s) => (
+                    <li key={s.id} className="flex items-center justify-between text-slate-700 bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-lg">
+                      <div className="truncate">
+                        <span className="block font-medium truncate">{s.name}</span>
+                        {(s.phone || s.email) && (
+                          <span className="block text-[11px] text-slate-400 truncate">
+                            {[s.phone, s.email].filter(Boolean).join(' • ')}
+                          </span>
+                        )}
+                      </div>
+                      {canManage && (
+                        <button
+                          type="button"
+                          onClick={() => deleteSupplier(s)}
+                          className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition p-1 shrink-0 ml-2"
+                          title={`Delete ${s.name}`}
+                        >
+                          <FaIcon icon="fa-trash" className="text-xs" />
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
               {canManage && (
-                <div className="flex gap-2">
-                  <input className="input-field flex-1" placeholder="New supplier" value={supName} onChange={(e) => setSupName(e.target.value)} />
-                  <button type="button" className="btn-primary text-xs" onClick={addSupplier}>
+                <div className="flex gap-2 pt-1">
+                  <input
+                    className="input-field flex-1 text-sm"
+                    placeholder="New supplier"
+                    value={supName}
+                    onChange={(e) => setSupName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') addSupplier(); }}
+                  />
+                  <button type="button" className="btn-primary text-xs shrink-0" onClick={addSupplier}>
                     Add
                   </button>
                 </div>

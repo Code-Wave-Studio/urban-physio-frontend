@@ -1,5 +1,6 @@
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import FaIcon from '../FaIcon';
+import PortalLink from './PortalLink';
 import { isNavLinkActive, TONE_CLASSES } from '../../constants/portalArchitecture';
 
 const ACTIVE_CLS = {
@@ -36,7 +37,7 @@ export default function ContextPanel({ section, accent = 'primary', onNavigate }
           if (!link.to) return null;
           const active = isNavLinkActive(pathname, link);
           return (
-            <Link
+            <PortalLink
               key={`${link.to}-${link.label}`}
               to={link.to}
               onClick={onNavigate}
@@ -45,7 +46,7 @@ export default function ContextPanel({ section, accent = 'primary', onNavigate }
               <span className="portal-nav-link-icon">
                 <FaIcon icon={link.icon} className="text-sm" />
               </span>
-              <span className="truncate flex-1">{link.label}</span>
+              <span className="truncate flex-1 text-left">{link.label}</span>
               {link.notifyKey && (
                 <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
                   !
@@ -54,7 +55,7 @@ export default function ContextPanel({ section, accent = 'primary', onNavigate }
               {active && !link.notifyKey && (
                 <FaIcon icon="fa-chevron-right" className="ml-auto text-xs opacity-80 shrink-0" />
               )}
-            </Link>
+            </PortalLink>
           );
         })}
       </nav>

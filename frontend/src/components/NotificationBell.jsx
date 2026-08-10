@@ -19,6 +19,9 @@ const TYPE_LABELS = {
   clinic_pending: 'Clinic',
   clinic_approved: 'Clinic',
   clinic_rejected: 'Clinic',
+  clinic_join_request: 'Join request',
+  clinic_invite: 'Invite',
+  clinic_removed: 'Clinic',
   doctor_service_pending: 'Services',
   doctor_service_approved: 'Services',
   doctor_service_rejected: 'Services',
@@ -29,6 +32,8 @@ const TYPE_LABELS = {
   career_application: 'Careers',
   user_registered: 'User',
   review_submitted: 'Review',
+  review_received: 'Review',
+  review_negative: 'Review',
   contact_message: 'Contact',
   appointment_request: 'Request',
   emergency_requested: 'Emergency',
@@ -39,6 +44,7 @@ const TYPE_LABELS = {
 
 function resolveRole(hasRole) {
   if (hasRole('super_admin', 'admin')) return 'admin';
+  if (hasRole('clinic', 'clinic_staff')) return 'clinic';
   if (hasRole('doctor')) return 'doctor';
   return 'patient';
 }

@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import FaIcon from './FaIcon';
 import Logo from './Logo';
+import PortalLink from './portal/PortalLink';
 import NavDrawerProfileCard from './nav/NavDrawerProfileCard';
 import PortalNavSections from './portal/PortalNavSections';
 import { PATIENT_SECTION_ORDER } from '../constants/patientNav';
@@ -57,21 +58,21 @@ function NavListItem({ to, label, icon, pathname, search, onNavigate, tone = 'pr
         : 'bg-slate-100 text-slate-500';
 
   return (
-    <Link
+    <PortalLink
       to={to}
       onClick={onNavigate}
-      className={`flex items-center gap-2.5 py-2.5 px-1 rounded-lg transition-colors active:scale-[0.99] ${
+      className={`flex items-center gap-2.5 py-2.5 px-1 rounded-lg transition-colors active:scale-[0.99] text-left ${
         active ? 'bg-primary-50/80' : 'hover:bg-slate-50'
       }`}
     >
       <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm ${iconTone}`}>
         <FaIcon icon={icon} />
       </span>
-      <span className={`flex-1 text-sm font-medium leading-snug ${active ? 'text-primary-800' : 'text-slate-700'}`}>
+      <span className={`flex-1 text-sm font-medium leading-snug text-left ${active ? 'text-primary-800' : 'text-slate-700'}`}>
         {label}
       </span>
       <FaIcon icon="fa-chevron-right" className="text-[10px] text-slate-300 shrink-0" />
-    </Link>
+    </PortalLink>
   );
 }
 

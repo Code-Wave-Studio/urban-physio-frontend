@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import FaIcon from '../FaIcon';
+import PortalLink from './PortalLink';
 
 /**
  * Context-aware quick-action bar that shows route-appropriate shortcuts.
@@ -83,14 +84,14 @@ export default function ContextQuickActions({ variant = 'patient', clinicId }) {
           : action.to || pathname;
 
         return (
-          <Link
+          <PortalLink
             key={action.label}
             to={to}
             className="context-quick-action-btn"
           >
             <FaIcon icon={action.icon} className="text-[11px]" />
             {action.label}
-          </Link>
+          </PortalLink>
         );
       })}
     </div>

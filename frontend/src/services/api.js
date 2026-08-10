@@ -712,6 +712,7 @@ export const clinicPortal = {
     api.get(`/clinic-portal/${clinicId}/billing/receipts/${paymentId}`),
   patients: (clinicId, params) => api.get(`/clinic-portal/${clinicId}/patients`, { params }),
   mergePatients: (clinicId, data) => api.post(`/clinic-portal/${clinicId}/patients/merge`, data),
+  deletePatients: (clinicId, data) => api.post(`/clinic-portal/${clinicId}/patients/delete`, data),
   patientReminders: (clinicId, params) =>
     api.get(`/clinic-portal/${clinicId}/patients/reminders`, { params }),
   createPatientReminder: (clinicId, data) =>
@@ -957,10 +958,14 @@ export const clinicPortal = {
     api.get(`/clinic-portal/${clinicId}/back-office/categories`),
   boCreateCategory: (clinicId, data) =>
     api.post(`/clinic-portal/${clinicId}/back-office/categories`, data),
+  boDeleteCategory: (clinicId, id) =>
+    api.delete(`/clinic-portal/${clinicId}/back-office/categories/${id}`),
   boSuppliers: (clinicId) =>
     api.get(`/clinic-portal/${clinicId}/back-office/suppliers`),
   boCreateSupplier: (clinicId, data) =>
     api.post(`/clinic-portal/${clinicId}/back-office/suppliers`, data),
+  boDeleteSupplier: (clinicId, id) =>
+    api.delete(`/clinic-portal/${clinicId}/back-office/suppliers/${id}`),
   boPurchaseOrders: (clinicId, params) =>
     api.get(`/clinic-portal/${clinicId}/back-office/purchase-orders`, { params }),
   boGetPurchaseOrder: (clinicId, id) =>

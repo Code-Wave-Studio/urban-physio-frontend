@@ -23,17 +23,22 @@ export default function PortalProfileCard({
   const [online, setOnline] = useState(presenceOnline);
   const [uploading, setUploading] = useState(false);
   const [toggling, setToggling] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     setOnline(presenceOnline);
   }, [presenceOnline]);
 
+  useEffect(() => {
+    setImgError(false);
+  }, [avatarUrl]);
+
   const tone =
     accent === 'teal'
-      ? 'from-teal-500/15 to-emerald-500/10 border-teal-200/60'
+      ? 'from-teal-50/80 via-white to-emerald-50/50 border-teal-200/80'
       : accent === 'emerald'
-        ? 'from-emerald-500/15 to-teal-500/10 border-emerald-200/60'
-        : 'from-primary-500/15 to-orange-500/10 border-primary-200/60';
+        ? 'from-emerald-50/80 via-white to-teal-50/50 border-emerald-200/80'
+        : 'from-slate-50/90 via-white to-primary-50/40 border-slate-200/90';
 
   const toggleTone = online
     ? 'bg-emerald-500'
@@ -83,7 +88,7 @@ export default function PortalProfileCard({
   };
 
   return (
-    <div className={`portal-profile-card rounded-xl border bg-gradient-to-br ${tone} p-2.5 sm:p-3 w-full max-w-full overflow-hidden`}>
+    <div className={`portal-profile-card rounded-2xl border bg-gradient-to-br ${tone} p-2.5 sm:p-3 w-full max-w-full overflow-hidden shadow-2xs transition-all duration-200`}>
       <div className="flex items-center justify-between gap-2.5 min-w-0 w-full">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <button
@@ -93,11 +98,18 @@ export default function PortalProfileCard({
             aria-label={allowAvatarUpload ? 'Change profile photo' : 'Profile photo'}
             disabled={!allowAvatarUpload || uploading}
           >
-            <span className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl overflow-hidden bg-white border border-slate-100 shadow-xs flex items-center justify-center text-slate-600 font-bold text-sm shrink-0">
-              {src ? (
-                <img src={src} alt="" className="w-full h-full object-contain p-0.5" />
+            <span className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl overflow-hidden bg-white border border-slate-200/90 shadow-2xs flex items-center justify-center text-slate-700 font-bold text-sm shrink-0">
+              {!imgError && src ? (
+                <img
+                  src={src}
+                  alt={name || ''}
+                  className="w-full h-full object-contain p-0.5 rounded-lg"
+                  onError={() => setImgError(true)}
+                />
               ) : (
-                (name || '?').slice(0, 1).toUpperCase()
+                <span className="font-bold text-primary-700 text-sm sm:text-base">
+                  {(name || '?').slice(0, 1).toUpperCase()}
+                </span>
               )}
             </span>
             {allowAvatarUpload && (
@@ -111,8 +123,8 @@ export default function PortalProfileCard({
           )}
 
           <div className="min-w-0 flex-1">
-            <p className="font-bold text-slate-900 text-xs sm:text-sm truncate leading-tight">{name || 'Account'}</p>
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 truncate mt-0.5">{roleLabel}</p>
+            <p className="font-bold text-slate-900 text-xs sm:text-sm truncate leading-snug" title={name}>{name || 'Account'}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 truncate mt-0.5 font-mono">{roleLabel}</p>
           </div>
         </div>
 
@@ -121,7 +133,7 @@ export default function PortalProfileCard({
             type="button"
             onClick={togglePresence}
             disabled={toggling}
-            className="portal-presence-toggle shrink-0 flex flex-col items-end gap-0.5 active:scale-95 transition-transform duration-200"
+            className="portal-presence-toggle shrink-0 flex flex-col items-end gap-0.5 active:scale-95 transition-transform duration-200 cursor-pointer"
             aria-pressed={online}
             title={online ? 'Online — tap to go offline' : 'Offline — tap to go online'}
           >

@@ -278,6 +278,9 @@ export default function ClinicPortalPatients() {
   const [bulkInviteOpen, setBulkInviteOpen] = useState(false);
   const [mergeOpen, setMergeOpen] = useState(false);
   const [merging, setMerging] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [labelOpen, setLabelOpen] = useState(false);
   const [palettePatients, setPalettePatients] = useState([]);
 
   const load = useCallback(async () => {
@@ -412,6 +415,15 @@ export default function ClinicPortalPatients() {
     [rows, selected]
   );
 
+  const handlePrintLabelClick = () => {
+    const targets = selectedList.length ? selectedList : glance ? [glance] : [];
+    if (!targets.length) {
+      toast.error('Select a patient first');
+      return;
+    }
+    setLabelOpen(true);
+  };
+
   const printLabel = () => {
     const targets = selectedList.length ? selectedList : glance ? [glance] : [];
     if (!targets.length) {
@@ -421,10 +433,11 @@ export default function ClinicPortalPatients() {
     const html = targets
       .map(
         (p) => `
-      <div style="border:1px solid #cbd5e1;padding:12px 16px;margin:8px;width:280px;font-family:system-ui;border-radius:8px">
-        <div style="font-weight:700;font-size:14px">${(p.patient_name || 'Patient').replace(/</g, '')}</div>
-        <div style="font-size:12px;color:#475569;margin-top:4px">${(p.phone || '').replace(/</g, '')}</div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:2px">${patientKey(p)}</div>
+      <div style="border:2px solid #94a3b8;padding:12px 16px;margin:8px;width:280px;font-family:system-ui;border-radius:8px;background:#fff">
+        <div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em">Clinic Patient Label</div>
+        <div style="font-weight:700;font-size:15px;color:#0f172a;margin-top:2px">${(p.patient_name || 'Patient').replace(/</g, '')}</div>
+        <div style="font-size:12px;color:#475569;margin-top:4px">Phone: ${(p.phone || '').replace(/</g, '')}</div>
+        <div style="font-size:11px;color:#64748b;margin-top:2px">ID: ${patientKey(p)}</div>
       </div>`
       )
       .join('');
@@ -435,6 +448,23 @@ export default function ClinicPortalPatients() {
     }
     w.document.write(`<html><head><title>Patient labels</title></head><body onload="print()">${html}</body></html>`);
     w.document.close();
+  };
+
+  const runDelete = async () => {
+    if (!selected.size) return;
+    setDeleting(true);
+    try {
+      const keys = Array.from(selected);
+      await clinicPortal.deletePatients(clinicId, { keys });
+      toast.success(`${keys.length} patient(s) deleted`);
+      setDeleteOpen(false);
+      setSelected(new Set());
+      load();
+    } catch (e) {
+      toast.error(e.message || 'Could not delete patient(s)');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const runMerge = async () => {
@@ -598,22 +628,40 @@ export default function ClinicPortalPatients() {
 
               <button
                 type="button"
-                onClick={printLabel}
-                className="hidden items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 sm:inline-flex"
+                onClick={handlePrintLabelClick}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer shadow-2xs"
+                title="Print patient label"
               >
-                <FaIcon icon="fa-print" />
+                <FaIcon icon="fa-print" className="text-slate-500" />
                 Label
+                {selected.size > 0 && (
+                  <span className="ml-1 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-700">
+                    {selected.size}
+                  </span>
+                )}
               </button>
 
               <button
                 type="button"
                 onClick={() => setMergeOpen(true)}
                 disabled={selected.size !== 2}
-                className="hidden items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40 sm:inline-flex"
+                className="hidden items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40 sm:inline-flex cursor-pointer"
               >
                 <FaIcon icon="fa-object-group" />
                 Merge
               </button>
+
+              {selected.size > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setDeleteOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition cursor-pointer shadow-2xs"
+                  title="Delete selected patient(s)"
+                >
+                  <FaIcon icon="fa-trash-can" className="text-xs text-rose-600" />
+                  <span>Delete ({selected.size})</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -838,6 +886,105 @@ export default function ClinicPortalPatients() {
             <button type="button" className="btn-primary flex-1 text-sm" disabled={merging} onClick={runMerge}>
               {merging ? 'Merging…' : 'Confirm merge'}
             </button>
+          </div>
+        </GlassModalBody>
+      </GlassModal>
+
+      <GlassModal open={deleteOpen} onClose={() => !deleting && setDeleteOpen(false)} size="sm">
+        <GlassModalHeader
+          title="Delete patient"
+          subtitle="Permanent deletion from clinic roster"
+          icon="fa-trash-can"
+          onClose={() => !deleting && setDeleteOpen(false)}
+        />
+        <GlassModalBody>
+          <div className="rounded-xl bg-rose-50 border border-rose-200/80 p-3 mb-3">
+            <div className="flex items-start gap-2.5">
+              <FaIcon icon="fa-triangle-exclamation" className="text-rose-600 text-sm mt-0.5 shrink-0" />
+              <div className="text-xs text-rose-900">
+                <p className="font-bold uppercase tracking-wide">Warning: Permanent Action</p>
+                <p className="mt-0.5 leading-relaxed">
+                  Are you sure you want to permanently delete the selected patient(s) from this clinic? All associated roster records, reminders, and clinic attachments for these patients will be removed. <strong>This action cannot be undone.</strong>
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="text-xs text-slate-600 space-y-1 mb-4 bg-slate-50 p-2.5 rounded-lg border border-slate-100 max-h-36 overflow-y-auto">
+            {selectedList.map((p) => (
+              <p key={patientKey(p)} className="font-medium text-slate-800 flex items-center justify-between">
+                <span>{maskName(p.patient_name, privacy)}</span>
+                <span className="text-[10px] text-slate-400 font-mono">{patientKey(p)}</span>
+              </p>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className="btn-outline flex-1 text-sm cursor-pointer"
+              disabled={deleting}
+              onClick={() => setDeleteOpen(false)}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="bg-rose-600 hover:bg-rose-700 text-white font-semibold flex-1 rounded-xl px-4 py-2 text-sm shadow-sm transition active:scale-95 cursor-pointer disabled:opacity-50"
+              disabled={deleting}
+              onClick={runDelete}
+            >
+              {deleting ? 'Deleting…' : 'Permanently Delete'}
+            </button>
+          </div>
+        </GlassModalBody>
+      </GlassModal>
+
+      <GlassModal open={labelOpen} onClose={() => setLabelOpen(false)} size="md">
+        <GlassModalHeader
+          title="Patient label preview"
+          subtitle="Printable patient sticker / wristband labels"
+          icon="fa-print"
+          onClose={() => setLabelOpen(false)}
+        />
+        <GlassModalBody>
+          <div className="flex justify-between items-center mb-3">
+            <p className="text-xs text-slate-500 font-medium">
+              Showing labels for {selectedList.length || (glance ? 1 : 0)} patient(s)
+            </p>
+            <button
+              type="button"
+              onClick={printLabel}
+              className="btn-primary text-xs !py-1.5 !px-3 inline-flex items-center gap-1.5 cursor-pointer"
+            >
+              <FaIcon icon="fa-print" className="text-xs" />
+              Print Labels
+            </button>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto p-1 bg-slate-100/70 rounded-xl border border-slate-200/80">
+            {(selectedList.length ? selectedList : glance ? [glance] : []).map((p) => (
+              <div
+                key={patientKey(p)}
+                className="bg-white border-2 border-slate-300 rounded-xl p-3 shadow-xs space-y-1 select-none font-sans"
+              >
+                <div className="flex justify-between items-start border-b border-slate-200 pb-1.5 mb-1.5">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Clinic Patient Label</p>
+                    <p className="font-extrabold text-slate-900 text-sm">{maskName(p.patient_name, privacy)}</p>
+                  </div>
+                  <span className="text-[10px] font-mono font-bold bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 border border-slate-200">
+                    {patientKey(p)}
+                  </span>
+                </div>
+                <div className="text-xs text-slate-700 space-y-0.5">
+                  {p.phone && <p><strong>Phone:</strong> {maskPhone(p.phone, privacy)}</p>}
+                  {p.email && <p className="truncate"><strong>Email:</strong> {maskEmail(p.email, privacy)}</p>}
+                  {p.portal_status && (
+                    <p className="text-[11px] capitalize text-slate-500">
+                      <strong>Status:</strong> {p.portal_status}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </GlassModalBody>
       </GlassModal>

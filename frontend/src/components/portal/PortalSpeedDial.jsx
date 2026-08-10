@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
 import FaIcon from '../FaIcon';
+import PortalLink from './PortalLink';
 
 function SpeedDialTile({ item, onAction, onNavigate }) {
   const inner = (
@@ -9,12 +9,12 @@ function SpeedDialTile({ item, onAction, onNavigate }) {
       >
         <FaIcon icon={item.icon} className="text-xs" />
       </span>
-      <span className="text-xs font-semibold text-slate-700 leading-snug flex-1">{item.label}</span>
+      <span className="text-xs font-semibold text-slate-700 leading-snug flex-1 text-left">{item.label}</span>
     </>
   );
 
   const base =
-    'portal-speed-dial-item flex flex-col h-full rounded-xl border border-slate-100 bg-slate-50/50 p-2.5 active:scale-[0.98] transition-transform';
+    'portal-speed-dial-item flex flex-col h-full rounded-xl border border-slate-100 bg-slate-50/50 p-2.5 active:scale-[0.98] transition-transform text-left cursor-pointer';
 
   if (item.action) {
     return (
@@ -33,14 +33,14 @@ function SpeedDialTile({ item, onAction, onNavigate }) {
   }
 
   return (
-    <Link
+    <PortalLink
       to={item.to}
       role="listitem"
       className={base}
       onClick={() => onNavigate?.()}
     >
       {inner}
-    </Link>
+    </PortalLink>
   );
 }
 
