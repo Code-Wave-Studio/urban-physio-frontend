@@ -195,7 +195,7 @@ export default function Home() {
   const showPromoBanner = promoBanner.enabled && promoBanner.slides.length >= 1;
 
   return (
-    <div className="relative overflow-x-hidden page-enter has-fab-rail">
+    <div className="relative overflow-x-hidden page-enter">
       <ManagedPageSeo
         fallbackTitle="The Urban Physio | Book Verified Physiotherapists"
         fallbackDescription="Book verified physiotherapists for online, clinic & home visits across India."

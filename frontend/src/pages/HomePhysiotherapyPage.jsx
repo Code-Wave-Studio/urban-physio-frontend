@@ -102,7 +102,7 @@ export default function HomePhysiotherapyPage() {
   }
 
   return (
-    <div className="page-enter overflow-x-hidden has-fab-rail">
+    <div className="page-enter overflow-x-hidden">
       <ManagedPageSeo
         fallbackTitle={data.seo_title || HOME_PHYSIO_SEO.title}
         fallbackDescription={data.seo_description || HOME_PHYSIO_SEO.description}

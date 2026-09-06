@@ -1669,25 +1669,16 @@
     transform: translateY(0) scale(0.96);
   }
 
-  .floating-actions--rail .fab-scroll-top {
-    bottom: calc(11.5rem + env(safe-area-inset-bottom, 0px));
-  }
-
-  @media (min-width: 768px) {
-    .floating-actions--rail .fab-scroll-top {
-      bottom: calc(13rem + env(safe-area-inset-bottom, 0px));
-    }
-  }
-
   .fab-rail {
-    @apply pointer-events-none fixed z-[9976] flex flex-col items-end gap-2.5;
-    right: 1rem;
+    @apply pointer-events-none fixed z-[9976] flex flex-col items-start gap-2.5;
+    left: 1rem;
+    right: auto;
     bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
   }
 
   @media (min-width: 640px) {
     .fab-rail {
-      right: 1.5rem;
+      left: 1.5rem;
     }
   }
 
@@ -1748,16 +1739,6 @@
 
   .fab-rail-btn:active {
     transform: scale(0.96);
-  }
-}
-
-.has-fab-rail {
-  padding-bottom: 6.5rem;
-}
-
-@media (min-width: 768px) {
-  .has-fab-rail {
-    padding-bottom: 7.5rem;
   }
 }
 
