@@ -99,645 +99,511 @@ export default function AdminTelePhysio() {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-6 border-b border-slate-200 pb-3">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setTab(t.id)}
-            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all inline-flex items-center gap-2 ${
-              tab === t.id
-                ? 'bg-teal-700 text-white shadow-sm'
-                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-            }`}
-          >
-            <FaIcon icon={t.icon} />
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <form onSubmit={save} className="max-w-5xl space-y-6">
+        <div
+          className="flex gap-2 overflow-x-auto pb-3 mb-5 -mx-1 px-1"
+          role="tablist"
+          aria-label="Page content sections"
+        >
+          {TABS.map((t) => {
+            const active = tab === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setTab(t.id)}
+                className={`shrink-0 inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-sm font-semibold border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
+                  active
+                    ? 'bg-teal-700 text-white border-teal-700 shadow-sm'
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-teal-300'
+                }`}
+              >
+                <FaIcon icon={t.icon} className="text-xs" />
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
 
-      <form onSubmit={save} className="space-y-6">
         {/* TAB 1: HERO & TRUST */}
         {tab === 'hero' && (
-          <div className="space-y-6">
-            <CmsPanel title="Hero section" subtitle="Main banner at top of /telephysio">
-              <div className="grid md:grid-cols-2 gap-4">
-                <CmsField
-                  label="Hero badge"
-                  value={s.hero_badge}
-                  onChange={(v) => setSection('hero_badge', v)}
-                  placeholder="TelePhysio by Myoreset"
-                />
-                <CmsField
-                  label="Primary CTA label"
-                  value={s.hero_cta_label}
-                  onChange={(v) => setSection('hero_cta_label', v)}
-                />
+          <div className="space-y-5" role="tabpanel">
+            <CmsPanel title="Hero Section" icon="fa-flag">
+              <div className="grid sm:grid-cols-2 gap-3">
+                <CmsField label="Hero badge">
+                  <input
+                    className="input-field"
+                    value={s.hero_badge || ''}
+                    onChange={(e) => setSection('hero_badge', e.target.value)}
+                  />
+                </CmsField>
+                <CmsField label="Primary CTA button label">
+                  <input
+                    className="input-field"
+                    value={s.hero_cta_label || ''}
+                    onChange={(e) => setSection('hero_cta_label', e.target.value)}
+                  />
+                </CmsField>
               </div>
-              <div className="grid md:grid-cols-2 gap-4">
-                <CmsField
-                  label="Primary CTA link"
-                  value={s.hero_cta_link}
-                  onChange={(v) => setSection('hero_cta_link', v)}
-                />
-                <CmsField
-                  label="Secondary CTA label"
-                  value={s.secondary_cta_label}
-                  onChange={(v) => setSection('secondary_cta_label', v)}
-                />
+              <div className="grid sm:grid-cols-2 gap-3">
+                <CmsField label="Primary CTA button link">
+                  <input
+                    className="input-field"
+                    value={s.hero_cta_link || ''}
+                    onChange={(e) => setSection('hero_cta_link', e.target.value)}
+                  />
+                </CmsField>
+                <CmsField label="Secondary CTA label (WhatsApp)">
+                  <input
+                    className="input-field"
+                    value={s.secondary_cta_label || ''}
+                    onChange={(e) => setSection('secondary_cta_label', e.target.value)}
+                  />
+                </CmsField>
               </div>
-              <CmsField
-                label="Hero title"
-                value={form.hero_title}
-                onChange={(v) => set('hero_title', v)}
-                required
-              />
-              <CmsField
-                label="Hero subtitle"
-                type="textarea"
-                rows={3}
-                value={form.hero_subtitle}
-                onChange={(v) => set('hero_subtitle', v)}
-              />
+              <CmsField label="Headline">
+                <textarea
+                  className="input-field min-h-[72px]"
+                  value={form.hero_title}
+                  onChange={(e) => set('hero_title', e.target.value)}
+                  required
+                />
+              </CmsField>
+              <CmsField label="Subheadline">
+                <textarea
+                  className="input-field min-h-[100px]"
+                  value={form.hero_subtitle}
+                  onChange={(e) => set('hero_subtitle', e.target.value)}
+                />
+              </CmsField>
               <MediaUrlOrUpload
                 label="Hero image"
-                value={form.hero_image}
-                onChange={(v) => set('hero_image', v)}
-                onUpload={(file) => uploadCmsImage(file, 'telephysio')}
-                helperText="Professional telemedicine / video consultation photo (1200×900 recommended)"
+                hint="Shown beside the headline — URL or upload"
+                icon="fa-image"
+                urlValue={form.hero_image}
+                onUrlChange={(v) => set('hero_image', v)}
+                onUpload={uploadCmsImage}
+                accept="image/jpeg,image/png,image/webp"
+                maxMb={4}
+                preview="image"
               />
+              <CmsField label="Trust signals" hint="One line per tick shown under the hero.">
+                <textarea
+                  className="input-field min-h-[90px]"
+                  value={(s.trust_signals || []).join('\n')}
+                  onChange={(e) =>
+                    setSection(
+                      'trust_signals',
+                      e.target.value.split('\n').map((x) => x.trim()).filter(Boolean)
+                    )
+                  }
+                />
+              </CmsField>
             </CmsPanel>
 
-            <CmsPanel title="Trust indicators" subtitle="Checkmark pills shown in the hero">
+            <CmsPanel title="Trust Bar Strip" icon="fa-shield-halved">
               <CmsListEditor
-                items={s.trust_signals || []}
-                onChange={(next) => setSection('trust_signals', next)}
-                addLabel="Add trust indicator"
-                itemPlaceholder="e.g. Qualified Physiotherapists"
+                items={s.trust_bar || []}
+                onChange={(v) => setSection('trust_bar', v)}
+                addLabel="Add trust bar item"
+                fields={[
+                  { key: 'icon', label: 'Icon (e.g. fa-user-doctor)' },
+                  { key: 'label', label: 'Label' },
+                ]}
               />
-            </CmsPanel>
-
-            <CmsPanel title="Trust bar strip" subtitle="Compact 6-item trust banner below hero">
-              <div className="space-y-3">
-                {(s.trust_bar || []).map((item, idx) => (
-                  <div key={idx} className="flex gap-3 items-center bg-slate-50 p-3 rounded-xl border border-slate-200">
-                    <input
-                      type="text"
-                      className="input-field w-32"
-                      value={item.icon}
-                      onChange={(e) => {
-                        const copy = [...s.trust_bar];
-                        copy[idx] = { ...copy[idx], icon: e.target.value };
-                        setSection('trust_bar', copy);
-                      }}
-                      placeholder="fa-video"
-                    />
-                    <input
-                      type="text"
-                      className="input-field flex-1"
-                      value={item.label}
-                      onChange={(e) => {
-                        const copy = [...s.trust_bar];
-                        copy[idx] = { ...copy[idx], label: e.target.value };
-                        setSection('trust_bar', copy);
-                      }}
-                      placeholder="Feature label"
-                    />
-                  </div>
-                ))}
-              </div>
             </CmsPanel>
           </div>
         )}
 
         {/* TAB 2: OVERVIEW & SUITABILITY */}
         {tab === 'overview' && (
-          <div className="space-y-6">
-            <CmsPanel title="What Is TelePhysio?" subtitle="Explanation and ideal use cases">
-              <CmsField
-                label="Section heading"
-                value={s.what_heading}
-                onChange={(v) => setSection('what_heading', v)}
-              />
-              <CmsField
-                label="Body description"
-                type="textarea"
-                rows={4}
-                value={s.what_body}
-                onChange={(v) => setSection('what_body', v)}
-              />
-              <CmsField
-                label="Use cases title"
-                value={s.what_use_cases_title}
-                onChange={(v) => setSection('what_use_cases_title', v)}
-              />
-              <CmsListEditor
-                items={s.what_use_cases || []}
-                onChange={(next) => setSection('what_use_cases', next)}
-                addLabel="Add use case"
-                itemPlaceholder="e.g. Follow-up consultations"
-              />
+          <div className="space-y-5" role="tabpanel">
+            <CmsPanel title="What Is TelePhysio?" icon="fa-circle-info">
+              <CmsField label="Section heading">
+                <input
+                  className="input-field"
+                  value={s.what_heading || ''}
+                  onChange={(e) => setSection('what_heading', e.target.value)}
+                />
+              </CmsField>
+              <CmsField label="Body description">
+                <textarea
+                  className="input-field min-h-[100px]"
+                  value={s.what_body || ''}
+                  onChange={(e) => setSection('what_body', e.target.value)}
+                />
+              </CmsField>
+              <CmsField label="Use cases title">
+                <input
+                  className="input-field"
+                  value={s.what_use_cases_title || ''}
+                  onChange={(e) => setSection('what_use_cases_title', e.target.value)}
+                />
+              </CmsField>
+              <CmsField label="Use cases checklist" hint="One line per use case">
+                <textarea
+                  className="input-field min-h-[120px]"
+                  value={(s.what_use_cases || []).join('\n')}
+                  onChange={(e) =>
+                    setSection(
+                      'what_use_cases',
+                      e.target.value.split('\n').map((x) => x.trim()).filter(Boolean)
+                    )
+                  }
+                />
+              </CmsField>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <CmsField label="Section CTA label">
+                  <input
+                    className="input-field"
+                    value={s.what_cta_label || ''}
+                    onChange={(e) => setSection('what_cta_label', e.target.value)}
+                  />
+                </CmsField>
+                <CmsField label="Section CTA link">
+                  <input
+                    className="input-field"
+                    value={s.what_cta_link || ''}
+                    onChange={(e) => setSection('what_cta_link', e.target.value)}
+                  />
+                </CmsField>
+              </div>
             </CmsPanel>
 
-            <CmsPanel title="Who Is TelePhysio For?" subtitle="6 target patient cards">
-              <CmsField
-                label="Section heading"
-                value={s.who_heading}
-                onChange={(v) => setSection('who_heading', v)}
+            <CmsPanel title="Is Online Physiotherapy Right for You?" icon="fa-users">
+              <CmsField label="Section heading">
+                <input
+                  className="input-field"
+                  value={s.who_heading || ''}
+                  onChange={(e) => setSection('who_heading', e.target.value)}
+                />
+              </CmsField>
+              <CmsField label="Section subheading">
+                <textarea
+                  className="input-field min-h-[60px]"
+                  value={s.who_subheading || ''}
+                  onChange={(e) => setSection('who_subheading', e.target.value)}
+                />
+              </CmsField>
+              <CmsListEditor
+                items={s.who_cards || []}
+                onChange={(v) => setSection('who_cards', v)}
+                addLabel="Add patient profile card"
+                fields={[
+                  { key: 'title', label: 'Title (e.g. Busy Professionals)' },
+                  { key: 'icon', label: 'Icon (e.g. fa-briefcase)' },
+                  { key: 'description', label: 'Description', type: 'textarea' },
+                ]}
               />
-              <CmsField
-                label="Section subheading"
-                value={s.who_subheading}
-                onChange={(v) => setSection('who_subheading', v)}
-              />
-              <div className="space-y-3 mt-4">
-                {(s.who_cards || []).map((card, idx) => (
-                  <div key={idx} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                    <div className="flex gap-3">
-                      <input
-                        type="text"
-                        className="input-field w-32"
-                        value={card.icon}
-                        onChange={(e) => {
-                          const copy = [...s.who_cards];
-                          copy[idx] = { ...copy[idx], icon: e.target.value };
-                          setSection('who_cards', copy);
-                        }}
-                        placeholder="fa-icon"
-                      />
-                      <input
-                        type="text"
-                        className="input-field flex-1 font-bold"
-                        value={card.title}
-                        onChange={(e) => {
-                          const copy = [...s.who_cards];
-                          copy[idx] = { ...copy[idx], title: e.target.value };
-                          setSection('who_cards', copy);
-                        }}
-                        placeholder="Card title"
-                      />
-                    </div>
-                    <textarea
-                      rows={2}
-                      className="input-field w-full text-xs"
-                      value={card.description}
-                      onChange={(e) => {
-                        const copy = [...s.who_cards];
-                        copy[idx] = { ...copy[idx], description: e.target.value };
-                        setSection('who_cards', copy);
-                      }}
-                      placeholder="Card description"
-                    />
-                  </div>
-                ))}
-              </div>
-              <CmsField
-                label="Clinical advisory note"
-                type="textarea"
-                rows={2}
-                value={s.who_clinical_note}
-                onChange={(v) => setSection('who_clinical_note', v)}
-              />
+              <CmsField label="Clinical advisory note">
+                <textarea
+                  className="input-field min-h-[70px]"
+                  value={s.who_clinical_note || ''}
+                  onChange={(e) => setSection('who_clinical_note', e.target.value)}
+                />
+              </CmsField>
             </CmsPanel>
           </div>
         )}
 
         {/* TAB 3: STEPS & TIMELINE */}
         {tab === 'steps' && (
-          <div className="space-y-6">
-            <CmsPanel title="How TelePhysio Works" subtitle="4-step process">
-              <CmsField
-                label="Section heading"
-                value={s.how_heading}
-                onChange={(v) => setSection('how_heading', v)}
+          <div className="space-y-5" role="tabpanel">
+            <CmsPanel title="How TelePhysio Works" icon="fa-list-ol">
+              <CmsField label="Section heading">
+                <input
+                  className="input-field"
+                  value={s.how_heading || ''}
+                  onChange={(e) => setSection('how_heading', e.target.value)}
+                />
+              </CmsField>
+              <CmsField label="Section subheading">
+                <input
+                  className="input-field"
+                  value={s.how_subheading || ''}
+                  onChange={(e) => setSection('how_subheading', e.target.value)}
+                />
+              </CmsField>
+              <CmsListEditor
+                items={s.how_steps || []}
+                onChange={(v) => setSection('how_steps', v)}
+                addLabel="Add process step"
+                fields={[
+                  { key: 'step', label: 'Step number (e.g. 01)' },
+                  { key: 'title', label: 'Step title' },
+                  { key: 'icon', label: 'Icon (e.g. fa-video)' },
+                  { key: 'description', label: 'Description', type: 'textarea' },
+                ]}
               />
-              <CmsField
-                label="Section subheading"
-                value={s.how_subheading}
-                onChange={(v) => setSection('how_subheading', v)}
-              />
-              <div className="space-y-3 mt-4">
-                {(s.how_steps || []).map((step, idx) => (
-                  <div key={idx} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                    <div className="flex gap-3">
-                      <input
-                        type="text"
-                        className="input-field w-20 font-mono"
-                        value={step.step}
-                        onChange={(e) => {
-                          const copy = [...s.how_steps];
-                          copy[idx] = { ...copy[idx], step: e.target.value };
-                          setSection('how_steps', copy);
-                        }}
-                      />
-                      <input
-                        type="text"
-                        className="input-field flex-1 font-bold"
-                        value={step.title}
-                        onChange={(e) => {
-                          const copy = [...s.how_steps];
-                          copy[idx] = { ...copy[idx], title: e.target.value };
-                          setSection('how_steps', copy);
-                        }}
-                      />
-                    </div>
-                    <textarea
-                      rows={2}
-                      className="input-field w-full text-xs"
-                      value={step.description}
-                      onChange={(e) => {
-                        const copy = [...s.how_steps];
-                        copy[idx] = { ...copy[idx], description: e.target.value };
-                        setSection('how_steps', copy);
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
             </CmsPanel>
 
-            <CmsPanel title="Session Timeline" subtitle="7-point session breakdown">
-              <CmsField
-                label="Section heading"
-                value={s.session_heading}
-                onChange={(v) => setSection('session_heading', v)}
+            <CmsPanel title="What Happens During Your TelePhysio Session?" icon="fa-clock">
+              <CmsField label="Section heading">
+                <input
+                  className="input-field"
+                  value={s.session_heading || ''}
+                  onChange={(e) => setSection('session_heading', e.target.value)}
+                />
+              </CmsField>
+              <CmsField label="Section subheading">
+                <input
+                  className="input-field"
+                  value={s.session_subheading || ''}
+                  onChange={(e) => setSection('session_subheading', e.target.value)}
+                />
+              </CmsField>
+              <CmsListEditor
+                items={s.session_timeline || []}
+                onChange={(v) => setSection('session_timeline', v)}
+                addLabel="Add session timeline item"
+                fields={[
+                  { key: 'number', label: 'Step number (e.g. 1)' },
+                  { key: 'title', label: 'Title' },
+                  { key: 'description', label: 'Description', type: 'textarea' },
+                ]}
               />
-              <CmsField
-                label="Section subheading"
-                value={s.session_subheading}
-                onChange={(v) => setSection('session_subheading', v)}
-              />
-              <div className="space-y-3 mt-4">
-                {(s.session_timeline || []).map((tl, idx) => (
-                  <div key={idx} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                    <div className="flex gap-3">
-                      <span className="w-8 h-8 rounded-lg bg-teal-700 text-white flex items-center justify-center font-bold text-xs shrink-0">
-                        {tl.number || idx + 1}
-                      </span>
-                      <input
-                        type="text"
-                        className="input-field flex-1 font-bold"
-                        value={tl.title}
-                        onChange={(e) => {
-                          const copy = [...s.session_timeline];
-                          copy[idx] = { ...copy[idx], title: e.target.value };
-                          setSection('session_timeline', copy);
-                        }}
-                      />
-                    </div>
-                    <textarea
-                      rows={2}
-                      className="input-field w-full text-xs"
-                      value={tl.description}
-                      onChange={(e) => {
-                        const copy = [...s.session_timeline];
-                        copy[idx] = { ...copy[idx], description: e.target.value };
-                        setSection('session_timeline', copy);
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
+              <CmsField label="Session disclaimer">
+                <textarea
+                  className="input-field min-h-[60px]"
+                  value={s.session_disclaimer || ''}
+                  onChange={(e) => setSection('session_disclaimer', e.target.value)}
+                />
+              </CmsField>
             </CmsPanel>
           </div>
         )}
 
         {/* TAB 4: BENEFITS & CONDITIONS */}
         {tab === 'benefits' && (
-          <div className="space-y-6">
-            <CmsPanel title="Why Choose TelePhysio?" subtitle="6 key benefit cards">
-              <CmsField
-                label="Section heading"
-                value={s.benefits_heading}
-                onChange={(v) => setSection('benefits_heading', v)}
+          <div className="space-y-5" role="tabpanel">
+            <CmsPanel title="Why Choose TelePhysio?" icon="fa-certificate">
+              <CmsField label="Section heading">
+                <input
+                  className="input-field"
+                  value={s.benefits_heading || ''}
+                  onChange={(e) => setSection('benefits_heading', e.target.value)}
+                />
+              </CmsField>
+              <CmsField label="Section subheading">
+                <input
+                  className="input-field"
+                  value={s.benefits_subheading || ''}
+                  onChange={(e) => setSection('benefits_subheading', e.target.value)}
+                />
+              </CmsField>
+              <CmsListEditor
+                items={s.benefits || []}
+                onChange={(v) => setSection('benefits', v)}
+                addLabel="Add benefit card"
+                fields={[
+                  { key: 'title', label: 'Benefit title' },
+                  { key: 'icon', label: 'Icon (e.g. fa-house-circle-check)' },
+                  { key: 'description', label: 'Description', type: 'textarea' },
+                ]}
               />
-              <div className="grid md:grid-cols-2 gap-4 mt-4">
-                {(s.benefits || []).map((ben, idx) => (
-                  <div key={idx} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        className="input-field w-28"
-                        value={ben.icon}
-                        onChange={(e) => {
-                          const copy = [...s.benefits];
-                          copy[idx] = { ...copy[idx], icon: e.target.value };
-                          setSection('benefits', copy);
-                        }}
-                      />
-                      <input
-                        type="text"
-                        className="input-field flex-1 font-bold"
-                        value={ben.title}
-                        onChange={(e) => {
-                          const copy = [...s.benefits];
-                          copy[idx] = { ...copy[idx], title: e.target.value };
-                          setSection('benefits', copy);
-                        }}
-                      />
-                    </div>
-                    <textarea
-                      rows={2}
-                      className="input-field w-full text-xs"
-                      value={ben.description}
-                      onChange={(e) => {
-                        const copy = [...s.benefits];
-                        copy[idx] = { ...copy[idx], description: e.target.value };
-                        setSection('benefits', copy);
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
             </CmsPanel>
 
-            <CmsPanel title="Conditions We Support Online" subtitle="8 clinical condition tiles">
-              <CmsField
-                label="Section heading"
-                value={s.conditions_heading}
-                onChange={(v) => setSection('conditions_heading', v)}
+            <CmsPanel title="Conditions We Can Support Online" icon="fa-notes-medical">
+              <CmsField label="Section heading">
+                <input
+                  className="input-field"
+                  value={s.conditions_heading || ''}
+                  onChange={(e) => setSection('conditions_heading', e.target.value)}
+                />
+              </CmsField>
+              <CmsField label="Section subheading">
+                <input
+                  className="input-field"
+                  value={s.conditions_subheading || ''}
+                  onChange={(e) => setSection('conditions_subheading', e.target.value)}
+                />
+              </CmsField>
+              <CmsListEditor
+                items={s.conditions || []}
+                onChange={(v) => setSection('conditions', v)}
+                addLabel="Add condition"
+                fields={[
+                  { key: 'name', label: 'Condition name' },
+                  { key: 'icon', label: 'Icon (e.g. fa-person-cane)' },
+                  { key: 'desc', label: 'Short description', type: 'textarea' },
+                ]}
               />
-              <div className="grid sm:grid-cols-2 gap-3 mt-4">
-                {(s.conditions || []).map((cond, idx) => (
-                  <div key={idx} className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        className="input-field w-28"
-                        value={cond.icon}
-                        onChange={(e) => {
-                          const copy = [...s.conditions];
-                          copy[idx] = { ...copy[idx], icon: e.target.value };
-                          setSection('conditions', copy);
-                        }}
-                      />
-                      <input
-                        type="text"
-                        className="input-field flex-1 font-bold"
-                        value={cond.name}
-                        onChange={(e) => {
-                          const copy = [...s.conditions];
-                          copy[idx] = { ...copy[idx], name: e.target.value };
-                          setSection('conditions', copy);
-                        }}
-                      />
-                    </div>
-                    <input
-                      type="text"
-                      className="input-field w-full text-xs"
-                      value={cond.desc}
-                      onChange={(e) => {
-                        const copy = [...s.conditions];
-                        copy[idx] = { ...copy[idx], desc: e.target.value };
-                        setSection('conditions', copy);
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
+              <CmsField label="Clinical note">
+                <input
+                  className="input-field"
+                  value={s.conditions_clinical_note || ''}
+                  onChange={(e) => setSection('conditions_clinical_note', e.target.value)}
+                />
+              </CmsField>
             </CmsPanel>
           </div>
         )}
 
         {/* TAB 5: PRICING & JOURNEY */}
         {tab === 'pricing' && (
-          <div className="space-y-6">
-            <CmsPanel title="Pricing Cards" subtitle="Admin-configurable pricing plans">
-              <CmsField
-                label="Pricing heading"
-                value={s.pricing_heading}
-                onChange={(v) => setSection('pricing_heading', v)}
+          <div className="space-y-5" role="tabpanel">
+            <CmsPanel title="Pricing Cards" icon="fa-tag">
+              <CmsField label="Section heading">
+                <input
+                  className="input-field"
+                  value={s.pricing_heading || ''}
+                  onChange={(e) => setSection('pricing_heading', e.target.value)}
+                />
+              </CmsField>
+              <CmsField label="Section subheading">
+                <input
+                  className="input-field"
+                  value={s.pricing_subheading || ''}
+                  onChange={(e) => setSection('pricing_subheading', e.target.value)}
+                />
+              </CmsField>
+              <CmsListEditor
+                items={s.pricing_cards || []}
+                onChange={(v) => setSection('pricing_cards', v)}
+                addLabel="Add pricing plan"
+                fields={[
+                  { key: 'title', label: 'Plan title' },
+                  { key: 'badge', label: 'Badge (optional)' },
+                  { key: 'price', label: 'Price (e.g. ₹499)' },
+                  { key: 'original_price', label: 'Original price (e.g. ₹799)' },
+                  { key: 'duration', label: 'Duration / Sessions (e.g. 30–45 mins)' },
+                  { key: 'features', label: 'Features (separate with · or new line)', type: 'textarea' },
+                  { key: 'cta_label', label: 'Button label' },
+                  { key: 'cta_link', label: 'Button link' },
+                ]}
               />
-              <div className="grid md:grid-cols-2 gap-6 mt-4">
-                {(s.pricing_cards || []).map((pkg, idx) => (
-                  <div key={idx} className="p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                    <div className="flex gap-3">
-                      <CmsField
-                        label="Card title"
-                        value={pkg.title}
-                        onChange={(v) => {
-                          const copy = [...s.pricing_cards];
-                          copy[idx] = { ...copy[idx], title: v };
-                          setSection('pricing_cards', copy);
-                        }}
-                      />
-                      <CmsField
-                        label="Badge"
-                        value={pkg.badge}
-                        onChange={(v) => {
-                          const copy = [...s.pricing_cards];
-                          copy[idx] = { ...copy[idx], badge: v };
-                          setSection('pricing_cards', copy);
-                        }}
-                      />
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <CmsField
-                        label="Price"
-                        value={pkg.price}
-                        onChange={(v) => {
-                          const copy = [...s.pricing_cards];
-                          copy[idx] = { ...copy[idx], price: v };
-                          setSection('pricing_cards', copy);
-                        }}
-                      />
-                      <CmsField
-                        label="Original"
-                        value={pkg.original_price}
-                        onChange={(v) => {
-                          const copy = [...s.pricing_cards];
-                          copy[idx] = { ...copy[idx], original_price: v };
-                          setSection('pricing_cards', copy);
-                        }}
-                      />
-                      <CmsField
-                        label="Duration"
-                        value={pkg.duration}
-                        onChange={(v) => {
-                          const copy = [...s.pricing_cards];
-                          copy[idx] = { ...copy[idx], duration: v };
-                          setSection('pricing_cards', copy);
-                        }}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <CmsField
-                        label="CTA label"
-                        value={pkg.cta_label}
-                        onChange={(v) => {
-                          const copy = [...s.pricing_cards];
-                          copy[idx] = { ...copy[idx], cta_label: v };
-                          setSection('pricing_cards', copy);
-                        }}
-                      />
-                      <CmsField
-                        label="CTA link"
-                        value={pkg.cta_link}
-                        onChange={(v) => {
-                          const copy = [...s.pricing_cards];
-                          copy[idx] = { ...copy[idx], cta_link: v };
-                          setSection('pricing_cards', copy);
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">Features</label>
-                      <CmsListEditor
-                        items={pkg.features || []}
-                        onChange={(next) => {
-                          const copy = [...s.pricing_cards];
-                          copy[idx] = { ...copy[idx], features: next };
-                          setSection('pricing_cards', copy);
-                        }}
-                        addLabel="Add feature"
-                        itemPlaceholder="e.g. 1-on-1 video session"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <CmsField label="Pricing footer note">
+                <input
+                  className="input-field"
+                  value={s.pricing_note || ''}
+                  onChange={(e) => setSection('pricing_note', e.target.value)}
+                />
+              </CmsField>
             </CmsPanel>
 
-            <CmsPanel title="Final CTA Banner" subtitle="Bottom conversion banner">
-              <CmsField
-                label="Heading"
-                value={s.final_heading}
-                onChange={(v) => setSection('final_heading', v)}
-              />
-              <CmsField
-                label="Subheading"
-                value={s.final_subheading}
-                onChange={(v) => setSection('final_subheading', v)}
-              />
-              <div className="grid md:grid-cols-2 gap-4">
-                <CmsField
-                  label="Primary CTA label"
-                  value={s.final_primary_cta_label}
-                  onChange={(v) => setSection('final_primary_cta_label', v)}
+            <CmsPanel title="Final CTA Banner" icon="fa-bullhorn">
+              <CmsField label="Banner headline">
+                <input
+                  className="input-field"
+                  value={s.final_heading || ''}
+                  onChange={(e) => setSection('final_heading', e.target.value)}
                 />
-                <CmsField
-                  label="Primary CTA link"
-                  value={s.final_primary_cta_link}
-                  onChange={(v) => setSection('final_primary_cta_link', v)}
+              </CmsField>
+              <CmsField label="Banner subheading">
+                <textarea
+                  className="input-field min-h-[60px]"
+                  value={s.final_subheading || ''}
+                  onChange={(e) => setSection('final_subheading', e.target.value)}
                 />
+              </CmsField>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <CmsField label="Primary CTA button label">
+                  <input
+                    className="input-field"
+                    value={s.final_primary_cta_label || ''}
+                    onChange={(e) => setSection('final_primary_cta_label', e.target.value)}
+                  />
+                </CmsField>
+                <CmsField label="Primary CTA button link">
+                  <input
+                    className="input-field"
+                    value={s.final_primary_cta_link || ''}
+                    onChange={(e) => setSection('final_primary_cta_link', e.target.value)}
+                  />
+                </CmsField>
               </div>
+              <CmsField label="Secondary CTA label">
+                <input
+                  className="input-field"
+                  value={s.final_secondary_cta_label || ''}
+                  onChange={(e) => setSection('final_secondary_cta_label', e.target.value)}
+                />
+              </CmsField>
             </CmsPanel>
           </div>
         )}
 
         {/* TAB 6: REVIEWS & FAQ */}
         {tab === 'voice' && (
-          <div className="space-y-6">
-            <CmsPanel title="Patient Testimonials" subtitle="Social proof from recovering patients">
-              <div className="space-y-4">
-                {(s.testimonials || []).map((t, idx) => (
-                  <div key={idx} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                    <div className="grid grid-cols-3 gap-3">
-                      <input
-                        type="text"
-                        className="input-field font-bold"
-                        value={t.name}
-                        onChange={(e) => {
-                          const copy = [...s.testimonials];
-                          copy[idx] = { ...copy[idx], name: e.target.value };
-                          setSection('testimonials', copy);
-                        }}
-                        placeholder="Patient name"
-                      />
-                      <input
-                        type="text"
-                        className="input-field"
-                        value={t.condition}
-                        onChange={(e) => {
-                          const copy = [...s.testimonials];
-                          copy[idx] = { ...copy[idx], condition: e.target.value };
-                          setSection('testimonials', copy);
-                        }}
-                        placeholder="Condition"
-                      />
-                      <input
-                        type="text"
-                        className="input-field"
-                        value={t.location}
-                        onChange={(e) => {
-                          const copy = [...s.testimonials];
-                          copy[idx] = { ...copy[idx], location: e.target.value };
-                          setSection('testimonials', copy);
-                        }}
-                        placeholder="Location"
-                      />
-                    </div>
-                    <textarea
-                      rows={2}
-                      className="input-field w-full text-xs"
-                      value={t.quote}
-                      onChange={(e) => {
-                        const copy = [...s.testimonials];
-                        copy[idx] = { ...copy[idx], quote: e.target.value };
-                        setSection('testimonials', copy);
-                      }}
-                      placeholder="Patient quote / review"
-                    />
-                  </div>
-                ))}
-              </div>
+          <div className="space-y-5" role="tabpanel">
+            <CmsPanel title="Patient Testimonials" icon="fa-comment-dots">
+              <CmsField label="Section heading">
+                <input
+                  className="input-field"
+                  value={s.testimonials_heading || ''}
+                  onChange={(e) => setSection('testimonials_heading', e.target.value)}
+                />
+              </CmsField>
+              <CmsField label="Section subheading">
+                <input
+                  className="input-field"
+                  value={s.testimonials_subheading || ''}
+                  onChange={(e) => setSection('testimonials_subheading', e.target.value)}
+                />
+              </CmsField>
+              <CmsListEditor
+                items={s.testimonials || []}
+                onChange={(v) => setSection('testimonials', v)}
+                addLabel="Add testimonial"
+                fields={[
+                  { key: 'name', label: 'Patient name' },
+                  { key: 'condition', label: 'Condition / Recovery type' },
+                  { key: 'location', label: 'City / Location' },
+                  { key: 'quote', label: 'Testimonial quote', type: 'textarea' },
+                ]}
+              />
             </CmsPanel>
 
-            <CmsPanel title="Frequently Asked Questions" subtitle="10 accessible accordion items">
-              <div className="space-y-4">
-                {(s.faqs || []).map((faq, idx) => (
-                  <div key={idx} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                    <div className="flex gap-2 items-center">
-                      <span className="text-xs font-bold text-teal-700 w-6">#{idx + 1}</span>
-                      <input
-                        type="text"
-                        className="input-field flex-1 font-bold"
-                        value={faq.q}
-                        onChange={(e) => {
-                          const copy = [...s.faqs];
-                          copy[idx] = { ...copy[idx], q: e.target.value };
-                          setSection('faqs', copy);
-                        }}
-                        placeholder="Question"
-                      />
-                    </div>
-                    <textarea
-                      rows={3}
-                      className="input-field w-full text-xs"
-                      value={faq.a}
-                      onChange={(e) => {
-                        const copy = [...s.faqs];
-                        copy[idx] = { ...copy[idx], a: e.target.value };
-                        setSection('faqs', copy);
-                      }}
-                      placeholder="Answer"
-                    />
-                  </div>
-                ))}
-              </div>
+            <CmsPanel title="Frequently Asked Questions" icon="fa-circle-question">
+              <CmsField label="Section heading">
+                <input
+                  className="input-field"
+                  value={s.faq_heading || ''}
+                  onChange={(e) => setSection('faq_heading', e.target.value)}
+                />
+              </CmsField>
+              <CmsField label="Section subheading">
+                <input
+                  className="input-field"
+                  value={s.faq_subheading || ''}
+                  onChange={(e) => setSection('faq_subheading', e.target.value)}
+                />
+              </CmsField>
+              <CmsListEditor
+                items={s.faqs || []}
+                onChange={(v) => setSection('faqs', v)}
+                addLabel="Add FAQ item"
+                fields={[
+                  { key: 'q', label: 'Question' },
+                  { key: 'a', label: 'Answer', type: 'textarea' },
+                ]}
+              />
             </CmsPanel>
           </div>
         )}
 
         {/* TAB 7: SEO */}
         {tab === 'seo' && (
-          <div className="space-y-6">
-            <CmsPanel title="Search engine optimization" subtitle="Meta tags for /telephysio">
-              <CmsField
-                label="SEO page title"
-                value={form.seo_title}
-                onChange={(v) => set('seo_title', v)}
-                placeholder="TelePhysio by Myoreset | Online Physiotherapy Consultation"
-              />
-              <CmsField
-                label="SEO meta description"
-                type="textarea"
-                rows={3}
-                value={form.seo_description}
-                onChange={(v) => set('seo_description', v)}
-                placeholder="Book online physiotherapy consultations..."
-              />
+          <div className="space-y-5" role="tabpanel">
+            <CmsPanel title="Search Engine Optimization" icon="fa-magnifying-glass-chart">
+              <CmsField label="Meta Title">
+                <input
+                  className="input-field"
+                  value={form.seo_title || ''}
+                  onChange={(e) => set('seo_title', e.target.value)}
+                  placeholder="TelePhysio by Myoreset | Online Physiotherapy Consultation"
+                />
+              </CmsField>
+              <CmsField label="Meta Description">
+                <textarea
+                  className="input-field min-h-[90px]"
+                  value={form.seo_description || ''}
+                  onChange={(e) => set('seo_description', e.target.value)}
+                  placeholder="Book online physiotherapy consultations..."
+                />
+              </CmsField>
             </CmsPanel>
           </div>
         )}
