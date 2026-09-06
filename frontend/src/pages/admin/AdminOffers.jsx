@@ -127,6 +127,7 @@ export default function AdminOffers() {
   }, [filters.page, filters.status, filters.reward_status]);
 
   useEffect(() => {
+    document.title = 'Offers & Campaign Submissions | The Urban Physio Admin';
     fetchSettings();
   }, []);
 
