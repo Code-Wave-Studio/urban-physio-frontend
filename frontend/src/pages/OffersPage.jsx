@@ -264,21 +264,16 @@ export default function OffersPage() {
       <Navbar />
 
       <main className="flex-1">
-        {/* Breadcrumb Navigation */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
-          <SeoBreadcrumbs items={[{ label: 'Offers', path: '/offers' }]} />
-        </div>
-
         {/* ─── SECTION 1: MODERN HERO ───────────────────────────────────────── */}
-        <section className="relative overflow-hidden pt-6 sm:pt-8 pb-16 sm:pb-24">
+        <section className="relative overflow-hidden pt-6 sm:pt-10 pb-10 sm:pb-16 lg:max-h-[95vh] flex flex-col justify-center">
           {/* Subtle Ambient Radial Glows */}
           <div className="absolute -top-24 right-1/4 -z-10 w-[32rem] h-[32rem] bg-gradient-to-br from-[#376299]/15 to-[#FF6F61]/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute top-1/2 -left-20 -z-10 w-96 h-96 bg-[#FF6F61]/10 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
               {/* Left Column: Headline & Action Buttons */}
-              <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
+              <div className="lg:col-span-7 space-y-5 sm:space-y-6 text-center lg:text-left">
                 {/* Status Pill */}
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/90 border border-slate-200/80 shadow-xs backdrop-blur-md">
                   <span className="relative flex h-2.5 w-2.5">
@@ -345,7 +340,7 @@ export default function OffersPage() {
                 </div>
 
                 {/* Supported Apps Ribbon */}
-                <div className="pt-3 flex flex-wrap items-center justify-center lg:justify-start gap-2 text-xs text-slate-500">
+                <div className="pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-2 text-xs text-slate-500">
                   <span className="font-semibold text-slate-400">Compatible Trackers:</span>
                   {['Strava', 'Nike Run Club', 'Garmin', 'Apple Health', 'Samsung Health', 'GPS Watches'].map((app, i) => (
                     <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100/80 text-slate-600 font-medium text-[11px] border border-slate-200/60">
@@ -356,7 +351,7 @@ export default function OffersPage() {
                 </div>
               </div>
 
-              {/* Right Column: Hero Visual Card with Floating Badges */}
+              {/* Right Column: Hero Visual Card */}
               <div className="lg:col-span-5 relative mt-4 lg:mt-0">
                 <div className="relative mx-auto max-w-md lg:max-w-none">
                   {/* Subtle Glow Frame */}
@@ -366,7 +361,7 @@ export default function OffersPage() {
                     <img
                       src={heroImage}
                       alt="Run 10 KM and get free physiotherapy recovery sessions"
-                      className="w-full h-80 sm:h-96 lg:h-[28rem] object-cover object-center"
+                      className="w-full h-80 sm:h-96 lg:h-[26rem] object-cover object-center"
                       loading="lazy"
                     />
 
@@ -386,28 +381,6 @@ export default function OffersPage() {
                       <p className="text-xs sm:text-sm text-slate-300 mt-1 leading-relaxed">
                         Submit your verified 10 KM run proof and consult licensed physiotherapists at clinic or online.
                       </p>
-                    </div>
-                  </div>
-
-                  {/* Floating Micro Badge - Left */}
-                  <div className="hidden sm:flex absolute -left-5 top-10 items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200 shadow-xl">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 font-bold">
-                      <FaIcon icon="fa-shield-heart" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold uppercase text-slate-400">Recovery Partner</p>
-                      <p className="text-xs font-bold text-slate-800">Certified Physiotherapists</p>
-                    </div>
-                  </div>
-
-                  {/* Floating Micro Badge - Right */}
-                  <div className="hidden sm:flex absolute -right-5 bottom-8 items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200 shadow-xl">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FF6F61]/15 text-[#FF6F61] font-bold">
-                      <FaIcon icon="fa-gift" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold uppercase text-slate-400">100% Free</p>
-                      <p className="text-xs font-bold text-slate-800">Complimentary Session</p>
                     </div>
                   </div>
                 </div>

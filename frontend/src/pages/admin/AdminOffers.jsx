@@ -592,11 +592,19 @@ export default function AdminOffers() {
                     </CmsField>
                     <CmsField label="Hero Visual Banner Image">
                       <MediaUrlOrUpload
-                        value={settingsForm.hero_image || ''}
-                        onChange={(v) => setSetting('hero_image', v)}
-                        uploadFn={uploadCmsImage}
-                        presetImages={HEALTHCARE_IMAGES}
                         label="Hero campaign photo"
+                        hint="Displayed on the main offer campaign hero card. High-resolution 4:3 landscape image recommended."
+                        recommendedSize="1200 × 900 px (4:3 ratio)"
+                        aspectRatio="4/3"
+                        devicePreview="4:3"
+                        accent="primary"
+                        icon="fa-image"
+                        urlValue={settingsForm.hero_image || ''}
+                        onUrlChange={(v) => setSetting('hero_image', v)}
+                        onUpload={uploadCmsImage}
+                        accept="image/jpeg,image/png,image/webp"
+                        maxMb={4}
+                        preview="image"
                       />
                     </CmsField>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

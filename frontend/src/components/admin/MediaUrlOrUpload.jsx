@@ -55,8 +55,11 @@ export default function MediaUrlOrUpload({
   hint,
   icon = 'fa-link',
   urlValue = '',
+  value,
   onUrlChange,
+  onChange,
   onUpload,
+  uploadFn,
   accept,
   maxMb = 25,
   preview = 'none',
@@ -69,7 +72,12 @@ export default function MediaUrlOrUpload({
 }) {
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const resolved = resolveMediaUrl(urlValue) || urlValue;
+  
+  const currentUrl = urlValue || value || '';
+  const handleUrlUpdate = onUrlChange || onChange || (() => {});
+  const handleFileUpload = onUpload || uploadFn || (async () => {});
+  
+  const resolved = resolveMediaUrl(currentUrl) || currentUrl;
 
   const currentAccent = ACCENT_STYLES[accent] || ACCENT_STYLES.violet;
   const ratioKey = aspectRatio || devicePreview || 'default';
@@ -83,9 +91,9 @@ export default function MediaUrlOrUpload({
     }
     setUploading(true);
     try {
-      const res = await onUpload(file);
+      const res = await handleFileUpload(file);
       const url = res?.data?.url ?? res?.url ?? '';
-      if (url) onUrlChange(url);
+      if (url) handleUrlUpdate(url);
       toast.success('File uploaded successfully');
     } catch (err) {
       toast.error(err.response?.data?.message || err.message || 'Upload failed');

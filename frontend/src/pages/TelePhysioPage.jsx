@@ -96,17 +96,10 @@ export default function TelePhysioPage() {
       {/* =========================================================================
           SECTION 1: HERO
           ========================================================================= */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-teal-700 via-primary-800 to-slate-950 text-white">
+      <section className="relative overflow-hidden bg-gradient-to-br from-teal-700 via-primary-800 to-slate-950 text-white lg:max-h-[95vh] flex flex-col justify-center">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-teal-500/20 via-transparent to-transparent pointer-events-none" aria-hidden />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 md:py-20 relative">
-          <SeoBreadcrumbs
-            tone="onDark"
-            items={[
-              { label: 'Home', href: '/' },
-              { label: 'TelePhysio by Myoreset' },
-            ]}
-          />
-          <div className="grid lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] gap-10 lg:gap-14 items-center mt-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16 relative w-full">
+          <div className="grid lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] gap-8 lg:gap-14 items-center">
             <div>
               <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider bg-white/15 border border-white/20 px-3.5 py-1.5 rounded-full mb-4 backdrop-blur-xs">
                 <FaIcon icon="fa-video" className="text-teal-300" />

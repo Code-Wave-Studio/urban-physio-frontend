@@ -97,17 +97,10 @@ export default function HomePhysiotherapyPage() {
       />
       <Navbar />
 
-      <section className="relative overflow-hidden bg-gradient-to-br from-orange-600 via-primary-700 to-primary-950 text-white">
+      <section className="relative overflow-hidden bg-gradient-to-br from-orange-600 via-primary-700 to-primary-950 text-white lg:max-h-[95vh] flex flex-col justify-center">
         <div className="absolute inset-0 hp-hero-grid pointer-events-none" aria-hidden />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 md:py-20 relative">
-          <SeoBreadcrumbs
-            tone="onDark"
-            items={[
-              { label: 'Home', href: '/' },
-              { label: 'Home Physiotherapy' },
-            ]}
-          />
-          <div className="grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] gap-8 lg:gap-14 items-center mt-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16 relative w-full">
+          <div className="grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] gap-8 lg:gap-14 items-center">
             <div>
               <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider bg-white/15 border border-white/20 px-3 py-1.5 rounded-full mb-4">
                 <FaIcon icon="fa-house-medical" />
