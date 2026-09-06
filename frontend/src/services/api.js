@@ -573,6 +573,8 @@ export const admin = {
   updateAboutSettings: (data) => api.put('/admin/about-settings', data),
   homePhysioSettings: () => api.get('/admin/home-physio-settings'),
   updateHomePhysioSettings: (data) => api.put('/admin/home-physio-settings', data),
+  telephysioSettings: () => api.get('/admin/telephysio-settings'),
+  updateTelePhysioSettings: (data) => api.put('/admin/telephysio-settings', data),
   heroSettings: () => api.get('/admin/hero-settings'),
   updateHeroSettings: (data) => api.put('/admin/hero-settings', data),
   homeBannerSettings: () => api.get('/admin/home-banner-settings'),
@@ -1057,6 +1059,10 @@ export const about = {
 
 export const homePhysio = {
   settings: () => api.get('/home-physio/settings'),
+};
+
+export const telephysio = {
+  settings: () => api.get('/telephysio/settings'),
 };
 
 export const home = {

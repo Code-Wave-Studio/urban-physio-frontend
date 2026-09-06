@@ -23,6 +23,7 @@ const MORE_NAV_LINKS = [
   { to: '/conditions', label: 'Conditions', icon: 'fa-notes-medical' },
   { to: '/packages', label: 'Packages', icon: 'fa-box-open' },
   { to: '/home-physiotherapy', label: 'Home Physiotherapy', icon: 'fa-house-medical' },
+  { to: '/telephysio', label: 'TelePhysio by Myoreset', icon: 'fa-video' },
   { to: '/podcast', label: 'Podcast', icon: 'fa-podcast' },
   { to: '/careers', label: 'Careers', icon: 'fa-briefcase' },
   { to: '/faq', label: 'FAQ', icon: 'fa-circle-question' },

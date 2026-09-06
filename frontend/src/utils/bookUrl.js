@@ -105,3 +105,14 @@ export function matchHomeConditionLabel(title, homeConditions = []) {
   const lower = title.toLowerCase();
   return homeConditions.find((c) => lower.includes(c.toLowerCase()) || c.toLowerCase().includes(lower.split(' ')[0])) || '';
 }
+
+/** TelePhysio / Online consultation booking URL (CRF-2026-0006). */
+export function bookTelePhysioUrl(extra = {}) {
+  const params = new URLSearchParams();
+  params.set('type', 'online');
+  params.set('mode', 'telephysio');
+  if (extra.package) params.set('package', extra.package);
+  if (extra.pain_type) params.set('pain_type', extra.pain_type);
+  return `/book?${params.toString()}`;
+}
+

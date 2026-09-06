@@ -11,9 +11,9 @@ function isTouchLike() {
   return typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches;
 }
 
-/** Floating CTAs — home + PhysioAtHome landing. */
+/** Floating CTAs — home + PhysioAtHome + TelePhysio landing. */
 function isMarketingPage(pathname) {
-  return pathname === '/' || pathname === '/home-physiotherapy';
+  return pathname === '/' || pathname === '/home-physiotherapy' || pathname === '/telephysio';
 }
 
 /** No floating actions on staff dashboards (doctor / admin). */

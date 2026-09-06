@@ -371,6 +371,8 @@ export default function BookAppointmentWizard() {
       home_visit: 'home_visit',
       homevisit: 'home_visit',
       online: 'online',
+      telephysio: 'online',
+      'tele-physio': 'online',
       clinic: 'clinic',
     };
     const resolved = t || modeAlias[mode] || '';
