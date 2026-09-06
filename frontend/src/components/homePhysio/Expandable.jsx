@@ -26,7 +26,7 @@ export default function Expandable({
         onClick={onToggle}
         className={
           buttonClassName ||
-          'inline-flex items-center gap-2 text-sm font-semibold text-primary-700 hover:text-primary-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-lg px-1'
+          'inline-flex items-center gap-2 text-sm font-semibold text-primary-700 hover:text-primary-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-full px-3 py-1.5 hover:bg-primary-50'
         }
       >
         <span>{open ? label.replace(/↓\s*$/, '').trim() : label}</span>

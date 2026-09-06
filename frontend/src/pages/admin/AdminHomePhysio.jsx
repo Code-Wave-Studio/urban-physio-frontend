@@ -3,101 +3,24 @@ import { Link } from 'react-router-dom';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import FaIcon from '../../components/FaIcon';
 import MediaUrlOrUpload from '../../components/admin/MediaUrlOrUpload';
+import { CmsField, CmsListEditor, CmsPanel } from '../../components/admin/CmsFormKit';
 import { admin, uploadCmsImage } from '../../services/api';
 import { HOME_PHYSIO_DEFAULTS } from '../../constants/homePhysioDefaults';
 import toast from 'react-hot-toast';
 
-function Field({ label, children }) {
-  return (
-    <label className="block space-y-1.5">
-      <span className="text-xs font-semibold text-slate-600">{label}</span>
-      {children}
-    </label>
-  );
-}
-
-function ListEditor({ items, onChange, fields, addLabel }) {
-  const list = items || [];
-  return (
-    <div className="space-y-3">
-      {list.map((item, i) => (
-        <div key={i} className="rounded-xl border border-slate-200 p-3 space-y-2 relative">
-          <button
-            type="button"
-            className="absolute top-2 right-2 text-red-500 text-sm"
-            onClick={() => onChange(list.filter((_, j) => j !== i))}
-            aria-label="Remove"
-          >
-            <FaIcon icon="fa-trash" />
-          </button>
-          {fields.map((f) =>
-            f.type === 'textarea' ? (
-              <textarea
-                key={f.key}
-                className="input-field text-sm min-h-[64px] pr-8"
-                placeholder={f.label}
-                value={
-                  typeof item === 'string'
-                    ? item
-                    : Array.isArray(item[f.key])
-                      ? item[f.key].join(' · ')
-                      : item[f.key] || ''
-                }
-                onChange={(e) => {
-                  if (typeof item === 'string') {
-                    const next = [...list];
-                    next[i] = e.target.value;
-                    onChange(next);
-                  } else {
-                    const next = [...list];
-                    const raw = e.target.value;
-                    next[i] = {
-                      ...next[i],
-                      [f.key]: f.key === 'items' ? raw.split(/\s*[·\n]\s*/).filter(Boolean) : raw,
-                    };
-                    onChange(next);
-                  }
-                }}
-              />
-            ) : (
-              <input
-                key={f.key}
-                className="input-field text-sm pr-8"
-                placeholder={f.label}
-                value={typeof item === 'string' ? item : item[f.key] || ''}
-                onChange={(e) => {
-                  if (typeof item === 'string') {
-                    const next = [...list];
-                    next[i] = e.target.value;
-                    onChange(next);
-                  } else {
-                    const next = [...list];
-                    next[i] = { ...next[i], [f.key]: e.target.value };
-                    onChange(next);
-                  }
-                }}
-              />
-            )
-          )}
-        </div>
-      ))}
-      <button
-        type="button"
-        className="btn-outline text-xs !py-1.5"
-        onClick={() => {
-          const blank = fields.length === 1 && fields[0].key === 'value' ? '' : Object.fromEntries(fields.map((f) => [f.key, '']));
-          onChange([...list, blank]);
-        }}
-      >
-        <FaIcon icon="fa-plus" /> {addLabel}
-      </button>
-    </div>
-  );
-}
+const TABS = [
+  { id: 'hero', label: 'Hero & trust', icon: 'fa-flag' },
+  { id: 'story', label: 'Story', icon: 'fa-book-open' },
+  { id: 'book', label: 'Tiers & booking', icon: 'fa-user-doctor' },
+  { id: 'price', label: 'Pricing & areas', icon: 'fa-tag' },
+  { id: 'voice', label: 'Reviews & FAQ', icon: 'fa-comments' },
+  { id: 'seo', label: 'SEO', icon: 'fa-magnifying-glass-chart' },
+];
 
 export default function AdminHomePhysio() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [tab, setTab] = useState('hero');
   const [form, setForm] = useState({
     hero_title: '',
     hero_subtitle: '',
@@ -156,13 +79,13 @@ export default function AdminHomePhysio() {
 
   return (
     <AdminDashboardLayout>
-      <div className="rounded-3xl border border-orange-200/60 bg-gradient-to-br from-orange-50 via-white to-primary-50/80 p-5 sm:p-7 mb-6 shadow-sm">
+      <div className="rounded-3xl border border-orange-200/60 bg-gradient-to-br from-orange-50 via-white to-primary-50/80 p-5 sm:p-7 mb-5 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-primary-600 mb-1">Website CMS</p>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Home Physiotherapy page</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Home Physiotherapy</h1>
             <p className="text-sm text-slate-600 mt-1">
-              Edit all content on{' '}
+              Content only — layout stays the same.{' '}
               <Link to="/home-physiotherapy" target="_blank" className="text-primary-700 font-semibold hover:underline">
                 /home-physiotherapy
               </Link>
@@ -170,269 +93,394 @@ export default function AdminHomePhysio() {
           </div>
           <Link to="/home-physiotherapy" target="_blank" className="btn-outline text-sm shrink-0 inline-flex items-center gap-2">
             <FaIcon icon="fa-arrow-up-right-from-square" />
-            Preview page
+            Preview live page
           </Link>
         </div>
       </div>
 
-      <form onSubmit={save} className="space-y-6 max-w-4xl">
-        <section className="glass-card p-5 sm:p-6 space-y-4">
-          <h2 className="font-bold text-slate-900">Hero</h2>
-          <Field label="Headline">
-            <textarea className="input-field min-h-[72px]" value={form.hero_title} onChange={(e) => set('hero_title', e.target.value)} />
-          </Field>
-          <Field label="Subheadline">
-            <textarea className="input-field min-h-[100px]" value={form.hero_subtitle} onChange={(e) => set('hero_subtitle', e.target.value)} />
-          </Field>
-          <div className="grid sm:grid-cols-2 gap-3">
-            <Field label="Button label">
-              <input className="input-field" value={s.hero_cta_label} onChange={(e) => setSection('hero_cta_label', e.target.value)} />
-            </Field>
-            <Field label="Button link">
-              <input className="input-field" value={s.hero_cta_link} onChange={(e) => setSection('hero_cta_link', e.target.value)} />
-            </Field>
+      <form onSubmit={save} className="max-w-5xl">
+        <div
+          className="flex gap-2 overflow-x-auto pb-3 mb-5 -mx-1 px-1"
+          role="tablist"
+          aria-label="Page content sections"
+        >
+          {TABS.map((t) => {
+            const active = tab === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setTab(t.id)}
+                className={`shrink-0 inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-sm font-semibold border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
+                  active
+                    ? 'bg-primary-600 text-white border-primary-600'
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-primary-200'
+                }`}
+              >
+                <FaIcon icon={t.icon} className="text-xs" />
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {tab === 'hero' && (
+          <div className="space-y-5" role="tabpanel">
+            <CmsPanel title="Hero" icon="fa-flag">
+              <CmsField label="Headline">
+                <textarea className="input-field min-h-[72px]" value={form.hero_title} onChange={(e) => set('hero_title', e.target.value)} />
+              </CmsField>
+              <CmsField label="Subheadline">
+                <textarea className="input-field min-h-[100px]" value={form.hero_subtitle} onChange={(e) => set('hero_subtitle', e.target.value)} />
+              </CmsField>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <CmsField label="Button label">
+                  <input className="input-field" value={s.hero_cta_label} onChange={(e) => setSection('hero_cta_label', e.target.value)} />
+                </CmsField>
+                <CmsField label="Button link">
+                  <input className="input-field" value={s.hero_cta_link} onChange={(e) => setSection('hero_cta_link', e.target.value)} />
+                </CmsField>
+              </div>
+              <MediaUrlOrUpload
+                label="Hero image"
+                hint="Shown beside the headline — URL or upload"
+                icon="fa-image"
+                urlValue={form.hero_image}
+                onUrlChange={(v) => set('hero_image', v)}
+                onUpload={uploadCmsImage}
+                accept="image/jpeg,image/png,image/webp"
+                maxMb={4}
+                preview="image"
+              />
+              <CmsField label="Trust signals" hint="One line per tick shown under the hero.">
+                <textarea
+                  className="input-field min-h-[90px]"
+                  value={(s.trust_signals || []).join('\n')}
+                  onChange={(e) => setSection('trust_signals', e.target.value.split('\n').map((x) => x.trim()).filter(Boolean))}
+                />
+              </CmsField>
+            </CmsPanel>
+            <CmsPanel title="Trust bar" icon="fa-shield-halved">
+              <CmsListEditor
+                items={s.trust_bar}
+                onChange={(v) => setSection('trust_bar', v)}
+                addLabel="Add trust item"
+                fields={[
+                  { key: 'icon', label: 'Icon (e.g. fa-user-doctor)' },
+                  { key: 'label', label: 'Label' },
+                ]}
+              />
+            </CmsPanel>
           </div>
-          <MediaUrlOrUpload
-            label="Hero image"
-            hint="Shown beside the headline — URL or upload"
-            icon="fa-image"
-            urlValue={form.hero_image}
-            onUrlChange={(v) => set('hero_image', v)}
-            onUpload={uploadCmsImage}
-            accept="image/jpeg,image/png,image/webp"
-            maxMb={4}
-            preview="image"
-          />
-          <Field label="Trust signals (one per line)">
-            <textarea
-              className="input-field min-h-[90px]"
-              value={(s.trust_signals || []).join('\n')}
-              onChange={(e) => setSection('trust_signals', e.target.value.split('\n').map((x) => x.trim()).filter(Boolean))}
-            />
-          </Field>
-        </section>
+        )}
 
-        <section className="glass-card p-5 sm:p-6 space-y-3">
-          <h2 className="font-bold text-slate-900">Trust bar</h2>
-          <ListEditor
-            items={s.trust_bar}
-            onChange={(v) => setSection('trust_bar', v)}
-            addLabel="Add trust item"
-            fields={[
-              { key: 'icon', label: 'Icon (e.g. fa-user-doctor)' },
-              { key: 'label', label: 'Label' },
-            ]}
-          />
-        </section>
-
-        <section className="glass-card p-5 sm:p-6 space-y-4">
-          <h2 className="font-bold text-slate-900">Is home physio right for you?</h2>
-          <input className="input-field" value={s.fit_heading} onChange={(e) => setSection('fit_heading', e.target.value)} placeholder="Heading" />
-          <textarea className="input-field min-h-[72px]" value={s.fit_intro} onChange={(e) => setSection('fit_intro', e.target.value)} placeholder="Intro" />
-          <input className="input-field" value={s.fit_home_title} onChange={(e) => setSection('fit_home_title', e.target.value)} placeholder="Home column title" />
-          <textarea
-            className="input-field min-h-[90px]"
-            value={(s.fit_home_items || []).join('\n')}
-            onChange={(e) => setSection('fit_home_items', e.target.value.split('\n').map((x) => x.trim()).filter(Boolean))}
-          />
-          <input className="input-field" value={s.fit_clinic_title} onChange={(e) => setSection('fit_clinic_title', e.target.value)} placeholder="Clinic column title" />
-          <textarea
-            className="input-field min-h-[72px]"
-            value={(s.fit_clinic_items || []).join('\n')}
-            onChange={(e) => setSection('fit_clinic_items', e.target.value.split('\n').map((x) => x.trim()).filter(Boolean))}
-          />
-          <textarea className="input-field min-h-[72px]" value={s.fit_reassurance} onChange={(e) => setSection('fit_reassurance', e.target.value)} placeholder="Reassurance" />
-          <div className="grid sm:grid-cols-2 gap-3">
-            <input className="input-field" value={s.fit_toggle} onChange={(e) => setSection('fit_toggle', e.target.value)} placeholder="Toggle label" />
-            <input className="input-field" value={s.fit_cta_label} onChange={(e) => setSection('fit_cta_label', e.target.value)} placeholder="CTA label" />
+        {tab === 'story' && (
+          <div className="space-y-5" role="tabpanel">
+            <CmsPanel title="Is home physio right for you?" icon="fa-scale-balanced">
+              <CmsField label="Heading">
+                <input className="input-field" value={s.fit_heading} onChange={(e) => setSection('fit_heading', e.target.value)} />
+              </CmsField>
+              <CmsField label="Intro">
+                <textarea className="input-field min-h-[72px]" value={s.fit_intro} onChange={(e) => setSection('fit_intro', e.target.value)} />
+              </CmsField>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <CmsField label="Home column title">
+                    <input className="input-field" value={s.fit_home_title} onChange={(e) => setSection('fit_home_title', e.target.value)} />
+                  </CmsField>
+                  <CmsField label="Home bullets" hint="One per line">
+                    <textarea
+                      className="input-field min-h-[120px]"
+                      value={(s.fit_home_items || []).join('\n')}
+                      onChange={(e) => setSection('fit_home_items', e.target.value.split('\n').map((x) => x.trim()).filter(Boolean))}
+                    />
+                  </CmsField>
+                </div>
+                <div className="space-y-2">
+                  <CmsField label="Clinic column title">
+                    <input className="input-field" value={s.fit_clinic_title} onChange={(e) => setSection('fit_clinic_title', e.target.value)} />
+                  </CmsField>
+                  <CmsField label="Clinic bullets" hint="One per line">
+                    <textarea
+                      className="input-field min-h-[120px]"
+                      value={(s.fit_clinic_items || []).join('\n')}
+                      onChange={(e) => setSection('fit_clinic_items', e.target.value.split('\n').map((x) => x.trim()).filter(Boolean))}
+                    />
+                  </CmsField>
+                </div>
+              </div>
+              <CmsField label="Reassurance">
+                <textarea className="input-field min-h-[72px]" value={s.fit_reassurance} onChange={(e) => setSection('fit_reassurance', e.target.value)} />
+              </CmsField>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <CmsField label="Toggle label">
+                  <input className="input-field" value={s.fit_toggle} onChange={(e) => setSection('fit_toggle', e.target.value)} />
+                </CmsField>
+                <CmsField label="CTA label">
+                  <input className="input-field" value={s.fit_cta_label} onChange={(e) => setSection('fit_cta_label', e.target.value)} />
+                </CmsField>
+              </div>
+            </CmsPanel>
+            <CmsPanel title="Why it works" icon="fa-heart-pulse">
+              <CmsField label="Heading">
+                <input className="input-field" value={s.why_heading} onChange={(e) => setSection('why_heading', e.target.value)} />
+              </CmsField>
+              <CmsField label="Intro">
+                <textarea className="input-field min-h-[72px]" value={s.why_intro} onChange={(e) => setSection('why_intro', e.target.value)} />
+              </CmsField>
+              <CmsField label="Toggle label">
+                <input className="input-field" value={s.why_toggle} onChange={(e) => setSection('why_toggle', e.target.value)} />
+              </CmsField>
+              <CmsListEditor
+                items={s.why_items}
+                onChange={(v) => setSection('why_items', v)}
+                addLabel="Add reason"
+                fields={[
+                  { key: 'title', label: 'Title' },
+                  { key: 'body', label: 'Description', type: 'textarea' },
+                ]}
+              />
+            </CmsPanel>
+            <CmsPanel title="The TUP difference" icon="fa-star">
+              <CmsField label="Heading">
+                <input className="input-field" value={s.difference_heading} onChange={(e) => setSection('difference_heading', e.target.value)} />
+              </CmsField>
+              <CmsField label="Intro">
+                <textarea className="input-field min-h-[72px]" value={s.difference_intro} onChange={(e) => setSection('difference_intro', e.target.value)} />
+              </CmsField>
+              <CmsField label="Toggle label">
+                <input className="input-field" value={s.difference_toggle} onChange={(e) => setSection('difference_toggle', e.target.value)} />
+              </CmsField>
+              <CmsListEditor
+                items={s.difference_items}
+                onChange={(v) => setSection('difference_items', v)}
+                addLabel="Add point"
+                fields={[
+                  { key: 'title', label: 'Title' },
+                  { key: 'body', label: 'Description', type: 'textarea' },
+                ]}
+              />
+            </CmsPanel>
           </div>
-        </section>
+        )}
 
-        <section className="glass-card p-5 sm:p-6 space-y-4">
-          <h2 className="font-bold text-slate-900">Why it works</h2>
-          <input className="input-field" value={s.why_heading} onChange={(e) => setSection('why_heading', e.target.value)} />
-          <textarea className="input-field min-h-[72px]" value={s.why_intro} onChange={(e) => setSection('why_intro', e.target.value)} />
-          <input className="input-field" value={s.why_toggle} onChange={(e) => setSection('why_toggle', e.target.value)} />
-          <ListEditor
-            items={s.why_items}
-            onChange={(v) => setSection('why_items', v)}
-            addLabel="Add reason"
-            fields={[
-              { key: 'title', label: 'Title' },
-              { key: 'body', label: 'Description', type: 'textarea' },
-            ]}
-          />
-        </section>
-
-        <section className="glass-card p-5 sm:p-6 space-y-4">
-          <h2 className="font-bold text-slate-900">The TUP difference</h2>
-          <input className="input-field" value={s.difference_heading} onChange={(e) => setSection('difference_heading', e.target.value)} />
-          <textarea className="input-field min-h-[72px]" value={s.difference_intro} onChange={(e) => setSection('difference_intro', e.target.value)} />
-          <input className="input-field" value={s.difference_toggle} onChange={(e) => setSection('difference_toggle', e.target.value)} />
-          <ListEditor
-            items={s.difference_items}
-            onChange={(v) => setSection('difference_items', v)}
-            addLabel="Add point"
-            fields={[
-              { key: 'title', label: 'Title' },
-              { key: 'body', label: 'Description', type: 'textarea' },
-            ]}
-          />
-        </section>
-
-        <section className="glass-card p-5 sm:p-6 space-y-4">
-          <h2 className="font-bold text-slate-900">Physiotherapist tiers</h2>
-          <input className="input-field" value={s.tiers_heading} onChange={(e) => setSection('tiers_heading', e.target.value)} />
-          <textarea className="input-field min-h-[72px]" value={s.tiers_intro} onChange={(e) => setSection('tiers_intro', e.target.value)} />
-          <ListEditor
-            items={s.tiers}
-            onChange={(v) => setSection('tiers', v)}
-            addLabel="Add tier"
-            fields={[
-              { key: 'name', label: 'Name' },
-              { key: 'badge', label: 'Badge (optional)' },
-              { key: 'price', label: 'Price' },
-              { key: 'original', label: 'Original price' },
-              { key: 'summary', label: 'Summary', type: 'textarea' },
-              { key: 'qualification', label: 'Qualification' },
-              { key: 'experience', label: 'Experience' },
-              { key: 'speciality', label: 'Speciality', type: 'textarea' },
-              { key: 'case_handling', label: 'Case handling', type: 'textarea' },
-              { key: 'cta_label', label: 'Button label' },
-              { key: 'cta_link', label: 'Button link' },
-              { key: 'key', label: 'Tier id (certified / senior / specialist)' },
-            ]}
-          />
-          <textarea className="input-field min-h-[60px]" value={s.tiers_note} onChange={(e) => setSection('tiers_note', e.target.value)} placeholder="Bottom note" />
-        </section>
-
-        <section className="glass-card p-5 sm:p-6 space-y-4">
-          <h2 className="font-bold text-slate-900">How it works</h2>
-          <input className="input-field" value={s.how_heading} onChange={(e) => setSection('how_heading', e.target.value)} />
-          <ListEditor
-            items={s.how_steps}
-            onChange={(v) => setSection('how_steps', v)}
-            addLabel="Add step"
-            fields={[
-              { key: 'title', label: 'Step title' },
-              { key: 'body', label: 'Description', type: 'textarea' },
-            ]}
-          />
-          <div className="grid sm:grid-cols-2 gap-3">
-            <input className="input-field" value={s.how_cta_label} onChange={(e) => setSection('how_cta_label', e.target.value)} placeholder="CTA label" />
-            <input className="input-field" value={s.how_cta_link} onChange={(e) => setSection('how_cta_link', e.target.value)} placeholder="CTA link" />
+        {tab === 'book' && (
+          <div className="space-y-5" role="tabpanel">
+            <CmsPanel title="Physiotherapist tiers" icon="fa-user-doctor">
+              <CmsField label="Heading">
+                <input className="input-field" value={s.tiers_heading} onChange={(e) => setSection('tiers_heading', e.target.value)} />
+              </CmsField>
+              <CmsField label="Intro">
+                <textarea className="input-field min-h-[72px]" value={s.tiers_intro} onChange={(e) => setSection('tiers_intro', e.target.value)} />
+              </CmsField>
+              <CmsListEditor
+                items={s.tiers}
+                onChange={(v) => setSection('tiers', v)}
+                addLabel="Add tier"
+                fields={[
+                  { key: 'name', label: 'Name' },
+                  { key: 'badge', label: 'Badge (optional)' },
+                  { key: 'price', label: 'Price' },
+                  { key: 'original', label: 'Original price' },
+                  { key: 'summary', label: 'Summary', type: 'textarea' },
+                  { key: 'qualification', label: 'Qualification' },
+                  { key: 'experience', label: 'Experience' },
+                  { key: 'speciality', label: 'Speciality', type: 'textarea' },
+                  { key: 'case_handling', label: 'Case handling', type: 'textarea' },
+                  { key: 'cta_label', label: 'Button label' },
+                  { key: 'cta_link', label: 'Button link' },
+                  { key: 'key', label: 'Tier id (certified / senior / specialist)' },
+                ]}
+              />
+              <CmsField label="Bottom note">
+                <textarea className="input-field min-h-[60px]" value={s.tiers_note} onChange={(e) => setSection('tiers_note', e.target.value)} />
+              </CmsField>
+            </CmsPanel>
+            <CmsPanel title="How it works" icon="fa-list-ol">
+              <CmsField label="Heading">
+                <input className="input-field" value={s.how_heading} onChange={(e) => setSection('how_heading', e.target.value)} />
+              </CmsField>
+              <CmsListEditor
+                items={s.how_steps}
+                onChange={(v) => setSection('how_steps', v)}
+                addLabel="Add step"
+                fields={[
+                  { key: 'title', label: 'Step title' },
+                  { key: 'body', label: 'Description', type: 'textarea' },
+                ]}
+              />
+              <div className="grid sm:grid-cols-2 gap-3">
+                <CmsField label="CTA label">
+                  <input className="input-field" value={s.how_cta_label} onChange={(e) => setSection('how_cta_label', e.target.value)} />
+                </CmsField>
+                <CmsField label="CTA link">
+                  <input className="input-field" value={s.how_cta_link} onChange={(e) => setSection('how_cta_link', e.target.value)} />
+                </CmsField>
+              </div>
+            </CmsPanel>
+            <CmsPanel title="Conditions" icon="fa-notes-medical">
+              <CmsField label="Heading">
+                <input className="input-field" value={s.conditions_heading} onChange={(e) => setSection('conditions_heading', e.target.value)} />
+              </CmsField>
+              <CmsField label="Featured tiles" hint="One per line">
+                <textarea
+                  className="input-field min-h-[90px]"
+                  value={(s.conditions_featured || []).join('\n')}
+                  onChange={(e) => setSection('conditions_featured', e.target.value.split('\n').map((x) => x.trim()).filter(Boolean))}
+                />
+              </CmsField>
+              <CmsListEditor
+                items={s.conditions_categories}
+                onChange={(v) => setSection('conditions_categories', v)}
+                addLabel="Add category"
+                fields={[
+                  { key: 'name', label: 'Category name' },
+                  { key: 'items', label: 'Conditions ( · or new line)', type: 'textarea' },
+                ]}
+              />
+              <div className="grid sm:grid-cols-2 gap-3">
+                <CmsField label="Toggle label">
+                  <input className="input-field" value={s.conditions_toggle} onChange={(e) => setSection('conditions_toggle', e.target.value)} />
+                </CmsField>
+                <CmsField label="CTA label">
+                  <input className="input-field" value={s.conditions_cta_label} onChange={(e) => setSection('conditions_cta_label', e.target.value)} />
+                </CmsField>
+              </div>
+            </CmsPanel>
           </div>
-        </section>
+        )}
 
-        <section className="glass-card p-5 sm:p-6 space-y-4">
-          <h2 className="font-bold text-slate-900">Conditions</h2>
-          <input className="input-field" value={s.conditions_heading} onChange={(e) => setSection('conditions_heading', e.target.value)} />
-          <Field label="Featured tiles (one per line)">
-            <textarea
-              className="input-field min-h-[90px]"
-              value={(s.conditions_featured || []).join('\n')}
-              onChange={(e) => setSection('conditions_featured', e.target.value.split('\n').map((x) => x.trim()).filter(Boolean))}
-            />
-          </Field>
-          <ListEditor
-            items={s.conditions_categories}
-            onChange={(v) => setSection('conditions_categories', v)}
-            addLabel="Add category"
-            fields={[
-              { key: 'name', label: 'Category name' },
-              { key: 'items', label: 'Conditions ( · separated)', type: 'textarea' },
-            ]}
-          />
-          <p className="text-xs text-slate-500">For each category, list conditions separated by · (middle dot) or new lines. They are shown as a joined list on the website.</p>
-        </section>
-
-        <section className="glass-card p-5 sm:p-6 space-y-4">
-          <h2 className="font-bold text-slate-900">Pricing</h2>
-          <input className="input-field" value={s.pricing_heading} onChange={(e) => setSection('pricing_heading', e.target.value)} />
-          <ListEditor
-            items={s.pricing_sessions}
-            onChange={(v) => setSection('pricing_sessions', v)}
-            addLabel="Add session price"
-            fields={[
-              { key: 'name', label: 'Tier name' },
-              { key: 'original', label: 'Original' },
-              { key: 'price', label: 'Current' },
-            ]}
-          />
-          <ListEditor
-            items={s.pricing_packages}
-            onChange={(v) => setSection('pricing_packages', v)}
-            addLabel="Add package"
-            fields={[
-              { key: 'name', label: 'Package name' },
-              { key: 'sessions', label: 'Sessions label' },
-              { key: 'price', label: 'Price' },
-              { key: 'save', label: 'Save label' },
-            ]}
-          />
-          <textarea className="input-field min-h-[60px]" value={s.pricing_offer} onChange={(e) => setSection('pricing_offer', e.target.value)} placeholder="Offer note" />
-          <input className="input-field" value={s.pricing_payment} onChange={(e) => setSection('pricing_payment', e.target.value)} placeholder="Payment methods" />
-          <div className="grid sm:grid-cols-2 gap-3">
-            <input className="input-field" value={s.pricing_cta_label} onChange={(e) => setSection('pricing_cta_label', e.target.value)} placeholder="CTA label" />
-            <input className="input-field" value={s.pricing_cta_link} onChange={(e) => setSection('pricing_cta_link', e.target.value)} placeholder="CTA link" />
+        {tab === 'price' && (
+          <div className="space-y-5" role="tabpanel">
+            <CmsPanel title="Pricing" icon="fa-tag">
+              <CmsField label="Heading">
+                <input className="input-field" value={s.pricing_heading} onChange={(e) => setSection('pricing_heading', e.target.value)} />
+              </CmsField>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Single sessions</p>
+              <CmsListEditor
+                items={s.pricing_sessions}
+                onChange={(v) => setSection('pricing_sessions', v)}
+                addLabel="Add session price"
+                fields={[
+                  { key: 'name', label: 'Tier name' },
+                  { key: 'original', label: 'Original' },
+                  { key: 'price', label: 'Current' },
+                ]}
+              />
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Packages</p>
+              <CmsListEditor
+                items={s.pricing_packages}
+                onChange={(v) => setSection('pricing_packages', v)}
+                addLabel="Add package"
+                fields={[
+                  { key: 'name', label: 'Package name' },
+                  { key: 'sessions', label: 'Sessions label' },
+                  { key: 'price', label: 'Price' },
+                  { key: 'save', label: 'Save label' },
+                ]}
+              />
+              <CmsField label="Package toggle label">
+                <input className="input-field" value={s.pricing_toggle} onChange={(e) => setSection('pricing_toggle', e.target.value)} />
+              </CmsField>
+              <CmsField label="Offer note">
+                <textarea className="input-field min-h-[60px]" value={s.pricing_offer} onChange={(e) => setSection('pricing_offer', e.target.value)} />
+              </CmsField>
+              <CmsField label="Payment methods">
+                <input className="input-field" value={s.pricing_payment} onChange={(e) => setSection('pricing_payment', e.target.value)} />
+              </CmsField>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <CmsField label="CTA label">
+                  <input className="input-field" value={s.pricing_cta_label} onChange={(e) => setSection('pricing_cta_label', e.target.value)} />
+                </CmsField>
+                <CmsField label="CTA link">
+                  <input className="input-field" value={s.pricing_cta_link} onChange={(e) => setSection('pricing_cta_link', e.target.value)} />
+                </CmsField>
+              </div>
+            </CmsPanel>
+            <CmsPanel title="Service areas" icon="fa-map-location-dot">
+              <CmsField label="Heading">
+                <input className="input-field" value={s.areas_heading} onChange={(e) => setSection('areas_heading', e.target.value)} />
+              </CmsField>
+              <CmsListEditor
+                items={s.areas}
+                onChange={(v) => setSection('areas', v)}
+                addLabel="Add city"
+                fields={[
+                  { key: 'name', label: 'City' },
+                  { key: 'localities', label: 'Locality details', type: 'textarea' },
+                ]}
+              />
+              <CmsField label="Pincode message">
+                <textarea className="input-field min-h-[60px]" value={s.areas_pincode} onChange={(e) => setSection('areas_pincode', e.target.value)} />
+              </CmsField>
+            </CmsPanel>
           </div>
-        </section>
+        )}
 
-        <section className="glass-card p-5 sm:p-6 space-y-4">
-          <h2 className="font-bold text-slate-900">Service areas</h2>
-          <input className="input-field" value={s.areas_heading} onChange={(e) => setSection('areas_heading', e.target.value)} />
-          <ListEditor
-            items={s.areas}
-            onChange={(v) => setSection('areas', v)}
-            addLabel="Add city"
-            fields={[
-              { key: 'name', label: 'City' },
-              { key: 'localities', label: 'Locality details', type: 'textarea' },
-            ]}
-          />
-          <textarea className="input-field min-h-[60px]" value={s.areas_pincode} onChange={(e) => setSection('areas_pincode', e.target.value)} />
-        </section>
+        {tab === 'voice' && (
+          <div className="space-y-5" role="tabpanel">
+            <CmsPanel title="Testimonials" icon="fa-comment-dots">
+              <CmsField label="Heading">
+                <input className="input-field" value={s.testimonials_heading} onChange={(e) => setSection('testimonials_heading', e.target.value)} />
+              </CmsField>
+              <CmsListEditor
+                items={s.testimonials}
+                onChange={(v) => setSection('testimonials', v)}
+                addLabel="Add testimonial"
+                fields={[
+                  { key: 'name', label: 'Name' },
+                  { key: 'city', label: 'Locality' },
+                  { key: 'rating', label: 'Rating (1–5)' },
+                  { key: 'text', label: 'Quote', type: 'textarea' },
+                ]}
+              />
+            </CmsPanel>
+            <CmsPanel title="FAQs" icon="fa-circle-question">
+              <CmsField label="Heading">
+                <input className="input-field" value={s.faq_heading} onChange={(e) => setSection('faq_heading', e.target.value)} />
+              </CmsField>
+              <CmsListEditor
+                items={s.faqs}
+                onChange={(v) => setSection('faqs', v)}
+                addLabel="Add question"
+                fields={[
+                  { key: 'q', label: 'Question' },
+                  { key: 'a', label: 'Answer', type: 'textarea' },
+                ]}
+              />
+            </CmsPanel>
+          </div>
+        )}
 
-        <section className="glass-card p-5 sm:p-6 space-y-4">
-          <h2 className="font-bold text-slate-900">Testimonials</h2>
-          <input className="input-field" value={s.testimonials_heading} onChange={(e) => setSection('testimonials_heading', e.target.value)} />
-          <ListEditor
-            items={s.testimonials}
-            onChange={(v) => setSection('testimonials', v)}
-            addLabel="Add testimonial"
-            fields={[
-              { key: 'name', label: 'Name' },
-              { key: 'city', label: 'Locality' },
-              { key: 'rating', label: 'Rating (1–5)' },
-              { key: 'text', label: 'Quote', type: 'textarea' },
-            ]}
-          />
-        </section>
+        {tab === 'seo' && (
+          <div className="space-y-5" role="tabpanel">
+            <CmsPanel title="Search listing" icon="fa-magnifying-glass-chart">
+              <CmsField label="SEO title">
+                <input className="input-field" value={form.seo_title} onChange={(e) => set('seo_title', e.target.value)} />
+              </CmsField>
+              <CmsField label="SEO description">
+                <textarea className="input-field min-h-[80px]" value={form.seo_description} onChange={(e) => set('seo_description', e.target.value)} />
+              </CmsField>
+              <p className="text-xs text-slate-500">
+                Advanced sitemap / Open Graph overrides also live in{' '}
+                <Link to="/admin/seo" className="text-primary-700 font-semibold hover:underline">
+                  SEO settings
+                </Link>
+                .
+              </p>
+            </CmsPanel>
+          </div>
+        )}
 
-        <section className="glass-card p-5 sm:p-6 space-y-4">
-          <h2 className="font-bold text-slate-900">FAQs</h2>
-          <input className="input-field" value={s.faq_heading} onChange={(e) => setSection('faq_heading', e.target.value)} />
-          <ListEditor
-            items={s.faqs}
-            onChange={(v) => setSection('faqs', v)}
-            addLabel="Add question"
-            fields={[
-              { key: 'q', label: 'Question' },
-              { key: 'a', label: 'Answer', type: 'textarea' },
-            ]}
-          />
-        </section>
-
-        <section className="glass-card p-5 sm:p-6 space-y-3 border-dashed border-violet-200">
-          <h2 className="font-bold text-violet-900 text-sm">SEO</h2>
-          <input className="input-field text-sm" value={form.seo_title} onChange={(e) => set('seo_title', e.target.value)} placeholder="SEO title" />
-          <textarea className="input-field text-sm min-h-[60px]" value={form.seo_description} onChange={(e) => set('seo_description', e.target.value)} placeholder="SEO description" />
-        </section>
-
-        <div className="flex flex-wrap gap-3 sticky bottom-4 z-10">
-          <button type="submit" disabled={saving} className="btn-primary !px-8">
-            {saving ? 'Saving…' : 'Save Home Physiotherapy page'}
-          </button>
+        <div className="sticky bottom-3 z-20 mt-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-orange-200 bg-white/95 backdrop-blur-md shadow-lg px-4 py-3">
+            <p className="text-xs text-slate-500 hidden sm:block">Publishes content to the live Home Physiotherapy page.</p>
+            <button type="submit" disabled={saving} className="btn-primary !px-7 min-h-11">
+              {saving ? 'Saving…' : 'Save & publish'}
+            </button>
+          </div>
         </div>
       </form>
     </AdminDashboardLayout>

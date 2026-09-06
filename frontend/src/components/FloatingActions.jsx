@@ -7,6 +7,10 @@ import FaIcon from './FaIcon';
 
 import { FLOATING_ACTIONS_EVENT } from '../utils/floatingActionsBus';
 
+function isTouchLike() {
+  return typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches;
+}
+
 /** Floating CTAs — home + PhysioAtHome landing. */
 function isMarketingPage(pathname) {
   return pathname === '/' || pathname === '/home-physiotherapy';
@@ -43,6 +47,7 @@ export default function FloatingActions() {
   const { whatsapp, phone } = useContact();
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [hiddenByOverlay, setHiddenByOverlay] = useState(false);
+  const [openFab, setOpenFab] = useState(null);
   const hideAll = isBookingPage(pathname);
   const showFloating = isMarketingPage(pathname) && !isStaffDashboard(pathname) && !hideAll;
 
@@ -64,6 +69,27 @@ export default function FloatingActions() {
     return () => window.removeEventListener(FLOATING_ACTIONS_EVENT, onOverlay);
   }, []);
 
+  useEffect(() => {
+    setOpenFab(null);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!openFab) return undefined;
+    const onPointerDown = (e) => {
+      if (!e.target.closest?.('.fab-rail')) setOpenFab(null);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [openFab]);
+
+  const onFabActivate = (id) => (e) => {
+    if (!isTouchLike()) return;
+    if (openFab !== id) {
+      e.preventDefault();
+      setOpenFab(id);
+    }
+  };
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -73,21 +99,35 @@ export default function FloatingActions() {
   return (
     <div className="floating-actions floating-actions--rail" aria-label="Quick actions">
       <div className="fab-rail" role="navigation" aria-label="Book, call, or WhatsApp">
-        <Link to={bookHref} className="fab-rail-btn fab-rail-book" title="Book a Session">
+        <Link
+          to={bookHref}
+          className={`fab-rail-btn fab-rail-book ${openFab === 'book' ? 'is-open' : ''}`}
+          title="Book a Session"
+          aria-label="Book a home physiotherapy session"
+          onClick={onFabActivate('book')}
+        >
           <span className="fab-rail-icon" aria-hidden>
             <FaIcon icon="fa-calendar-check" />
           </span>
-          <span className="fab-rail-label">Book a Session</span>
-          <span className="sr-only">Book a home physiotherapy session</span>
+          <span className="fab-rail-label" aria-hidden>
+            Book a Session
+          </span>
         </Link>
 
         {telHref && (
-          <a href={telHref} className="fab-rail-btn fab-rail-call" title={phone ? `Call ${phone}` : 'Call Us'}>
+          <a
+            href={telHref}
+            className={`fab-rail-btn fab-rail-call ${openFab === 'call' ? 'is-open' : ''}`}
+            title={phone ? `Call ${phone}` : 'Call Us'}
+            aria-label={phone ? `Call us at ${phone}` : 'Call us'}
+            onClick={onFabActivate('call')}
+          >
             <span className="fab-rail-icon" aria-hidden>
               <FaIcon icon="fa-phone" />
             </span>
-            <span className="fab-rail-label">Call Us</span>
-            <span className="sr-only">{phone ? `Call us at ${phone}` : 'Call us'}</span>
+            <span className="fab-rail-label" aria-hidden>
+              Call Us
+            </span>
           </a>
         )}
 
@@ -96,15 +136,16 @@ export default function FloatingActions() {
             href={waUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="fab-rail-btn fab-rail-wa"
+            className={`fab-rail-btn fab-rail-wa ${openFab === 'wa' ? 'is-open' : ''}`}
             title={whatsapp || 'WhatsApp'}
+            aria-label={`Chat on WhatsApp${waDigits ? ` (${whatsapp})` : ''}`}
+            onClick={onFabActivate('wa')}
           >
             <span className="fab-rail-icon" aria-hidden>
               <FaIcon icon="fa-whatsapp" brand />
             </span>
-            <span className="fab-rail-label">WhatsApp</span>
-            <span className="sr-only">
-              Chat on WhatsApp{waDigits ? ` (${whatsapp})` : ''}
+            <span className="fab-rail-label" aria-hidden>
+              WhatsApp
             </span>
           </a>
         )}

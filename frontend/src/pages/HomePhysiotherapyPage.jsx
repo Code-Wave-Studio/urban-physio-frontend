@@ -7,6 +7,7 @@ import SeoBreadcrumbs from '../components/seo/SeoBreadcrumbs';
 import ManagedPageSeo from '../components/seo/ManagedPageSeo';
 import { breadcrumbSchema, faqPageSchema, medicalWebPageSchema } from '../components/seo/PageMeta';
 import Expandable, { AccordionItem } from '../components/homePhysio/Expandable';
+import { CheckRow, CtaLink, QuoteCard, SectionHead, bookHref } from '../components/homePhysio/HomePhysioUi';
 import { homePhysio } from '../services/api';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import { HEALTHCARE_IMAGES } from '../utils/healthcareImages';
@@ -14,30 +15,15 @@ import { bookHomeVisitUrl } from '../utils/bookUrl';
 import {
   HOME_PHYSIO_DEFAULTS,
   HOME_PHYSIO_SEO,
-  HOME_VISIT_BOOK_PATH,
   mergeHomePhysioSections,
 } from '../constants/homePhysioDefaults';
 
-function bookHref(link) {
-  return link || HOME_VISIT_BOOK_PATH;
-}
-
-function SectionHead({ heading, intro }) {
-  return (
-    <div className="text-center max-w-3xl mx-auto mb-8 md:mb-10">
-      <h2 className="section-title">{heading}</h2>
-      {intro && <p className="section-subtitle mx-auto mt-3">{intro}</p>}
-    </div>
-  );
-}
-
-function CtaLink({ to, children, className = 'btn-primary' }) {
-  return (
-    <Link to={bookHref(to)} className={`${className} inline-flex items-center justify-center gap-2`}>
-      <FaIcon icon="fa-calendar-check" />
-      {children}
-    </Link>
-  );
+function categoryItems(cat) {
+  return Array.isArray(cat.items)
+    ? cat.items
+    : String(cat.items || '')
+        .split(/\s*[·\n]\s*/)
+        .filter(Boolean);
 }
 
 export default function HomePhysiotherapyPage() {
@@ -102,7 +88,7 @@ export default function HomePhysiotherapyPage() {
   }
 
   return (
-    <div className="page-enter overflow-x-hidden">
+    <div className="hp-page page-enter overflow-x-hidden">
       <ManagedPageSeo
         fallbackTitle={data.seo_title || HOME_PHYSIO_SEO.title}
         fallbackDescription={data.seo_description || HOME_PHYSIO_SEO.description}
@@ -112,8 +98,8 @@ export default function HomePhysiotherapyPage() {
       <Navbar />
 
       <section className="relative overflow-hidden bg-gradient-to-br from-orange-600 via-primary-700 to-primary-950 text-white">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M0 0h60v60H0z\'/%3E%3C/g%3E%3C/svg%3E')] pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 relative">
+        <div className="absolute inset-0 hp-hero-grid pointer-events-none" aria-hidden />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 md:py-20 relative">
           <SeoBreadcrumbs
             tone="onDark"
             items={[
@@ -121,19 +107,19 @@ export default function HomePhysiotherapyPage() {
               { label: 'Home Physiotherapy' },
             ]}
           />
-          <div className="grid lg:grid-cols-2 gap-10 items-center mt-6">
+          <div className="grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] gap-8 lg:gap-14 items-center mt-4">
             <div>
               <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider bg-white/15 border border-white/20 px-3 py-1.5 rounded-full mb-4">
                 <FaIcon icon="fa-house-medical" />
                 PhysioAtHome
               </p>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight leading-tight">
+              <h1 className="text-[1.75rem] sm:text-4xl md:text-5xl font-bold tracking-tight leading-[1.15]">
                 {data.hero_title}
               </h1>
-              <p className="mt-4 text-primary-100 text-base md:text-lg leading-relaxed max-w-xl">
+              <p className="mt-4 text-primary-100 text-[15px] md:text-lg leading-relaxed max-w-xl">
                 {data.hero_subtitle}
               </p>
-              <div className="mt-7">
+              <div className="mt-7 flex flex-col sm:flex-row gap-3">
                 <CtaLink
                   to={s.hero_cta_link}
                   className="btn-primary !bg-white !text-primary-700 hover:!bg-orange-50 shadow-lg"
@@ -144,14 +130,14 @@ export default function HomePhysiotherapyPage() {
               <ul className="mt-8 grid sm:grid-cols-2 gap-2.5">
                 {(s.trust_signals || []).map((item) => (
                   <li key={item} className="flex items-start gap-2 text-sm text-white/90">
-                    <FaIcon icon="fa-check" className="text-emerald-300 mt-0.5 shrink-0" />
+                    <FaIcon icon="fa-circle-check" className="text-emerald-300 mt-0.5 shrink-0" />
                     <span>{item}</span>
                   </li>
                 ))}
               </ul>
             </div>
             <div className="relative">
-              <div className="rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/20 aspect-[4/3] max-h-[420px]">
+              <div className="hp-hero-photo rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/25 aspect-[4/3] max-h-[420px]">
                 <img
                   src={heroImage}
                   alt="Hospital-trained physiotherapist providing a home physiotherapy session"
@@ -163,15 +149,15 @@ export default function HomePhysiotherapyPage() {
         </div>
       </section>
 
-      <section className="bg-white border-y border-orange-100/80" aria-label="Trust signals">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 md:py-6">
-          <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
+      <section className="bg-white border-b border-orange-100" aria-label="Trust signals">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-5">
+          <ul className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2.5 md:gap-3">
             {(s.trust_bar || []).map((item) => (
               <li
                 key={item.label}
-                className="flex items-center gap-2.5 rounded-xl bg-orange-50/70 border border-orange-100 px-3 py-2.5 min-w-0"
+                className="flex items-center gap-2.5 rounded-2xl bg-orange-50/80 border border-orange-100/80 px-3 py-2.5 min-w-0"
               >
-                <span className="shrink-0 w-8 h-8 rounded-lg bg-white text-primary-600 flex items-center justify-center">
+                <span className="shrink-0 w-9 h-9 rounded-xl bg-white text-primary-600 flex items-center justify-center shadow-sm">
                   <FaIcon icon={item.icon || 'fa-circle-check'} className="text-sm" />
                 </span>
                 <span className="text-xs sm:text-sm font-semibold text-slate-800 leading-snug">
@@ -184,16 +170,13 @@ export default function HomePhysiotherapyPage() {
       </section>
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-pad">
-        <SectionHead heading={s.fit_heading} intro={s.fit_intro} />
-        <div className="grid md:grid-cols-2 gap-5">
-          <div className="glass-card p-5 sm:p-6 border-l-4 border-l-primary-500">
-            <h3 className="font-bold text-slate-900 mb-3">{s.fit_home_title}</h3>
-            <ul className="space-y-2.5">
+        <SectionHead eyebrow="Choose your format" heading={s.fit_heading} intro={s.fit_intro} />
+        <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+          <div className="glass-card p-5 sm:p-7 border-l-4 border-l-primary-500">
+            <h3 className="font-bold text-slate-900 mb-4">{s.fit_home_title}</h3>
+            <ul className="space-y-3">
               {(s.fit_home_items || []).slice(0, 2).map((item) => (
-                <li key={item} className="flex gap-2 text-sm text-slate-600">
-                  <FaIcon icon="fa-check" className="text-primary-600 mt-0.5 shrink-0" />
-                  {item}
-                </li>
+                <CheckRow key={item}>{item}</CheckRow>
               ))}
             </ul>
             <Expandable
@@ -203,24 +186,20 @@ export default function HomePhysiotherapyPage() {
               label={`${s.fit_toggle} ↓`}
               className="mt-4"
             >
-              <ul className="space-y-2.5 pt-2">
+              <ul className="space-y-3 pt-3">
                 {(s.fit_home_items || []).slice(2).map((item) => (
-                  <li key={item} className="flex gap-2 text-sm text-slate-600">
-                    <FaIcon icon="fa-check" className="text-primary-600 mt-0.5 shrink-0" />
-                    {item}
-                  </li>
+                  <CheckRow key={item}>{item}</CheckRow>
                 ))}
               </ul>
             </Expandable>
           </div>
-          <div className="glass-card p-5 sm:p-6 border-l-4 border-l-slate-400">
-            <h3 className="font-bold text-slate-900 mb-3">{s.fit_clinic_title}</h3>
-            <ul className="space-y-2.5">
+          <div className="glass-card p-5 sm:p-7 border-l-4 border-l-slate-300">
+            <h3 className="font-bold text-slate-900 mb-4">{s.fit_clinic_title}</h3>
+            <ul className="space-y-3">
               {(s.fit_clinic_items || []).slice(0, 2).map((item) => (
-                <li key={item} className="flex gap-2 text-sm text-slate-600">
-                  <FaIcon icon="fa-minus" className="text-slate-400 mt-0.5 shrink-0" />
+                <CheckRow key={item} tone="neutral">
                   {item}
-                </li>
+                </CheckRow>
               ))}
             </ul>
             <Expandable
@@ -230,56 +209,55 @@ export default function HomePhysiotherapyPage() {
               label={`${s.fit_toggle} ↓`}
               className="mt-4"
             >
-              <ul className="space-y-2.5 pt-2">
+              <ul className="space-y-3 pt-3">
                 {(s.fit_clinic_items || []).slice(2).map((item) => (
-                  <li key={item} className="flex gap-2 text-sm text-slate-600">
-                    <FaIcon icon="fa-minus" className="text-slate-400 mt-0.5 shrink-0" />
+                  <CheckRow key={item} tone="neutral">
                     {item}
-                  </li>
+                  </CheckRow>
                 ))}
               </ul>
             </Expandable>
           </div>
         </div>
-        <p className="mt-6 text-center text-sm md:text-base text-slate-600 max-w-3xl mx-auto leading-relaxed">
-          {s.fit_reassurance}
-        </p>
-        <div className="mt-6 text-center">
-          <CtaLink to={s.hero_cta_link}>{s.fit_cta_label}</CtaLink>
+        <div className="mt-8 rounded-2xl bg-primary-50/70 border border-primary-100 p-5 sm:p-6 text-center">
+          <p className="text-sm md:text-base text-slate-700 max-w-3xl mx-auto leading-relaxed">
+            {s.fit_reassurance}
+          </p>
+          <div className="mt-5">
+            <CtaLink to={s.hero_cta_link}>{s.fit_cta_label}</CtaLink>
+          </div>
         </div>
       </section>
 
-      <section className="bg-gradient-to-b from-orange-50/60 to-transparent">
+      <section className="bg-gradient-to-b from-orange-50/70 via-white to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-pad">
-          <SectionHead heading={s.why_heading} intro={s.why_intro} />
-          <div className="grid md:grid-cols-3 gap-4">
-            {(s.why_items || []).map((item) => (
-              <article key={item.title} className="glass-card p-5 sm:p-6">
-                <h3 className="font-bold text-slate-900">{item.title}</h3>
-                <p className="mt-2 text-sm text-slate-600 leading-relaxed line-clamp-3">{item.body}</p>
+          <SectionHead eyebrow="Outcomes" heading={s.why_heading} intro={s.why_intro} />
+          <div className="grid md:grid-cols-3 gap-4 md:gap-5">
+            {(s.why_items || []).map((item, i) => (
+              <article key={item.title} className="glass-card p-5 sm:p-6 h-full">
+                <span className="inline-flex w-9 h-9 rounded-xl bg-primary-50 text-primary-700 text-sm font-bold items-center justify-center">
+                  {i + 1}
+                </span>
+                <h3 className="font-bold text-slate-900 mt-3">{item.title}</h3>
+                <p className={`mt-2 text-sm text-slate-600 leading-relaxed ${whyOpen ? '' : 'line-clamp-3'}`}>
+                  {item.body}
+                </p>
               </article>
             ))}
           </div>
-          <Expandable
-            id="why-works"
-            open={whyOpen}
-            onToggle={() => setWhyOpen((v) => !v)}
-            label={`${s.why_toggle} ↓`}
-            className="mt-5 text-center"
-          >
-            <div className="grid md:grid-cols-3 gap-4 pt-4 text-left">
-              {(s.why_items || []).map((item) => (
-                <p key={`${item.title}-full`} className="text-sm text-slate-600 leading-relaxed glass-card p-5">
-                  {item.body}
-                </p>
-              ))}
-            </div>
-          </Expandable>
+          <div className="mt-6 text-center">
+            <Expandable
+              id="why-works"
+              open={whyOpen}
+              onToggle={() => setWhyOpen((v) => !v)}
+              label={`${s.why_toggle} ↓`}
+            />
+          </div>
         </div>
       </section>
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-pad">
-        <SectionHead heading={s.difference_heading} intro={s.difference_intro} />
+        <SectionHead eyebrow="The TUP difference" heading={s.difference_heading} intro={s.difference_intro} />
         <div className="space-y-3 max-w-4xl mx-auto">
           {(s.difference_items || []).slice(0, 2).map((item, i) => (
             <AccordionItem
@@ -298,9 +276,9 @@ export default function HomePhysiotherapyPage() {
             open={diffOpen}
             onToggle={() => setDiffOpen((v) => !v)}
             label={`${s.difference_toggle} ↓`}
-            className="pt-2"
+            className="pt-1 text-center"
           >
-            <div className="space-y-3 pt-3">
+            <div className="space-y-3 pt-3 text-left">
               {(s.difference_items || []).slice(2).map((item, i) => (
                 <AccordionItem
                   key={item.title}
@@ -318,21 +296,22 @@ export default function HomePhysiotherapyPage() {
         </div>
       </section>
 
-      <section className="bg-white/70">
+      <section className="bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-pad">
-          <SectionHead heading={s.tiers_heading} intro={s.tiers_intro} />
-          <div className="grid md:grid-cols-3 gap-5">
+          <SectionHead eyebrow="Choose your physio" heading={s.tiers_heading} intro={s.tiers_intro} />
+          <div className="grid md:grid-cols-3 gap-4 md:gap-5">
             {(s.tiers || []).map((tier) => {
               const open = !!tierOpen[tier.key];
+              const featured = Boolean(tier.badge);
               return (
                 <article
                   key={tier.key}
-                  className={`glass-card p-5 sm:p-6 flex flex-col relative ${
-                    tier.badge === 'Most Booked' ? 'ring-2 ring-primary-400' : ''
+                  className={`glass-card p-5 sm:p-6 flex flex-col relative pt-7 ${
+                    featured ? 'ring-2 ring-primary-400 md:-translate-y-1 shadow-lg' : ''
                   }`}
                 >
                   {tier.badge && (
-                    <span className="absolute -top-3 left-5 text-[11px] font-bold uppercase tracking-wide bg-primary-600 text-white px-2.5 py-1 rounded-full">
+                    <span className="absolute top-0 left-5 -translate-y-1/2 text-[11px] font-bold uppercase tracking-wide bg-primary-600 text-white px-2.5 py-1 rounded-full">
                       {tier.badge}
                     </span>
                   )}
@@ -341,7 +320,7 @@ export default function HomePhysiotherapyPage() {
                   <p className="text-sm text-slate-500">
                     per session · <span className="line-through">{tier.original}</span>
                   </p>
-                  <p className="mt-3 text-sm text-slate-600 leading-relaxed">{tier.summary}</p>
+                  <p className="mt-3 text-sm text-slate-600 leading-relaxed flex-1">{tier.summary}</p>
                   <Expandable
                     id={`tier-${tier.key}`}
                     open={open}
@@ -349,7 +328,7 @@ export default function HomePhysiotherapyPage() {
                     label="See details ↓"
                     className="mt-4"
                   >
-                    <dl className="mt-3 space-y-2 text-sm text-slate-600">
+                    <dl className="mt-3 space-y-2.5 text-sm text-slate-600">
                       <div>
                         <dt className="font-semibold text-slate-800">Qualification</dt>
                         <dd>{tier.qualification}</dd>
@@ -370,7 +349,7 @@ export default function HomePhysiotherapyPage() {
                   </Expandable>
                   <Link
                     to={bookHref(tier.cta_link || bookHomeVisitUrl({ tier: tier.key }))}
-                    className="btn-primary mt-5 w-full justify-center text-sm"
+                    className="btn-primary mt-5 w-full justify-center text-sm min-h-11"
                   >
                     {tier.cta_label}
                   </Link>
@@ -378,12 +357,12 @@ export default function HomePhysiotherapyPage() {
               );
             })}
           </div>
-          <p className="mt-6 text-center text-sm text-slate-600">{s.tiers_note}</p>
+          <p className="mt-7 text-center text-sm text-slate-600 max-w-2xl mx-auto">{s.tiers_note}</p>
         </div>
       </section>
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-pad">
-        <SectionHead heading={s.how_heading} />
+        <SectionHead eyebrow="Simple process" heading={s.how_heading} />
         <div className="space-y-3 max-w-3xl mx-auto">
           {(s.how_steps || []).map((step, i) => (
             <AccordionItem
@@ -403,34 +382,36 @@ export default function HomePhysiotherapyPage() {
         </div>
       </section>
 
-      <section className="bg-orange-50/40">
+      <section className="bg-orange-50/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-pad">
-          <SectionHead heading={s.conditions_heading} />
+          <SectionHead eyebrow="Clinical coverage" heading={s.conditions_heading} />
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {(s.conditions_featured || []).map((name) => (
-              <div key={name} className="glass-card p-4 text-center font-semibold text-slate-800 text-sm">
+              <div
+                key={name}
+                className="glass-card p-4 sm:p-5 text-center font-semibold text-slate-800 text-sm min-h-[4.5rem] flex items-center justify-center"
+              >
                 {name}
               </div>
             ))}
           </div>
-          <Expandable
-            id="all-conditions"
-            open={condOpen}
-            onToggle={() => setCondOpen((v) => !v)}
-            label={`${s.conditions_toggle} ↓`}
-            className="mt-6 text-center"
-          >
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-5 text-left">
-              {(s.conditions_categories || []).map((cat) => (
-                <div key={cat.name} className="glass-card p-4">
-                  <h3 className="font-bold text-slate-900 text-sm mb-2">{cat.name}</h3>
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    {(Array.isArray(cat.items) ? cat.items : String(cat.items || '').split(/\s*[·\n]\s*/).filter(Boolean)).join(' · ')}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </Expandable>
+          <div className="mt-6 text-center">
+            <Expandable
+              id="all-conditions"
+              open={condOpen}
+              onToggle={() => setCondOpen((v) => !v)}
+              label={`${s.conditions_toggle} ↓`}
+            >
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-5 text-left">
+                {(s.conditions_categories || []).map((cat) => (
+                  <div key={cat.name} className="glass-card p-4">
+                    <h3 className="font-bold text-slate-900 text-sm mb-2">{cat.name}</h3>
+                    <p className="text-xs text-slate-600 leading-relaxed">{categoryItems(cat).join(' · ')}</p>
+                  </div>
+                ))}
+              </div>
+            </Expandable>
+          </div>
           <div className="mt-8 text-center">
             <CtaLink to={s.hero_cta_link}>{s.conditions_cta_label}</CtaLink>
           </div>
@@ -438,46 +419,35 @@ export default function HomePhysiotherapyPage() {
       </section>
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-pad">
-        <SectionHead heading={s.pricing_heading} />
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[320px] max-w-2xl mx-auto text-sm">
-            <caption className="sr-only">Single session home physiotherapy pricing</caption>
-            <thead>
-              <tr className="text-left text-slate-500">
-                <th className="py-2 pr-4 font-semibold">Tier</th>
-                <th className="py-2 pr-4 font-semibold">Was</th>
-                <th className="py-2 font-semibold">Now</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(s.pricing_sessions || []).map((row) => (
-                <tr key={row.name} className="border-t border-slate-200">
-                  <td className="py-3 pr-4 font-medium text-slate-800">{row.name}</td>
-                  <td className="py-3 pr-4 text-slate-400 line-through">{row.original}</td>
-                  <td className="py-3 font-bold text-primary-700">{row.price}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <SectionHead eyebrow="Transparent rates" heading={s.pricing_heading} />
+        <div className="grid sm:grid-cols-3 gap-3 max-w-3xl mx-auto">
+          {(s.pricing_sessions || []).map((row) => (
+            <div key={row.name} className="glass-card p-4 text-center">
+              <p className="text-sm font-semibold text-slate-800">{row.name}</p>
+              <p className="mt-2 text-xs text-slate-400 line-through">{row.original}</p>
+              <p className="text-2xl font-bold text-primary-700">{row.price}</p>
+            </div>
+          ))}
         </div>
-        <Expandable
-          id="packages"
-          open={pkgOpen}
-          onToggle={() => setPkgOpen((v) => !v)}
-          label={`${s.pricing_toggle} ↓`}
-          className="mt-6 text-center"
-        >
-          <div className="grid md:grid-cols-3 gap-4 pt-5 text-left max-w-4xl mx-auto">
-            {(s.pricing_packages || []).map((pkg) => (
-              <div key={pkg.name} className="glass-card p-5">
-                <p className="font-bold text-slate-900">{pkg.name}</p>
-                <p className="text-sm text-slate-500">{pkg.sessions}</p>
-                <p className="mt-2 text-2xl font-bold text-primary-700">{pkg.price}</p>
-                <p className="text-xs font-semibold text-emerald-700 mt-1">{pkg.save}</p>
-              </div>
-            ))}
-          </div>
-        </Expandable>
+        <div className="mt-6 text-center">
+          <Expandable
+            id="packages"
+            open={pkgOpen}
+            onToggle={() => setPkgOpen((v) => !v)}
+            label={`${s.pricing_toggle} ↓`}
+          >
+            <div className="grid md:grid-cols-3 gap-4 pt-5 text-left max-w-4xl mx-auto">
+              {(s.pricing_packages || []).map((pkg) => (
+                <div key={pkg.name} className="glass-card p-5">
+                  <p className="font-bold text-slate-900">{pkg.name}</p>
+                  <p className="text-sm text-slate-500">{pkg.sessions}</p>
+                  <p className="mt-2 text-2xl font-bold text-primary-700">{pkg.price}</p>
+                  <p className="text-xs font-semibold text-emerald-700 mt-1">{pkg.save}</p>
+                </div>
+              ))}
+            </div>
+          </Expandable>
+        </div>
         <p className="mt-6 text-center text-sm font-medium text-orange-700">{s.pricing_offer}</p>
         <p className="mt-2 text-center text-xs text-slate-500">{s.pricing_payment}</p>
         <div className="mt-6 text-center">
@@ -485,9 +455,9 @@ export default function HomePhysiotherapyPage() {
         </div>
       </section>
 
-      <section className="bg-white/70">
+      <section className="bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-pad">
-          <SectionHead heading={s.areas_heading} />
+          <SectionHead eyebrow="Service area" heading={s.areas_heading} />
           <div className="flex flex-wrap justify-center gap-2">
             {(s.areas || []).map((city, i) => {
               const open = areaOpen === i;
@@ -497,7 +467,7 @@ export default function HomePhysiotherapyPage() {
                   type="button"
                   aria-expanded={open}
                   onClick={() => setAreaOpen(open ? null : i)}
-                  className={`px-4 py-2 rounded-full text-sm font-semibold border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
+                  className={`px-4 py-2.5 rounded-full text-sm font-semibold border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
                     open
                       ? 'bg-primary-600 text-white border-primary-600'
                       : 'bg-white text-slate-700 border-slate-200 hover:border-primary-300'
@@ -509,7 +479,7 @@ export default function HomePhysiotherapyPage() {
             })}
           </div>
           {areaOpen != null && s.areas?.[areaOpen]?.localities && (
-            <p className="mt-4 mx-auto max-w-2xl text-center text-sm text-slate-600 leading-relaxed glass-card p-4">
+            <p className="mt-5 mx-auto max-w-2xl text-center text-sm text-slate-600 leading-relaxed glass-card p-4">
               {s.areas[areaOpen].localities}
             </p>
           )}
@@ -518,44 +488,24 @@ export default function HomePhysiotherapyPage() {
       </section>
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-pad">
-        <SectionHead heading={s.testimonials_heading} />
-        <div className="grid md:grid-cols-2 gap-4 mb-6">
+        <SectionHead eyebrow="Patient stories" heading={s.testimonials_heading} />
+        <div className="grid md:grid-cols-2 gap-4 mb-5">
           {featuredQuotes.map((t) => (
-            <blockquote key={t.name} className="glass-card p-5 sm:p-6">
-              <div className="flex gap-0.5 text-amber-500 mb-2" aria-label={`${t.rating || 5} out of 5 stars`}>
-                {Array.from({ length: t.rating || 5 }).map((_, i) => (
-                  <FaIcon key={i} icon="fa-star" />
-                ))}
-              </div>
-              <p className="text-slate-700 text-sm italic leading-relaxed">&ldquo;{t.text}&rdquo;</p>
-              <footer className="mt-3 font-semibold text-slate-800 text-sm">
-                {t.name}
-                {t.city ? ` — ${t.city}` : ''}
-              </footer>
-            </blockquote>
+            <QuoteCard key={t.name} quote={t} featured />
           ))}
         </div>
         {carouselQuotes.length > 0 && (
           <div className="mobile-scroll-x md:grid md:grid-cols-3 md:gap-4">
             {carouselQuotes.map((t) => (
-              <blockquote key={t.name} className="mobile-scroll-item glass-card p-5 min-w-[260px]">
-                <div className="flex gap-0.5 text-amber-500 mb-2" aria-hidden>
-                  {Array.from({ length: t.rating || 5 }).map((_, i) => (
-                    <FaIcon key={i} icon="fa-star" />
-                  ))}
-                </div>
-                <p className="text-slate-700 text-sm italic line-clamp-4">&ldquo;{t.text}&rdquo;</p>
-                <footer className="mt-3 font-semibold text-slate-800 text-sm">
-                  {t.name}
-                  {t.city ? ` — ${t.city}` : ''}
-                </footer>
-              </blockquote>
+              <div key={t.name} className="mobile-scroll-item min-w-[260px]">
+                <QuoteCard quote={t} />
+              </div>
             ))}
           </div>
         )}
       </section>
 
-      <section className="bg-orange-50/50">
+      <section className="bg-orange-50/60">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 section-pad">
           <SectionHead heading={s.faq_heading} />
           <div className="space-y-3">
@@ -571,6 +521,24 @@ export default function HomePhysiotherapyPage() {
                 {item.a}
               </AccordionItem>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 md:pb-14">
+        <div className="relative overflow-hidden rounded-2xl md:rounded-3xl text-white text-center">
+          <div className="absolute inset-0 bg-gradient-to-r from-orange-600 via-primary-600 to-primary-800" />
+          <div className="relative px-6 py-10 sm:py-12">
+            <h2 className="text-2xl sm:text-3xl font-bold">{s.hero_cta_label}</h2>
+            <p className="mt-3 text-primary-100 max-w-xl mx-auto text-sm sm:text-base">{s.fit_reassurance}</p>
+            <div className="mt-6">
+              <CtaLink
+                to={s.hero_cta_link}
+                className="btn-primary !bg-white !text-primary-700 hover:!bg-orange-50"
+              >
+                {s.hero_cta_label}
+              </CtaLink>
+            </div>
           </div>
         </div>
       </section>
