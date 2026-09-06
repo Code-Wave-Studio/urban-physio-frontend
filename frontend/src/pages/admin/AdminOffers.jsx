@@ -5,20 +5,25 @@ import FaIcon from '../../components/FaIcon';
 import MediaUrlOrUpload from '../../components/admin/MediaUrlOrUpload';
 import { CmsField, CmsListEditor, CmsPanel } from '../../components/admin/CmsFormKit';
 import { admin, uploadCmsImage } from '../../services/api';
-import { OFFERS_DEFAULTS } from '../../constants/offersDefaults';
+import { HEALTHCARE_IMAGES } from '../../utils/healthcareImages';
+import { OFFERS_DEFAULTS, mergeOffersSections } from '../../constants/offersDefaults';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import toast from 'react-hot-toast';
 
 const MAIN_TABS = [
   { id: 'submissions', label: 'Submissions & Verification', icon: 'fa-list-check' },
-  { id: 'settings', label: 'Campaign CMS Settings', icon: 'fa-sliders' },
+  { id: 'settings', label: 'Campaign CMS & Content Customizer', icon: 'fa-sliders' },
 ];
 
 const SETTINGS_SUBTABS = [
   { id: 'hero', label: 'Hero & Highlights', icon: 'fa-flag' },
-  { id: 'how', label: 'How It Works & Steps', icon: 'fa-list-ol' },
-  { id: 'benefits', label: 'Benefits', icon: 'fa-award' },
-  { id: 'rules', label: 'Rules & Rewards', icon: 'fa-scale-balanced' },
-  { id: 'faqs', label: 'FAQs & Terms', icon: 'fa-circle-question' },
+  { id: 'highlights', label: '4-Step Overview', icon: 'fa-cubes' },
+  { id: 'how', label: 'How It Works (5 Steps)', icon: 'fa-list-ol' },
+  { id: 'benefits', label: 'Why Join Benefits', icon: 'fa-award' },
+  { id: 'rules', label: 'Eligibility & Rules', icon: 'fa-scale-balanced' },
+  { id: 'form', label: 'Form & Tracker Copy', icon: 'fa-pen-to-square' },
+  { id: 'faqs', label: 'FAQs Accordion', icon: 'fa-circle-question' },
+  { id: 'final_cta', label: 'Bottom CTA Banner', icon: 'fa-bullhorn' },
   { id: 'visibility', label: 'Section Visibility', icon: 'fa-eye' },
   { id: 'seo', label: 'SEO Settings', icon: 'fa-magnifying-glass-chart' },
 ];
@@ -110,7 +115,7 @@ export default function AdminOffers() {
           hero_image: d.hero_image || '',
           seo_title: d.seo_title || '',
           seo_description: d.seo_description || '',
-          sections: { ...OFFERS_DEFAULTS.sections, ...(d.sections || {}) },
+          sections: mergeOffersSections(d?.sections || {}),
         });
       })
       .catch((err) => toast.error(err.message || 'Could not load campaign settings'))
@@ -186,11 +191,11 @@ export default function AdminOffers() {
     setSettingsForm((f) => ({ ...f, sections: { ...f.sections, [k]: v } }));
 
   const handleSaveSettings = async (e) => {
-    e.preventDefault();
+    if (e?.preventDefault) e.preventDefault();
     setSavingSettings(true);
     try {
       await admin.updateOffersSettings(settingsForm);
-      toast.success('Campaign settings published successfully');
+      toast.success('Campaign settings & copy published successfully');
     } catch (err) {
       toast.error(err.message || 'Failed to save settings');
     } finally {
@@ -198,8 +203,33 @@ export default function AdminOffers() {
     }
   };
 
-  const s = settingsForm.sections;
-  const stats = submissionsData.stats;
+  const handleResetToDefaults = () => {
+    if (
+      window.confirm(
+        'Are you sure you want to reset all campaign text & sections to the original default copy? This will overwrite unsaved changes.'
+      )
+    ) {
+      setSettingsForm({
+        hero_title: OFFERS_DEFAULTS.hero_title,
+        hero_subtitle: OFFERS_DEFAULTS.hero_subtitle,
+        hero_image: OFFERS_DEFAULTS.hero_image,
+        seo_title: OFFERS_DEFAULTS.seo_title,
+        seo_description: OFFERS_DEFAULTS.seo_description,
+        sections: { ...OFFERS_DEFAULTS.sections },
+      });
+      toast.success('Reset to default copy in form. Click "Save & Publish Changes" to apply.');
+    }
+  };
+
+  const s = settingsForm?.sections || OFFERS_DEFAULTS.sections;
+  const stats = submissionsData?.stats || {
+    total: 0,
+    pending: 0,
+    under_review: 0,
+    approved: 0,
+    rejected: 0,
+    rewards_claimed: 0,
+  };
 
   const statusBadge = (st) => {
     switch (st) {
@@ -249,7 +279,11 @@ export default function AdminOffers() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Link to="/offers" target="_blank" className="btn-outline text-sm shrink-0 inline-flex items-center gap-2">
+            <Link
+              to="/offers"
+              target="_blank"
+              className="btn-outline text-sm shrink-0 inline-flex items-center gap-2 bg-white"
+            >
               <FaIcon icon="fa-eye" />
               View Live Page
             </Link>
@@ -266,7 +300,7 @@ export default function AdminOffers() {
               key={t.id}
               type="button"
               onClick={() => setMainTab(t.id)}
-              className={`inline-flex items-center gap-2 px-5 py-3 text-sm font-bold border-b-2 transition-all ${
+              className={`inline-flex items-center gap-2 px-5 py-3 text-sm font-bold border-b-2 transition-all cursor-pointer ${
                 active
                   ? 'border-primary-600 text-primary-700 bg-primary-50/50 rounded-t-xl'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
@@ -274,7 +308,7 @@ export default function AdminOffers() {
             >
               <FaIcon icon={t.icon} />
               {t.label}
-              {t.id === 'submissions' && stats.pending > 0 && (
+              {t.id === 'submissions' && (stats.pending || 0) > 0 && (
                 <span className="ml-1.5 px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500 text-white">
                   {stats.pending} pending
                 </span>
@@ -291,27 +325,27 @@ export default function AdminOffers() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
               <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Entries</p>
-              <p className="text-2xl font-extrabold text-slate-900 mt-1">{stats.total}</p>
+              <p className="text-2xl font-extrabold text-slate-900 mt-1">{stats.total || 0}</p>
             </div>
             <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 shadow-xs">
               <p className="text-[11px] font-bold uppercase tracking-wider text-amber-700">Pending Review</p>
-              <p className="text-2xl font-extrabold text-amber-900 mt-1">{stats.pending}</p>
+              <p className="text-2xl font-extrabold text-amber-900 mt-1">{stats.pending || 0}</p>
             </div>
             <div className="rounded-2xl border border-sky-200 bg-sky-50/50 p-4 shadow-xs">
               <p className="text-[11px] font-bold uppercase tracking-wider text-sky-700">Under Review</p>
-              <p className="text-2xl font-extrabold text-sky-900 mt-1">{stats.under_review}</p>
+              <p className="text-2xl font-extrabold text-sky-900 mt-1">{stats.under_review || 0}</p>
             </div>
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4 shadow-xs">
               <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Approved</p>
-              <p className="text-2xl font-extrabold text-emerald-900 mt-1">{stats.approved}</p>
+              <p className="text-2xl font-extrabold text-emerald-900 mt-1">{stats.approved || 0}</p>
             </div>
             <div className="rounded-2xl border border-rose-200 bg-rose-50/50 p-4 shadow-xs">
               <p className="text-[11px] font-bold uppercase tracking-wider text-rose-700">Rejected</p>
-              <p className="text-2xl font-extrabold text-rose-900 mt-1">{stats.rejected}</p>
+              <p className="text-2xl font-extrabold text-rose-900 mt-1">{stats.rejected || 0}</p>
             </div>
             <div className="rounded-2xl border border-purple-200 bg-purple-50/50 p-4 shadow-xs">
               <p className="text-[11px] font-bold uppercase tracking-wider text-purple-700">Rewards Claimed</p>
-              <p className="text-2xl font-extrabold text-purple-900 mt-1">{stats.rewards_claimed}</p>
+              <p className="text-2xl font-extrabold text-purple-900 mt-1">{stats.rewards_claimed || 0}</p>
             </div>
           </div>
 
@@ -417,7 +451,9 @@ export default function AdminOffers() {
                         <td className="py-3.5 px-4">
                           <p className="font-bold text-slate-900">{sub.full_name}</p>
                           <p className="text-[11px] text-slate-500">{sub.email}</p>
-                          <p className="text-[11px] text-slate-400">{sub.phone} {sub.city ? `• ${sub.city}` : ''}</p>
+                          <p className="text-[11px] text-slate-400">
+                            {sub.phone} {sub.city ? `• ${sub.city}` : ''}
+                          </p>
                         </td>
                         <td className="py-3.5 px-4 font-semibold text-slate-700">{sub.run_date}</td>
                         <td className="py-3.5 px-4">
@@ -448,7 +484,7 @@ export default function AdminOffers() {
                           <button
                             type="button"
                             onClick={() => handleOpenReview(sub)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-50 text-primary-700 hover:bg-primary-100 font-bold text-xs transition"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-50 text-primary-700 hover:bg-primary-100 font-bold text-xs transition cursor-pointer"
                           >
                             <FaIcon icon="fa-magnifying-glass" />
                             Review
@@ -472,7 +508,7 @@ export default function AdminOffers() {
                     type="button"
                     disabled={filters.page <= 1}
                     onClick={() => setFilters({ ...filters, page: filters.page - 1 })}
-                    className="btn-outline text-xs !py-1 !px-2.5 disabled:opacity-40"
+                    className="btn-outline text-xs !py-1 !px-2.5 disabled:opacity-40 cursor-pointer"
                   >
                     Previous
                   </button>
@@ -480,7 +516,7 @@ export default function AdminOffers() {
                     type="button"
                     disabled={filters.page >= submissionsData.total_pages}
                     onClick={() => setFilters({ ...filters, page: filters.page + 1 })}
-                    className="btn-outline text-xs !py-1 !px-2.5 disabled:opacity-40"
+                    className="btn-outline text-xs !py-1 !px-2.5 disabled:opacity-40 cursor-pointer"
                   >
                     Next
                   </button>
@@ -510,7 +546,7 @@ export default function AdminOffers() {
                       key={sub.id}
                       type="button"
                       onClick={() => setSettingsSubtab(sub.id)}
-                      className={`shrink-0 inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold border transition ${
+                      className={`shrink-0 inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold border transition cursor-pointer ${
                         active
                           ? 'bg-primary-700 text-white border-primary-700 shadow-sm'
                           : 'bg-white text-slate-600 border-slate-200 hover:border-primary-300'
@@ -525,368 +561,480 @@ export default function AdminOffers() {
 
               {/* Subtab 1: Hero & Highlights */}
               {settingsSubtab === 'hero' && (
-                <CmsPanel title="Hero Section & Highlights" icon="fa-flag">
-                  <div className="space-y-4">
-                    <CmsField label="Hero Badge Text">
+                <div className="space-y-6">
+                  <CmsPanel title="Hero Section Header &amp; Copy" icon="fa-flag">
+                    <CmsField label="Hero Badge Text" hint="Small pill badge displayed above the main headline">
                       <input
                         type="text"
                         value={s.hero_badge || ''}
                         onChange={(e) => setSection('hero_badge', e.target.value)}
-                        className="input-base"
+                        className="input-field"
+                        placeholder="e.g. Exclusive Fitness & Recovery Campaign"
                       />
                     </CmsField>
-                    <CmsField label="Hero Headline">
+                    <CmsField label="Hero Headline (Main Title)">
                       <input
                         type="text"
                         value={settingsForm.hero_title || ''}
                         onChange={(e) => setSetting('hero_title', e.target.value)}
-                        className="input-base"
+                        className="input-field"
+                        placeholder="e.g. Run 10 KM. Get Free Physiotherapy Sessions."
                       />
                     </CmsField>
-                    <CmsField label="Hero Subtitle / Description">
+                    <CmsField label="Hero Subtitle / Description Copy">
                       <textarea
                         rows={3}
                         value={settingsForm.hero_subtitle || ''}
                         onChange={(e) => setSetting('hero_subtitle', e.target.value)}
-                        className="input-base"
+                        className="input-field min-h-[80px]"
+                        placeholder="e.g. Complete your 10 KM run and take a step toward better recovery with free physiotherapy sessions..."
                       />
                     </CmsField>
-                    <CmsField label="Hero Image">
+                    <CmsField label="Hero Visual Banner Image">
                       <MediaUrlOrUpload
                         value={settingsForm.hero_image || ''}
                         onChange={(v) => setSetting('hero_image', v)}
                         uploadFn={uploadCmsImage}
                         presetImages={HEALTHCARE_IMAGES}
-                        label="Hero visual image"
+                        label="Hero campaign photo"
                       />
                     </CmsField>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <CmsField label="Primary CTA Label">
+                      <CmsField label="Primary CTA Button Label">
                         <input
                           type="text"
                           value={s.hero_primary_cta_label || ''}
                           onChange={(e) => setSection('hero_primary_cta_label', e.target.value)}
-                          className="input-base"
+                          className="input-field"
+                          placeholder="e.g. Join the Campaign"
                         />
                       </CmsField>
-                      <CmsField label="Secondary CTA Label">
+                      <CmsField label="Secondary CTA Button Label">
                         <input
                           type="text"
                           value={s.hero_secondary_cta_label || ''}
                           onChange={(e) => setSection('hero_secondary_cta_label', e.target.value)}
-                          className="input-base"
+                          className="input-field"
+                          placeholder="e.g. Learn How It Works"
                         />
                       </CmsField>
                     </div>
+                  </CmsPanel>
 
-                    <div className="pt-4 border-t border-slate-100">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3">
-                        Hero Quick Stat Cards
-                      </h4>
-                      <CmsListEditor
-                        items={s.hero_highlights || []}
-                        onChange={(items) => setSection('hero_highlights', items)}
-                        itemTemplate={{ label: '', value: '', icon: 'fa-check' }}
-                        renderItem={(item, onChange) => (
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 flex-1">
-                            <input
-                              type="text"
-                              value={item.label}
-                              onChange={(e) => onChange({ ...item, label: e.target.value })}
-                              placeholder="Label"
-                              className="input-base text-xs"
-                            />
-                            <input
-                              type="text"
-                              value={item.value}
-                              onChange={(e) => onChange({ ...item, value: e.target.value })}
-                              placeholder="Value"
-                              className="input-base text-xs"
-                            />
-                            <input
-                              type="text"
-                              value={item.icon}
-                              onChange={(e) => onChange({ ...item, icon: e.target.value })}
-                              placeholder="FontAwesome Icon"
-                              className="input-base text-xs"
-                            />
-                          </div>
-                        )}
-                      />
-                    </div>
-                  </div>
-                </CmsPanel>
-              )}
-
-              {/* Subtab 2: How It Works & Steps */}
-              {settingsSubtab === 'how' && (
-                <CmsPanel title="How It Works Timeline" icon="fa-list-ol">
-                  <div className="space-y-4">
-                    <CmsField label="Section Heading">
-                      <input
-                        type="text"
-                        value={s.how_heading || ''}
-                        onChange={(e) => setSection('how_heading', e.target.value)}
-                        className="input-base"
-                      />
-                    </CmsField>
-                    <CmsField label="Section Subtitle">
-                      <input
-                        type="text"
-                        value={s.how_subheading || ''}
-                        onChange={(e) => setSection('how_subheading', e.target.value)}
-                        className="input-base"
-                      />
-                    </CmsField>
-
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 pt-3">
-                      Step Progression (5 Steps)
-                    </h4>
+                  <CmsPanel title="Hero 3 Quick Stat Highlight Badges" icon="fa-chart-simple">
+                    <p className="text-xs text-slate-500 mb-2">
+                      Cards shown beneath the hero CTAs highlighting target distance, reward, and process.
+                    </p>
                     <CmsListEditor
-                      items={s.how_steps || []}
-                      onChange={(items) => setSection('how_steps', items)}
-                      itemTemplate={{ step: '01', title: '', summary: '', details: '', icon: 'fa-check' }}
-                      renderItem={(step, onChange) => (
-                        <div className="space-y-2 flex-1">
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                            <input
-                              type="text"
-                              value={step.step}
-                              onChange={(e) => onChange({ ...step, step: e.target.value })}
-                              placeholder="Step #"
-                              className="input-base text-xs"
-                            />
-                            <input
-                              type="text"
-                              value={step.title}
-                              onChange={(e) => onChange({ ...step, title: e.target.value })}
-                              placeholder="Step Title"
-                              className="input-base text-xs sm:col-span-2"
-                            />
-                          </div>
-                          <input
-                            type="text"
-                            value={step.summary}
-                            onChange={(e) => onChange({ ...step, summary: e.target.value })}
-                            placeholder="Short summary copy"
-                            className="input-base text-xs"
-                          />
-                          <textarea
-                            rows={2}
-                            value={step.details}
-                            onChange={(e) => onChange({ ...step, details: e.target.value })}
-                            placeholder="Detailed explanation"
-                            className="input-base text-xs"
-                          />
-                        </div>
-                      )}
+                      items={s.hero_highlights || []}
+                      onChange={(items) => setSection('hero_highlights', items)}
+                      addLabel="Add Hero Stat Card"
+                      fields={[
+                        { key: 'label', label: 'Label (e.g. Target Distance)' },
+                        { key: 'value', label: 'Value (e.g. 10 KM)' },
+                        { key: 'icon', label: 'FontAwesome Icon (e.g. fa-person-running)' },
+                      ]}
                     />
-                  </div>
-                </CmsPanel>
+                  </CmsPanel>
+                </div>
               )}
 
-              {/* Subtab 3: Benefits */}
-              {settingsSubtab === 'benefits' && (
-                <CmsPanel title="Campaign Benefits" icon="fa-award">
-                  <div className="space-y-4">
-                    <CmsField label="Benefits Heading">
-                      <input
-                        type="text"
-                        value={s.benefits_heading || ''}
-                        onChange={(e) => setSection('benefits_heading', e.target.value)}
-                        className="input-base"
-                      />
-                    </CmsField>
-                    <CmsField label="Benefits Subheading">
-                      <textarea
-                        rows={2}
-                        value={s.benefits_subheading || ''}
-                        onChange={(e) => setSection('benefits_subheading', e.target.value)}
-                        className="input-base"
-                      />
-                    </CmsField>
-
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 pt-3">
-                      Benefits List
-                    </h4>
-                    <CmsListEditor
-                      items={s.benefits || []}
-                      onChange={(items) => setSection('benefits', items)}
-                      itemTemplate={{ title: '', description: '', icon: 'fa-heart-pulse' }}
-                      renderItem={(b, onChange) => (
-                        <div className="space-y-2 flex-1">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <input
-                              type="text"
-                              value={b.title}
-                              onChange={(e) => onChange({ ...b, title: e.target.value })}
-                              placeholder="Benefit Title"
-                              className="input-base text-xs"
-                            />
-                            <input
-                              type="text"
-                              value={b.icon}
-                              onChange={(e) => onChange({ ...b, icon: e.target.value })}
-                              placeholder="Icon (e.g. fa-user-doctor)"
-                              className="input-base text-xs"
-                            />
-                          </div>
-                          <textarea
-                            rows={2}
-                            value={b.description}
-                            onChange={(e) => onChange({ ...b, description: e.target.value })}
-                            placeholder="Benefit Description"
-                            className="input-base text-xs"
-                          />
-                        </div>
-                      )}
+              {/* Subtab 2: 4-Step Overview Cards */}
+              {settingsSubtab === 'highlights' && (
+                <CmsPanel title="4-Card Campaign Overview Section" icon="fa-cubes">
+                  <CmsField label="Section Header Title">
+                    <input
+                      type="text"
+                      value={s.highlights_heading || ''}
+                      onChange={(e) => setSection('highlights_heading', e.target.value)}
+                      className="input-field"
+                      placeholder="e.g. Campaign Overview"
                     />
-                  </div>
-                </CmsPanel>
-              )}
-
-              {/* Subtab 4: Rules & Rewards */}
-              {settingsSubtab === 'rules' && (
-                <CmsPanel title="Eligibility, Rules &amp; Reward Configuration" icon="fa-scale-balanced">
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <CmsField label="Campaign Status">
-                        <select
-                          value={s.campaign_status || 'active'}
-                          onChange={(e) => setSection('campaign_status', e.target.value)}
-                          className="input-base"
-                        >
-                          <option value="active">Active</option>
-                          <option value="paused">Paused</option>
-                          <option value="ended">Ended</option>
-                        </select>
-                      </CmsField>
-                      <CmsField label="Start Date">
-                        <input
-                          type="date"
-                          value={s.start_date || ''}
-                          onChange={(e) => setSection('start_date', e.target.value)}
-                          className="input-base"
-                        />
-                      </CmsField>
-                      <CmsField label="End Date">
-                        <input
-                          type="date"
-                          value={s.end_date || ''}
-                          onChange={(e) => setSection('end_date', e.target.value)}
-                          className="input-base"
-                        />
-                      </CmsField>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <CmsField label="Required Distance (KM)">
-                        <input
-                          type="number"
-                          step="0.1"
-                          value={s.required_distance_km || '10.0'}
-                          onChange={(e) => setSection('required_distance_km', e.target.value)}
-                          className="input-base"
-                        />
-                      </CmsField>
-                      <CmsField label="Reward Validity (Days)">
-                        <input
-                          type="number"
-                          value={s.reward_validity_days || '60'}
-                          onChange={(e) => setSection('reward_validity_days', e.target.value)}
-                          className="input-base"
-                        />
-                      </CmsField>
-                    </div>
-
-                    <CmsField label="Reward Title / Description">
-                      <input
-                        type="text"
-                        value={s.reward_details || ''}
-                        onChange={(e) => setSection('reward_details', e.target.value)}
-                        className="input-base"
-                      />
-                    </CmsField>
-
-                    <CmsField label="Accepted Proof Types Description">
-                      <input
-                        type="text"
-                        value={s.accepted_proof_types || ''}
-                        onChange={(e) => setSection('accepted_proof_types', e.target.value)}
-                        className="input-base"
-                      />
-                    </CmsField>
-
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 pt-3">
-                      Rules Checklist
-                    </h4>
-                    <CmsListEditor
-                      items={s.rules || []}
-                      onChange={(items) => setSection('rules', items)}
-                      itemTemplate=""
-                      renderItem={(rule, onChange) => (
-                        <input
-                          type="text"
-                          value={rule}
-                          onChange={(e) => onChange(e.target.value)}
-                          placeholder="Rule description..."
-                          className="input-base text-xs flex-1"
-                        />
-                      )}
+                  </CmsField>
+                  <CmsField label="Section Subheading Description">
+                    <input
+                      type="text"
+                      value={s.highlights_subheading || ''}
+                      onChange={(e) => setSection('highlights_subheading', e.target.value)}
+                      className="input-field"
+                      placeholder="e.g. A simple, transparent 4-step campaign designed to reward your active lifestyle..."
                     />
-
-                    <CmsField label="Terms &amp; Disclaimer Text">
-                      <textarea
-                        rows={2}
-                        value={s.terms_text || ''}
-                        onChange={(e) => setSection('terms_text', e.target.value)}
-                        className="input-base"
-                      />
-                    </CmsField>
-                  </div>
-                </CmsPanel>
-              )}
-
-              {/* Subtab 5: FAQs */}
-              {settingsSubtab === 'faqs' && (
-                <CmsPanel title="Frequently Asked Questions" icon="fa-circle-question">
+                  </CmsField>
                   <CmsListEditor
-                    items={s.faqs || []}
-                    onChange={(items) => setSection('faqs', items)}
-                    itemTemplate={{ q: '', a: '' }}
-                    renderItem={(faq, onChange) => (
-                      <div className="space-y-2 flex-1">
-                        <input
-                          type="text"
-                          value={faq.q}
-                          onChange={(e) => onChange({ ...faq, q: e.target.value })}
-                          placeholder="Question"
-                          className="input-base text-xs font-bold"
-                        />
-                        <textarea
-                          rows={2}
-                          value={faq.a}
-                          onChange={(e) => onChange({ ...faq, a: e.target.value })}
-                          placeholder="Answer"
-                          className="input-base text-xs"
-                        />
-                      </div>
-                    )}
+                    items={s.highlights_cards || []}
+                    onChange={(items) => setSection('highlights_cards', items)}
+                    addLabel="Add Overview Step Card"
+                    fields={[
+                      { key: 'step', label: 'Step Number (e.g. 01)' },
+                      { key: 'title', label: 'Card Title (e.g. Run 10 KM)' },
+                      { key: 'description', label: 'Card Description', type: 'textarea' },
+                      { key: 'icon', label: 'Icon (e.g. fa-person-running)' },
+                    ]}
                   />
                 </CmsPanel>
               )}
 
-              {/* Subtab 6: Section Visibility */}
+              {/* Subtab 3: How It Works & Steps */}
+              {settingsSubtab === 'how' && (
+                <CmsPanel title="How It Works Timeline (5 Detailed Progression Steps)" icon="fa-list-ol">
+                  <CmsField label="Section Header Title">
+                    <input
+                      type="text"
+                      value={s.how_heading || ''}
+                      onChange={(e) => setSection('how_heading', e.target.value)}
+                      className="input-field"
+                      placeholder="e.g. How It Works"
+                    />
+                  </CmsField>
+                  <CmsField label="Section Subtitle Copy">
+                    <input
+                      type="text"
+                      value={s.how_subheading || ''}
+                      onChange={(e) => setSection('how_subheading', e.target.value)}
+                      className="input-field"
+                      placeholder="e.g. Follow these five steps to participate and redeem your physiotherapy recovery session."
+                    />
+                  </CmsField>
+                  <CmsListEditor
+                    items={s.how_steps || []}
+                    onChange={(items) => setSection('how_steps', items)}
+                    addLabel="Add Progression Step"
+                    fields={[
+                      { key: 'step', label: 'Step Number (e.g. 01)' },
+                      { key: 'title', label: 'Step Title (e.g. Run 10 KM)' },
+                      { key: 'summary', label: 'Short Summary Copy' },
+                      { key: 'details', label: 'Detailed Clinical Explanation', type: 'textarea' },
+                      { key: 'icon', label: 'Icon (e.g. fa-circle-check)' },
+                    ]}
+                  />
+                </CmsPanel>
+              )}
+
+              {/* Subtab 4: Benefits */}
+              {settingsSubtab === 'benefits' && (
+                <CmsPanel title="Campaign Benefits &amp; Clinical Motivation" icon="fa-award">
+                  <CmsField label="Benefits Section Heading">
+                    <input
+                      type="text"
+                      value={s.benefits_heading || ''}
+                      onChange={(e) => setSection('benefits_heading', e.target.value)}
+                      className="input-field"
+                      placeholder="e.g. Why Join the Campaign?"
+                    />
+                  </CmsField>
+                  <CmsField label="Benefits Subheading Description">
+                    <textarea
+                      rows={2}
+                      value={s.benefits_subheading || ''}
+                      onChange={(e) => setSection('benefits_subheading', e.target.value)}
+                      className="input-field min-h-[70px]"
+                      placeholder="e.g. Combining fitness motivation with evidence-based physiotherapy recovery..."
+                    />
+                  </CmsField>
+                  <CmsListEditor
+                    items={s.benefits || []}
+                    onChange={(items) => setSection('benefits', items)}
+                    addLabel="Add Benefit Item"
+                    fields={[
+                      { key: 'title', label: 'Benefit Title (e.g. Professional Physiotherapy Support)' },
+                      { key: 'description', label: 'Benefit Description', type: 'textarea' },
+                      { key: 'icon', label: 'Icon (e.g. fa-heart-pulse)' },
+                    ]}
+                  />
+                </CmsPanel>
+              )}
+
+              {/* Subtab 5: Rules & Rewards */}
+              {settingsSubtab === 'rules' && (
+                <CmsPanel title="Eligibility, Rules &amp; Reward Configuration" icon="fa-scale-balanced">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <CmsField label="Eligibility Section Heading">
+                      <input
+                        type="text"
+                        value={s.eligibility_heading || ''}
+                        onChange={(e) => setSection('eligibility_heading', e.target.value)}
+                        className="input-field"
+                        placeholder="e.g. Eligibility & Campaign Rules"
+                      />
+                    </CmsField>
+                    <CmsField label="Eligibility Section Subheading">
+                      <input
+                        type="text"
+                        value={s.eligibility_subheading || ''}
+                        onChange={(e) => setSection('eligibility_subheading', e.target.value)}
+                        className="input-field"
+                        placeholder="e.g. Please review the participation requirements and verification guidelines."
+                      />
+                    </CmsField>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <CmsField label="Campaign Live Status">
+                      <select
+                        value={s.campaign_status || 'active'}
+                        onChange={(e) => setSection('campaign_status', e.target.value)}
+                        className="input-field"
+                      >
+                        <option value="active">Active (Accepting Submissions)</option>
+                        <option value="paused">Paused</option>
+                        <option value="ended">Ended</option>
+                      </select>
+                    </CmsField>
+                    <CmsField label="Campaign Start Date">
+                      <input
+                        type="date"
+                        value={s.start_date || ''}
+                        onChange={(e) => setSection('start_date', e.target.value)}
+                        className="input-field"
+                      />
+                    </CmsField>
+                    <CmsField label="Campaign End Date">
+                      <input
+                        type="date"
+                        value={s.end_date || ''}
+                        onChange={(e) => setSection('end_date', e.target.value)}
+                        className="input-field"
+                      />
+                    </CmsField>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <CmsField label="Required Distance (KM)">
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={s.required_distance_km || '10.0'}
+                        onChange={(e) => setSection('required_distance_km', e.target.value)}
+                        className="input-field"
+                        placeholder="10.0"
+                      />
+                    </CmsField>
+                    <CmsField label="Reward Validity Window (Days)">
+                      <input
+                        type="number"
+                        value={s.reward_validity_days || '60'}
+                        onChange={(e) => setSection('reward_validity_days', e.target.value)}
+                        className="input-field"
+                        placeholder="60"
+                      />
+                    </CmsField>
+                  </div>
+
+                  <CmsField label="Reward Title / Description">
+                    <input
+                      type="text"
+                      value={s.reward_details || ''}
+                      onChange={(e) => setSection('reward_details', e.target.value)}
+                      className="input-field"
+                      placeholder="e.g. 1 Complimentary Clinical Physiotherapy Assessment & Recovery Session"
+                    />
+                  </CmsField>
+
+                  <CmsField label="Accepted Proof Types Description">
+                    <input
+                      type="text"
+                      value={s.accepted_proof_types || ''}
+                      onChange={(e) => setSection('accepted_proof_types', e.target.value)}
+                      className="input-field"
+                      placeholder="e.g. Strava, Nike Run Club, Garmin, Apple Health, Samsung Health, or GPS running watch export (JPG, PNG, WebP, PDF)"
+                    />
+                  </CmsField>
+
+                  <CmsPanel title="Campaign Conditions &amp; Rules Checklist" icon="fa-list-check">
+                    <CmsListEditor
+                      items={s.rules || []}
+                      onChange={(items) => setSection('rules', items)}
+                      addLabel="Add Rule Condition"
+                      fields={[{ key: 'value', label: 'Rule condition statement' }]}
+                    />
+                  </CmsPanel>
+
+                  <CmsField label="Terms &amp; Disclaimer Text">
+                    <textarea
+                      rows={3}
+                      value={s.terms_text || ''}
+                      onChange={(e) => setSection('terms_text', e.target.value)}
+                      className="input-field min-h-[80px]"
+                      placeholder="e.g. The Urban Physio reserves the right to verify activity logs..."
+                    />
+                  </CmsField>
+                </CmsPanel>
+              )}
+
+              {/* Subtab 6: Form & Tracker Copy */}
+              {settingsSubtab === 'form' && (
+                <div className="space-y-6">
+                  <CmsPanel title="Submission Form Copy &amp; Instructions" icon="fa-pen-to-square">
+                    <CmsField label="Form Section Badge">
+                      <input
+                        type="text"
+                        value={s.form_badge || ''}
+                        onChange={(e) => setSection('form_badge', e.target.value)}
+                        className="input-field"
+                        placeholder="e.g. Participation Desk"
+                      />
+                    </CmsField>
+                    <CmsField label="Form Section Heading">
+                      <input
+                        type="text"
+                        value={s.form_heading || ''}
+                        onChange={(e) => setSection('form_heading', e.target.value)}
+                        className="input-field"
+                        placeholder="e.g. Submit Your 10 KM Run Proof"
+                      />
+                    </CmsField>
+                    <CmsField label="Form Subtitle / Instructions">
+                      <textarea
+                        rows={2}
+                        value={s.form_subheading || ''}
+                        onChange={(e) => setSection('form_subheading', e.target.value)}
+                        className="input-field min-h-[70px]"
+                        placeholder="e.g. Fill in your activity details and upload your run proof for verification..."
+                      />
+                    </CmsField>
+                    <CmsField label="Consent Checkbox Confirmation Copy">
+                      <textarea
+                        rows={2}
+                        value={s.form_consent_text || ''}
+                        onChange={(e) => setSection('form_consent_text', e.target.value)}
+                        className="input-field min-h-[70px]"
+                        placeholder="e.g. I confirm that I have completed the 10 KM run, the uploaded activity details are authentic..."
+                      />
+                    </CmsField>
+                    <CmsField label="Success Receipt Message">
+                      <textarea
+                        rows={2}
+                        value={s.form_success_message || ''}
+                        onChange={(e) => setSection('form_success_message', e.target.value)}
+                        className="input-field min-h-[70px]"
+                        placeholder="e.g. Your 10 KM campaign submission has been received and is currently under review..."
+                      />
+                    </CmsField>
+                  </CmsPanel>
+
+                  <CmsPanel title="Live Status Tracker Copy" icon="fa-magnifying-glass">
+                    <CmsField label="Status Tracker Heading">
+                      <input
+                        type="text"
+                        value={s.status_heading || ''}
+                        onChange={(e) => setSection('status_heading', e.target.value)}
+                        className="input-field"
+                        placeholder="e.g. Check Live Submission Status"
+                      />
+                    </CmsField>
+                    <CmsField label="Status Tracker Subtitle">
+                      <input
+                        type="text"
+                        value={s.status_subheading || ''}
+                        onChange={(e) => setSection('status_subheading', e.target.value)}
+                        className="input-field"
+                        placeholder="e.g. Already submitted? Check your verification and reward status in real time."
+                      />
+                    </CmsField>
+                    <CmsField label="Search Box Placeholder">
+                      <input
+                        type="text"
+                        value={s.status_search_placeholder || ''}
+                        onChange={(e) => setSection('status_search_placeholder', e.target.value)}
+                        className="input-field"
+                        placeholder="e.g. Enter Submission ID, Email, or Phone number"
+                      />
+                    </CmsField>
+                  </CmsPanel>
+                </div>
+              )}
+
+              {/* Subtab 7: FAQs */}
+              {settingsSubtab === 'faqs' && (
+                <CmsPanel title="Frequently Asked Questions (Accordion)" icon="fa-circle-question">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <CmsField label="FAQ Badge Text">
+                      <input
+                        type="text"
+                        value={s.faqs_badge || ''}
+                        onChange={(e) => setSection('faqs_badge', e.target.value)}
+                        className="input-field"
+                        placeholder="e.g. Got Questions?"
+                      />
+                    </CmsField>
+                    <CmsField label="FAQ Section Heading">
+                      <input
+                        type="text"
+                        value={s.faqs_heading || ''}
+                        onChange={(e) => setSection('faqs_heading', e.target.value)}
+                        className="input-field"
+                        placeholder="e.g. Frequently Asked Questions"
+                      />
+                    </CmsField>
+                  </div>
+                  <CmsField label="FAQ Section Subheading">
+                    <input
+                      type="text"
+                      value={s.faqs_subheading || ''}
+                      onChange={(e) => setSection('faqs_subheading', e.target.value)}
+                      className="input-field"
+                      placeholder="e.g. Everything you need to know about participation, verification, and claiming your reward."
+                    />
+                  </CmsField>
+                  <CmsListEditor
+                    items={s.faqs || []}
+                    onChange={(items) => setSection('faqs', items)}
+                    addLabel="Add FAQ Item"
+                    fields={[
+                      { key: 'q', label: 'Question' },
+                      { key: 'a', label: 'Answer', type: 'textarea' },
+                    ]}
+                  />
+                </CmsPanel>
+              )}
+
+              {/* Subtab 8: Bottom Final CTA */}
+              {settingsSubtab === 'final_cta' && (
+                <CmsPanel title="Bottom Call to Action Banner" icon="fa-bullhorn">
+                  <CmsField label="CTA Headline">
+                    <input
+                      type="text"
+                      value={s.final_heading || ''}
+                      onChange={(e) => setSection('final_heading', e.target.value)}
+                      className="input-field"
+                      placeholder="e.g. Ready to Run 10 KM?"
+                    />
+                  </CmsField>
+                  <CmsField label="CTA Subtitle / Description">
+                    <textarea
+                      rows={2}
+                      value={s.final_subheading || ''}
+                      onChange={(e) => setSection('final_subheading', e.target.value)}
+                      className="input-field min-h-[70px]"
+                      placeholder="e.g. Complete your run, submit your proof, and take the next step toward better recovery..."
+                    />
+                  </CmsField>
+                  <CmsField label="CTA Button Label">
+                    <input
+                      type="text"
+                      value={s.final_primary_cta_label || ''}
+                      onChange={(e) => setSection('final_primary_cta_label', e.target.value)}
+                      className="input-field"
+                      placeholder="e.g. Join the Campaign"
+                    />
+                  </CmsField>
+                </CmsPanel>
+              )}
+
+              {/* Subtab 9: Section Visibility */}
               {settingsSubtab === 'visibility' && (
                 <CmsPanel title="Section Visibility Toggles" icon="fa-eye">
+                  <p className="text-xs text-slate-500 mb-2">
+                    Enable or disable any section from being rendered on the live public page.
+                  </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {Object.entries(s.sections_visibility || {}).map(([key, val]) => (
                       <label
                         key={key}
-                        className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 bg-slate-50/60 cursor-pointer hover:bg-slate-50"
+                        className="flex items-center justify-between p-4 rounded-xl border border-slate-200 bg-slate-50/60 cursor-pointer hover:bg-slate-50 transition"
                       >
                         <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                          {key.replace('_', ' ')}
+                          {key.replace(/_/g, ' ')}
                         </span>
                         <input
                           type="checkbox"
@@ -905,41 +1053,50 @@ export default function AdminOffers() {
                 </CmsPanel>
               )}
 
-              {/* Subtab 7: SEO */}
+              {/* Subtab 10: SEO */}
               {settingsSubtab === 'seo' && (
                 <CmsPanel title="SEO &amp; Social Metadata" icon="fa-magnifying-glass-chart">
-                  <div className="space-y-4">
-                    <CmsField label="Page Meta Title">
-                      <input
-                        type="text"
-                        value={settingsForm.seo_title || ''}
-                        onChange={(e) => setSetting('seo_title', e.target.value)}
-                        className="input-base"
-                      />
-                    </CmsField>
-                    <CmsField label="Page Meta Description">
-                      <textarea
-                        rows={3}
-                        value={settingsForm.seo_description || ''}
-                        onChange={(e) => setSetting('seo_description', e.target.value)}
-                        className="input-base"
-                      />
-                    </CmsField>
-                  </div>
+                  <CmsField label="Page Meta Title">
+                    <input
+                      type="text"
+                      value={settingsForm.seo_title || ''}
+                      onChange={(e) => setSetting('seo_title', e.target.value)}
+                      className="input-field"
+                      placeholder="e.g. Run 10 KM & Get Free Physiotherapy Sessions | The Urban Physio"
+                    />
+                  </CmsField>
+                  <CmsField label="Page Meta Description">
+                    <textarea
+                      rows={3}
+                      value={settingsForm.seo_description || ''}
+                      onChange={(e) => setSetting('seo_description', e.target.value)}
+                      className="input-field min-h-[90px]"
+                      placeholder="e.g. Run 10 KM, submit your run proof and get a chance to receive free physiotherapy sessions..."
+                    />
+                  </CmsField>
                 </CmsPanel>
               )}
 
-              {/* Save Bar */}
-              <div className="sticky bottom-4 z-20 flex justify-end p-4 rounded-2xl bg-white/90 backdrop-blur-md border border-slate-200 shadow-lg">
+              {/* Save & Reset Floating Bar */}
+              <div className="sticky bottom-4 z-20 flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200 shadow-xl">
+                <button
+                  type="button"
+                  onClick={handleResetToDefaults}
+                  className="btn-outline text-xs !py-2.5 !px-4 text-slate-600 hover:text-rose-600 cursor-pointer"
+                >
+                  <FaIcon icon="fa-rotate-left" />
+                  Reset to Default Template
+                </button>
+
                 <button
                   type="submit"
                   disabled={savingSettings}
-                  className="btn-primary text-sm font-bold !py-2.5 !px-6 shadow-md"
+                  className="btn-primary text-sm font-bold !py-3 !px-8 shadow-md cursor-pointer"
                 >
                   {savingSettings ? (
                     <>
                       <FaIcon icon="fa-spinner" className="fa-spin" />
-                      Saving Settings...
+                      Publishing Changes...
                     </>
                   ) : (
                     <>
@@ -962,7 +1119,7 @@ export default function AdminOffers() {
             <div className="flex items-center justify-between pb-4 border-b border-slate-200">
               <div>
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                  Submission Details
+                  Submission Verification
                 </span>
                 <h3 className="text-xl font-bold text-slate-900">
                   {selectedSubmission.full_name} (#{selectedSubmission.id})
@@ -971,7 +1128,7 @@ export default function AdminOffers() {
               <button
                 type="button"
                 onClick={() => setSelectedSubmission(null)}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 text-sm"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 text-sm cursor-pointer"
               >
                 <FaIcon icon="fa-xmark" />
               </button>
@@ -1011,7 +1168,7 @@ export default function AdminOffers() {
               </div>
             </div>
 
-            {/* Notes if provided */}
+            {/* Participant Notes */}
             {selectedSubmission.notes && (
               <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs">
                 <span className="text-slate-400 font-bold block mb-1">Participant Notes:</span>
@@ -1019,7 +1176,7 @@ export default function AdminOffers() {
               </div>
             )}
 
-            {/* Proof Attachment */}
+            {/* Proof Attachment Viewer */}
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-slate-700 block mb-2">
                 Uploaded Proof Document / Screenshot
@@ -1031,7 +1188,7 @@ export default function AdminOffers() {
                     <FaIcon icon="fa-file-pdf" className="text-4xl text-rose-500 mb-2" />
                     <p className="text-xs font-bold text-slate-700 mb-2">{selectedSubmission.proof_file_name}</p>
                     <a
-                      href={selectedSubmission.proof_file_url}
+                      href={resolveMediaUrl(selectedSubmission.proof_file_url) || selectedSubmission.proof_file_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn-primary text-xs inline-flex items-center gap-2"
@@ -1043,13 +1200,13 @@ export default function AdminOffers() {
                 ) : (
                   <div>
                     <img
-                      src={selectedSubmission.proof_file_url}
+                      src={resolveMediaUrl(selectedSubmission.proof_file_url) || selectedSubmission.proof_file_url}
                       alt="Run proof screenshot"
                       className="max-h-72 mx-auto rounded-xl border border-slate-200 object-contain shadow-xs"
                     />
                     <div className="mt-2">
                       <a
-                        href={selectedSubmission.proof_file_url}
+                        href={resolveMediaUrl(selectedSubmission.proof_file_url) || selectedSubmission.proof_file_url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-xs font-semibold text-primary-600 hover:underline inline-flex items-center gap-1.5"
@@ -1077,7 +1234,7 @@ export default function AdminOffers() {
                   <select
                     value={rewardStatusSelect}
                     onChange={(e) => setRewardStatusSelect(e.target.value)}
-                    className="w-full rounded-xl border border-slate-300 p-2 text-xs font-semibold"
+                    className="input-field text-xs font-semibold"
                   >
                     <option value="pending">Pending</option>
                     <option value="eligible">Eligible</option>
@@ -1094,12 +1251,12 @@ export default function AdminOffers() {
                     value={reviewNote}
                     onChange={(e) => setReviewNote(e.target.value)}
                     placeholder="e.g. Strava link verified, distance confirmed."
-                    className="w-full rounded-xl border border-slate-300 p-2 text-xs"
+                    className="input-field text-xs"
                   />
                 </div>
               </div>
 
-              {/* Rejection reason box if rejecting */}
+              {/* Rejection reason box */}
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
                   Rejection Reason (Visible to participant if rejected)
@@ -1109,7 +1266,7 @@ export default function AdminOffers() {
                   value={rejectionReason}
                   onChange={(e) => setRejectionReason(e.target.value)}
                   placeholder="e.g. Screenshot does not show completed distance or date."
-                  className="w-full rounded-xl border border-slate-300 p-2 text-xs"
+                  className="input-field text-xs"
                 />
               </div>
 
@@ -1120,7 +1277,7 @@ export default function AdminOffers() {
                     type="button"
                     disabled={reviewActionLoading}
                     onClick={() => handleUpdateStatus('approved')}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition cursor-pointer"
                   >
                     <FaIcon icon="fa-check" />
                     Approve Submission
@@ -1129,7 +1286,7 @@ export default function AdminOffers() {
                     type="button"
                     disabled={reviewActionLoading}
                     onClick={() => handleUpdateStatus('under_review')}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-xs transition"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-xs transition cursor-pointer"
                   >
                     <FaIcon icon="fa-clock" />
                     Under Review
@@ -1138,7 +1295,7 @@ export default function AdminOffers() {
                     type="button"
                     disabled={reviewActionLoading}
                     onClick={() => handleUpdateStatus('rejected')}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-xs transition"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-xs transition cursor-pointer"
                   >
                     <FaIcon icon="fa-xmark" />
                     Reject
@@ -1149,7 +1306,7 @@ export default function AdminOffers() {
                   type="button"
                   disabled={reviewActionLoading}
                   onClick={handleUpdateRewardStatus}
-                  className="btn-outline text-xs !py-2 !px-3"
+                  className="btn-outline text-xs !py-2 !px-3 cursor-pointer"
                 >
                   Save Reward Status Only
                 </button>

@@ -661,13 +661,14 @@ export default function OffersPage() {
             {/* Header */}
             <div className="text-center mb-10">
               <span className="inline-block text-xs font-extrabold uppercase tracking-widest text-[#376299] bg-[#376299]/10 px-3.5 py-1 rounded-full border border-[#376299]/20">
-                Participation Desk
+                {s.form_badge || 'Participation Desk'}
               </span>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 mt-2 tracking-tight">
-                Submit Your 10 KM Run Proof
+                {s.form_heading || 'Submit Your 10 KM Run Proof'}
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 mt-1.5 max-w-lg mx-auto">
-                Fill in your activity details and upload your run proof for verification by our clinical administration.
+                {s.form_subheading ||
+                  'Fill in your activity details and upload your run proof for verification by our clinical administration.'}
               </p>
             </div>
 
@@ -978,8 +979,8 @@ export default function OffersPage() {
                         className="mt-1 h-4 w-4 rounded border-slate-300 text-[#376299] focus:ring-[#376299]"
                       />
                       <span className="text-xs text-slate-600 leading-relaxed font-normal">
-                        I confirm that I have completed the 10 KM run, the uploaded activity details are
-                        authentic, and I agree to the campaign terms &amp; conditions of The Urban Physio.
+                        {s.form_consent_text ||
+                          'I confirm that I have completed the 10 KM run, the uploaded activity details are authentic, and I agree to the campaign terms & conditions of The Urban Physio.'}
                       </span>
                     </label>
                     {formErrors.consent_given && (
@@ -1018,10 +1019,11 @@ export default function OffersPage() {
                   <div>
                     <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2.5">
                       <FaIcon icon="fa-magnifying-glass" className="text-[#376299]" />
-                      Check Live Submission Status
+                      {s.status_heading || 'Check Live Submission Status'}
                     </h3>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      Already submitted? Check your verification and reward status in real time.
+                      {s.status_subheading ||
+                        'Already submitted? Check your verification and reward status in real time.'}
                     </p>
                   </div>
                 </div>
@@ -1031,7 +1033,7 @@ export default function OffersPage() {
                     type="text"
                     value={statusQuery}
                     onChange={(e) => setStatusQuery(e.target.value)}
-                    placeholder="Enter Submission ID, Email, or Phone number"
+                    placeholder={s.status_search_placeholder || 'Enter Submission ID, Email, or Phone number'}
                     className="flex-1 rounded-2xl border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:border-[#376299] focus:ring-2 focus:ring-[#376299]/15"
                   />
                   <button
@@ -1123,13 +1125,14 @@ export default function OffersPage() {
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="text-center mb-12">
                 <span className="inline-block text-xs font-extrabold uppercase tracking-widest text-[#FF6F61] bg-[#FF6F61]/10 px-3.5 py-1 rounded-full border border-[#FF6F61]/20">
-                  Got Questions?
+                  {s.faqs_badge || 'Got Questions?'}
                 </span>
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 mt-2.5 tracking-tight">
-                  Frequently Asked Questions
+                  {s.faqs_heading || 'Frequently Asked Questions'}
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-md mx-auto">
-                  Everything you need to know about participation, verification, and claiming your reward.
+                  {s.faqs_subheading ||
+                    'Everything you need to know about participation, verification, and claiming your reward.'}
                 </p>
               </div>
 

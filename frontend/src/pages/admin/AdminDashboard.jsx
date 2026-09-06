@@ -32,6 +32,7 @@ const ADMIN_SHORTCUTS = [
   { to: '/admin/seo', label: 'SEO Center', desc: 'Page ranks & indexing', icon: 'fa-magnifying-glass-chart', tone: 'violet' },
   { to: '/admin/home-banners', label: 'Banners & Media', desc: 'Homepage slides & photos', icon: 'fa-images', tone: 'amber' },
   { to: '/admin/reviews', label: 'Reviews', desc: 'Patient feedback & ratings', icon: 'fa-star', tone: 'orange' },
+  { to: '/admin/offers', label: 'Offers & Campaigns', desc: '10 KM campaign submissions', icon: 'fa-bullhorn', tone: 'amber' },
   { to: '/admin/treatment-packages', label: 'Packages', desc: 'Catalog & pricing', icon: 'fa-box-open', tone: 'emerald' },
   { to: '/admin/logs', label: 'Audit Logs', desc: 'System activity & security', icon: 'fa-list-check', tone: 'slate' },
   { to: '/admin/profile', label: 'Settings', desc: 'Console & profile config', icon: 'fa-sliders', tone: 'cyan' },

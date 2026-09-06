@@ -161,7 +161,26 @@ export const OFFERS_DEFAULTS = {
     terms_text:
       'The Urban Physio reserves the right to verify activity logs and disqualify tampered or duplicate entries. Free sessions are non-transferable and cannot be exchanged for cash or credit.',
 
+    // Participation Form Copy
+    form_badge: 'Participation Desk',
+    form_heading: 'Submit Your 10 KM Run Proof',
+    form_subheading:
+      'Fill in your activity details and upload your run proof for verification by our clinical administration.',
+    form_consent_text:
+      'I confirm that I have completed the 10 KM run, the uploaded activity details are authentic, and I agree to the campaign terms & conditions of The Urban Physio.',
+    form_success_message:
+      'Your 10 KM campaign submission has been received and is currently under review by our clinical team.',
+
+    // Live Status Tracker Copy
+    status_heading: 'Check Live Submission Status',
+    status_subheading: 'Already submitted? Check your verification and reward status in real time.',
+    status_search_placeholder: 'Enter Submission ID, Email, or Phone number',
+
     // FAQs
+    faqs_badge: 'Got Questions?',
+    faqs_heading: 'Frequently Asked Questions',
+    faqs_subheading:
+      'Everything you need to know about participation, verification, and claiming your reward.',
     faqs: [
       {
         q: 'What is the Run 10 KM & Get Free Physiotherapy campaign?',
@@ -228,7 +247,7 @@ export const OFFERS_DEFAULTS = {
 
 export function mergeOffersSections(raw = {}) {
   const defaults = OFFERS_DEFAULTS.sections;
-  const merged = { ...defaults, ...raw };
+  const merged = { ...defaults, ...(raw || {}) };
   const listKeys = [
     'hero_highlights',
     'highlights_cards',
@@ -244,7 +263,7 @@ export function mergeOffersSections(raw = {}) {
   });
   merged.sections_visibility = {
     ...defaults.sections_visibility,
-    ...(raw.sections_visibility || {}),
+    ...(raw?.sections_visibility || {}),
   };
   return merged;
 }
