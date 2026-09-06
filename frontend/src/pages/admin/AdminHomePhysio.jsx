@@ -145,7 +145,11 @@ export default function AdminHomePhysio() {
               </div>
               <MediaUrlOrUpload
                 label="Hero image"
-                hint="Shown beside the headline — URL or upload"
+                hint="Displayed in the hero banner beside the headline. A 4:3 high-resolution landscape photo is recommended for desktop & mobile."
+                recommendedSize="1200 × 900 px (4:3 ratio)"
+                aspectRatio="4/3"
+                devicePreview="4:3"
+                accent="orange"
                 icon="fa-image"
                 urlValue={form.hero_image}
                 onUrlChange={(v) => set('hero_image', v)}
