@@ -282,19 +282,19 @@
     box-shadow: 0 8px 24px -8px rgb(249 115 22 / 0.2);
   }
 
-  /* Modals / popups — light frosted overlay + crisp white panel */
+  /* Modals / popups — dark overlay + crisp white panel */
   .glass-modal-backdrop {
     @apply backdrop-blur-sm transition-opacity;
-    background: rgba(15, 23, 42, 0.48);
+    background: rgba(2, 6, 23, 0.60);
     animation: fadeIn 0.18s ease-out forwards;
   }
 
   .glass-modal-panel {
-    @apply flex flex-col rounded-2xl md:rounded-3xl overflow-hidden
-           bg-white border border-slate-200/90
-           shadow-2xl shadow-slate-950/20
+    @apply flex flex-col rounded-2xl overflow-hidden
+           bg-white border border-slate-200/60
+           shadow-2xl
            max-h-[calc(100dvh-2.5rem)] sm:max-h-[min(calc(100dvh-3.5rem),840px)];
-    animation: modalPop 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
   .glass-modal-panel.overflow-visible-panel {
@@ -354,20 +354,20 @@
   }
 
   .glass-modal-header {
-    @apply px-5 py-4 md:px-6 md:py-5 border-b border-white/80
-           bg-gradient-to-r from-white/95 via-white/90 to-primary-50/40;
+    @apply px-5 py-3.5 sm:px-6 border-b border-slate-200
+           bg-gradient-to-r from-slate-50 to-white;
   }
 
   .glass-modal-footer {
-    @apply px-4 md:px-6 py-4 border-t border-white/80
-           bg-white/60 backdrop-blur-xl flex flex-wrap items-center gap-3;
+    @apply px-5 sm:px-6 py-3 border-t border-slate-200
+           bg-white flex flex-wrap items-center gap-3;
   }
 
   .glass-modal-close {
-    @apply w-9 h-9 rounded-xl bg-white/90 backdrop-blur border border-white/80
-           text-slate-500 hover:text-slate-800 hover:bg-white hover:shadow-md
-           flex items-center justify-center transition-all duration-300 ease-micro
-           hover:scale-105 active:scale-95 disabled:opacity-50;
+    @apply w-8 h-8 rounded-lg bg-slate-100 
+           text-slate-400 hover:text-slate-700 hover:bg-slate-200
+           flex items-center justify-center transition-all duration-200
+           active:scale-95 disabled:opacity-50 cursor-pointer;
   }
 
   .glass-modal-sidebar {

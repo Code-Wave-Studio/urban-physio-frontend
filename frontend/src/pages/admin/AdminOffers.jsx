@@ -1138,7 +1138,7 @@ export default function AdminOffers() {
             onClick={(e) => e.stopPropagation()}
             style={{ animation: 'modalSlideUp 0.25s cubic-bezier(0.16,1,0.3,1)' }}
           >
-            {/* ━━━ HEADER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+            {/* ━━━ HEADER ━━━ */}
             <div className="shrink-0 px-5 sm:px-6 py-3.5 bg-gradient-to-r from-slate-50 to-white border-b border-slate-200">
               <div className="flex items-start justify-between gap-3">
                 {/* Left: Name + badges */}

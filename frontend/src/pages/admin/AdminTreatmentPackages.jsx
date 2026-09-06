@@ -210,56 +210,150 @@ export default function AdminTreatmentPackages() {
               onClose={() => !saving && setModalOpen(false)}
               disabledClose={saving}
             />
-            <GlassModalBody className="space-y-4">
-              <input className="input-field" placeholder="Package name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-              <input className="input-field" placeholder="Slug (optional)" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Duration (days)</label>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {DAY_PRESETS.map((d) => (
-                    <button
-                      key={d}
-                      type="button"
-                      onClick={() => setForm((f) => ({ ...f, duration_days: d, total_sessions: d }))}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition ${
-                        Number(form.duration_days) === d
-                          ? 'border-primary-500 bg-primary-50 text-primary-800'
-                          : 'border-slate-200 bg-white text-slate-600 hover:border-primary-200'
-                      }`}
-                    >
-                      {d} days
-                    </button>
-                  ))}
+            <GlassModalBody className="space-y-3.5">
+
+              {/* Section: Package Identity */}
+              <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+                <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600 flex items-center gap-1.5">
+                    <FaIcon icon="fa-tag" className="text-primary-500" />
+                    Package Info
+                  </span>
                 </div>
-                <input
-                  className="input-field"
-                  type="number"
-                  min={1}
-                  max={365}
-                  placeholder="Custom days e.g. 7"
-                  value={form.duration_days}
-                  onChange={(e) => setForm({ ...form, duration_days: e.target.value })}
-                  required
-                />
+                <div className="px-4 py-3 space-y-3">
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Package Name <span className="text-rose-500">*</span></label>
+                    <input className="input-field !text-sm" placeholder="e.g. 10-Day Recovery Package" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">URL Slug <span className="text-slate-400 font-normal lowercase">(optional)</span></label>
+                    <input className="input-field !text-sm" placeholder="e.g. 10-day-recovery" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
+                  </div>
+                </div>
               </div>
-              <input className="input-field" type="number" min={1} placeholder="Total sessions" value={form.total_sessions} onChange={(e) => setForm({ ...form, total_sessions: e.target.value })} />
-              <input className="input-field" type="number" step="0.01" placeholder="Price (INR)" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
-              <input className="input-field" placeholder="Short description" value={form.short_description} onChange={(e) => setForm({ ...form, short_description: e.target.value })} />
-              <textarea className="input-field min-h-[80px]" placeholder="Full description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-              <select className="input-field" value={form.consultation_type} onChange={(e) => setForm({ ...form, consultation_type: e.target.value })}>
-                <option value="any">Any mode</option>
-                <option value="online">Online</option>
-                <option value="clinic">Clinic</option>
-                <option value="home_visit">Home visit</option>
-              </select>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={!!form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked ? 1 : 0 })} />
-                Active on website
-              </label>
+
+              {/* Section: Duration & Sessions */}
+              <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+                <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600 flex items-center gap-1.5">
+                    <FaIcon icon="fa-calendar-days" className="text-sky-500" />
+                    Duration & Sessions
+                  </span>
+                </div>
+                <div className="px-4 py-3 space-y-3">
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Quick Duration Presets</label>
+                    <div className="flex flex-wrap gap-2">
+                      {DAY_PRESETS.map((d) => (
+                        <button
+                          key={d}
+                          type="button"
+                          onClick={() => setForm((f) => ({ ...f, duration_days: d, total_sessions: d }))}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer ${
+                            Number(form.duration_days) === d
+                              ? 'border-primary-500 bg-primary-50 text-primary-700'
+                              : 'border-slate-200 bg-white text-slate-600 hover:border-primary-200'
+                          }`}
+                        >
+                          {d} days
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Duration (days)</label>
+                      <input
+                        className="input-field !text-sm"
+                        type="number"
+                        min={1}
+                        max={365}
+                        placeholder="Custom days"
+                        value={form.duration_days}
+                        onChange={(e) => setForm({ ...form, duration_days: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Total Sessions</label>
+                      <input className="input-field !text-sm" type="number" min={1} placeholder="Sessions" value={form.total_sessions} onChange={(e) => setForm({ ...form, total_sessions: e.target.value })} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section: Pricing */}
+              <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+                <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600 flex items-center gap-1.5">
+                    <FaIcon icon="fa-indian-rupee-sign" className="text-emerald-500" />
+                    Pricing
+                  </span>
+                </div>
+                <div className="px-4 py-3">
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Price (INR)</label>
+                  <input className="input-field !text-sm" type="number" step="0.01" placeholder="e.g. 4999.00" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+                </div>
+              </div>
+
+              {/* Section: Description */}
+              <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+                <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600 flex items-center gap-1.5">
+                    <FaIcon icon="fa-align-left" className="text-violet-500" />
+                    Description
+                  </span>
+                </div>
+                <div className="px-4 py-3 space-y-3">
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Short Description</label>
+                    <input className="input-field !text-sm" placeholder="One-liner summary" value={form.short_description} onChange={(e) => setForm({ ...form, short_description: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Full Description</label>
+                    <textarea className="input-field !text-sm min-h-[70px] resize-none" placeholder="Detailed package description..." value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Section: Settings */}
+              <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+                <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600 flex items-center gap-1.5">
+                    <FaIcon icon="fa-sliders" className="text-slate-400" />
+                    Settings
+                  </span>
+                </div>
+                <div className="px-4 py-3 space-y-3">
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Consultation Mode</label>
+                    <select className="input-field !text-sm" value={form.consultation_type} onChange={(e) => setForm({ ...form, consultation_type: e.target.value })}>
+                      <option value="any">Any mode</option>
+                      <option value="online">Online</option>
+                      <option value="clinic">Clinic</option>
+                      <option value="home_visit">Home visit</option>
+                    </select>
+                  </div>
+                  <label className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-slate-50 border border-slate-200 cursor-pointer hover:bg-slate-100 transition text-sm">
+                    <input type="checkbox" checked={!!form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked ? 1 : 0 })} className="w-4 h-4 rounded text-primary-600 border-slate-300 focus:ring-primary-500" />
+                    <span className="font-semibold text-slate-700 text-xs">Active on website</span>
+                  </label>
+                </div>
+              </div>
+
             </GlassModalBody>
             <GlassModalFooter>
-              <button type="button" onClick={() => setModalOpen(false)} className="btn-outline" disabled={saving}>Cancel</button>
-              <button type="submit" disabled={saving} className="btn-primary ml-auto">{saving ? 'Saving…' : 'Save package'}</button>
+              <button type="button" onClick={() => setModalOpen(false)} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 font-semibold text-xs transition cursor-pointer" disabled={saving}>
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white font-bold text-xs shadow-sm transition disabled:opacity-50 cursor-pointer ml-auto"
+              >
+                <FaIcon icon={saving ? 'fa-spinner' : 'fa-floppy-disk'} className={saving ? 'fa-spin text-[10px]' : 'text-[10px]'} />
+                {saving ? 'Saving…' : 'Save package'}
+              </button>
             </GlassModalFooter>
           </form>
         </GlassModal>

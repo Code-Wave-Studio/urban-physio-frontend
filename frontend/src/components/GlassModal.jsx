@@ -129,18 +129,18 @@ export function GlassModalHeader({
 }) {
   return (
     <div className="glass-modal-header shrink-0">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-3 min-w-0">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <div
-            className={`w-11 h-11 rounded-xl border flex items-center justify-center shrink-0 ${ACCENT_ICON[accent] || ACCENT_ICON.primary}`}
+            className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 ${ACCENT_ICON[accent] || ACCENT_ICON.primary}`}
           >
-            <FaIcon icon={icon} className="text-lg" />
+            <FaIcon icon={icon} className="text-base" />
           </div>
           <div className="min-w-0">
-            <h2 id={titleId} className="font-bold text-lg md:text-xl text-slate-800 truncate">
+            <h2 id={titleId} className="font-extrabold text-sm sm:text-[15px] text-slate-900 truncate leading-tight">
               {title}
             </h2>
-            {subtitle && <p className="text-slate-500 text-xs md:text-sm mt-0.5">{subtitle}</p>}
+            {subtitle && <p className="text-slate-500 text-[11px] sm:text-xs mt-0.5">{subtitle}</p>}
           </div>
         </div>
         {onClose && (
@@ -151,7 +151,7 @@ export function GlassModalHeader({
             className="glass-modal-close shrink-0"
             aria-label="Close"
           >
-            <FaIcon icon="fa-xmark" />
+            <FaIcon icon="fa-xmark" className="text-sm" />
           </button>
         )}
       </div>
