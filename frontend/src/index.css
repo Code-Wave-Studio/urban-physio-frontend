@@ -1668,6 +1668,109 @@
   .fab-scroll-top--visible:active {
     transform: translateY(0) scale(0.96);
   }
+
+  .floating-actions--rail .fab-scroll-top {
+    bottom: calc(11.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  @media (min-width: 768px) {
+    .floating-actions--rail .fab-scroll-top {
+      bottom: calc(13rem + env(safe-area-inset-bottom, 0px));
+    }
+  }
+
+  .fab-rail {
+    @apply pointer-events-none fixed z-[9976] flex flex-col items-end gap-2.5;
+    right: 1rem;
+    bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  @media (min-width: 640px) {
+    .fab-rail {
+      right: 1.5rem;
+    }
+  }
+
+  .fab-rail-btn {
+    @apply pointer-events-auto inline-flex items-center justify-center rounded-full shadow-lg
+           border text-white font-semibold transition-all duration-300 ease-micro
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white
+           focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900;
+    width: 3.25rem;
+    height: 3.25rem;
+  }
+
+  .fab-rail-icon {
+    @apply flex items-center justify-center text-base;
+  }
+
+  .fab-rail-label {
+    @apply hidden;
+  }
+
+  @media (min-width: 768px) {
+    .fab-rail-btn {
+      width: auto;
+      height: 2.85rem;
+      padding: 0 1rem 0 0.7rem;
+      gap: 0.5rem;
+      border-radius: 9999px;
+    }
+
+    .fab-rail-label {
+      @apply inline text-sm whitespace-nowrap;
+    }
+  }
+
+  .fab-rail-book {
+    background: #ff6f61;
+    border-color: rgb(255 255 255 / 0.25);
+    box-shadow: 0 10px 28px -6px rgb(255 111 97 / 0.5);
+  }
+
+  .fab-rail-call {
+    background: #376299;
+    border-color: rgb(255 255 255 / 0.25);
+    box-shadow: 0 10px 28px -6px rgb(55 98 153 / 0.45);
+  }
+
+  .fab-rail-wa {
+    background: #25d366;
+    border-color: rgb(255 255 255 / 0.25);
+    box-shadow: 0 10px 28px -6px rgb(37 211 102 / 0.5);
+  }
+
+  @media (hover: hover) {
+    .fab-rail-btn:hover {
+      transform: translateY(-2px) scale(1.03);
+    }
+  }
+
+  .fab-rail-btn:active {
+    transform: scale(0.96);
+  }
+}
+
+.has-fab-rail {
+  padding-bottom: 6.5rem;
+}
+
+@media (min-width: 768px) {
+  .has-fab-rail {
+    padding-bottom: 7.5rem;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Smooth scroll */

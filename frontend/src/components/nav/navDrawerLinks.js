@@ -1,7 +1,7 @@
 export const EXPLORE_LINKS = [
   { to: '/doctors', label: 'Find Physiotherapist', icon: 'fa-user-doctor' },
   { to: '/clinics', label: 'Find Clinics', icon: 'fa-hospital', tone: 'emerald' },
-  { to: '/book?type=home_visit', label: 'Home Physiotherapy', icon: 'fa-house-medical' },
+  { to: '/home-physiotherapy', label: 'Home Physiotherapy', icon: 'fa-house-medical' },
   { to: '/treatments', label: 'Our Services', icon: 'fa-kit-medical' },
   { to: '/exercises', label: 'Exercise Library', icon: 'fa-dumbbell' },
   { to: '/physiofeed', label: 'PhysioFeed', icon: 'fa-newspaper' },

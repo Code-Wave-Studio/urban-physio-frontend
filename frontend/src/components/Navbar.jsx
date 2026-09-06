@@ -22,7 +22,7 @@ const MORE_NAV_LINKS = [
   { to: '/treatments', label: 'Treatments', icon: 'fa-kit-medical' },
   { to: '/conditions', label: 'Conditions', icon: 'fa-notes-medical' },
   { to: '/packages', label: 'Packages', icon: 'fa-box-open' },
-  { to: '/book?type=home_visit', label: 'Home Physiotherapy', icon: 'fa-house-medical' },
+  { to: '/home-physiotherapy', label: 'Home Physiotherapy', icon: 'fa-house-medical' },
   { to: '/podcast', label: 'Podcast', icon: 'fa-podcast' },
   { to: '/careers', label: 'Careers', icon: 'fa-briefcase' },
   { to: '/faq', label: 'FAQ', icon: 'fa-circle-question' },

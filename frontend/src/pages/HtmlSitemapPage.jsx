@@ -15,6 +15,7 @@ const SECTIONS = [
       { to: '/doctors', label: 'Find physiotherapists' },
       { to: '/clinics', label: 'Find clinics' },
       { to: '/book', label: 'Book an appointment' },
+      { to: '/home-physiotherapy', label: 'Home physiotherapy' },
       { to: '/search', label: 'Search' },
     ],
   },

@@ -90,6 +90,16 @@ export function bookPainAreaUrl(painLabel, extra = {}) {
   return q ? `/book?${q}` : '/book';
 }
 
+/** Home-visit booking URL. Uses existing `type=home_visit` plus CRF `mode` alias. */
+export function bookHomeVisitUrl(extra = {}) {
+  const params = new URLSearchParams();
+  params.set('type', 'home_visit');
+  params.set('mode', 'home-visit');
+  if (extra.tier) params.set('tier', extra.tier);
+  if (extra.pain_type) params.set('pain_type', extra.pain_type);
+  return `/book?${params.toString()}`;
+}
+
 export function matchHomeConditionLabel(title, homeConditions = []) {
   if (!title || !homeConditions.length) return '';
   const lower = title.toLowerCase();

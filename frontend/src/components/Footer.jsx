@@ -13,6 +13,7 @@ const QUICK_LINKS = [
   { to: '/treatments', label: 'Treatments', icon: 'fa-kit-medical' },
   { to: '/conditions', label: 'Conditions', icon: 'fa-notes-medical' },
   { to: '/book', label: 'Book Appointment', icon: 'fa-calendar-check' },
+  { to: '/home-physiotherapy', label: 'Home Physiotherapy', icon: 'fa-house-medical' },
 ];
 
 const SUPPORT_LINKS = [

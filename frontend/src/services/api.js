@@ -571,6 +571,8 @@ export const admin = {
   updateContactSettings: (data) => api.put('/admin/contact-settings', data),
   aboutSettings: () => api.get('/admin/about-settings'),
   updateAboutSettings: (data) => api.put('/admin/about-settings', data),
+  homePhysioSettings: () => api.get('/admin/home-physio-settings'),
+  updateHomePhysioSettings: (data) => api.put('/admin/home-physio-settings', data),
   heroSettings: () => api.get('/admin/hero-settings'),
   updateHeroSettings: (data) => api.put('/admin/hero-settings', data),
   homeBannerSettings: () => api.get('/admin/home-banner-settings'),
@@ -1051,6 +1053,10 @@ export const clinicQr = {
 
 export const about = {
   settings: () => api.get('/about/settings'),
+};
+
+export const homePhysio = {
+  settings: () => api.get('/home-physio/settings'),
 };
 
 export const home = {

@@ -365,8 +365,17 @@ export default function BookAppointmentWizard() {
 
   useEffect(() => {
     const t = searchParams.get('type');
-    if (t && ['online', 'clinic', 'home_visit'].includes(t)) {
-      patch({ consultation_type: t });
+    const mode = searchParams.get('mode');
+    const modeAlias = {
+      'home-visit': 'home_visit',
+      home_visit: 'home_visit',
+      homevisit: 'home_visit',
+      online: 'online',
+      clinic: 'clinic',
+    };
+    const resolved = t || modeAlias[mode] || '';
+    if (resolved && ['online', 'clinic', 'home_visit'].includes(resolved)) {
+      patch({ consultation_type: resolved });
     }
     const cid = searchParams.get('clinic_id');
     if (cid) {

@@ -45,6 +45,7 @@ export const ADMIN_NAV = [
   { to: '/admin/physiofeed', label: 'PhysioFeed', icon: 'fa-rss', section: 'content' },
   { to: '/admin/reviews', label: 'Reviews', icon: 'fa-star', section: 'content' },
   { to: '/admin/about', label: 'About Us', icon: 'fa-building', section: 'content' },
+  { to: '/admin/home-physio', label: 'Home Physiotherapy', icon: 'fa-house-medical', section: 'content' },
 
   // Finance & Promos
   { to: '/admin/treatment-packages', label: 'Platform Packages', icon: 'fa-box-open', section: 'finance_promos' },
