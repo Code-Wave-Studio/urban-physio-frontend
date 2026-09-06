@@ -325,30 +325,31 @@ export default function AdminOffersSubmissionReview() {
                 </div>
               </div>
 
-              {/* Status Pills & Live Page Link */}
-              <div className="flex items-center gap-2.5 flex-wrap">
+              {/* Status Pills & Reload Action Button */}
+              <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 flex-wrap">
                 <div
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold border shadow-xs ${currentStatusBadge.bg}`}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-bold border shadow-xs ${currentStatusBadge.bg}`}
                 >
                   <span className={`h-2 w-2 rounded-full ${currentStatusBadge.dot}`} />
                   <FaIcon icon={currentStatusBadge.icon} className="text-xs" />
-                  {currentStatusBadge.label}
+                  <span>{currentStatusBadge.label}</span>
                 </div>
 
                 <div
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold border shadow-xs ${currentRewardBadge.bg}`}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-bold border shadow-xs ${currentRewardBadge.bg}`}
                 >
                   <FaIcon icon={currentRewardBadge.icon} className="text-xs" />
-                  {currentRewardBadge.label}
+                  <span>{currentRewardBadge.label}</span>
                 </div>
 
                 <button
                   type="button"
                   onClick={fetchDetail}
-                  className="btn-outline !py-1.5 !px-3 text-xs bg-white"
-                  title="Refresh Submission"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-primary-600 font-bold text-xs shadow-xs transition cursor-pointer"
+                  title="Reload Submission Details"
                 >
-                  <FaIcon icon="fa-arrows-rotate" />
+                  <FaIcon icon="fa-arrows-rotate" className={loading ? 'fa-spin text-primary-600' : 'text-slate-400'} />
+                  <span>Reload</span>
                 </button>
               </div>
             </div>
@@ -566,12 +567,24 @@ export default function AdminOffersSubmissionReview() {
                 </div>
 
                 {resolvedProofUrl && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {!isPdf && (
+                      <button
+                        type="button"
+                        onClick={() => setImageModalOpen(true)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition shadow-2xs hover:text-primary-700 cursor-pointer"
+                        title="Inspect and Zoom Image"
+                      >
+                        <FaIcon icon="fa-magnifying-glass-plus" className="text-primary-600 text-[11px]" />
+                        Inspect &amp; Zoom
+                      </button>
+                    )}
                     <a
                       href={resolvedProofUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition shadow-2xs"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition shadow-2xs hover:text-primary-700"
+                      title="Open full resolution in new tab"
                     >
                       <FaIcon icon="fa-arrow-up-right-from-square" className="text-[11px]" />
                       Open Full
@@ -579,7 +592,8 @@ export default function AdminOffersSubmissionReview() {
                     <a
                       href={resolvedProofUrl}
                       download={submission.proof_file_name || `proof_${submission.id}`}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary-50 hover:bg-primary-100 text-primary-700 text-xs font-bold transition shadow-2xs"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary-50 hover:bg-primary-100 text-primary-700 border border-primary-200/50 text-xs font-bold transition shadow-2xs"
+                      title="Download file"
                     >
                       <FaIcon icon="fa-download" className="text-[11px]" />
                       Download
@@ -633,31 +647,20 @@ export default function AdminOffersSubmissionReview() {
                     </div>
                   </div>
                 ) : resolvedProofUrl ? (
-                  /* Image Proof View with Hover zoom & click to inspect */
-                  <div className="relative group w-full flex items-center justify-center p-2 min-h-[380px] max-h-[600px] overflow-hidden bg-slate-950">
+                  /* Clean Image Proof View - Click to Zoom without any blocking hover overlay */
+                  <div
+                    onClick={() => setImageModalOpen(true)}
+                    className="w-full flex flex-col items-center justify-center p-3 min-h-[380px] max-h-[600px] overflow-hidden bg-slate-950 cursor-zoom-in group"
+                    title="Click image to inspect in zoom view"
+                  >
                     <img
                       src={resolvedProofUrl}
                       alt="Participant Run Proof"
-                      className="max-h-[560px] w-auto max-w-full object-contain rounded-xl transition duration-300 group-hover:scale-[1.01]"
+                      className="max-h-[530px] w-auto max-w-full object-contain rounded-xl transition duration-300 group-hover:scale-[1.01]"
                     />
-                    <div className="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setImageModalOpen(true)}
-                        className="px-4 py-2.5 rounded-xl bg-white text-slate-900 font-bold text-xs shadow-xl inline-flex items-center gap-2 hover:bg-slate-100 transition cursor-pointer"
-                      >
-                        <FaIcon icon="fa-magnifying-glass-plus" className="text-primary-600" />
-                        Inspect &amp; Zoom
-                      </button>
-                      <a
-                        href={resolvedProofUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-4 py-2.5 rounded-xl bg-slate-900/90 text-white font-bold text-xs border border-white/20 shadow-xl inline-flex items-center gap-2 hover:bg-slate-800 transition"
-                      >
-                        <FaIcon icon="fa-expand" />
-                        Full Resolution
-                      </a>
+                    <div className="text-[10px] text-slate-400 font-medium mt-2 flex items-center gap-1 opacity-60 group-hover:opacity-100 transition">
+                      <FaIcon icon="fa-magnifying-glass-plus" className="text-[9px]" />
+                      Click image to inspect in zoom view
                     </div>
                   </div>
                 ) : (
