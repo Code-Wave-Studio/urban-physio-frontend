@@ -1133,34 +1133,35 @@ export default function AdminOffers() {
           onClick={() => setSelectedSubmission(null)}
         >
           <div
-            className="w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden"
+            className="w-full max-w-5xl lg:max-w-6xl max-h-[92vh] flex flex-col rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 1. STICKY TOP HEADER */}
             <div className="sticky top-0 z-20 flex items-center justify-between px-6 py-4 bg-white/95 backdrop-blur-md border-b border-slate-200">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-700 font-bold">
-                  <FaIcon icon="fa-id-card-clip" className="text-base" />
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-700 font-bold shadow-xs">
+                  <FaIcon icon="fa-id-card-clip" className="text-lg" />
                 </div>
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-base sm:text-lg font-bold text-slate-900 truncate">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <h3 className="text-base sm:text-lg font-black text-slate-900 truncate">
                       {selectedSubmission.full_name}
                     </h3>
-                    <span className="font-mono text-xs font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
-                      #{selectedSubmission.id}
+                    <span className="font-mono text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-lg border border-slate-200">
+                      ID #{selectedSubmission.id}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 mt-0.5 text-xs">
+                  <div className="flex items-center gap-2 mt-1 text-xs">
                     <span
-                      className={`px-2 py-0.5 rounded-full font-bold text-[10px] border capitalize ${statusBadge(
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-bold text-[11px] border capitalize ${statusBadge(
                         selectedSubmission.status
                       )}`}
                     >
+                      <span className="h-1.5 w-1.5 rounded-full bg-current" />
                       Status: {selectedSubmission.status?.replace('_', ' ')}
                     </span>
                     <span
-                      className={`px-2 py-0.5 rounded-full font-bold text-[10px] border capitalize ${rewardBadge(
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-bold text-[11px] border capitalize ${rewardBadge(
                         selectedSubmission.reward_status
                       )}`}
                     >
@@ -1180,157 +1181,169 @@ export default function AdminOffers() {
               </button>
             </div>
 
-            {/* 2. SCROLLABLE CONTENT BODY */}
-            <div className="overflow-y-auto flex-1 p-5 sm:p-7 space-y-6">
-              {/* Participant & Run Info Grid (4 Stat Cards) */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-100 flex items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white">
-                    <FaIcon icon="fa-person-running" className="text-sm" />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800/70 block">
-                      Distance
-                    </span>
-                    <span className="text-sm sm:text-base font-extrabold text-emerald-950 truncate block">
-                      {selectedSubmission.distance_km} KM
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-100 text-primary-700">
-                    <FaIcon icon="fa-calendar-day" className="text-sm" />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Run Date</span>
-                    <span className="text-xs sm:text-sm font-bold text-slate-800 truncate block">
-                      {selectedSubmission.run_date}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-200 text-slate-700">
-                    <FaIcon icon="fa-envelope" className="text-sm" />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Email</span>
-                    <a
-                      href={`mailto:${selectedSubmission.email}`}
-                      className="text-xs font-bold text-primary-700 hover:underline truncate block"
-                      title={selectedSubmission.email}
-                    >
-                      {selectedSubmission.email}
-                    </a>
-                  </div>
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-200 text-slate-700">
-                    <FaIcon icon="fa-phone" className="text-sm" />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                      Phone &amp; City
-                    </span>
-                    <span className="text-xs font-bold text-slate-800 truncate block">
-                      {selectedSubmission.phone} {selectedSubmission.city ? `(${selectedSubmission.city})` : ''}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Participant Notes (if any) */}
-              {selectedSubmission.notes && (
-                <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/70 text-xs flex items-start gap-3">
-                  <FaIcon icon="fa-comment-dots" className="text-amber-600 mt-0.5 text-sm shrink-0" />
-                  <div>
-                    <span className="text-amber-900 font-bold block mb-0.5">Participant Message / Note:</span>
-                    <p className="text-amber-950 font-medium leading-relaxed">{selectedSubmission.notes}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* 2-Column Section on Desktop: Proof Preview + Decision Controls */}
+            {/* 2. SCROLLABLE 2-COLUMN CONTENT BODY */}
+            <div className="overflow-y-auto flex-1 p-5 sm:p-7">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                {/* Proof Attachment Viewer (6 cols) */}
-                <div className="lg:col-span-6 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                      <FaIcon icon="fa-paperclip" className="text-primary-600" />
-                      Uploaded Proof Document
-                    </span>
-                    {selectedSubmission.proof_file_url && (
-                      <a
-                        href={resolveMediaUrl(selectedSubmission.proof_file_url) || selectedSubmission.proof_file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs font-semibold text-primary-700 hover:text-primary-800 inline-flex items-center gap-1 hover:underline"
-                      >
-                        <FaIcon icon="fa-arrow-up-right-from-square" />
-                        Full View
-                      </a>
-                    )}
+                {/* ─── LEFT COLUMN (6 cols): Participant Details + Proof Preview ─── */}
+                <div className="lg:col-span-6 space-y-4">
+                  {/* Participant 4-Stat Cards */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-100 flex items-center gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-xs">
+                        <FaIcon icon="fa-person-running" className="text-base" />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800/70 block">
+                          Distance
+                        </span>
+                        <span className="text-sm sm:text-base font-black text-emerald-950 truncate block">
+                          {selectedSubmission.distance_km} KM
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-100 text-primary-700 shadow-xs">
+                        <FaIcon icon="fa-calendar-day" className="text-base" />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                          Run Date
+                        </span>
+                        <span className="text-xs sm:text-sm font-bold text-slate-800 truncate block">
+                          {selectedSubmission.run_date}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-200 text-slate-700 shadow-xs">
+                        <FaIcon icon="fa-envelope" className="text-base" />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                          Email
+                        </span>
+                        <a
+                          href={`mailto:${selectedSubmission.email}`}
+                          className="text-xs font-bold text-primary-700 hover:underline truncate block"
+                          title={selectedSubmission.email}
+                        >
+                          {selectedSubmission.email}
+                        </a>
+                      </div>
+                    </div>
+
+                    <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-200 text-slate-700 shadow-xs">
+                        <FaIcon icon="fa-phone" className="text-base" />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                          Phone &amp; City
+                        </span>
+                        <span className="text-xs font-bold text-slate-800 truncate block">
+                          {selectedSubmission.phone} {selectedSubmission.city ? `(${selectedSubmission.city})` : ''}
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="rounded-2xl border border-slate-200 bg-slate-900 overflow-hidden relative group flex items-center justify-center min-h-[280px] max-h-[380px]">
-                    {selectedSubmission.proof_file_mime?.includes('pdf') ||
-                    selectedSubmission.proof_file_name?.endsWith('.pdf') ? (
-                      <div className="p-8 text-center bg-slate-900 text-white w-full">
-                        <div className="h-16 w-16 mx-auto mb-3 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-3xl">
-                          <FaIcon icon="fa-file-pdf" />
-                        </div>
-                        <p className="text-sm font-bold text-slate-200 mb-1 max-w-[240px] mx-auto truncate">
-                          {selectedSubmission.proof_file_name || 'Proof_Document.pdf'}
-                        </p>
-                        <p className="text-xs text-slate-400 mb-4">PDF Document Submitted</p>
+                  {/* Participant Message / Note */}
+                  {selectedSubmission.notes && (
+                    <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/70 text-xs flex items-start gap-3">
+                      <FaIcon icon="fa-comment-dots" className="text-amber-600 mt-0.5 text-sm shrink-0" />
+                      <div>
+                        <span className="text-amber-900 font-bold block mb-0.5">Participant Note:</span>
+                        <p className="text-amber-950 font-medium leading-relaxed">{selectedSubmission.notes}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Proof Attachment Viewer */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                        <FaIcon icon="fa-paperclip" className="text-primary-600" />
+                        Uploaded Proof Document
+                      </span>
+                      {selectedSubmission.proof_file_url && (
                         <a
                           href={resolveMediaUrl(selectedSubmission.proof_file_url) || selectedSubmission.proof_file_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-600 hover:bg-primary-500 text-white font-bold text-xs shadow-md transition"
+                          className="text-xs font-semibold text-primary-700 hover:text-primary-800 inline-flex items-center gap-1 hover:underline"
                         >
                           <FaIcon icon="fa-arrow-up-right-from-square" />
-                          Open PDF in New Window
+                          Full View
                         </a>
-                      </div>
-                    ) : selectedSubmission.proof_file_url ? (
-                      <div className="w-full h-full flex flex-col items-center justify-center p-2">
-                        <img
-                          src={resolveMediaUrl(selectedSubmission.proof_file_url) || selectedSubmission.proof_file_url}
-                          alt="Run proof screenshot"
-                          className="max-h-[340px] w-auto max-w-full object-contain rounded-lg transition-transform duration-300 group-hover:scale-[1.02]"
-                        />
-                        <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-xs">
+                      )}
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-200 bg-slate-900 overflow-hidden relative group flex items-center justify-center min-h-[220px] max-h-[300px]">
+                      {selectedSubmission.proof_file_mime?.includes('pdf') ||
+                      selectedSubmission.proof_file_name?.endsWith('.pdf') ? (
+                        <div className="p-6 text-center bg-slate-900 text-white w-full">
+                          <div className="h-14 w-14 mx-auto mb-2 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-2xl shadow-inner">
+                            <FaIcon icon="fa-file-pdf" />
+                          </div>
+                          <p className="text-xs sm:text-sm font-bold text-slate-200 mb-0.5 max-w-[240px] mx-auto truncate">
+                            {selectedSubmission.proof_file_name || 'Proof_Document.pdf'}
+                          </p>
+                          <p className="text-xs text-slate-400 mb-3">PDF Activity Document</p>
                           <a
                             href={resolveMediaUrl(selectedSubmission.proof_file_url) || selectedSubmission.proof_file_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-4 py-2 rounded-xl bg-white/90 hover:bg-white text-slate-900 font-bold text-xs shadow-lg inline-flex items-center gap-2 transform transition hover:scale-105"
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-600 hover:bg-primary-500 text-white font-bold text-xs shadow-md transition"
                           >
-                            <FaIcon icon="fa-magnifying-glass-plus" />
-                            View Full Resolution
+                            <FaIcon icon="fa-arrow-up-right-from-square" />
+                            Open PDF Document
                           </a>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="p-8 text-center text-slate-400">
-                        <FaIcon icon="fa-image" className="text-4xl mb-2 text-slate-600" />
-                        <p className="text-xs">No attachment uploaded</p>
-                      </div>
-                    )}
+                      ) : selectedSubmission.proof_file_url ? (
+                        <div className="w-full h-full flex flex-col items-center justify-center p-2">
+                          <img
+                            src={resolveMediaUrl(selectedSubmission.proof_file_url) || selectedSubmission.proof_file_url}
+                            alt="Run proof screenshot"
+                            className="max-h-[280px] w-auto max-w-full object-contain rounded-lg transition-transform duration-300 group-hover:scale-[1.02]"
+                          />
+                          <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-xs">
+                            <a
+                              href={resolveMediaUrl(selectedSubmission.proof_file_url) || selectedSubmission.proof_file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-4 py-2 rounded-xl bg-white/95 hover:bg-white text-slate-900 font-bold text-xs shadow-lg inline-flex items-center gap-2 transform transition hover:scale-105 cursor-pointer"
+                            >
+                              <FaIcon icon="fa-magnifying-glass-plus" />
+                              View Full Resolution
+                            </a>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-8 text-center text-slate-400">
+                          <FaIcon icon="fa-image" className="text-4xl mb-2 text-slate-600" />
+                          <p className="text-xs">No attachment uploaded</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {/* Verification Decision Form (6 cols) */}
+                {/* ─── RIGHT COLUMN (6 cols): Verification Decision & Notes ─── */}
                 <div className="lg:col-span-6 space-y-4">
-                  <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-4">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                      <FaIcon icon="fa-clipboard-check" className="text-primary-600" />
-                      Verification &amp; Reward Config
-                    </span>
+                  <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 bg-slate-50/70 space-y-4">
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                        <FaIcon icon="fa-clipboard-check" className="text-primary-600" />
+                        Verification &amp; Decision Config
+                      </span>
+                      <span className="text-[11px] text-slate-400 font-semibold">
+                        Submitted: {new Date(selectedSubmission.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
 
+                    {/* Reward Status Selector */}
                     <div>
                       <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1.5">
                         Reward Status
@@ -1338,15 +1351,19 @@ export default function AdminOffers() {
                       <select
                         value={rewardStatusSelect}
                         onChange={(e) => setRewardStatusSelect(e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                        className="w-full rounded-2xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
                       >
                         <option value="pending">🟡 Pending (Not assigned)</option>
                         <option value="eligible">🟢 Eligible (Qualified for Reward)</option>
                         <option value="approved">⭐ Approved (Session Voucher Ready)</option>
-                        <option value="claimed">🎉 Claimed (Redeemed by Participant)</option>
+                        <option value="claimed">🎉 Claimed (Redeemed at Clinic)</option>
                       </select>
+                      <p className="text-[10px] text-slate-400 mt-1">
+                        Auto-assigned to &apos;Eligible&apos; upon approving if still pending.
+                      </p>
                     </div>
 
+                    {/* Internal Admin Notes */}
                     <div>
                       <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1.5">
                         Internal Admin Notes <span className="text-slate-400 font-normal lowercase">(team only)</span>
@@ -1356,22 +1373,26 @@ export default function AdminOffers() {
                         value={reviewNote}
                         onChange={(e) => setReviewNote(e.target.value)}
                         placeholder="e.g. Strava link verified, distance confirmed."
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                        className="w-full rounded-2xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
                       />
                     </div>
 
+                    {/* Rejection Reason (Mandatory when rejecting) */}
                     <div>
                       <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1.5">
                         Rejection Reason{' '}
                         <span className="text-rose-500 font-normal lowercase">(sent to user if rejected)</span>
                       </label>
                       <textarea
-                        rows={2}
+                        rows={3}
                         value={rejectionReason}
                         onChange={(e) => setRejectionReason(e.target.value)}
                         placeholder="e.g. Activity proof does not show completed distance, date, or timestamp."
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400"
+                        className="w-full rounded-2xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-400/20"
                       />
+                      <p className="text-[10px] text-slate-400 mt-1">
+                        Required only when clicking &apos;Reject&apos; to explain reasons to the participant.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -1380,6 +1401,7 @@ export default function AdminOffers() {
 
             {/* 3. STICKY BOTTOM ACTION FOOTER */}
             <div className="sticky bottom-0 z-20 flex flex-wrap items-center justify-between gap-3 px-6 py-4 bg-slate-50/95 backdrop-blur-md border-t border-slate-200">
+              {/* Primary Verification Actions */}
               <div className="flex items-center gap-2 flex-wrap">
                 <button
                   type="button"
@@ -1421,6 +1443,7 @@ export default function AdminOffers() {
                 </button>
               </div>
 
+              {/* Secondary Actions */}
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -1433,7 +1456,7 @@ export default function AdminOffers() {
                 <button
                   type="button"
                   onClick={() => setSelectedSubmission(null)}
-                  className="px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-600 hover:bg-slate-100 font-bold text-xs cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 font-bold text-xs cursor-pointer transition"
                 >
                   Close
                 </button>
