@@ -2,6 +2,7 @@ export const EXPLORE_LINKS = [
   { to: '/doctors', label: 'Find Physiotherapist', icon: 'fa-user-doctor' },
   { to: '/clinics', label: 'Find Clinics', icon: 'fa-hospital', tone: 'emerald' },
   { to: '/home-physiotherapy', label: 'Home Physiotherapy', icon: 'fa-house-medical' },
+  { to: '/offers', label: 'Offers', icon: 'fa-tag' },
   { to: '/telephysio', label: 'TelePhysio by Myoreset', icon: 'fa-video' },
   { to: '/treatments', label: 'Our Services', icon: 'fa-kit-medical' },
   { to: '/exercises', label: 'Exercise Library', icon: 'fa-dumbbell' },

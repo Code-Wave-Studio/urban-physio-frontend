@@ -49,6 +49,7 @@ export const ADMIN_NAV = [
   { to: '/admin/telephysio', label: 'TelePhysio by Myoreset', icon: 'fa-video', section: 'content' },
 
   // Finance & Promos
+  { to: '/admin/offers', label: 'Offers & Campaigns', icon: 'fa-bullhorn', section: 'finance_promos' },
   { to: '/admin/treatment-packages', label: 'Platform Packages', icon: 'fa-box-open', section: 'finance_promos' },
   { to: '/admin/doctor-packages', label: 'Doctor Packages', icon: 'fa-boxes-stacked', section: 'finance_promos' },
   { to: '/admin/billing', label: 'Billing', icon: 'fa-file-invoice-dollar', section: 'finance_promos' },

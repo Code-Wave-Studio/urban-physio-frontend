@@ -575,6 +575,12 @@ export const admin = {
   updateHomePhysioSettings: (data) => api.put('/admin/home-physio-settings', data),
   telephysioSettings: () => api.get('/admin/telephysio-settings'),
   updateTelePhysioSettings: (data) => api.put('/admin/telephysio-settings', data),
+  offersSettings: () => api.get('/admin/offers-settings'),
+  updateOffersSettings: (data) => api.put('/admin/offers-settings', data),
+  offersSubmissions: (params) => api.get('/admin/offers-submissions', { params }),
+  offersSubmissionDetail: (id) => api.get(`/admin/offers-submissions/${id}`),
+  updateOffersSubmissionStatus: (id, data) => api.post(`/admin/offers-submissions/${id}/status`, data),
+  updateOffersRewardStatus: (id, data) => api.post(`/admin/offers-submissions/${id}/reward`, data),
   heroSettings: () => api.get('/admin/hero-settings'),
   updateHeroSettings: (data) => api.put('/admin/hero-settings', data),
   homeBannerSettings: () => api.get('/admin/home-banner-settings'),
@@ -668,6 +674,16 @@ export const admin = {
 export const contact = {
   settings: () => api.get('/contact/settings'),
   sendMessage: (data) => api.post('/contact/message', data),
+};
+
+export const offers = {
+  settings: () => api.get('/offers/settings'),
+  submit: (formData) =>
+    api.post('/offers/submit', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  status: (params) => api.get('/offers/status', { params }),
+  mySubmissions: () => api.get('/offers/my-submissions'),
 };
 
 export const seo = {
