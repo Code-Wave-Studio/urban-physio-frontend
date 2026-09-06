@@ -129,6 +129,12 @@ export default function AdminOffers() {
   useEffect(() => {
     document.title = 'Offers & Campaign Submissions | The Urban Physio Admin';
     fetchSettings();
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setSelectedSubmission(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const handleSearchSubmit = (e) => {
@@ -1122,202 +1128,314 @@ export default function AdminOffers() {
 
       {/* ─── SUBMISSION REVIEW MODAL ─────────────────────────────────────────── */}
       {selectedSubmission && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xl animate-fade-in space-y-6">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-slate-200">
-              <div>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                  Submission Verification
-                </span>
-                <h3 className="text-xl font-bold text-slate-900">
-                  {selectedSubmission.full_name} (#{selectedSubmission.id})
-                </h3>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/70 backdrop-blur-xs animate-fade-in"
+          onClick={() => setSelectedSubmission(null)}
+        >
+          <div
+            className="w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 1. STICKY TOP HEADER */}
+            <div className="sticky top-0 z-20 flex items-center justify-between px-6 py-4 bg-white/95 backdrop-blur-md border-b border-slate-200">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-700 font-bold">
+                  <FaIcon icon="fa-id-card-clip" className="text-base" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-base sm:text-lg font-bold text-slate-900 truncate">
+                      {selectedSubmission.full_name}
+                    </h3>
+                    <span className="font-mono text-xs font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
+                      #{selectedSubmission.id}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5 text-xs">
+                    <span
+                      className={`px-2 py-0.5 rounded-full font-bold text-[10px] border capitalize ${statusBadge(
+                        selectedSubmission.status
+                      )}`}
+                    >
+                      Status: {selectedSubmission.status?.replace('_', ' ')}
+                    </span>
+                    <span
+                      className={`px-2 py-0.5 rounded-full font-bold text-[10px] border capitalize ${rewardBadge(
+                        selectedSubmission.reward_status
+                      )}`}
+                    >
+                      Reward: {selectedSubmission.reward_status}
+                    </span>
+                  </div>
+                </div>
               </div>
+
               <button
                 type="button"
                 onClick={() => setSelectedSubmission(null)}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 text-sm cursor-pointer"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition cursor-pointer"
+                title="Close modal (Esc)"
               >
                 <FaIcon icon="fa-xmark" />
               </button>
             </div>
 
-            {/* Participant Details Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5 p-4 rounded-2xl bg-slate-50 border border-slate-100 text-xs">
-              <div>
-                <span className="text-slate-400 block font-semibold">Email</span>
-                <a href={`mailto:${selectedSubmission.email}`} className="font-bold text-primary-600 hover:underline">
-                  {selectedSubmission.email}
-                </a>
-              </div>
-              <div>
-                <span className="text-slate-400 block font-semibold">Phone</span>
-                <a href={`tel:${selectedSubmission.phone}`} className="font-bold text-slate-800">
-                  {selectedSubmission.phone}
-                </a>
-              </div>
-              <div>
-                <span className="text-slate-400 block font-semibold">City</span>
-                <span className="font-bold text-slate-800">{selectedSubmission.city || 'N/A'}</span>
-              </div>
-              <div>
-                <span className="text-slate-400 block font-semibold">Run Date</span>
-                <span className="font-bold text-slate-800">{selectedSubmission.run_date}</span>
-              </div>
-              <div>
-                <span className="text-slate-400 block font-semibold">Distance</span>
-                <span className="font-bold text-emerald-700">{selectedSubmission.distance_km} KM</span>
-              </div>
-              <div>
-                <span className="text-slate-400 block font-semibold">Submitted On</span>
-                <span className="font-bold text-slate-800">
-                  {new Date(selectedSubmission.created_at).toLocaleString()}
-                </span>
-              </div>
-            </div>
+            {/* 2. SCROLLABLE CONTENT BODY */}
+            <div className="overflow-y-auto flex-1 p-5 sm:p-7 space-y-6">
+              {/* Participant & Run Info Grid (4 Stat Cards) */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-100 flex items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white">
+                    <FaIcon icon="fa-person-running" className="text-sm" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800/70 block">
+                      Distance
+                    </span>
+                    <span className="text-sm sm:text-base font-extrabold text-emerald-950 truncate block">
+                      {selectedSubmission.distance_km} KM
+                    </span>
+                  </div>
+                </div>
 
-            {/* Participant Notes */}
-            {selectedSubmission.notes && (
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs">
-                <span className="text-slate-400 font-bold block mb-1">Participant Notes:</span>
-                <p className="text-slate-700">{selectedSubmission.notes}</p>
-              </div>
-            )}
+                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-100 text-primary-700">
+                    <FaIcon icon="fa-calendar-day" className="text-sm" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Run Date</span>
+                    <span className="text-xs sm:text-sm font-bold text-slate-800 truncate block">
+                      {selectedSubmission.run_date}
+                    </span>
+                  </div>
+                </div>
 
-            {/* Proof Attachment Viewer */}
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-700 block mb-2">
-                Uploaded Proof Document / Screenshot
-              </span>
-              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50 text-center">
-                {selectedSubmission.proof_file_mime?.includes('pdf') ||
-                selectedSubmission.proof_file_name?.endsWith('.pdf') ? (
-                  <div className="py-4">
-                    <FaIcon icon="fa-file-pdf" className="text-4xl text-rose-500 mb-2" />
-                    <p className="text-xs font-bold text-slate-700 mb-2">{selectedSubmission.proof_file_name}</p>
+                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-200 text-slate-700">
+                    <FaIcon icon="fa-envelope" className="text-sm" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Email</span>
                     <a
-                      href={resolveMediaUrl(selectedSubmission.proof_file_url) || selectedSubmission.proof_file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-primary text-xs inline-flex items-center gap-2"
+                      href={`mailto:${selectedSubmission.email}`}
+                      className="text-xs font-bold text-primary-700 hover:underline truncate block"
+                      title={selectedSubmission.email}
                     >
-                      <FaIcon icon="fa-arrow-up-right-from-square" />
-                      Open PDF in New Window
+                      {selectedSubmission.email}
                     </a>
                   </div>
-                ) : (
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-200 text-slate-700">
+                    <FaIcon icon="fa-phone" className="text-sm" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                      Phone &amp; City
+                    </span>
+                    <span className="text-xs font-bold text-slate-800 truncate block">
+                      {selectedSubmission.phone} {selectedSubmission.city ? `(${selectedSubmission.city})` : ''}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Participant Notes (if any) */}
+              {selectedSubmission.notes && (
+                <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/70 text-xs flex items-start gap-3">
+                  <FaIcon icon="fa-comment-dots" className="text-amber-600 mt-0.5 text-sm shrink-0" />
                   <div>
-                    <img
-                      src={resolveMediaUrl(selectedSubmission.proof_file_url) || selectedSubmission.proof_file_url}
-                      alt="Run proof screenshot"
-                      className="max-h-72 mx-auto rounded-xl border border-slate-200 object-contain shadow-xs"
-                    />
-                    <div className="mt-2">
+                    <span className="text-amber-900 font-bold block mb-0.5">Participant Message / Note:</span>
+                    <p className="text-amber-950 font-medium leading-relaxed">{selectedSubmission.notes}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* 2-Column Section on Desktop: Proof Preview + Decision Controls */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                {/* Proof Attachment Viewer (6 cols) */}
+                <div className="lg:col-span-6 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                      <FaIcon icon="fa-paperclip" className="text-primary-600" />
+                      Uploaded Proof Document
+                    </span>
+                    {selectedSubmission.proof_file_url && (
                       <a
                         href={resolveMediaUrl(selectedSubmission.proof_file_url) || selectedSubmission.proof_file_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs font-semibold text-primary-600 hover:underline inline-flex items-center gap-1.5"
+                        className="text-xs font-semibold text-primary-700 hover:text-primary-800 inline-flex items-center gap-1 hover:underline"
                       >
                         <FaIcon icon="fa-arrow-up-right-from-square" />
-                        View Full Resolution Image
+                        Full View
                       </a>
+                    )}
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 bg-slate-900 overflow-hidden relative group flex items-center justify-center min-h-[280px] max-h-[380px]">
+                    {selectedSubmission.proof_file_mime?.includes('pdf') ||
+                    selectedSubmission.proof_file_name?.endsWith('.pdf') ? (
+                      <div className="p-8 text-center bg-slate-900 text-white w-full">
+                        <div className="h-16 w-16 mx-auto mb-3 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-3xl">
+                          <FaIcon icon="fa-file-pdf" />
+                        </div>
+                        <p className="text-sm font-bold text-slate-200 mb-1 max-w-[240px] mx-auto truncate">
+                          {selectedSubmission.proof_file_name || 'Proof_Document.pdf'}
+                        </p>
+                        <p className="text-xs text-slate-400 mb-4">PDF Document Submitted</p>
+                        <a
+                          href={resolveMediaUrl(selectedSubmission.proof_file_url) || selectedSubmission.proof_file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-600 hover:bg-primary-500 text-white font-bold text-xs shadow-md transition"
+                        >
+                          <FaIcon icon="fa-arrow-up-right-from-square" />
+                          Open PDF in New Window
+                        </a>
+                      </div>
+                    ) : selectedSubmission.proof_file_url ? (
+                      <div className="w-full h-full flex flex-col items-center justify-center p-2">
+                        <img
+                          src={resolveMediaUrl(selectedSubmission.proof_file_url) || selectedSubmission.proof_file_url}
+                          alt="Run proof screenshot"
+                          className="max-h-[340px] w-auto max-w-full object-contain rounded-lg transition-transform duration-300 group-hover:scale-[1.02]"
+                        />
+                        <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-xs">
+                          <a
+                            href={resolveMediaUrl(selectedSubmission.proof_file_url) || selectedSubmission.proof_file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 rounded-xl bg-white/90 hover:bg-white text-slate-900 font-bold text-xs shadow-lg inline-flex items-center gap-2 transform transition hover:scale-105"
+                          >
+                            <FaIcon icon="fa-magnifying-glass-plus" />
+                            View Full Resolution
+                          </a>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-8 text-center text-slate-400">
+                        <FaIcon icon="fa-image" className="text-4xl mb-2 text-slate-600" />
+                        <p className="text-xs">No attachment uploaded</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Verification Decision Form (6 cols) */}
+                <div className="lg:col-span-6 space-y-4">
+                  <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-4">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                      <FaIcon icon="fa-clipboard-check" className="text-primary-600" />
+                      Verification &amp; Reward Config
+                    </span>
+
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                        Reward Status
+                      </label>
+                      <select
+                        value={rewardStatusSelect}
+                        onChange={(e) => setRewardStatusSelect(e.target.value)}
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                      >
+                        <option value="pending">🟡 Pending (Not assigned)</option>
+                        <option value="eligible">🟢 Eligible (Qualified for Reward)</option>
+                        <option value="approved">⭐ Approved (Session Voucher Ready)</option>
+                        <option value="claimed">🎉 Claimed (Redeemed by Participant)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                        Internal Admin Notes <span className="text-slate-400 font-normal lowercase">(team only)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={reviewNote}
+                        onChange={(e) => setReviewNote(e.target.value)}
+                        placeholder="e.g. Strava link verified, distance confirmed."
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                        Rejection Reason{' '}
+                        <span className="text-rose-500 font-normal lowercase">(sent to user if rejected)</span>
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={rejectionReason}
+                        onChange={(e) => setRejectionReason(e.target.value)}
+                        placeholder="e.g. Activity proof does not show completed distance, date, or timestamp."
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400"
+                      />
                     </div>
                   </div>
-                )}
+                </div>
               </div>
             </div>
 
-            {/* Verification Status Updates */}
-            <div className="space-y-4 pt-2 border-t border-slate-200">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                Update Verification Decision
-              </h4>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-                    Reward Status
-                  </label>
-                  <select
-                    value={rewardStatusSelect}
-                    onChange={(e) => setRewardStatusSelect(e.target.value)}
-                    className="input-field text-xs font-semibold"
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="eligible">Eligible</option>
-                    <option value="approved">Approved</option>
-                    <option value="claimed">Claimed</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-                    Internal Admin Notes
-                  </label>
-                  <input
-                    type="text"
-                    value={reviewNote}
-                    onChange={(e) => setReviewNote(e.target.value)}
-                    placeholder="e.g. Strava link verified, distance confirmed."
-                    className="input-field text-xs"
+            {/* 3. STICKY BOTTOM ACTION FOOTER */}
+            <div className="sticky bottom-0 z-20 flex flex-wrap items-center justify-between gap-3 px-6 py-4 bg-slate-50/95 backdrop-blur-md border-t border-slate-200">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  disabled={reviewActionLoading}
+                  onClick={() => handleUpdateStatus('approved')}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white font-bold text-xs sm:text-sm shadow-xs transition disabled:opacity-50 cursor-pointer"
+                >
+                  <FaIcon
+                    icon={reviewActionLoading ? 'fa-spinner' : 'fa-check'}
+                    className={reviewActionLoading ? 'fa-spin' : ''}
                   />
-                </div>
-              </div>
-
-              {/* Rejection reason box */}
-              <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-                  Rejection Reason (Visible to participant if rejected)
-                </label>
-                <input
-                  type="text"
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                  placeholder="e.g. Screenshot does not show completed distance or date."
-                  className="input-field text-xs"
-                />
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    disabled={reviewActionLoading}
-                    onClick={() => handleUpdateStatus('approved')}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition cursor-pointer"
-                  >
-                    <FaIcon icon="fa-check" />
-                    Approve Submission
-                  </button>
-                  <button
-                    type="button"
-                    disabled={reviewActionLoading}
-                    onClick={() => handleUpdateStatus('under_review')}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-xs transition cursor-pointer"
-                  >
-                    <FaIcon icon="fa-clock" />
-                    Under Review
-                  </button>
-                  <button
-                    type="button"
-                    disabled={reviewActionLoading}
-                    onClick={() => handleUpdateStatus('rejected')}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-xs transition cursor-pointer"
-                  >
-                    <FaIcon icon="fa-xmark" />
-                    Reject
-                  </button>
-                </div>
+                  Approve Submission
+                </button>
 
                 <button
                   type="button"
                   disabled={reviewActionLoading}
+                  onClick={() => handleUpdateStatus('under_review')}
+                  className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-98 text-white font-bold text-xs sm:text-sm shadow-xs transition disabled:opacity-50 cursor-pointer"
+                >
+                  <FaIcon
+                    icon={reviewActionLoading ? 'fa-spinner' : 'fa-clock'}
+                    className={reviewActionLoading ? 'fa-spin' : ''}
+                  />
+                  Under Review
+                </button>
+
+                <button
+                  type="button"
+                  disabled={reviewActionLoading}
+                  onClick={() => handleUpdateStatus('rejected')}
+                  className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-98 text-white font-bold text-xs sm:text-sm shadow-xs transition disabled:opacity-50 cursor-pointer"
+                >
+                  <FaIcon
+                    icon={reviewActionLoading ? 'fa-spinner' : 'fa-xmark'}
+                    className={reviewActionLoading ? 'fa-spin' : ''}
+                  />
+                  Reject
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={reviewActionLoading}
                   onClick={handleUpdateRewardStatus}
-                  className="btn-outline text-xs !py-2 !px-3 cursor-pointer"
+                  className="btn-outline text-xs !py-2.5 !px-3.5 font-bold cursor-pointer hover:bg-slate-100"
                 >
                   Save Reward Status Only
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedSubmission(null)}
+                  className="px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-600 hover:bg-slate-100 font-bold text-xs cursor-pointer"
+                >
+                  Close
                 </button>
               </div>
             </div>
