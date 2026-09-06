@@ -652,41 +652,52 @@ export default function OffersPage() {
                   <FaIcon icon="fa-circle-check" />
                 </div>
 
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold mb-3">
-                  <span>Reference ID:</span>
-                  <span className="font-mono">{submissionSuccess.reference_code || submissionSuccess.submission_id}</span>
+                <span className="inline-block text-xs font-extrabold uppercase tracking-widest text-emerald-800 bg-emerald-100 px-3.5 py-1 rounded-full border border-emerald-200 mb-2">
+                  Entry Received Successfully
+                </span>
+
+                <h3 className="text-2xl sm:text-3xl font-black text-slate-900 mb-2">
+                  You’re One Step Closer to Free Recovery!
+                </h3>
+
+                <p className="text-sm text-slate-600 max-w-lg mx-auto mb-6">
+                  {s.form_success_message ||
+                    'Your 10 KM run submission has been received and is currently under clinical review. Keep your Reference Code safe.'}
+                </p>
+
+                {/* Reference Code Box */}
+                <div className="max-w-md mx-auto p-4 rounded-2xl bg-white border border-emerald-200/80 shadow-xs mb-6 flex items-center justify-between gap-3">
+                  <div className="text-left">
+                    <span className="text-[10px] uppercase font-extrabold text-slate-400 block tracking-wider">
+                      Your Unique Reference Code
+                    </span>
+                    <span className="text-lg sm:text-xl font-mono font-black text-[#376299]">
+                      {submissionSuccess.reference_code}
+                    </span>
+                  </div>
                   <button
                     type="button"
-                    onClick={() => copyReferenceCode(submissionSuccess.reference_code || submissionSuccess.submission_id)}
-                    className="hover:text-emerald-950 ml-1"
-                    title="Copy code"
+                    onClick={() => copyReferenceCode(submissionSuccess.reference_code)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
                   >
                     <FaIcon icon="fa-copy" />
+                    Copy Code
                   </button>
                 </div>
 
-                <h3 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                  Submission Successfully Received!
-                </h3>
-                <p className="text-sm text-slate-600 max-w-xl mx-auto mt-2.5 leading-relaxed">
-                  {submissionSuccess.message ||
-                    'Your 10 KM campaign submission has been received and is currently under review by our clinical team.'}
-                </p>
-
-                {/* Summary Card */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 max-w-xl mx-auto my-7 p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/80 text-left">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg mx-auto p-4 rounded-2xl bg-white/80 border border-slate-200 text-left mb-6">
                   <div>
                     <p className="text-[10px] uppercase font-bold text-slate-400">Participant</p>
                     <p className="text-xs font-bold text-slate-800 truncate mt-0.5">{submissionSuccess.full_name}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase font-bold text-slate-400">Current Status</p>
+                    <p className="text-[10px] uppercase font-bold text-slate-400">Status</p>
                     <span className="inline-block mt-0.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-100 text-sky-800 border border-sky-200">
                       {submissionSuccess.status_label || 'Pending Review'}
                     </span>
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase font-bold text-slate-400">Submitted Time</p>
+                    <p className="text-[10px] uppercase font-bold text-slate-400">Date</p>
                     <p className="text-xs font-semibold text-slate-700 mt-0.5">Just now</p>
                   </div>
                 </div>
@@ -695,293 +706,321 @@ export default function OffersPage() {
                   <button
                     type="button"
                     onClick={() => {
+                      setStatusQuery(submissionSuccess.reference_code);
+                      handleScrollTo(statusRef);
+                    }}
+                    className="btn-primary text-sm w-full sm:w-auto !py-3 !px-6 cursor-pointer"
+                  >
+                    <FaIcon icon="fa-magnifying-glass" className="mr-1.5" />
+                    Track Live Status Below
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
                       setSubmissionSuccess(null);
                       setProofFile(null);
                       setProofPreview(null);
                     }}
-                    className="btn-outline text-sm w-full sm:w-auto !py-3 !px-6"
+                    className="btn-outline text-sm w-full sm:w-auto !py-3 !px-6 cursor-pointer"
                   >
                     Submit Another Entry
                   </button>
-                  <Link to="/book" className="btn-primary text-sm w-full sm:w-auto !py-3 !px-6">
-                    Explore Clinics &amp; Booking
-                  </Link>
                 </div>
               </div>
             ) : (
               /* Main Submission Form Card */
               <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-10 shadow-xl mb-12">
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
-                    {/* Full Name */}
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                        Full Name <span className="text-rose-500">*</span>
-                      </label>
-                      <div className="relative">
+                {/* Campaign Inactive / Paused / Expired Notice if applicable */}
+                {s.campaign_status && s.campaign_status !== 'active' ? (
+                  <div className="p-6 rounded-2xl bg-amber-50 border border-amber-200 text-center space-y-2">
+                    <div className="flex h-12 w-12 mx-auto items-center justify-center rounded-2xl bg-amber-100 text-amber-700 text-xl">
+                      <FaIcon icon="fa-pause" />
+                    </div>
+                    <h4 className="text-base font-bold text-amber-900">Campaign Submissions Currently Paused</h4>
+                    <p className="text-xs sm:text-sm text-amber-800 max-w-md mx-auto">
+                      New entries are currently on hold by administration. If you have already submitted your run proof, you can track your live verification status below.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => handleScrollTo(statusRef)}
+                      className="mt-2 btn-primary text-xs !py-2 !px-4"
+                    >
+                      Go to Status Tracker
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+                      {/* Full Name */}
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                          Full Name <span className="text-rose-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            required
+                            value={form.full_name}
+                            onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+                            placeholder="e.g. Rahul Sharma"
+                            className={`w-full rounded-2xl border px-4 py-3 text-sm transition focus:outline-none focus:ring-2 ${
+                              formErrors.full_name
+                                ? 'border-rose-400 focus:ring-rose-200 bg-rose-50/20'
+                                : 'border-slate-300 focus:border-[#376299] focus:ring-[#376299]/15'
+                            }`}
+                          />
+                        </div>
+                        {formErrors.full_name && (
+                          <p className="text-xs text-rose-500 mt-1 font-semibold">{formErrors.full_name}</p>
+                        )}
+                      </div>
+
+                      {/* Email */}
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                          Email Address <span className="text-rose-500">*</span>
+                        </label>
                         <input
-                          type="text"
+                          type="email"
                           required
-                          value={form.full_name}
-                          onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-                          placeholder="e.g. Rahul Sharma"
+                          value={form.email}
+                          onChange={(e) => setForm({ ...form, email: e.target.value })}
+                          placeholder="e.g. rahul@example.com"
                           className={`w-full rounded-2xl border px-4 py-3 text-sm transition focus:outline-none focus:ring-2 ${
-                            formErrors.full_name
+                            formErrors.email
                               ? 'border-rose-400 focus:ring-rose-200 bg-rose-50/20'
                               : 'border-slate-300 focus:border-[#376299] focus:ring-[#376299]/15'
                           }`}
                         />
+                        {formErrors.email && (
+                          <p className="text-xs text-rose-500 mt-1 font-semibold">{formErrors.email}</p>
+                        )}
                       </div>
-                      {formErrors.full_name && (
-                        <p className="text-xs text-rose-500 mt-1 font-semibold">{formErrors.full_name}</p>
-                      )}
+
+                      {/* Phone Number */}
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                          Phone Number <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="tel"
+                          required
+                          value={form.phone}
+                          onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                          placeholder="e.g. +91 98765 43210"
+                          className={`w-full rounded-2xl border px-4 py-3 text-sm transition focus:outline-none focus:ring-2 ${
+                            formErrors.phone
+                              ? 'border-rose-400 focus:ring-rose-200 bg-rose-50/20'
+                              : 'border-slate-300 focus:border-[#376299] focus:ring-[#376299]/15'
+                          }`}
+                        />
+                        {formErrors.phone && (
+                          <p className="text-xs text-rose-500 mt-1 font-semibold">{formErrors.phone}</p>
+                        )}
+                      </div>
+
+                      {/* City (Optional) */}
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                          City / Locality <span className="text-slate-400 font-normal">(Optional)</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={form.city}
+                          onChange={(e) => setForm({ ...form, city: e.target.value })}
+                          placeholder="e.g. Mumbai, Bandra"
+                          className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm transition focus:outline-none focus:border-[#376299] focus:ring-2 focus:ring-[#376299]/15"
+                        />
+                      </div>
+
+                      {/* Run Date */}
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                          Date of Run <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="date"
+                          required
+                          max={new Date().toISOString().split('T')[0]}
+                          value={form.run_date}
+                          onChange={(e) => setForm({ ...form, run_date: e.target.value })}
+                          className={`w-full rounded-2xl border px-4 py-3 text-sm transition focus:outline-none focus:ring-2 ${
+                            formErrors.run_date
+                              ? 'border-rose-400 focus:ring-rose-200 bg-rose-50/20'
+                              : 'border-slate-300 focus:border-[#376299] focus:ring-[#376299]/15'
+                          }`}
+                        />
+                        {formErrors.run_date && (
+                          <p className="text-xs text-rose-500 mt-1 font-semibold">{formErrors.run_date}</p>
+                        )}
+                      </div>
+
+                      {/* Distance Completed */}
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                          Distance Completed (KM) <span className="text-rose-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="1"
+                            required
+                            value={form.distance_km}
+                            onChange={(e) => setForm({ ...form, distance_km: e.target.value })}
+                            placeholder="10.0"
+                            className={`w-full rounded-2xl border px-4 py-3 text-sm transition focus:outline-none focus:ring-2 ${
+                              formErrors.distance_km
+                                ? 'border-rose-400 focus:ring-rose-200 bg-rose-50/20'
+                                : 'border-slate-300 focus:border-[#376299] focus:ring-[#376299]/15'
+                            }`}
+                          />
+                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 pointer-events-none">
+                            KM
+                          </span>
+                        </div>
+                        {formErrors.distance_km && (
+                          <p className="text-xs text-rose-500 mt-1 font-semibold">{formErrors.distance_km}</p>
+                        )}
+                      </div>
                     </div>
 
-                    {/* Email */}
+                    {/* Drag & Drop File Upload Box */}
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                        Email Address <span className="text-rose-500">*</span>
+                        Proof of Run <span className="text-rose-500">*</span>{' '}
+                        <span className="text-slate-400 font-normal">
+                          (Screenshot from Strava, Nike Run, Garmin, etc. - Max 10MB)
+                        </span>
                       </label>
+
                       <input
-                        type="email"
-                        required
-                        value={form.email}
-                        onChange={(e) => setForm({ ...form, email: e.target.value })}
-                        placeholder="e.g. rahul@example.com"
-                        className={`w-full rounded-2xl border px-4 py-3 text-sm transition focus:outline-none focus:ring-2 ${
-                          formErrors.email
-                            ? 'border-rose-400 focus:ring-rose-200 bg-rose-50/20'
-                            : 'border-slate-300 focus:border-[#376299] focus:ring-[#376299]/15'
-                        }`}
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,application/pdf"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                        id="proof-upload-input"
                       />
-                      {formErrors.email && (
-                        <p className="text-xs text-rose-500 mt-1 font-semibold">{formErrors.email}</p>
+
+                      {proofFile ? (
+                        <div className="flex items-center justify-between p-4 rounded-2xl border border-[#376299]/30 bg-[#376299]/5">
+                          <div className="flex items-center gap-3.5 min-w-0">
+                            {proofPreview ? (
+                              <img
+                                src={proofPreview}
+                                alt="Proof preview"
+                                className="h-16 w-16 rounded-xl object-cover border border-slate-200 shrink-0 shadow-xs"
+                              />
+                            ) : (
+                              <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-[#376299]/15 text-[#376299] text-2xl shrink-0">
+                                <FaIcon icon="fa-file-pdf" />
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">{proofFile.name}</p>
+                              <p className="text-xs text-slate-500 mt-0.5">
+                                {(proofFile.size / (1024 * 1024)).toFixed(2)} MB • {proofFile.type || 'Document'}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleRemoveFile}
+                            className="text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-3.5 py-2 rounded-xl transition cursor-pointer"
+                          >
+                            Change File
+                          </button>
+                        </div>
+                      ) : (
+                        <label
+                          htmlFor="proof-upload-input"
+                          onDragOver={handleDragOver}
+                          onDragLeave={handleDragLeave}
+                          onDrop={handleDrop}
+                          className={`flex flex-col items-center justify-center p-8 sm:p-10 rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-200 ${
+                            isDragging
+                              ? 'border-[#376299] bg-[#376299]/10 scale-[0.99]'
+                              : formErrors.proof_file
+                              ? 'border-rose-400 bg-rose-50/30 hover:bg-rose-50/50'
+                              : 'border-slate-300 bg-slate-50/60 hover:bg-[#376299]/5 hover:border-[#376299]/60'
+                          }`}
+                        >
+                          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#376299]/10 text-[#376299] text-2xl mb-3 shadow-xs">
+                            <FaIcon icon="fa-cloud-arrow-up" />
+                          </div>
+                          <p className="text-sm font-bold text-slate-800 text-center">
+                            Click to upload or drag &amp; drop your run proof
+                          </p>
+                          <p className="text-xs text-slate-400 mt-1 text-center">
+                            Supported formats: JPG, PNG, WebP, PDF (Up to 10MB)
+                          </p>
+                        </label>
+                      )}
+
+                      {formErrors.proof_file && (
+                        <p className="text-xs text-rose-500 mt-1.5 font-semibold">{formErrors.proof_file}</p>
                       )}
                     </div>
 
-                    {/* Phone Number */}
+                    {/* Additional Notes */}
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                        Phone Number <span className="text-rose-500">*</span>
+                        Additional Notes / Running App Used{' '}
+                        <span className="text-slate-400 font-normal">(Optional)</span>
                       </label>
-                      <input
-                        type="tel"
-                        required
-                        value={form.phone}
-                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                        placeholder="e.g. +91 98765 43210"
-                        className={`w-full rounded-2xl border px-4 py-3 text-sm transition focus:outline-none focus:ring-2 ${
-                          formErrors.phone
-                            ? 'border-rose-400 focus:ring-rose-200 bg-rose-50/20'
-                            : 'border-slate-300 focus:border-[#376299] focus:ring-[#376299]/15'
-                        }`}
-                      />
-                      {formErrors.phone && (
-                        <p className="text-xs text-rose-500 mt-1 font-semibold">{formErrors.phone}</p>
-                      )}
-                    </div>
-
-                    {/* City (Optional) */}
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                        City / Locality <span className="text-slate-400 font-normal">(Optional)</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={form.city}
-                        onChange={(e) => setForm({ ...form, city: e.target.value })}
-                        placeholder="e.g. Mumbai, Bandra"
+                      <textarea
+                        rows={2}
+                        value={form.notes}
+                        onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                        placeholder="e.g. Completed via Strava on Marine Drive..."
                         className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm transition focus:outline-none focus:border-[#376299] focus:ring-2 focus:ring-[#376299]/15"
                       />
                     </div>
 
-                    {/* Run Date */}
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                        Date of Run <span className="text-rose-500">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        required
-                        max={new Date().toISOString().split('T')[0]}
-                        value={form.run_date}
-                        onChange={(e) => setForm({ ...form, run_date: e.target.value })}
-                        className={`w-full rounded-2xl border px-4 py-3 text-sm transition focus:outline-none focus:ring-2 ${
-                          formErrors.run_date
-                            ? 'border-rose-400 focus:ring-rose-200 bg-rose-50/20'
-                            : 'border-slate-300 focus:border-[#376299] focus:ring-[#376299]/15'
-                        }`}
-                      />
-                      {formErrors.run_date && (
-                        <p className="text-xs text-rose-500 mt-1 font-semibold">{formErrors.run_date}</p>
-                      )}
-                    </div>
-
-                    {/* Distance Completed */}
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                        Distance Completed (KM) <span className="text-rose-500">*</span>
-                      </label>
-                      <div className="relative">
+                    {/* Consent Checkbox */}
+                    <div className="pt-1">
+                      <label className="flex items-start gap-3.5 cursor-pointer select-none">
                         <input
-                          type="number"
-                          step="0.01"
-                          min="1"
-                          required
-                          value={form.distance_km}
-                          onChange={(e) => setForm({ ...form, distance_km: e.target.value })}
-                          placeholder="10.0"
-                          className={`w-full rounded-2xl border px-4 py-3 text-sm transition focus:outline-none focus:ring-2 ${
-                            formErrors.distance_km
-                              ? 'border-rose-400 focus:ring-rose-200 bg-rose-50/20'
-                              : 'border-slate-300 focus:border-[#376299] focus:ring-[#376299]/15'
-                          }`}
+                          type="checkbox"
+                          checked={form.consent_given}
+                          onChange={(e) =>
+                            setForm({ ...form, consent_given: e.target.checked })
+                          }
+                          className="mt-1 h-4 w-4 rounded border-slate-300 text-[#376299] focus:ring-[#376299]"
                         />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 pointer-events-none">
-                          KM
+                        <span className="text-xs text-slate-600 leading-relaxed font-normal">
+                          {s.form_consent_text ||
+                            'I confirm that I have completed the 10 KM run, the uploaded activity details are authentic, and I agree to the campaign terms & conditions of The Urban Physio.'}
                         </span>
-                      </div>
-                      {formErrors.distance_km && (
-                        <p className="text-xs text-rose-500 mt-1 font-semibold">{formErrors.distance_km}</p>
+                      </label>
+                      {formErrors.consent_given && (
+                        <p className="text-xs text-rose-500 mt-1 font-semibold">{formErrors.consent_given}</p>
                       )}
                     </div>
-                  </div>
 
-                  {/* Drag & Drop File Upload Box */}
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                      Proof of Run <span className="text-rose-500">*</span>{' '}
-                      <span className="text-slate-400 font-normal">
-                        (Screenshot from Strava, Nike Run, Garmin, etc. - Max 10MB)
-                      </span>
-                    </label>
-
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp,application/pdf"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                      id="proof-upload-input"
-                    />
-
-                    {proofFile ? (
-                      <div className="flex items-center justify-between p-4 rounded-2xl border border-[#376299]/30 bg-[#376299]/5">
-                        <div className="flex items-center gap-3.5 min-w-0">
-                          {proofPreview ? (
-                            <img
-                              src={proofPreview}
-                              alt="Proof preview"
-                              className="h-16 w-16 rounded-xl object-cover border border-slate-200 shrink-0 shadow-xs"
-                            />
-                          ) : (
-                            <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-[#376299]/15 text-[#376299] text-2xl shrink-0">
-                              <FaIcon icon="fa-file-pdf" />
-                            </div>
-                          )}
-                          <div className="min-w-0">
-                            <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">{proofFile.name}</p>
-                            <p className="text-xs text-slate-500 mt-0.5">
-                              {(proofFile.size / (1024 * 1024)).toFixed(2)} MB • {proofFile.type || 'Document'}
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={handleRemoveFile}
-                          className="text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-3.5 py-2 rounded-xl transition cursor-pointer"
-                        >
-                          Change File
-                        </button>
-                      </div>
-                    ) : (
-                      <label
-                        htmlFor="proof-upload-input"
-                        onDragOver={handleDragOver}
-                        onDragLeave={handleDragLeave}
-                        onDrop={handleDrop}
-                        className={`flex flex-col items-center justify-center p-8 sm:p-10 rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-200 ${
-                          isDragging
-                            ? 'border-[#376299] bg-[#376299]/10 scale-[0.99]'
-                            : formErrors.proof_file
-                            ? 'border-rose-400 bg-rose-50/30 hover:bg-rose-50/50'
-                            : 'border-slate-300 bg-slate-50/60 hover:bg-[#376299]/5 hover:border-[#376299]/60'
-                        }`}
+                    {/* Submit Button */}
+                    <div className="pt-3">
+                      <button
+                        type="submit"
+                        disabled={submitting}
+                        className="w-full flex items-center justify-center gap-2.5 py-4 px-6 rounded-2xl bg-gradient-to-r from-[#376299] to-primary-800 hover:from-primary-700 hover:to-primary-900 text-white font-bold text-base shadow-lg shadow-[#376299]/25 hover:shadow-xl hover:shadow-[#376299]/35 disabled:opacity-60 active:scale-[0.99] transition cursor-pointer"
                       >
-                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#376299]/10 text-[#376299] text-2xl mb-3 shadow-xs">
-                          <FaIcon icon="fa-cloud-arrow-up" />
-                        </div>
-                        <p className="text-sm font-bold text-slate-800 text-center">
-                          Click to upload or drag &amp; drop your run proof
-                        </p>
-                        <p className="text-xs text-slate-400 mt-1 text-center">
-                          Supported formats: JPG, PNG, WebP, PDF (Up to 10MB)
-                        </p>
-                      </label>
-                    )}
-
-                    {formErrors.proof_file && (
-                      <p className="text-xs text-rose-500 mt-1.5 font-semibold">{formErrors.proof_file}</p>
-                    )}
-                  </div>
-
-                  {/* Additional Notes */}
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                      Additional Notes / Running App Used{' '}
-                      <span className="text-slate-400 font-normal">(Optional)</span>
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={form.notes}
-                      onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                      placeholder="e.g. Completed via Strava on Marine Drive..."
-                      className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm transition focus:outline-none focus:border-[#376299] focus:ring-2 focus:ring-[#376299]/15"
-                    />
-                  </div>
-
-                  {/* Consent Checkbox */}
-                  <div className="pt-1">
-                    <label className="flex items-start gap-3.5 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={form.consent_given}
-                        onChange={(e) =>
-                          setForm({ ...form, consent_given: e.target.checked })
-                        }
-                        className="mt-1 h-4 w-4 rounded border-slate-300 text-[#376299] focus:ring-[#376299]"
-                      />
-                      <span className="text-xs text-slate-600 leading-relaxed font-normal">
-                        {s.form_consent_text ||
-                          'I confirm that I have completed the 10 KM run, the uploaded activity details are authentic, and I agree to the campaign terms & conditions of The Urban Physio.'}
-                      </span>
-                    </label>
-                    {formErrors.consent_given && (
-                      <p className="text-xs text-rose-500 mt-1 font-semibold">{formErrors.consent_given}</p>
-                    )}
-                  </div>
-
-                  {/* Submit Button */}
-                  <div className="pt-3">
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className="w-full flex items-center justify-center gap-2.5 py-4 px-6 rounded-2xl bg-gradient-to-r from-[#376299] to-primary-800 hover:from-primary-700 hover:to-primary-900 text-white font-bold text-base shadow-lg shadow-[#376299]/25 hover:shadow-xl hover:shadow-[#376299]/35 disabled:opacity-60 active:scale-[0.99] transition cursor-pointer"
-                    >
-                      {submitting ? (
-                        <>
-                          <FaIcon icon="fa-spinner" className="fa-spin text-lg" />
-                          Uploading &amp; Verifying Details...
-                        </>
-                      ) : (
-                        <>
-                          <FaIcon icon="fa-paper-plane" />
-                          Submit Campaign Entry
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </form>
+                        {submitting ? (
+                          <>
+                            <FaIcon icon="fa-spinner" className="fa-spin text-lg" />
+                            Uploading &amp; Verifying Details...
+                          </>
+                        ) : (
+                          <>
+                            <FaIcon icon="fa-paper-plane" />
+                            Submit Campaign Entry
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                )}
               </div>
             )}
 
@@ -1012,30 +1051,31 @@ export default function OffersPage() {
                   <button
                     type="submit"
                     disabled={statusLoading}
-                    className="btn-primary text-sm shrink-0 !py-3 !px-6 rounded-2xl"
+                    className="btn-primary text-sm shrink-0 !py-3 !px-6 rounded-2xl cursor-pointer"
                   >
                     {statusLoading ? <FaIcon icon="fa-spinner" className="fa-spin" /> : 'Check Status'}
                   </button>
                 </form>
 
                 {statusResult && (
-                  <div className="mt-5 p-5 sm:p-6 rounded-2xl bg-slate-50 border border-slate-200 animate-fade-in space-y-4">
-                    <div className="flex flex-wrap items-center justify-between gap-2.5 pb-3.5 border-b border-slate-200">
+                  <div className="mt-6 p-5 sm:p-7 rounded-3xl bg-slate-50 border border-slate-200 animate-fade-in space-y-6">
+                    {/* Header info */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-200">
                       <div>
                         <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
                           Reference Code
                         </span>
-                        <p className="text-sm font-bold text-slate-900 font-mono">
+                        <p className="text-base sm:text-lg font-bold text-slate-900 font-mono">
                           {statusResult.reference_code || `UP-10K-${statusResult.id}`}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span
                           className={`inline-block px-3 py-1 rounded-full text-xs font-bold border ${statusBadgeStyle(
                             statusResult.status
                           )}`}
                         >
-                          {statusResult.status_label || statusResult.status}
+                          Status: {statusResult.status_label || statusResult.status}
                         </span>
                         <span
                           className={`inline-block px-3 py-1 rounded-full text-xs font-bold border ${rewardBadgeStyle(
@@ -1047,40 +1087,106 @@ export default function OffersPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 text-xs">
-                      <div>
+                    {/* Participant summary stats */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                      <div className="p-3 rounded-xl bg-white border border-slate-200/80">
                         <span className="text-slate-400 block font-semibold">Participant</span>
-                        <span className="font-bold text-slate-800">{statusResult.full_name}</span>
+                        <span className="font-bold text-slate-800 truncate block">{statusResult.full_name}</span>
                       </div>
-                      <div>
-                        <span className="text-slate-400 block font-semibold">Distance</span>
-                        <span className="font-bold text-slate-800">{statusResult.distance_km} KM</span>
+                      <div className="p-3 rounded-xl bg-white border border-slate-200/80">
+                        <span className="text-slate-400 block font-semibold">Distance Completed</span>
+                        <span className="font-extrabold text-emerald-800">{statusResult.distance_km} KM</span>
                       </div>
-                      <div>
+                      <div className="p-3 rounded-xl bg-white border border-slate-200/80">
                         <span className="text-slate-400 block font-semibold">Run Date</span>
                         <span className="font-bold text-slate-800">{statusResult.run_date}</span>
                       </div>
-                      <div>
-                        <span className="text-slate-400 block font-semibold">Submitted</span>
+                      <div className="p-3 rounded-xl bg-white border border-slate-200/80">
+                        <span className="text-slate-400 block font-semibold">Submitted On</span>
                         <span className="font-bold text-slate-800">
                           {new Date(statusResult.submitted_at).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
 
-                    {statusResult.status === 'rejected' && statusResult.rejection_reason && (
-                      <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700">
-                        <span className="font-bold">Rejection Note: </span>
-                        {statusResult.rejection_reason}
+                    {/* Visual Progress Timeline Stepper */}
+                    {statusResult.timeline && statusResult.timeline.length > 0 && (
+                      <div className="pt-2">
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-700 block mb-4">
+                          Verification &amp; Reward Progress Timeline
+                        </span>
+                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 relative">
+                          {statusResult.timeline.map((step, sIdx) => {
+                            const isDone = step.completed;
+                            const isDanger = step.variant === 'danger';
+                            const isSuccess = step.variant === 'success' || (isDone && !isDanger);
+                            const isCurrent = step.active && !isDone;
+
+                            return (
+                              <div
+                                key={sIdx}
+                                className={`p-4 rounded-2xl border transition-all ${
+                                  isDanger
+                                    ? 'bg-rose-50/70 border-rose-200 text-rose-900'
+                                    : isSuccess
+                                    ? 'bg-emerald-50/60 border-emerald-200 text-emerald-950'
+                                    : isCurrent
+                                    ? 'bg-sky-50 border-sky-300 ring-2 ring-sky-200 text-sky-950'
+                                    : 'bg-white border-slate-200/70 text-slate-500 opacity-70'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5 mb-1.5">
+                                  <div
+                                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                                      isDanger
+                                        ? 'bg-rose-600 text-white'
+                                        : isSuccess
+                                        ? 'bg-emerald-600 text-white'
+                                        : isCurrent
+                                        ? 'bg-sky-600 text-white animate-pulse'
+                                        : 'bg-slate-200 text-slate-600'
+                                    }`}
+                                  >
+                                    {isDanger ? (
+                                      <FaIcon icon="fa-xmark" />
+                                    ) : isSuccess ? (
+                                      <FaIcon icon="fa-check" />
+                                    ) : (
+                                      step.step
+                                    )}
+                                  </div>
+                                  <span className="text-xs font-bold truncate">{step.title}</span>
+                                </div>
+                                <p className="text-[11px] leading-relaxed line-clamp-2">{step.description}</p>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
 
-                    {(statusResult.reward_status === 'approved' || statusResult.reward_status === 'eligible') && (
-                      <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-3.5">
-                        <span className="text-xs font-semibold text-emerald-800">
-                          Congratulations! Your run is verified. You are eligible to book your complimentary physiotherapy session.
+                    {/* Rejection Note if rejected */}
+                    {statusResult.status === 'rejected' && statusResult.rejection_reason && (
+                      <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-800 space-y-1">
+                        <span className="font-bold uppercase tracking-wide flex items-center gap-1.5 text-rose-900">
+                          <FaIcon icon="fa-circle-exclamation" /> Rejection Feedback from Clinical Team
                         </span>
-                        <Link to="/book" className="btn-primary text-xs !py-2 !px-4 shrink-0 rounded-xl">
+                        <p className="font-medium text-rose-950 pl-5">{statusResult.rejection_reason}</p>
+                      </div>
+                    )}
+
+                    {/* Action banner if approved */}
+                    {(statusResult.reward_status === 'approved' || statusResult.reward_status === 'eligible') && (
+                      <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div>
+                          <span className="text-xs sm:text-sm font-bold text-emerald-950 block">
+                            🎉 Congratulations! Your 10 KM run is verified.
+                          </span>
+                          <span className="text-xs text-emerald-800 font-normal">
+                            You are eligible for your complimentary clinical physiotherapy consultation. Book now or present your reference code at the clinic desk.
+                          </span>
+                        </div>
+                        <Link to="/book" className="btn-primary text-xs !py-2.5 !px-5 shrink-0 rounded-xl shadow-md cursor-pointer">
                           Book Free Session
                         </Link>
                       </div>
