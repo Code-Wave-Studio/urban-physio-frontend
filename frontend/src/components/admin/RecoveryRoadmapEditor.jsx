@@ -103,22 +103,6 @@ export default function RecoveryRoadmapEditor({
             onChange={(e) => onChange('roadmap_intro', e.target.value)}
           />
         </CmsField>
-        <div className="grid sm:grid-cols-2 gap-3">
-          <CmsField label="CTA button label" hint="Leave blank to hide the button.">
-            <input
-              className="input-field"
-              value={sections.roadmap_cta_label || ''}
-              onChange={(e) => onChange('roadmap_cta_label', e.target.value)}
-            />
-          </CmsField>
-          <CmsField label="CTA button link">
-            <input
-              className="input-field"
-              value={sections.roadmap_cta_link || ''}
-              onChange={(e) => onChange('roadmap_cta_link', e.target.value)}
-            />
-          </CmsField>
-        </div>
       </CmsPanel>
 
       <CmsPanel title="Journey phases" icon="fa-route">

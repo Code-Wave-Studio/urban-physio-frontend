@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import FaIcon from '../FaIcon';
 import { resolveMediaUrl } from '../../utils/mediaUrl';
@@ -26,7 +25,6 @@ const THEMES = {
     progressLine: 'bg-white/25',
     progressFill: 'bg-amber-200',
     circle: 'bg-orange-400/20',
-    cta: 'btn-primary !bg-white !text-primary-800 hover:!bg-orange-50',
     imageRing: 'ring-white/20 shadow-[0_24px_48px_-18px_rgb(67_20_7_/_0.55)]',
     live: 'text-amber-100',
   },
@@ -44,7 +42,6 @@ const THEMES = {
     progressLine: 'bg-white/25',
     progressFill: 'bg-teal-200',
     circle: 'bg-teal-400/20',
-    cta: 'btn-primary !bg-white !text-teal-900 hover:!bg-teal-50',
     imageRing: 'ring-white/15 shadow-[0_24px_48px_-18px_rgb(15_23_42_/_0.55)]',
     live: 'text-teal-100',
   },
@@ -186,16 +183,35 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
         <div className="absolute inset-0 roadmap-pin-grid pointer-events-none" aria-hidden />
         <div className="roadmap-pin-inner relative z-[1] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="roadmap-layout">
-            <div className="roadmap-intro">
-              <p className={`text-[11px] sm:text-xs font-bold uppercase tracking-[0.18em] ${tokens.label}`}>
-                {copy.roadmap_label}
-              </p>
-              <h2 id={headingId} className="roadmap-heading">
-                {copy.roadmap_heading}
-              </h2>
-              {copy.roadmap_intro ? (
-                <p className={`roadmap-lede ${tokens.intro}`}>{copy.roadmap_intro}</p>
-              ) : null}
+            <div className="roadmap-copy">
+              <div className="roadmap-intro">
+                <p className={`text-[11px] sm:text-xs font-bold uppercase tracking-[0.18em] ${tokens.label}`}>
+                  {copy.roadmap_label}
+                </p>
+                <h2 id={headingId} className="roadmap-heading">
+                  {copy.roadmap_heading}
+                </h2>
+                {copy.roadmap_intro ? (
+                  <p className={`roadmap-lede ${tokens.intro}`}>{copy.roadmap_intro}</p>
+                ) : null}
+              </div>
+
+              <div className="roadmap-phase" aria-live="polite">
+                <AnimatePresence mode="wait">
+                  <motion.div key={phaseKey} {...fade}>
+                    <p className="roadmap-phase-number">{String(safeIndex + 1).padStart(2, '0')}</p>
+                    {phase.subtitle || phase.number ? (
+                      <p className={`roadmap-phase-kicker ${tokens.live}`}>
+                        {phase.subtitle || phase.number}
+                      </p>
+                    ) : null}
+                    <h3 className={`roadmap-phase-title ${tokens.phaseTitle}`}>{phase.title}</h3>
+                    {phase.description ? (
+                      <p className="roadmap-phase-copy">{phase.description}</p>
+                    ) : null}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
             </div>
 
             <div
@@ -230,23 +246,6 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
                   </motion.div>
                 </AnimatePresence>
               </div>
-            </div>
-
-            <div className="roadmap-phase" aria-live="polite">
-              <AnimatePresence mode="wait">
-                <motion.div key={phaseKey} {...fade}>
-                  <p className="roadmap-phase-number">{String(safeIndex + 1).padStart(2, '0')}</p>
-                  {phase.subtitle || phase.number ? (
-                    <p className={`roadmap-phase-kicker ${tokens.live}`}>
-                      {phase.subtitle || phase.number}
-                    </p>
-                  ) : null}
-                  <h3 className={`roadmap-phase-title ${tokens.phaseTitle}`}>{phase.title}</h3>
-                  {phase.description ? (
-                    <p className="roadmap-phase-copy">{phase.description}</p>
-                  ) : null}
-                </motion.div>
-              </AnimatePresence>
             </div>
 
             <PhaseProgress
@@ -294,15 +293,6 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
                 </motion.ul>
               </AnimatePresence>
             </div>
-
-            {copy.roadmap_cta_label && copy.roadmap_cta_link ? (
-              <div className="roadmap-cta-wrap">
-                <Link to={copy.roadmap_cta_link} className={`roadmap-cta ${tokens.cta}`}>
-                  <FaIcon icon="fa-calendar-check" />
-                  {copy.roadmap_cta_label}
-                </Link>
-              </div>
-            ) : null}
 
             {!stickyMode && count > 1 ? (
               <div className="roadmap-mobile-nav">

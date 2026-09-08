@@ -520,7 +520,7 @@
 
   .roadmap-pin {
     position: relative;
-    overflow: hidden;
+    overflow-x: hidden;
   }
 
   .roadmap-pin-inner {
@@ -534,6 +534,10 @@
       radial-gradient(circle at 86% 0%, rgb(255 255 255 / 0.07), transparent 34%);
   }
 
+  .roadmap-copy {
+    display: contents;
+  }
+
   .roadmap-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -543,28 +547,22 @@
       "phase"
       "progress"
       "specs"
-      "cta"
       "nav";
-    gap: 1.15rem 0;
+    gap: 1.25rem 0;
     min-width: 0;
   }
 
   .roadmap-intro { grid-area: intro; min-width: 0; }
   .roadmap-visual { grid-area: visual; min-width: 0; }
-  .roadmap-phase {
-    grid-area: phase;
-    min-width: 0;
-    min-height: 7.25rem;
-  }
+  .roadmap-phase { grid-area: phase; min-width: 0; }
   .roadmap-progress { grid-area: progress; min-width: 0; }
   .roadmap-specs { grid-area: specs; min-width: 0; }
-  .roadmap-cta-wrap { grid-area: cta; min-width: 0; }
   .roadmap-mobile-nav { grid-area: nav; }
 
   .roadmap-heading {
     @apply mt-2 font-bold tracking-tight leading-[1.18];
-    font-size: clamp(1.45rem, 5.4vw, 2.15rem);
-    max-width: 16.5rem;
+    font-size: clamp(1.5rem, 6vw, 2.15rem);
+    max-width: 20rem;
     text-wrap: balance;
   }
 
@@ -578,14 +576,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
   }
 
   .roadmap-orb {
     position: absolute;
-    right: 8%;
-    top: 6%;
-    width: min(70%, 280px);
+    width: min(72%, 16rem);
     aspect-ratio: 1;
     border-radius: 999px;
     filter: blur(2px);
@@ -596,12 +591,11 @@
   .roadmap-visual-frame {
     position: relative;
     z-index: 1;
-    width: 100%;
-    max-width: 22rem;
-    aspect-ratio: 3 / 4;
-    max-height: 42vh;
+    width: min(100%, 18.5rem);
+    aspect-ratio: 4 / 5;
     border-radius: 1.15rem;
     overflow: hidden;
+    flex: none;
   }
 
   .roadmap-visual-layer,
@@ -636,14 +630,14 @@
 
   .roadmap-phase-title {
     @apply mt-1.5 font-bold leading-snug;
-    font-size: clamp(1.2rem, 3.8vw, 1.65rem);
-    max-width: 28rem;
+    font-size: clamp(1.2rem, 3.8vw, 1.7rem);
+    max-width: 36rem;
     text-wrap: balance;
   }
 
   .roadmap-phase-copy {
     @apply mt-2 text-sm text-white/90 leading-relaxed;
-    max-width: 36rem;
+    max-width: 40rem;
   }
 
   .roadmap-progress-list {
@@ -708,19 +702,6 @@
     overflow-wrap: break-word;
   }
 
-  .roadmap-cta {
-    @apply inline-flex items-center justify-center gap-2 min-h-11 px-6 rounded-xl font-semibold;
-    box-shadow: 0 10px 24px -12px rgb(0 0 0 / 0.45);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  @media (hover: hover) {
-    .roadmap-cta:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 14px 28px -12px rgb(0 0 0 / 0.5);
-    }
-  }
-
   .roadmap-mobile-nav {
     @apply flex items-center justify-between gap-3;
   }
@@ -734,11 +715,11 @@
 
   @media (min-width: 600px) {
     .roadmap-heading {
-      max-width: 20rem;
+      max-width: 26rem;
     }
 
     .roadmap-visual-frame {
-      max-width: 24rem;
+      width: min(100%, 20rem);
     }
 
     .roadmap-specs-grid--2,
@@ -749,17 +730,12 @@
 
   @media (min-width: 768px) {
     .roadmap-layout {
-      gap: 1.35rem 0;
+      gap: 1.4rem 0;
     }
 
     .roadmap-heading {
-      max-width: 22rem;
-      font-size: clamp(1.7rem, 3.4vw, 2.35rem);
-    }
-
-    .roadmap-visual-frame {
-      max-width: 26rem;
-      max-height: 44vh;
+      max-width: 30rem;
+      font-size: clamp(1.75rem, 3.2vw, 2.4rem);
     }
 
     .roadmap-pin-inner {
@@ -770,7 +746,7 @@
 
   @media (min-width: 1024px) {
     .roadmap-section {
-      height: calc(var(--roadmap-phases, 4) * 110vh);
+      height: calc(var(--roadmap-phases, 4) * 100vh);
     }
 
     .roadmap-pin {
@@ -778,74 +754,85 @@
       top: 0;
       height: 100dvh;
       min-height: 100dvh;
-      overflow: hidden;
     }
 
     .roadmap-pin-inner {
       display: flex;
       flex-direction: column;
+      justify-content: center;
       height: 100%;
       min-height: 0;
-      padding-top: var(--site-header-height, 4rem);
-      padding-bottom: 1.25rem;
+      padding-top: calc(var(--site-header-height, 4rem) + 1.25rem);
+      padding-bottom: 2rem;
       overflow-x: hidden;
       overflow-y: auto;
       scrollbar-width: thin;
     }
 
+    .roadmap-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 1.35rem;
+      grid-area: copy;
+      min-width: 0;
+    }
+
+    .roadmap-intro,
+    .roadmap-phase {
+      grid-area: auto;
+    }
+
     .roadmap-layout {
-      flex: 1;
-      min-height: 0;
-      height: 100%;
-      grid-template-columns: minmax(0, 1.18fr) minmax(15.5rem, 0.92fr);
-      grid-template-rows: auto auto auto auto auto;
+      flex: 0 1 auto;
+      width: 100%;
+      height: auto;
+      grid-template-columns: minmax(0, 1fr) minmax(16rem, 20.5rem);
+      grid-template-rows: auto auto auto;
       grid-template-areas:
-        "intro visual"
-        "phase visual"
+        "copy visual"
         "progress progress"
-        "specs specs"
-        "cta cta";
-      column-gap: clamp(1.5rem, 3vw, 2.75rem);
-      row-gap: 0.9rem;
+        "specs specs";
+      column-gap: clamp(1.75rem, 3.2vw, 3rem);
+      row-gap: 1.5rem;
       align-items: start;
-      align-content: center;
+      align-content: start;
     }
 
     .roadmap-mobile-nav {
       display: none;
     }
 
-    .roadmap-intro,
-    .roadmap-phase {
-      min-width: 0;
-    }
-
     .roadmap-visual {
-      align-self: stretch;
-      min-height: 0;
-      overflow: hidden;
-      justify-content: flex-end;
+      grid-area: visual;
+      align-self: center;
+      justify-self: end;
+      width: 100%;
+      max-width: 20.5rem;
     }
 
     .roadmap-visual-frame {
-      width: auto;
-      height: min(46vh, 100%);
-      max-height: 46vh;
-      max-width: 100%;
-      aspect-ratio: 3 / 4;
+      width: 100%;
+      max-width: none;
+      aspect-ratio: 4 / 5;
     }
 
     .roadmap-heading {
-      max-width: 18.5rem;
+      max-width: 34rem;
+      font-size: clamp(1.85rem, 2.15vw, 2.5rem);
     }
 
     .roadmap-lede,
-    .roadmap-phase-copy {
-      max-width: 32rem;
+    .roadmap-phase-copy,
+    .roadmap-phase-title {
+      max-width: none;
+    }
+
+    .roadmap-phase {
+      min-height: 8.5rem;
     }
 
     .roadmap-specs {
-      min-height: 6.75rem;
+      min-height: 6.5rem;
     }
 
     .roadmap-specs-grid--3 {
@@ -853,59 +840,51 @@
     }
 
     .roadmap-specs-grid--1 {
-      max-width: 30rem;
+      max-width: 34rem;
     }
   }
 
   @media (min-width: 1280px) {
     .roadmap-layout {
-      column-gap: 3rem;
-      row-gap: 1rem;
+      grid-template-columns: minmax(0, 1fr) minmax(17rem, 22rem);
+      column-gap: 3.25rem;
+      row-gap: 1.65rem;
+    }
+
+    .roadmap-visual {
+      max-width: 22rem;
     }
 
     .roadmap-heading {
-      max-width: 21rem;
-      font-size: 2.35rem;
+      font-size: 2.5rem;
     }
 
     .roadmap-visual-frame {
-      max-height: min(100%, 48vh);
-      border-radius: 1.35rem;
+      border-radius: 1.25rem;
     }
   }
 
   @media (min-width: 1024px) and (max-height: 820px) {
     .roadmap-layout {
-      row-gap: 0.65rem;
-      align-content: start;
+      row-gap: 1.15rem;
+      column-gap: 1.75rem;
+    }
+
+    .roadmap-copy {
+      gap: 1rem;
     }
 
     .roadmap-phase-number {
       font-size: 2rem;
     }
 
-    .roadmap-visual-frame {
-      max-height: min(100%, 36vh);
-    }
-
-    .roadmap-specs {
-      min-height: 5.5rem;
+    .roadmap-visual {
+      max-width: 17.5rem;
     }
 
     .roadmap-pin-inner {
-      padding-bottom: 0.85rem;
-    }
-  }
-
-  @media (min-width: 1024px) and (max-height: 700px) {
-    .roadmap-lede,
-    .roadmap-phase-copy,
-    .roadmap-spec-copy {
-      font-size: 0.8125rem;
-    }
-
-    .roadmap-visual-frame {
-      max-height: min(100%, 30vh);
+      padding-bottom: 1.25rem;
+      justify-content: flex-start;
     }
   }
 
