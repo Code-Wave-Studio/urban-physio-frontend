@@ -10,6 +10,7 @@ import Expandable, { AccordionItem } from '../components/homePhysio/Expandable';
 import { CheckRow, CtaLink, QuoteCard, SectionHead, bookHref } from '../components/homePhysio/HomePhysioUi';
 import CommunityPreviewSection from '../components/community/CommunityPreviewSection';
 import PainSelectionSection from '../components/home/PainSelectionSection';
+import RecoveryRoadmapSection from '../components/roadmap/RecoveryRoadmapSection';
 import { homePhysio } from '../services/api';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import { HEALTHCARE_IMAGES } from '../utils/healthcareImages';
@@ -20,6 +21,7 @@ import {
   mergeHomePhysioSections,
 } from '../constants/homePhysioDefaults';
 import { HOME_PAIN_MAP_DEFAULTS, isPainMapEnabled, painMapSectionProps, visiblePainAreas } from '../constants/painMapDefaults';
+import { isRoadmapEnabled } from '../constants/recoveryRoadmapDefaults';
 
 function categoryItems(cat) {
   return Array.isArray(cat.items)
@@ -103,7 +105,7 @@ export default function HomePhysiotherapyPage() {
   }
 
   return (
-    <div className="hp-page page-enter overflow-x-hidden">
+    <div className="hp-page page-enter overflow-x-clip">
       <ManagedPageSeo
         fallbackTitle={data.seo_title || HOME_PHYSIO_SEO.title}
         fallbackDescription={data.seo_description || HOME_PHYSIO_SEO.description}
@@ -189,6 +191,8 @@ export default function HomePhysiotherapyPage() {
           })}
         />
       )}
+
+      {isRoadmapEnabled(s) && <RecoveryRoadmapSection theme="home" sections={s} />}
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-pad">
         <SectionHead eyebrow="Choose your format" heading={s.fit_heading} intro={s.fit_intro} />

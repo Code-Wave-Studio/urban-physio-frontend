@@ -6,6 +6,7 @@ import MediaUrlOrUpload from '../../components/admin/MediaUrlOrUpload';
 import { CmsField, CmsListEditor, CmsPanel } from '../../components/admin/CmsFormKit';
 import CommunityPreviewEditor from '../../components/admin/CommunityPreviewEditor';
 import PainMapEditor from '../../components/admin/PainMapEditor';
+import RecoveryRoadmapEditor from '../../components/admin/RecoveryRoadmapEditor';
 import { admin, uploadCmsImage } from '../../services/api';
 import { TELEPHYSIO_DEFAULTS, mergeTelePhysioSections } from '../../constants/telephysioDefaults';
 import toast from 'react-hot-toast';
@@ -14,6 +15,7 @@ const TABS = [
   { id: 'hero', label: 'Hero & trust', icon: 'fa-flag' },
   { id: 'overview', label: 'Overview & suitability', icon: 'fa-circle-info' },
   { id: 'pain', label: 'Body areas', icon: 'fa-person-running' },
+  { id: 'roadmap', label: 'Recovery journey', icon: 'fa-route' },
   { id: 'steps', label: 'Steps & timeline', icon: 'fa-list-ol' },
   { id: 'benefits', label: 'Benefits & conditions', icon: 'fa-certificate' },
   { id: 'pricing', label: 'Pricing & journey', icon: 'fa-tag' },
@@ -324,6 +326,18 @@ export default function AdminTelePhysio() {
               uploadFn={uploadCmsImage}
               accent="teal"
               scopeNote="TeleRehab / TelePhysio only. The homepage Pain map and PhysioAtHome body areas are stored separately — edits here will not change those pages."
+            />
+          </div>
+        )}
+
+        {tab === 'roadmap' && (
+          <div className="space-y-5" role="tabpanel">
+            <RecoveryRoadmapEditor
+              sections={s}
+              onChange={setSection}
+              uploadFn={uploadCmsImage}
+              accent="teal"
+              scopeNote="TeleRehab / TelePhysio only. PhysioAtHome journey content is stored separately — edits here will not change that page."
             />
           </div>
         )}

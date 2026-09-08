@@ -1,12 +1,15 @@
 import FaIcon from '../FaIcon';
 import MediaUrlOrUpload from './MediaUrlOrUpload';
 import { CmsField, CmsPanel } from './CmsFormKit';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import {
   COMMUNITY_PLATFORMS,
+  SCREENSHOT_SLOTS,
   blankScreenshot,
   blankSocial,
   isFlagOn,
   platformMeta,
+  screenshotSlotMeta,
 } from '../../constants/communityPreview';
 
 function moveItem(list, index, dir) {
@@ -179,32 +182,55 @@ export default function CommunityPreviewEditor({ sections, onChange, uploadFn, a
         </button>
       </CmsPanel>
 
-      <CmsPanel title="Portal screenshots" icon="fa-display">
-        <CmsField label="Portal heading">
-          <input
-            className="input-field"
-            value={sections.community_portal_heading || ''}
-            onChange={(e) => onChange('community_portal_heading', e.target.value)}
-          />
-        </CmsField>
-        <CmsField label="Portal description">
-          <textarea
-            className="input-field min-h-[72px]"
-            value={sections.community_portal_intro || ''}
-            onChange={(e) => onChange('community_portal_intro', e.target.value)}
-          />
-        </CmsField>
-        <p className="text-xs text-slate-500">
-          Upload admin/portal screenshots. Enabled images appear in the gallery and lightbox. Reorder with the arrows.
+      <CmsPanel title="Portal screenshots" icon="fa-mobile-screen">
+        <p className="text-xs text-slate-500 -mt-1">
+          Upload full mobile portal screenshots. The first 5 enabled images fill the live gallery from Far Left to Far Right. Extra enabled images stay available in the lightbox. Reorder with the arrows.
         </p>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {SCREENSHOT_SLOTS.map((slot) => (
+            <span
+              key={slot.key}
+              className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide ${
+                slot.key === 'center'
+                  ? accent === 'teal'
+                    ? 'border-teal-200 bg-teal-50 text-teal-800'
+                    : 'border-orange-200 bg-orange-50 text-orange-800'
+                  : 'border-slate-200 bg-white text-slate-500'
+              }`}
+            >
+              {slot.label}
+            </span>
+          ))}
+        </div>
         <div className="space-y-4">
           {shots.map((item, i) => {
             const on = isFlagOn(item.enabled);
+            const slot = screenshotSlotMeta(shots, i);
+            const thumb = resolveMediaUrl(item.url) || item.url;
+            const isCenter = slot.key === 'center';
             return (
               <div key={`shot-${i}`} className="rounded-xl border border-slate-200 bg-white p-3 sm:p-4 space-y-3">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Screenshot {i + 1}</p>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="w-10 h-[4.4rem] rounded-lg border border-slate-200 bg-slate-50 overflow-hidden shrink-0 flex items-center justify-center">
+                      {thumb ? (
+                        <img src={thumb} alt="" className="w-full h-full object-contain" />
+                      ) : (
+                        <FaIcon icon="fa-image" className="text-slate-300 text-sm" />
+                      )}
+                    </span>
+                    <div className="min-w-0">
+                      <p
+                        className={`text-[11px] font-bold uppercase tracking-wider truncate ${
+                          isCenter ? 'text-slate-700' : 'text-slate-400'
+                        }`}
+                      >
+                        {slot.short}
+                      </p>
+                      <p className="text-[11px] text-slate-400 truncate">{slot.hint}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <EnabledToggle on={on} onChange={(v) => updateShot(i, { enabled: v })} accent={accent} />
                     <button
                       type="button"
@@ -217,7 +243,7 @@ export default function CommunityPreviewEditor({ sections, onChange, uploadFn, a
                     </button>
                     <button
                       type="button"
-                      className="p-1.5 text-slate-400 hover:text-slate-700 rounded-md"
+                      className={`p-1.5 text-slate-400 hover:text-slate-700 rounded-md ${accentBtn}`}
                       disabled={i === shots.length - 1}
                       onClick={() => onChange('community_screenshots', moveItem(shots, i, 1))}
                       aria-label="Move screenshot down"
@@ -235,12 +261,13 @@ export default function CommunityPreviewEditor({ sections, onChange, uploadFn, a
                   </div>
                 </div>
                 <MediaUrlOrUpload
-                  label="Portal image"
-                  hint="Desktop portal screenshot. A 16:9 capture works best."
-                  recommendedSize="1440 × 900 px"
-                  aspectRatio="16:9"
+                  label="Portal screenshot"
+                  hint="Upload the complete mobile screenshot. It is shown in full — nothing is cropped."
+                  recommendedSize="1080 × 2340 px"
+                  aspectRatio="9:19.5"
+                  previewFit="contain"
                   accent={accent === 'teal' ? 'emerald' : 'orange'}
-                  icon="fa-image"
+                  icon="fa-mobile-screen"
                   urlValue={item.url || ''}
                   onUrlChange={(v) => updateShot(i, { url: v })}
                   onUpload={uploadFn}

@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
 import FaIcon from '../FaIcon';
-import { resolveMediaUrl } from '../../utils/mediaUrl';
 import {
+  galleryScreenshots,
   platformMeta,
   visibleScreenshots,
   visibleSocials,
 } from '../../constants/communityPreview';
 import PortalLightbox from './PortalLightbox';
+import PortalScreenshotGallery from './PortalScreenshotGallery';
 
 function Heading({ heading, highlight, accentClass }) {
   if (!heading) return null;
@@ -23,18 +24,6 @@ function Heading({ heading, highlight, accentClass }) {
   return heading;
 }
 
-function fanStyle(index, total) {
-  const mid = (total - 1) / 2;
-  const offset = index - mid;
-  const rotate = offset * 8;
-  const lift = Math.abs(offset) * 18;
-  const shift = offset * 78;
-  return {
-    transform: `translateX(${shift}px) translateY(${lift}px) rotate(${rotate}deg)`,
-    zIndex: 20 - Math.abs(Math.round(offset * 10)),
-  };
-}
-
 export default function CommunityPreviewSection({ sections = {}, accent = 'orange' }) {
   const [lightboxIndex, setLightboxIndex] = useState(null);
   const isTeal = accent === 'teal';
@@ -43,22 +32,22 @@ export default function CommunityPreviewSection({ sections = {}, accent = 'orang
   const bar = isTeal ? 'bg-teal-500' : 'bg-primary-500';
 
   const socials = useMemo(() => visibleSocials(sections.community_socials), [sections.community_socials]);
-  const shots = useMemo(
+  const allShots = useMemo(
     () => visibleScreenshots(sections.community_screenshots),
     [sections.community_screenshots]
   );
+  const galleryShots = useMemo(
+    () => galleryScreenshots(sections.community_screenshots),
+    [sections.community_screenshots]
+  );
 
-  if (!socials.length && !shots.length) return null;
+  if (!socials.length && !allShots.length) return null;
 
   const heading = sections.community_heading || 'Join Our Community';
   const highlight = sections.community_highlight || 'Community';
   const intro = sections.community_intro || '';
-  const portalHeading = sections.community_portal_heading || 'Portal Preview';
-  const portalIntro = sections.community_portal_intro || '';
-  const useFan = shots.length >= 2 && shots.length <= 5;
-  const useCarousel = shots.length > 6;
 
-  const openShot = (i) => setLightboxIndex(i);
+  const openShot = (galleryIndex) => setLightboxIndex(galleryIndex);
 
   return (
     <section className="community-section" aria-labelledby="community-heading">
@@ -97,71 +86,9 @@ export default function CommunityPreviewSection({ sections = {}, accent = 'orang
           </div>
         )}
 
-        {shots.length > 0 && (
-          <div className="mt-12 sm:mt-16">
-            <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
-              <p className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.16em] text-slate-500 mb-2">
-                Admin portal
-              </p>
-              <h3 className="text-xl sm:text-2xl font-bold text-slate-900">{portalHeading}</h3>
-              {portalIntro && (
-                <p className="mt-2 text-sm text-slate-600 leading-relaxed">{portalIntro}</p>
-              )}
-            </div>
-
-            {useFan && (
-              <div className="community-fan hidden lg:flex">
-                {shots.map((shot, i) => {
-                  const src = resolveMediaUrl(shot.url) || shot.url;
-                  const label = shot.title || shot.alt || `Portal screenshot ${i + 1}`;
-                  return (
-                    <button
-                      key={`${shot.url}-fan-${i}`}
-                      type="button"
-                      className="community-fan-card"
-                      style={fanStyle(i, shots.length)}
-                      onClick={() => openShot(i)}
-                      aria-label={`Open preview: ${label}`}
-                    >
-                      <span className="community-window-dots" aria-hidden>
-                        <i /><i /><i />
-                      </span>
-                      <img src={src} alt={shot.alt || label} loading="lazy" decoding="async" />
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            <div
-              className={
-                useCarousel
-                  ? 'community-shot-carousel'
-                  : `grid grid-cols-1 sm:grid-cols-2 ${useFan ? 'lg:hidden' : 'lg:grid-cols-3'} gap-4 sm:gap-5`
-              }
-            >
-              {shots.map((shot, i) => {
-                const src = resolveMediaUrl(shot.url) || shot.url;
-                const label = shot.title || shot.alt || `Portal screenshot ${i + 1}`;
-                return (
-                  <button
-                    key={`${shot.url}-grid-${i}`}
-                    type="button"
-                    className={`community-shot-card ${useCarousel ? 'community-shot-card--slide' : ''}`}
-                    onClick={() => openShot(i)}
-                    aria-label={`Open preview: ${label}`}
-                  >
-                    <span className="community-window-dots" aria-hidden>
-                      <i /><i /><i />
-                    </span>
-                    <span className="community-shot-card__media">
-                      <img src={src} alt={shot.alt || label} loading="lazy" decoding="async" />
-                    </span>
-                    {shot.title && <span className="community-shot-card__label">{shot.title}</span>}
-                  </button>
-                );
-              })}
-            </div>
+        {galleryShots.length > 0 && (
+          <div className={`portal-gallery-wrap ${socials.length ? 'mt-10 sm:mt-12' : 'mt-8 sm:mt-10'}`}>
+            <PortalScreenshotGallery shots={galleryShots} onOpen={openShot} />
           </div>
         )}
       </div>
@@ -169,7 +96,7 @@ export default function CommunityPreviewSection({ sections = {}, accent = 'orang
 
       <PortalLightbox
         open={lightboxIndex != null}
-        items={shots}
+        items={allShots}
         index={lightboxIndex || 0}
         onClose={() => setLightboxIndex(null)}
         onIndexChange={setLightboxIndex}

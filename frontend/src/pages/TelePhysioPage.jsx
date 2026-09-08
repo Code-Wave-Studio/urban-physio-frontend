@@ -9,6 +9,7 @@ import { breadcrumbSchema, faqPageSchema, medicalWebPageSchema } from '../compon
 import { telephysio } from '../services/api';
 import CommunityPreviewSection from '../components/community/CommunityPreviewSection';
 import PainSelectionSection from '../components/home/PainSelectionSection';
+import RecoveryRoadmapSection from '../components/roadmap/RecoveryRoadmapSection';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import { HEALTHCARE_IMAGES } from '../utils/healthcareImages';
 import { bookTelePhysioUrl, withPainAreaParams } from '../utils/bookUrl';
@@ -20,6 +21,7 @@ import {
   mergeTelePhysioSections,
 } from '../constants/telephysioDefaults';
 import { TELE_PAIN_MAP_DEFAULTS, isPainMapEnabled, painMapSectionProps, visiblePainAreas } from '../constants/painMapDefaults';
+import { isRoadmapEnabled } from '../constants/recoveryRoadmapDefaults';
 
 export default function TelePhysioPage() {
   const { whatsapp } = useContact();
@@ -98,7 +100,7 @@ export default function TelePhysioPage() {
   }
 
   return (
-    <div className="telephysio-page page-enter overflow-x-hidden bg-slate-50 text-slate-800">
+    <div className="telephysio-page page-enter overflow-x-clip bg-slate-50 text-slate-800">
       <ManagedPageSeo
         fallbackTitle={data.seo_title || TELEPHYSIO_SEO.title}
         fallbackDescription={data.seo_description || TELEPHYSIO_SEO.description}
@@ -224,6 +226,8 @@ export default function TelePhysioPage() {
           })}
         />
       )}
+
+      {isRoadmapEnabled(s) && <RecoveryRoadmapSection theme="tele" sections={s} />}
 
       {/* =========================================================================
           SECTION 3: WHAT IS TELEPHYSIO?

@@ -73,6 +73,86 @@ export function visibleScreenshots(list = []) {
   );
 }
 
+/** First 5 enabled screenshots fill the live stacked gallery. */
+export const GALLERY_VISIBLE_COUNT = 5;
+
+export const SCREENSHOT_SLOTS = [
+  { key: 'far-left', label: 'Far Left', short: '1 · Far Left', hint: 'Far-left screenshot on desktop.' },
+  { key: 'left', label: 'Left', short: '2 · Left', hint: 'Left of the focal screenshot.' },
+  { key: 'center', label: 'Center', short: '3 · Center', hint: 'Main focal screenshot.' },
+  { key: 'right', label: 'Right', short: '4 · Right', hint: 'Right of the focal screenshot.' },
+  { key: 'far-right', label: 'Far Right', short: '5 · Far Right', hint: 'Far-right screenshot on desktop.' },
+];
+
+export function galleryScreenshots(list = []) {
+  return visibleScreenshots(list).slice(0, GALLERY_VISIBLE_COUNT);
+}
+
+export function galleryCenterIndex(count) {
+  const n = Number(count) || 0;
+  if (n <= 1) return 0;
+  if (n >= GALLERY_VISIBLE_COUNT) return 2;
+  return Math.floor((n - 1) / 2);
+}
+
+export function stackRoles(count) {
+  const n = Math.min(Math.max(0, Number(count) || 0), GALLERY_VISIBLE_COUNT);
+  if (n <= 1) return ['center'];
+  if (n === 2) return ['left', 'right'];
+  if (n === 3) return ['left', 'center', 'right'];
+  if (n === 4) return ['far-left', 'left', 'center', 'right'];
+  return ['far-left', 'left', 'center', 'right', 'far-right'];
+}
+
+export function shortestOffset(index, active, total) {
+  if (total <= 1) return 0;
+  let delta = index - active;
+  const half = Math.floor(total / 2);
+  if (delta > half) delta -= total;
+  if (delta < -half) delta += total;
+  return delta;
+}
+
+export function coverflowRole(offset) {
+  if (offset === 0) return 'center';
+  if (offset === -1) return 'left';
+  if (offset === 1) return 'right';
+  if (offset === -2) return 'far-left';
+  if (offset === 2) return 'far-right';
+  return 'hidden';
+}
+
+export function screenshotSlotMeta(shots = [], index) {
+  const list = Array.isArray(shots) ? shots : [];
+  const row = list[index];
+  const isLive = isFlagOn(row?.enabled) && String(row?.url || '').trim();
+  if (!isLive) {
+    return {
+      key: 'hidden',
+      label: 'Hidden',
+      short: 'Not shown',
+      hint: 'Enable this screenshot and add an image to include it in the live gallery.',
+      visibleIndex: -1,
+    };
+  }
+  let visibleIndex = 0;
+  for (let i = 0; i < index; i += 1) {
+    if (isFlagOn(list[i]?.enabled) && String(list[i]?.url || '').trim()) {
+      visibleIndex += 1;
+    }
+  }
+  if (visibleIndex < SCREENSHOT_SLOTS.length) {
+    return { ...SCREENSHOT_SLOTS[visibleIndex], visibleIndex };
+  }
+  return {
+    key: 'extra',
+    label: `Lightbox extra ${visibleIndex - 4}`,
+    short: `Extra ${visibleIndex - 4}`,
+    hint: 'Available in the lightbox after the main 5 gallery screenshots.',
+    visibleIndex,
+  };
+}
+
 export function blankSocial() {
   return { platform: 'instagram', label: 'Join us on Instagram', url: '', enabled: '1' };
 }

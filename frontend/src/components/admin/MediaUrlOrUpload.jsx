@@ -9,6 +9,8 @@ const PREVIEW_CLASS = {
   '4:3': 'aspect-[4/3] max-w-md w-full',
   '4/3': 'aspect-[4/3] max-w-md w-full',
   '16:9': 'aspect-[16/9] max-w-lg w-full',
+  '9:16': 'aspect-[9/16] max-h-72 w-[132px]',
+  '9:19.5': 'aspect-[9/19.5] max-h-80 w-[120px]',
   '1:1': 'aspect-square max-w-[260px] w-full',
   '21:9': 'aspect-[21/9] max-h-40 w-full',
   default: 'aspect-[21/9] max-h-40 w-full',
@@ -65,6 +67,7 @@ export default function MediaUrlOrUpload({
   preview = 'none',
   devicePreview = 'default',
   aspectRatio,
+  previewFit = 'cover',
   recommendedSize,
   accent = 'violet',
   onClear,
@@ -267,12 +270,14 @@ export default function MediaUrlOrUpload({
 
           {resolved ? (
             <div
-              className={`rounded-2xl overflow-hidden border border-slate-200/90 bg-slate-900/5 shadow-inner relative group ${previewClass}`}
+              className={`rounded-2xl overflow-hidden border border-slate-200/90 bg-slate-100 shadow-inner relative group ${previewClass}`}
             >
               <img
                 src={resolved}
                 alt={label || 'Media preview'}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                className={`w-full h-full ${
+                  previewFit === 'contain' ? 'object-contain' : 'object-cover'
+                } transition-transform duration-300 group-hover:scale-[1.02]`}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end p-3 pointer-events-none">
                 <span className="text-xs text-white font-medium drop-shadow-sm flex items-center gap-1.5">

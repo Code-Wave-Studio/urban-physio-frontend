@@ -25,7 +25,7 @@
 
   html {
     scrollbar-gutter: stable;
-    overflow-x: hidden;
+    overflow-x: clip;
     max-width: 100%;
   }
 
@@ -82,7 +82,7 @@
   }
 
   body {
-    @apply text-slate-800 antialiased overflow-x-hidden;
+    @apply text-slate-800 antialiased overflow-x-clip;
     background: linear-gradient(135deg, #fff7ed 0%, #fafafa 25%, #f8fafc 50%, #fff7ed 75%, #ffedd5 100%);
     background-attachment: fixed;
     min-height: 100vh;
@@ -90,7 +90,7 @@
   }
 
   #root {
-    overflow-x: hidden;
+    overflow-x: clip;
     max-width: 100%;
   }
 }
@@ -513,8 +513,103 @@
     border-block: 1px solid rgb(204 251 241 / 0.8);
   }
 
+  .roadmap-section {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .roadmap-pin {
+    position: relative;
+  }
+
+  .roadmap-pin-grid {
+    background-image:
+      radial-gradient(circle at 18% 12%, rgb(255 255 255 / 0.08), transparent 28%),
+      radial-gradient(circle at 86% 0%, rgb(255 255 255 / 0.07), transparent 34%);
+  }
+
+  .roadmap-orb {
+    position: absolute;
+    right: 6%;
+    top: 8%;
+    width: min(78%, 420px);
+    aspect-ratio: 1;
+    border-radius: 999px;
+    filter: blur(2px);
+    pointer-events: none;
+  }
+
+  .roadmap-phase-number {
+    font-size: clamp(2.6rem, 8vw, 5.5rem);
+  }
+
+  .roadmap-step-btn {
+    @apply shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-full text-xs sm:text-sm
+           inline-flex items-center justify-center transition
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2;
+  }
+
+  .roadmap-theme-home .roadmap-step-btn:focus-visible {
+    --tw-ring-offset-color: #9a3412;
+  }
+
+  .roadmap-theme-tele .roadmap-step-btn:focus-visible {
+    --tw-ring-offset-color: #134e4a;
+  }
+
+  .roadmap-step-line {
+    @apply relative mx-1.5 sm:mx-2 h-px flex-1 min-w-[12px] overflow-hidden rounded-full;
+  }
+
+  .roadmap-step-line-fill {
+    @apply absolute inset-0 origin-left;
+    transform: scaleX(0);
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .roadmap-nav-btn {
+    @apply inline-flex items-center justify-center w-11 h-11 rounded-full
+           border border-white/30 bg-white/10 text-white
+           disabled:opacity-35 disabled:pointer-events-none
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white;
+  }
+
+  @media (min-width: 1024px) {
+    .roadmap-section {
+      height: calc(var(--roadmap-phases, 4) * 100vh);
+    }
+
+    .roadmap-pin {
+      position: sticky;
+      top: 0;
+      height: 100dvh;
+      min-height: 100dvh;
+      overflow: hidden;
+    }
+
+    .roadmap-pin-inner {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+      padding-top: var(--site-header-height, 4rem);
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+
+    .roadmap-pin-inner::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  @media (min-width: 1024px) and (max-height: 820px) {
+    .roadmap-phase-number {
+      font-size: clamp(2.2rem, 6vh, 3.6rem);
+    }
+  }
+
   .community-section {
-    @apply relative bg-white;
+    @apply relative bg-white overflow-x-hidden;
   }
 
   .community-section__rule {
@@ -565,100 +660,215 @@
     @apply outline-none ring-2 ring-primary-500 ring-offset-2;
   }
 
-  .community-fan {
-    @apply relative justify-center items-end h-[340px] mb-2 px-8;
+  .portal-gallery-wrap {
+    overflow-x: hidden;
   }
 
-  .community-fan-card,
-  .community-shot-card {
-    @apply bg-white rounded-2xl border border-slate-200/90 overflow-hidden text-left;
+  .portal-stack {
+    @apply relative items-end justify-center w-full;
+    flex-wrap: nowrap;
+    isolation: isolate;
+    padding: 0.35rem 0.25rem 1.1rem;
+  }
+
+  .portal-stack__card,
+  .portal-coverflow__card {
+    appearance: none;
+    line-height: 0;
+  }
+
+  .portal-stack__card {
+    @apply relative bg-transparent border-0 p-0 cursor-pointer shrink-0;
+    width: clamp(6.6rem, 13.2vw, 10.15rem);
+    margin-inline: clamp(-1.55rem, -2.8vw, -0.95rem);
+    z-index: 2;
+  }
+
+  .portal-stack__card--left,
+  .portal-stack__card--right {
+    width: clamp(7.35rem, 14.6vw, 11.15rem);
+    z-index: 4;
+    transform: translateY(0.2rem);
+  }
+
+  .portal-stack__card--center {
+    width: clamp(8.15rem, 16.8vw, 12.75rem);
+    margin-inline: clamp(-1.05rem, -1.8vw, -0.45rem);
+    z-index: 5;
+    transform: translateY(-0.55rem);
+  }
+
+  .portal-stack__card--far-left,
+  .portal-stack__card--far-right {
+    transform: translateY(0.7rem);
+  }
+
+  .portal-stack--n1 .portal-stack__card,
+  .portal-stack--n2 .portal-stack__card {
+    margin-inline: 0.35rem;
+    transform: none;
+  }
+
+  .portal-shot-frame {
+    @apply block w-full overflow-hidden bg-slate-50;
+    aspect-ratio: 9 / 19.5;
+    border-radius: 1.15rem;
+    border: 1px solid rgb(226 232 240 / 0.95);
     box-shadow:
       0 1px 2px rgb(15 23 42 / 0.06),
-      0 14px 32px -16px rgb(15 23 42 / 0.28);
+      0 14px 30px -16px rgb(15 23 42 / 0.3);
     transition: transform 0.25s ease, box-shadow 0.25s ease;
   }
 
-  .community-fan-card {
-    @apply absolute w-[210px] xl:w-[240px];
-    left: 50%;
-    bottom: 12px;
-    margin-left: -105px;
+  .portal-stack__card--center .portal-shot-frame {
+    box-shadow:
+      0 2px 4px rgb(15 23 42 / 0.07),
+      0 18px 36px -16px rgb(15 23 42 / 0.38);
   }
 
-  @media (min-width: 1280px) {
-    .community-fan-card {
-      margin-left: -120px;
+  .portal-shot-frame img {
+    @apply block w-full h-full object-contain object-center bg-slate-50;
+    pointer-events: none;
+  }
+
+  .portal-coverflow {
+    --shot-w: min(48vw, 13.75rem);
+    position: relative;
+    height: calc(var(--shot-w) * 19.5 / 9 + 0.85rem);
+    overflow: hidden;
+    touch-action: pan-y;
+    user-select: none;
+  }
+
+  .portal-coverflow__card {
+    position: absolute;
+    left: 50%;
+    bottom: 0.4rem;
+    width: var(--shot-w);
+    margin-left: calc(var(--shot-w) / -2);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    transform-origin: center bottom;
+    transition:
+      transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.3s ease;
+  }
+
+  .portal-coverflow__card--center {
+    z-index: 5;
+    transform: translateX(0) scale(1);
+  }
+
+  .portal-coverflow__card--left {
+    z-index: 4;
+    transform: translateX(calc(var(--shot-w) * -0.58)) scale(0.82);
+  }
+
+  .portal-coverflow__card--right {
+    z-index: 4;
+    transform: translateX(calc(var(--shot-w) * 0.58)) scale(0.82);
+  }
+
+  .portal-coverflow__card--far-left {
+    z-index: 1;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(calc(var(--shot-w) * -1.08)) scale(0.7);
+  }
+
+  .portal-coverflow__card--far-right {
+    z-index: 1;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(calc(var(--shot-w) * 1.08)) scale(0.7);
+  }
+
+  .portal-coverflow__card--hidden {
+    z-index: 0;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.62);
+  }
+
+  .portal-coverflow__nav {
+    @apply mt-3 flex items-center justify-center gap-3;
+  }
+
+  .portal-coverflow__arrow {
+    @apply inline-flex items-center justify-center w-9 h-9 rounded-full border border-slate-200 bg-white text-slate-600;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.06);
+  }
+
+  .portal-coverflow__dots {
+    @apply flex items-center justify-center gap-1.5;
+  }
+
+  .portal-coverflow__dot {
+    @apply w-1.5 h-1.5 rounded-full bg-slate-300 border-0 p-0;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+  }
+
+  .portal-coverflow__dot.is-active {
+    @apply bg-slate-700;
+    transform: scale(1.35);
+  }
+
+  .telephysio-page .portal-coverflow__dot.is-active {
+    @apply bg-teal-700;
+  }
+
+  @media (max-width: 379px) {
+    .portal-coverflow {
+      --shot-w: min(52vw, 12.25rem);
     }
   }
 
-  .community-fan-card img,
-  .community-shot-card__media img {
-    @apply w-full h-full object-cover object-top;
-  }
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .portal-stack__card {
+      width: clamp(6.1rem, 11.8vw, 8.75rem);
+      margin-inline: clamp(-1.15rem, -2.1vw, -0.7rem);
+    }
 
-  .community-fan-card img {
-    @apply aspect-[16/10] block;
-  }
+    .portal-stack__card--left,
+    .portal-stack__card--right {
+      width: clamp(6.7rem, 13vw, 9.5rem);
+    }
 
-  .community-window-dots {
-    @apply flex items-center gap-1 px-3 py-2 bg-slate-50 border-b border-slate-100;
-  }
-
-  .community-window-dots i {
-    @apply block w-1.5 h-1.5 rounded-full bg-slate-300;
-  }
-
-  .community-shot-card__media {
-    @apply block aspect-[16/10] overflow-hidden bg-slate-100;
-  }
-
-  .community-shot-card__label {
-    @apply block px-3.5 py-2.5 text-sm font-semibold text-slate-700;
-  }
-
-  .community-shot-carousel {
-    @apply flex gap-4 overflow-x-auto snap-x snap-mandatory pb-3 -mx-4 px-4 sm:mx-0 sm:px-0;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  .community-shot-carousel::-webkit-scrollbar {
-    display: none;
-  }
-
-  .community-shot-card--slide {
-    @apply min-w-[78%] sm:min-w-[46%] lg:min-w-[32%] snap-start shrink-0;
+    .portal-stack__card--center {
+      width: clamp(7.5rem, 14.8vw, 10.75rem);
+    }
   }
 
   @media (hover: hover) {
-    .community-fan-card:hover,
-    .community-shot-card:hover {
+    .portal-stack__card:hover,
+    .portal-coverflow__card:hover {
+      z-index: 8;
+    }
+
+    .portal-stack__card:hover .portal-shot-frame,
+    .portal-coverflow__card:hover .portal-shot-frame {
+      transform: translateY(-5px);
       box-shadow:
         0 2px 6px rgb(15 23 42 / 0.08),
-        0 22px 40px -18px rgb(15 23 42 / 0.32);
-    }
-
-    .community-fan-card:hover {
-      transform: translateY(-6px) scale(1.03) !important;
-      z-index: 40 !important;
-    }
-
-    .community-shot-card:hover {
-      transform: translateY(-3px);
-    }
-
-    .community-shot-card:hover img {
-      transform: scale(1.03);
-    }
-
-    .community-shot-card__media img {
-      transition: transform 0.35s ease;
+        0 22px 40px -18px rgb(15 23 42 / 0.34);
     }
   }
 
-  .community-fan-card:focus-visible,
-  .community-shot-card:focus-visible {
+  .portal-stack__card:focus-visible .portal-shot-frame,
+  .portal-coverflow__card:focus-visible .portal-shot-frame,
+  .portal-coverflow__arrow:focus-visible,
+  .portal-coverflow__dot:focus-visible {
     @apply outline-none ring-2 ring-primary-500 ring-offset-2;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .portal-shot-frame,
+    .portal-coverflow__card,
+    .portal-coverflow__dot {
+      transition: none;
+    }
   }
 
   .community-lightbox {
@@ -674,11 +884,11 @@
   }
 
   .community-lightbox__figure {
-    @apply m-0 w-full max-w-4xl touch-pan-y;
+    @apply m-0 w-full max-w-lg touch-pan-y flex flex-col items-center;
   }
 
   .community-lightbox__img {
-    @apply w-full max-h-[72vh] object-contain rounded-xl sm:rounded-2xl bg-slate-900;
+    @apply w-auto max-w-full max-h-[82vh] object-contain rounded-xl sm:rounded-2xl bg-slate-900;
     box-shadow: 0 24px 60px -20px rgb(0 0 0 / 0.55);
   }
 
@@ -743,11 +953,11 @@
   }
 
   .community-lightbox__thumb {
-    @apply w-16 h-10 rounded-lg overflow-hidden border-2 border-transparent opacity-70 shrink-0;
+    @apply w-10 h-[4.6rem] rounded-lg overflow-hidden border-2 border-transparent opacity-70 shrink-0 bg-slate-800;
   }
 
   .community-lightbox__thumb img {
-    @apply w-full h-full object-cover;
+    @apply w-full h-full object-contain;
   }
 
   .community-lightbox__thumb.is-active {
