@@ -185,17 +185,17 @@ export default function RecoveryRoadmapEditor({
                   />
                 </CmsField>
                 <MediaUrlOrUpload
-                  label="Phase image"
-                  hint="Shown beside the phase copy. A portrait or 3:4 photo works best."
-                  recommendedSize="900 × 1200 px (3:4 ratio)"
-                  aspectRatio="4:3"
-                  devicePreview="4:3"
+                  label="Phase image (optional)"
+                  hint="Transparent PNGs sit naturally on the roadmap background. Leave empty for a clean blank right column."
+                  recommendedSize="PNG cutout or photo"
+                  previewFit="contain"
+                  previewClass="max-h-64 max-w-[210px] w-full min-h-[9rem] bg-slate-100"
                   accent={mediaAccent}
                   icon="fa-image"
                   urlValue={phase.image || ''}
                   onUrlChange={(v) => updatePhase(i, { image: v })}
                   onUpload={uploadFn}
-                  accept="image/jpeg,image/png,image/webp"
+                  accept="image/png,image/jpeg,image/webp"
                   maxMb={4}
                   preview="image"
                 />

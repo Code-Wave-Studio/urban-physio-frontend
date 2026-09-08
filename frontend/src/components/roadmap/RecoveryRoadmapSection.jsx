@@ -5,7 +5,6 @@ import { resolveMediaUrl } from '../../utils/mediaUrl';
 import {
   HOME_ROADMAP_DEFAULTS,
   TELE_ROADMAP_DEFAULTS,
-  roadmapFallbackImage,
   visibleRoadmapPhases,
   visibleRoadmapSpecs,
 } from '../../constants/recoveryRoadmapDefaults';
@@ -47,26 +46,10 @@ const THEMES = {
   },
 };
 
-const DESKTOP_MQ = '(min-width: 1024px)';
-
-function useDesktopSticky() {
-  const [sticky, setSticky] = useState(() =>
-    typeof window !== 'undefined' ? window.matchMedia(DESKTOP_MQ).matches : false
-  );
-
-  useEffect(() => {
-    const mq = window.matchMedia(DESKTOP_MQ);
-    const sync = () => setSticky(mq.matches);
-    sync();
-    mq.addEventListener('change', sync);
-    return () => mq.removeEventListener('change', sync);
-  }, []);
-
-  return sticky;
-}
-
-function phaseImageSrc(phase, theme, index) {
-  return resolveMediaUrl(phase?.image) || phase?.image || roadmapFallbackImage(theme, index);
+function phaseImageSrc(phase) {
+  const raw = String(phase?.image || '').trim();
+  if (!raw) return '';
+  return resolveMediaUrl(raw) || raw;
 }
 
 function specsGridClass(count) {
@@ -80,11 +63,9 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
   const copy = { ...tokens.defaults, ...sections };
   const phases = useMemo(() => visibleRoadmapPhases(copy.roadmap_phases), [copy.roadmap_phases]);
   const reduceMotion = useReducedMotion();
-  const stickyMode = useDesktopSticky();
   const trackRef = useRef(null);
   const [active, setActive] = useState(0);
   const [brokenImages, setBrokenImages] = useState({});
-  const touchStartX = useRef(null);
 
   const count = phases.length;
   const safeIndex = count ? Math.min(active, count - 1) : 0;
@@ -92,7 +73,7 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
   const specs = visibleRoadmapSpecs(phase?.specs);
 
   const syncFromScroll = useCallback(() => {
-    if (!stickyMode || count < 1) return;
+    if (count < 1) return;
     const el = trackRef.current;
     if (!el) return;
     const total = el.offsetHeight - window.innerHeight;
@@ -104,10 +85,9 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
     const ratio = scrolled / total;
     const next = Math.min(count - 1, Math.floor(ratio * count + 1e-4));
     setActive(next);
-  }, [stickyMode, count]);
+  }, [count]);
 
   useEffect(() => {
-    if (!stickyMode) return undefined;
     let frame = 0;
     const onScroll = () => {
       if (frame) return;
@@ -124,44 +104,29 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
       window.removeEventListener('resize', onScroll);
       if (frame) cancelAnimationFrame(frame);
     };
-  }, [stickyMode, syncFromScroll]);
+  }, [syncFromScroll]);
 
   useEffect(() => {
-    setActive(0);
+    setActive((prev) => (count ? Math.min(prev, count - 1) : 0));
   }, [count]);
 
   const goToPhase = useCallback(
     (index) => {
       const next = Math.max(0, Math.min(count - 1, index));
-      if (!stickyMode) {
-        setActive(next);
-        return;
-      }
       const el = trackRef.current;
       if (!el || count < 1) return;
       const total = Math.max(el.offsetHeight - window.innerHeight, 0);
       const target = el.getBoundingClientRect().top + window.scrollY + (next / count) * total + 8;
       window.scrollTo({ top: target, behavior: reduceMotion ? 'auto' : 'smooth' });
     },
-    [count, stickyMode, reduceMotion]
+    [count, reduceMotion]
   );
-
-  const onTouchStart = (event) => {
-    touchStartX.current = event.changedTouches[0]?.clientX ?? null;
-  };
-
-  const onTouchEnd = (event) => {
-    if (stickyMode || touchStartX.current == null) return;
-    const dx = (event.changedTouches[0]?.clientX ?? touchStartX.current) - touchStartX.current;
-    touchStartX.current = null;
-    if (Math.abs(dx) < 48) return;
-    goToPhase(dx < 0 ? safeIndex + 1 : safeIndex - 1);
-  };
 
   if (!phase) return null;
 
   const headingId = theme === 'tele' ? 'tele-roadmap-heading' : 'hp-roadmap-heading';
-  const imageSrc = brokenImages[safeIndex] ? null : phaseImageSrc(phase, theme, safeIndex);
+  const imageSrc = brokenImages[safeIndex] ? '' : phaseImageSrc(phase);
+  const hasImage = Boolean(imageSrc);
   const duration = reduceMotion ? 0 : 0.34;
   const fade = {
     initial: reduceMotion ? { opacity: 1 } : { opacity: 0, y: 10 },
@@ -176,13 +141,13 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
       ref={trackRef}
       className={`roadmap-section ${tokens.section}`}
       id={theme === 'tele' ? 'telerehab-recovery-roadmap' : 'physioathome-recovery-roadmap'}
-      style={stickyMode ? { '--roadmap-phases': String(count) } : undefined}
+      style={{ '--roadmap-phases': String(count) }}
       aria-labelledby={headingId}
     >
       <div className={`roadmap-pin ${tokens.pin} text-white`}>
         <div className="absolute inset-0 roadmap-pin-grid pointer-events-none" aria-hidden />
         <div className="roadmap-pin-inner relative z-[1] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="roadmap-layout">
+          <div className={`roadmap-layout ${hasImage ? '' : 'is-empty-visual'}`.trim()}>
             <div className="roadmap-copy">
               <div className="roadmap-intro">
                 <p className={`text-[11px] sm:text-xs font-bold uppercase tracking-[0.18em] ${tokens.label}`}>
@@ -215,37 +180,25 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
             </div>
 
             <div
-              className="roadmap-visual"
-              onTouchStart={onTouchStart}
-              onTouchEnd={onTouchEnd}
+              className={`roadmap-visual ${hasImage ? 'has-image' : 'is-empty'}`}
+              aria-hidden={!hasImage}
             >
-              <div className={`roadmap-orb ${tokens.circle}`} aria-hidden />
-              <div className={`roadmap-visual-frame ring-1 ${tokens.imageRing}`}>
-                <AnimatePresence mode="wait">
-                  <motion.div
+              <AnimatePresence mode="wait">
+                {hasImage ? (
+                  <motion.img
                     key={phase.id || `${theme}-${safeIndex}`}
-                    className="roadmap-visual-layer"
-                    initial={reduceMotion ? { opacity: 1 } : { opacity: 0, scale: 1.03 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={reduceMotion ? { opacity: 1 } : { opacity: 0, scale: 0.985 }}
+                    src={imageSrc}
+                    alt={phase.image_alt || phase.title || 'Recovery phase'}
+                    className="roadmap-visual-img"
+                    loading={safeIndex === 0 ? 'eager' : 'lazy'}
+                    initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
                     transition={{ duration, ease: [0.22, 1, 0.36, 1] }}
-                  >
-                    {imageSrc ? (
-                      <img
-                        src={imageSrc}
-                        alt={phase.image_alt || phase.title || 'Recovery phase'}
-                        className="roadmap-visual-img"
-                        loading={safeIndex === 0 ? 'eager' : 'lazy'}
-                        onError={() => setBrokenImages((prev) => ({ ...prev, [safeIndex]: true }))}
-                      />
-                    ) : (
-                      <div className="roadmap-visual-fallback">
-                        <FaIcon icon="fa-user-nurse" className="text-5xl text-white/50" />
-                      </div>
-                    )}
-                  </motion.div>
-                </AnimatePresence>
-              </div>
+                    onError={() => setBrokenImages((prev) => ({ ...prev, [safeIndex]: true }))}
+                  />
+                ) : null}
+              </AnimatePresence>
             </div>
 
             <PhaseProgress
@@ -293,32 +246,6 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
                 </motion.ul>
               </AnimatePresence>
             </div>
-
-            {!stickyMode && count > 1 ? (
-              <div className="roadmap-mobile-nav">
-                <button
-                  type="button"
-                  className="roadmap-nav-btn"
-                  onClick={() => goToPhase(safeIndex - 1)}
-                  disabled={safeIndex === 0}
-                  aria-label="Previous phase"
-                >
-                  <FaIcon icon="fa-arrow-left" />
-                </button>
-                <p className="text-xs font-semibold text-white/70">
-                  {String(safeIndex + 1).padStart(2, '0')} / {String(count).padStart(2, '0')}
-                </p>
-                <button
-                  type="button"
-                  className="roadmap-nav-btn"
-                  onClick={() => goToPhase(safeIndex + 1)}
-                  disabled={safeIndex === count - 1}
-                  aria-label="Next phase"
-                >
-                  <FaIcon icon="fa-arrow-right" />
-                </button>
-              </div>
-            ) : null}
           </div>
         </div>
       </div>
@@ -360,7 +287,7 @@ function PhaseProgress({ phases, active, tokens, onSelect }) {
                   current ? 'font-bold' : 'font-semibold'
                 }`}
               >
-                {String(i + 1).padStart(2, '0')}
+                <span className="sr-only">{item.number || `Phase ${i + 1}`}</span>
               </button>
               {i < phases.length - 1 ? (
                 <span className={`roadmap-step-line ${tokens.progressLine}`} aria-hidden>
