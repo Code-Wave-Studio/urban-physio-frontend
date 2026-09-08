@@ -7,6 +7,7 @@ import SeoBreadcrumbs from '../components/seo/SeoBreadcrumbs';
 import ManagedPageSeo from '../components/seo/ManagedPageSeo';
 import { breadcrumbSchema, faqPageSchema, medicalWebPageSchema } from '../components/seo/PageMeta';
 import { telephysio } from '../services/api';
+import CommunityPreviewSection from '../components/community/CommunityPreviewSection';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import { HEALTHCARE_IMAGES } from '../utils/healthcareImages';
 import { bookTelePhysioUrl } from '../utils/bookUrl';
@@ -745,6 +746,8 @@ export default function TelePhysioPage() {
           </div>
         </div>
       </section>
+
+      <CommunityPreviewSection sections={s} accent="teal" />
 
       <Footer />
     </div>

@@ -24,7 +24,7 @@ export function CtaLink({ to, children, className = 'btn-primary', icon = 'fa-ca
   return (
     <Link
       to={bookHref(to)}
-      className={`${className} inline-flex items-center justify-center gap-2 min-h-11 px-6`}
+      className={`${className} booking-cta-shadow inline-flex items-center justify-center gap-2 min-h-11 px-6`}
     >
       <FaIcon icon={icon} />
       {children}

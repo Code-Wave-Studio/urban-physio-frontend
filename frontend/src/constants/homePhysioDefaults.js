@@ -1,3 +1,5 @@
+import { HOME_COMMUNITY_DEFAULTS } from './communityPreview';
+
 /** Default PhysioAtHome / Home Physiotherapy page content (CRF-2026-0006). */
 
 export const HOME_VISIT_BOOK_PATH = '/book?type=home_visit&mode=home-visit';
@@ -369,6 +371,7 @@ export const HOME_PHYSIO_DEFAULTS = {
         a: 'Yes. You can start at home and move to clinic or video — or mix all three — while keeping the same physiotherapist and treatment history. Continuity of care is built into the platform.',
       },
     ],
+    ...HOME_COMMUNITY_DEFAULTS,
   },
 };
 

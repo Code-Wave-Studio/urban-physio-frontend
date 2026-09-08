@@ -8,6 +8,7 @@ import ManagedPageSeo from '../components/seo/ManagedPageSeo';
 import { breadcrumbSchema, faqPageSchema, medicalWebPageSchema } from '../components/seo/PageMeta';
 import Expandable, { AccordionItem } from '../components/homePhysio/Expandable';
 import { CheckRow, CtaLink, QuoteCard, SectionHead, bookHref } from '../components/homePhysio/HomePhysioUi';
+import CommunityPreviewSection from '../components/community/CommunityPreviewSection';
 import { homePhysio } from '../services/api';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import { HEALTHCARE_IMAGES } from '../utils/healthcareImages';
@@ -535,6 +536,8 @@ export default function HomePhysiotherapyPage() {
           </div>
         </div>
       </section>
+
+      <CommunityPreviewSection sections={s} accent="orange" />
 
       <Footer />
     </div>

@@ -386,7 +386,7 @@ export default function Navbar({
             <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto">
               {user && <NotificationBell />}
               {!portalMode && (
-                <Link to="/book" className="hidden sm:inline-flex btn-primary text-sm !py-2 !px-4">
+                <Link to="/book" className="hidden sm:inline-flex btn-primary booking-cta-shadow text-sm !py-2 !px-4">
                   Book Appointment
                 </Link>
               )}

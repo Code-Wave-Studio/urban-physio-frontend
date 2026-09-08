@@ -1,3 +1,5 @@
+import { TELE_COMMUNITY_DEFAULTS } from './communityPreview';
+
 /**
  * Default TelePhysio by Myoreset page content (CRF-2026-0006).
  */
@@ -379,6 +381,7 @@ export const TELEPHYSIO_DEFAULTS = {
     final_primary_cta_link: TELEPHYSIO_BOOK_PATH,
     final_secondary_cta_label: 'Talk to Us',
     final_secondary_cta_type: 'whatsapp',
+    ...TELE_COMMUNITY_DEFAULTS,
   },
 };
 

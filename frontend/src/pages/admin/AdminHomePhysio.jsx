@@ -4,6 +4,7 @@ import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import FaIcon from '../../components/FaIcon';
 import MediaUrlOrUpload from '../../components/admin/MediaUrlOrUpload';
 import { CmsField, CmsListEditor, CmsPanel } from '../../components/admin/CmsFormKit';
+import CommunityPreviewEditor from '../../components/admin/CommunityPreviewEditor';
 import { admin, uploadCmsImage } from '../../services/api';
 import { HOME_PHYSIO_DEFAULTS } from '../../constants/homePhysioDefaults';
 import toast from 'react-hot-toast';
@@ -14,6 +15,7 @@ const TABS = [
   { id: 'book', label: 'Tiers & booking', icon: 'fa-user-doctor' },
   { id: 'price', label: 'Pricing & areas', icon: 'fa-tag' },
   { id: 'voice', label: 'Reviews & FAQ', icon: 'fa-comments' },
+  { id: 'community', label: 'Social & portal', icon: 'fa-share-nodes' },
   { id: 'seo', label: 'SEO', icon: 'fa-magnifying-glass-chart' },
 ];
 
@@ -455,6 +457,17 @@ export default function AdminHomePhysio() {
                 ]}
               />
             </CmsPanel>
+          </div>
+        )}
+
+        {tab === 'community' && (
+          <div className="space-y-5" role="tabpanel">
+            <CommunityPreviewEditor
+              sections={s}
+              onChange={setSection}
+              uploadFn={uploadCmsImage}
+              accent="orange"
+            />
           </div>
         )}
 

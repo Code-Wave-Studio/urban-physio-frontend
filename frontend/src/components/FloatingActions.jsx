@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useContact } from '../contexts/ContactContext';
 import { whatsappChatUrl, whatsappDigits } from '../utils/whatsapp';
-import { bookHomeVisitUrl } from '../utils/bookUrl';
+import { bookHomeVisitUrl, bookTelePhysioUrl } from '../utils/bookUrl';
 import FaIcon from './FaIcon';
 
 import { FLOATING_ACTIONS_EVENT } from '../utils/floatingActionsBus';
@@ -34,6 +34,13 @@ const SCROLL_SHOW_AFTER = 320;
 const HOME_VISIT_WA =
   "Hi, I'd like to book a home physiotherapy session";
 
+const BOOK_OPTIONS = [
+  { to: bookHomeVisitUrl(), label: 'Home Visit', icon: 'fa-house-medical' },
+  { to: bookTelePhysioUrl(), label: 'TeleRehab', icon: 'fa-video' },
+  { to: '/doctors', label: 'Find Physio', icon: 'fa-user-doctor' },
+  { to: '/clinics', label: 'Find Clinic', icon: 'fa-hospital' },
+];
+
 function IconArrowUp({ className = 'w-5 h-5' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
@@ -48,13 +55,13 @@ export default function FloatingActions() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [hiddenByOverlay, setHiddenByOverlay] = useState(false);
   const [openFab, setOpenFab] = useState(null);
+  const [bookMenuOpen, setBookMenuOpen] = useState(false);
   const hideAll = isBookingPage(pathname);
   const showFloating = isMarketingPage(pathname) && !isStaffDashboard(pathname) && !hideAll;
 
   const waDigits = whatsappDigits(whatsapp);
   const waUrl = showFloating ? whatsappChatUrl(whatsapp, HOME_VISIT_WA) : null;
   const telHref = phone ? `tel:${String(phone).replace(/\s/g, '')}` : null;
-  const bookHref = bookHomeVisitUrl();
 
   useEffect(() => {
     const onScroll = () => setShowScrollTop(window.scrollY > SCROLL_SHOW_AFTER);
@@ -71,23 +78,46 @@ export default function FloatingActions() {
 
   useEffect(() => {
     setOpenFab(null);
+    setBookMenuOpen(false);
   }, [pathname]);
 
   useEffect(() => {
-    if (!openFab) return undefined;
+    if (!openFab && !bookMenuOpen) return undefined;
     const onPointerDown = (e) => {
-      if (!e.target.closest?.('.fab-rail')) setOpenFab(null);
+      if (!e.target.closest?.('.fab-rail')) {
+        setOpenFab(null);
+        setBookMenuOpen(false);
+        return;
+      }
+      if (bookMenuOpen && !e.target.closest?.('.fab-book-wrap')) {
+        setBookMenuOpen(false);
+      }
     };
     document.addEventListener('pointerdown', onPointerDown);
     return () => document.removeEventListener('pointerdown', onPointerDown);
-  }, [openFab]);
+  }, [openFab, bookMenuOpen]);
+
+  useEffect(() => {
+    if (!bookMenuOpen) return undefined;
+    const onKey = (e) => {
+      if (e.key === 'Escape') setBookMenuOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [bookMenuOpen]);
 
   const onFabActivate = (id) => (e) => {
     if (!isTouchLike()) return;
     if (openFab !== id) {
       e.preventDefault();
       setOpenFab(id);
+      setBookMenuOpen(false);
     }
+  };
+
+  const toggleBookMenu = () => {
+    setOpenFab(null);
+    setBookMenuOpen((open) => !open);
   };
 
   const scrollToTop = () => {
@@ -99,20 +129,50 @@ export default function FloatingActions() {
   return (
     <div className="floating-actions floating-actions--rail" aria-label="Quick actions">
       <div className="fab-rail" role="navigation" aria-label="Book, call, or WhatsApp">
-        <Link
-          to={bookHref}
-          className={`fab-rail-btn fab-rail-book ${openFab === 'book' ? 'is-open' : ''}`}
-          title="Book a Session"
-          aria-label="Book a home physiotherapy session"
-          onClick={onFabActivate('book')}
-        >
-          <span className="fab-rail-icon" aria-hidden>
-            <FaIcon icon="fa-calendar-check" />
-          </span>
-          <span className="fab-rail-label" aria-hidden>
-            Book a Session
-          </span>
-        </Link>
+        <div className={`fab-book-wrap ${bookMenuOpen ? 'is-open' : ''}`}>
+          <div
+            id="fab-book-menu"
+            className="fab-book-menu"
+            role="menu"
+            aria-label="Booking options"
+            aria-hidden={!bookMenuOpen}
+            inert={!bookMenuOpen ? true : undefined}
+          >
+            {BOOK_OPTIONS.map((option) => (
+              <Link
+                key={option.to}
+                to={option.to}
+                role="menuitem"
+                className="fab-book-option"
+                tabIndex={bookMenuOpen ? 0 : -1}
+                onClick={() => setBookMenuOpen(false)}
+              >
+                <span className="fab-book-option-icon" aria-hidden>
+                  <FaIcon icon={option.icon} />
+                </span>
+                <span>{option.label}</span>
+              </Link>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            className={`fab-rail-btn fab-rail-book ${bookMenuOpen ? 'is-open' : ''}`}
+            title="Book a Session"
+            aria-label="Book a Session"
+            aria-haspopup="menu"
+            aria-expanded={bookMenuOpen}
+            aria-controls="fab-book-menu"
+            onClick={toggleBookMenu}
+          >
+            <span className="fab-rail-icon" aria-hidden>
+              <FaIcon icon="fa-calendar-check" />
+            </span>
+            <span className="fab-rail-label" aria-hidden>
+              Book a Session
+            </span>
+          </button>
+        </div>
 
         {telHref && (
           <a
