@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import FaIcon from '../FaIcon';
@@ -12,7 +12,7 @@ import {
   resolveTreatmentLink,
 } from '../../constants/painSelectionData';
 import { bookPainAreaUrl } from '../../utils/bookUrl';
-import { resolveMediaUrl } from '../../utils/mediaUrl';
+import { sanitizeCmsImageUrl } from '../../utils/mediaUrl';
 import { useAuth } from '../../contexts/AuthContext';
 
 const BOOK_ANCHOR_ID = 'book-care';
@@ -164,65 +164,95 @@ function BodyPartHighlight({ activeId, spots, theme }) {
 }
 
 function PainRunnerVisual({ activeId, activeLabel, painPoints, theme, imageUrl }) {
-  const sources = useMemo(() => {
-    const list = [];
-    const custom = resolveMediaUrl(imageUrl) || imageUrl;
-    if (custom) list.push(custom);
-    list.push(...PAIN_RUNNER_SOURCES);
-    return list;
-  }, [imageUrl]);
-  const [srcIndex, setSrcIndex] = useState(0);
-  const [imgBroken, setImgBroken] = useState(false);
-  const [loaded, setLoaded] = useState(false);
+  const customSrc = useMemo(() => sanitizeCmsImageUrl(imageUrl), [imageUrl]);
+  const [fallbackIndex, setFallbackIndex] = useState(0);
+  const [fallbackDead, setFallbackDead] = useState(false);
+  const [rejectedCustom, setRejectedCustom] = useState('');
+  const [customReady, setCustomReady] = useState(false);
+  const customImgRef = useRef(null);
   const active = useMemo(() => getPainPointById(activeId, painPoints), [activeId, painPoints]);
   const highlightSpots = useMemo(() => getBodyHighlightSpots(active), [active]);
   const label = activeLabel || active?.label || 'Body';
-  const imgSrc = sources[srcIndex] || sources[0];
+  const fallbackSrc =
+    PAIN_RUNNER_SOURCES[Math.min(fallbackIndex, PAIN_RUNNER_SOURCES.length - 1)] || PAIN_RUNNER_SOURCES[0];
+  const tryCustom = Boolean(customSrc) && customSrc !== rejectedCustom && customSrc !== fallbackSrc;
+  const showCustom = tryCustom && customReady;
+  const figureVisible = !fallbackDead || showCustom;
 
   useEffect(() => {
-    setSrcIndex(0);
-    setImgBroken(false);
-    setLoaded(false);
-  }, [imageUrl]);
+    setCustomReady(false);
+    setRejectedCustom('');
+  }, [customSrc]);
 
-  const onImgError = () => {
-    if (srcIndex < sources.length - 1) {
-      setSrcIndex((i) => i + 1);
-      setLoaded(false);
+  useEffect(() => {
+    if (!tryCustom) return;
+    const el = customImgRef.current;
+    if (el?.complete && el.naturalWidth > 0) {
+      setCustomReady(true);
+    }
+  }, [tryCustom, customSrc]);
+
+  const onFallbackError = () => {
+    if (fallbackIndex < PAIN_RUNNER_SOURCES.length - 1) {
+      setFallbackIndex((i) => i + 1);
       return;
     }
-    setImgBroken(true);
+    setFallbackDead(true);
+  };
+
+  const onCustomError = () => {
+    if (!customSrc) return;
+    setRejectedCustom(customSrc);
+    setCustomReady(false);
+  };
+
+  const markCustomReady = (event) => {
+    const el = event?.currentTarget || customImgRef.current;
+    if (el && !el.naturalWidth) {
+      onCustomError();
+      return;
+    }
+    setCustomReady(true);
   };
 
   return (
     <div className={FIGURE_FRAME_CLASS}>
       <div className={`absolute inset-0 overflow-hidden rounded-xl border border-white/80 bg-gradient-to-br ${theme.figureFrame} shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] sm:rounded-2xl lg:rounded-3xl`}>
-        {!imgBroken ? (
-          <>
-            <div className="relative h-full w-full">
+        {figureVisible ? (
+          <div className="relative h-full w-full">
+            {!fallbackDead && (
               <img
-                key={imgSrc}
-                src={imgSrc}
-                alt={`Anatomy figure highlighting ${label}`}
-                className={`block h-full w-full select-none object-contain object-center transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'
-                  }`}
+                src={fallbackSrc}
+                alt={showCustom ? '' : `Anatomy figure highlighting ${label}`}
+                className="block h-full w-full select-none object-contain object-center"
+                width={500}
+                height={500}
+                style={{ filter: 'drop-shadow(0 12px 28px rgba(15, 23, 42, 0.1))' }}
+                draggable={false}
+                loading="eager"
+                fetchPriority="high"
+                onError={onFallbackError}
+              />
+            )}
+            {tryCustom && (
+              <img
+                src={customSrc}
+                alt={showCustom ? `Anatomy figure highlighting ${label}` : ''}
+                className={`pointer-events-none absolute inset-0 block h-full w-full select-none object-contain object-center transition-opacity duration-500 ${
+                  showCustom ? 'opacity-100' : 'opacity-0'
+                }`}
                 width={500}
                 height={500}
                 style={{ filter: 'drop-shadow(0 12px 28px rgba(15, 23, 42, 0.1))' }}
                 draggable={false}
                 decoding="async"
-                fetchPriority="high"
-                onLoad={() => setLoaded(true)}
-                onError={onImgError}
+                ref={customImgRef}
+                onLoad={markCustomReady}
+                onError={onCustomError}
               />
-              {loaded && <BodyPartHighlight activeId={activeId} spots={highlightSpots} theme={theme} />}
-            </div>
-            {!loaded && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className={`h-9 w-9 animate-pulse rounded-full border-2 ${theme.spinner}`} />
-              </div>
             )}
-          </>
+            <BodyPartHighlight activeId={activeId} spots={highlightSpots} theme={theme} />
+          </div>
         ) : (
           <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center text-xs text-slate-500 sm:text-sm">
             <FaIcon icon="fa-person-running" className={`text-3xl ${theme.iconMuted}`} />

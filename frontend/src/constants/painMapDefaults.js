@@ -5,6 +5,7 @@
 
 import { isFlagOn } from './communityPreview';
 import { PAIN_POINTS } from './painSelectionData';
+import { sanitizeCmsImageUrl } from '../utils/mediaUrl';
 
 const HOTSPOTS = Object.fromEntries(
   PAIN_POINTS.map((p) => [p.id, { left: p.highlight.left, top: p.highlight.top, icon: p.icon }])
@@ -263,7 +264,7 @@ export function painMapSectionProps(sections = {}, extras = {}) {
     knowMoreLabel: s.pain_know_more_label,
     bookLabel: s.pain_book_label,
     closeHref: s.pain_close_link || '/treatments',
-    figureImage: s.pain_image || '',
+    figureImage: sanitizeCmsImageUrl(s.pain_image),
     painPoints: extras.painPoints ?? visiblePainAreas(s.pain_areas),
     headingId: extras.headingId || 'pain-selection-heading',
     buildBookUrl: extras.buildBookUrl,

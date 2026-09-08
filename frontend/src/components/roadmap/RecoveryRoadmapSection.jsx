@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import FaIcon from '../FaIcon';
-import { resolveMediaUrl } from '../../utils/mediaUrl';
+import { sanitizeCmsImageUrl } from '../../utils/mediaUrl';
 import {
   HOME_ROADMAP_DEFAULTS,
   TELE_ROADMAP_DEFAULTS,
   visibleRoadmapPhases,
   visibleRoadmapSpecs,
+  roadmapFallbackImage,
 } from '../../constants/recoveryRoadmapDefaults';
 
 const THEMES = {
@@ -38,16 +39,48 @@ const THEMES = {
   },
 };
 
-function phaseImageSrc(phase) {
-  const raw = String(phase?.image || '').trim();
-  if (!raw) return '';
-  return resolveMediaUrl(raw) || raw;
-}
-
 function specsGridClass(count) {
   if (count >= 3) return 'roadmap-specs-grid roadmap-specs-grid--3';
   if (count === 2) return 'roadmap-specs-grid roadmap-specs-grid--2';
   return 'roadmap-specs-grid roadmap-specs-grid--1';
+}
+
+function RoadmapPhaseImage({ themeKey, phase, phaseIndex, reduceMotion, duration }) {
+  const fallbackSrc = roadmapFallbackImage(themeKey, phaseIndex);
+  const customSrc = sanitizeCmsImageUrl(phase?.image);
+  const [failedCustom, setFailedCustom] = useState(false);
+  const [failedFallback, setFailedFallback] = useState(false);
+
+  useEffect(() => {
+    setFailedCustom(false);
+    setFailedFallback(false);
+  }, [customSrc, fallbackSrc]);
+
+  if (!customSrc) return null;
+
+  const usingFallback = failedCustom;
+  const displaySrc = usingFallback ? fallbackSrc : customSrc;
+  if (!displaySrc || (usingFallback && failedFallback)) return null;
+
+  return (
+    <motion.img
+      src={displaySrc}
+      alt={phase.image_alt || phase.title || 'Recovery phase'}
+      className="roadmap-visual-img"
+      loading={phaseIndex === 0 ? 'eager' : 'lazy'}
+      initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
+      transition={{ duration, ease: [0.22, 1, 0.36, 1] }}
+      onError={() => {
+        if (!usingFallback) {
+          setFailedCustom(true);
+          return;
+        }
+        setFailedFallback(true);
+      }}
+    />
+  );
 }
 
 export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }) {
@@ -57,7 +90,6 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
   const reduceMotion = useReducedMotion();
   const trackRef = useRef(null);
   const [active, setActive] = useState(0);
-  const [brokenImages, setBrokenImages] = useState({});
 
   const count = phases.length;
   const safeIndex = count ? Math.min(active, count - 1) : 0;
@@ -105,8 +137,8 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
   if (!phase) return null;
 
   const headingId = theme === 'tele' ? 'tele-roadmap-heading' : 'hp-roadmap-heading';
-  const imageSrc = brokenImages[safeIndex] ? '' : phaseImageSrc(phase);
-  const hasImage = Boolean(imageSrc);
+  const themeKey = theme === 'tele' ? 'tele' : 'home';
+  const hasConfiguredImage = Boolean(sanitizeCmsImageUrl(phase?.image));
   const duration = reduceMotion ? 0 : 0.34;
   const fade = {
     initial: reduceMotion ? { opacity: 1 } : { opacity: 0, y: 10 },
@@ -127,7 +159,7 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
       <div className={`roadmap-pin ${tokens.pin} text-white`}>
         <div className="absolute inset-0 roadmap-pin-grid pointer-events-none" aria-hidden />
         <div className="roadmap-pin-inner relative z-[1] max-w-7xl mx-auto">
-          <div className={`roadmap-layout ${hasImage ? '' : 'is-empty-visual'}`.trim()}>
+          <div className={`roadmap-layout ${hasConfiguredImage ? '' : 'is-empty-visual'}`.trim()}>
             <div className="roadmap-copy">
               <div className="roadmap-intro">
                 <p className={`roadmap-label ${tokens.label}`}>
@@ -160,22 +192,18 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
             </div>
 
             <div
-              className={`roadmap-visual ${hasImage ? 'has-image' : 'is-empty'}`}
-              aria-hidden={!hasImage}
+              className={`roadmap-visual ${hasConfiguredImage ? 'has-image' : 'is-empty'}`}
+              aria-hidden={!hasConfiguredImage}
             >
               <AnimatePresence mode="wait">
-                {hasImage ? (
-                  <motion.img
-                    key={phase.id || `${theme}-${safeIndex}`}
-                    src={imageSrc}
-                    alt={phase.image_alt || phase.title || 'Recovery phase'}
-                    className="roadmap-visual-img"
-                    loading={safeIndex === 0 ? 'eager' : 'lazy'}
-                    initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
-                    transition={{ duration, ease: [0.22, 1, 0.36, 1] }}
-                    onError={() => setBrokenImages((prev) => ({ ...prev, [safeIndex]: true }))}
+                {hasConfiguredImage ? (
+                  <RoadmapPhaseImage
+                    key={phase.id || `${themeKey}-${safeIndex}`}
+                    themeKey={themeKey}
+                    phase={phase}
+                    phaseIndex={safeIndex}
+                    reduceMotion={reduceMotion}
+                    duration={duration}
                   />
                 ) : null}
               </AnimatePresence>
