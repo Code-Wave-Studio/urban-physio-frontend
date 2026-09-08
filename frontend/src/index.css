@@ -1093,20 +1093,12 @@
 
   .eco-theme-home {
     --eco-accent: #ea580c;
-    --eco-accent-soft: rgb(255 247 237 / 0.95);
-    --eco-accent-line: rgb(251 146 60 / 0.55);
-    --eco-muted: rgb(154 52 18 / 0.55);
-    --eco-wash: linear-gradient(180deg, #fff7ed 0%, #ffffff 28%, #ffffff 100%);
-    --eco-visual-wash: radial-gradient(circle at 70% 30%, rgb(255 237 213 / 0.9), transparent 58%);
+    --eco-surface: #fffaf6;
   }
 
   .eco-theme-tele {
     --eco-accent: #0f766e;
-    --eco-accent-soft: rgb(240 253 250 / 0.95);
-    --eco-accent-line: rgb(45 212 191 / 0.55);
-    --eco-muted: rgb(15 118 110 / 0.55);
-    --eco-wash: linear-gradient(180deg, #f0fdfa 0%, #ffffff 28%, #ffffff 100%);
-    --eco-visual-wash: radial-gradient(circle at 70% 30%, rgb(204 251 241 / 0.85), transparent 58%);
+    --eco-surface: #f7fffe;
   }
 
   .eco-pin {
@@ -1115,7 +1107,7 @@
     height: calc(100svh - var(--site-header-height, 3.5rem));
     min-height: 0;
     overflow: hidden;
-    background: var(--eco-wash);
+    background: var(--eco-surface, #fff);
   }
 
   .eco-inner {
@@ -1123,9 +1115,9 @@
     flex-direction: column;
     height: 100%;
     min-height: 0;
-    max-width: 80rem;
-    margin-inline: auto;
-    padding: 0.85rem 1rem calc(1.1rem + env(safe-area-inset-bottom, 0px));
+    width: 100%;
+    margin: 0;
+    padding: 0;
     overflow: hidden;
   }
 
@@ -1137,26 +1129,27 @@
     order: 1;
     min-width: 0;
     flex: 0 0 auto;
+    padding: 1rem 1.15rem 0.15rem;
   }
 
   .eco-label {
     margin: 0;
     font-size: 0.6875rem;
     font-weight: 700;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--eco-accent);
   }
 
   .eco-heading {
-    margin: 0.45rem 0 0;
+    margin: 0.7rem 0 0;
     font-weight: 800;
-    letter-spacing: -0.03em;
-    line-height: 1.18;
+    letter-spacing: -0.035em;
+    line-height: 1.12;
     color: rgb(15 23 42);
-    font-size: clamp(1.35rem, 6vw, 1.75rem);
+    font-size: clamp(1.6rem, 7vw, 2.05rem);
     text-wrap: balance;
-    max-width: 18ch;
+    max-width: 12.5ch;
   }
 
   .eco-heading-accent {
@@ -1164,19 +1157,21 @@
   }
 
   .eco-lede {
-    margin: 0.55rem 0 0;
-    font-size: 0.875rem;
-    line-height: 1.6;
-    color: rgb(71 85 105);
-    max-width: 40rem;
+    margin: 0.85rem 0 0;
+    font-size: 0.9375rem;
+    line-height: 1.65;
+    color: rgb(100 116 139);
+    max-width: 36rem;
   }
 
   .eco-visual {
     order: 2;
     position: relative;
     flex: 0 0 auto;
+    width: 100%;
     min-width: 0;
-    margin-top: 0.85rem;
+    margin: 0.9rem 0 0;
+    background: #000;
   }
 
   .eco-visual-frame {
@@ -1185,8 +1180,8 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    height: min(34vh, 13.5rem);
-    background-image: var(--eco-visual-wash);
+    height: min(38vh, 14.5rem);
+    background: #000;
   }
 
   .eco-visual-slide {
@@ -1195,15 +1190,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 0.75rem 1rem;
     opacity: 0;
-    transform: translate3d(0, 10px, 0) scale(0.985);
+    transform: translate3d(0, 8px, 0);
     transition: opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1), transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
     pointer-events: none;
+    background: #000;
   }
 
   .eco-visual-slide.is-active {
     opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
+    transform: translate3d(0, 0, 0);
     pointer-events: auto;
     z-index: 1;
   }
@@ -1224,34 +1221,12 @@
     pointer-events: none;
   }
 
-  .eco-visual-fallback {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-    width: min(100%, 16rem);
-    height: 100%;
-    color: var(--eco-accent);
-  }
-
-  .eco-visual-fallback-icon {
-    font-size: 1.75rem;
-    line-height: 1;
-  }
-
-  .eco-visual-fallback-number {
-    font-size: 1.5rem;
-    font-weight: 800;
-    letter-spacing: -0.04em;
-    color: rgb(15 23 42 / 0.28);
-  }
-
   .eco-nav {
     order: 3;
     min-width: 0;
     flex: 1 1 auto;
-    margin-top: 0.7rem;
+    margin: 0;
+    padding: 0.35rem 1.15rem calc(0.9rem + env(safe-area-inset-bottom, 0px));
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: thin;
@@ -1260,153 +1235,76 @@
   .eco-list {
     list-style: none;
     margin: 0;
-    padding: 0;
-    position: relative;
+    padding: 0.35rem 0 0;
   }
 
-  .eco-list::before {
-    content: '';
-    position: absolute;
-    top: 0.35rem;
-    bottom: 0.35rem;
-    left: 0.7rem;
-    width: 2px;
-    background: rgb(226 232 240);
-    border-radius: 9999px;
-  }
-
-  .eco-item {
-    position: relative;
-  }
-
-  .eco-item.is-active::before {
-    content: '';
-    position: absolute;
-    left: 0.7rem;
-    top: 0.45rem;
-    bottom: 0.45rem;
-    width: 2px;
-    background: var(--eco-accent-line);
-    border-radius: 9999px;
-    z-index: 0;
+  .eco-item + .eco-item {
+    margin-top: 0.15rem;
   }
 
   .eco-item-btn {
-    display: grid;
-    grid-template-columns: 2.1rem minmax(0, 1fr);
-    column-gap: 0.75rem;
-    align-items: start;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
     width: 100%;
     text-align: left;
     background: transparent;
     border: 0;
-    padding: 0.55rem 0.4rem 0.55rem 0;
-    border-radius: 0.85rem;
+    padding: 0.85rem 0;
+    border-radius: 0;
     cursor: pointer;
     color: inherit;
   }
 
   .eco-item-btn:focus-visible {
     outline: 2px solid var(--eco-accent);
-    outline-offset: 2px;
-  }
-
-  .eco-item-index {
-    position: relative;
-    z-index: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.45rem;
-    height: 1.45rem;
-    margin-top: 0.1rem;
-    border-radius: 9999px;
-    background: #fff;
-    border: 2px solid rgb(203 213 225);
-    font-size: 0.625rem;
-    font-weight: 800;
-    letter-spacing: 0.02em;
-    color: rgb(100 116 139);
-    transition: border-color 0.22s ease, background 0.22s ease, color 0.22s ease, box-shadow 0.22s ease;
-  }
-
-  .eco-item-body {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-  }
-
-  .eco-item-title-row {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    min-width: 0;
-  }
-
-  .eco-item-icon {
-    color: rgb(148 163 184);
-    font-size: 0.8rem;
-    flex-shrink: 0;
+    outline-offset: 3px;
   }
 
   .eco-item-title {
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-weight: 600;
     line-height: 1.3;
     color: rgb(100 116 139);
     overflow-wrap: break-word;
+    transition: color 0.2s ease;
   }
 
   .eco-item-copy {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    font-size: 0.8rem;
-    line-height: 1.5;
-    color: rgb(148 163 184);
-  }
-
-  .eco-item.is-active .eco-item-index {
-    background: var(--eco-accent);
-    border-color: var(--eco-accent);
-    color: #fff;
-    box-shadow: 0 0 0 4px var(--eco-accent-soft);
-  }
-
-  .eco-item.is-active .eco-item-icon {
-    color: var(--eco-accent);
+    display: none;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: rgb(71 85 105);
+    max-width: 34rem;
   }
 
   .eco-item.is-active .eco-item-title {
-    font-weight: 800;
-    color: rgb(15 23 42);
+    font-weight: 700;
+    color: var(--eco-accent);
   }
 
   .eco-item.is-active .eco-item-copy {
-    -webkit-line-clamp: 4;
-    color: rgb(71 85 105);
-  }
-
-  .eco-item.is-active .eco-item-btn {
-    background: var(--eco-accent-soft);
-    padding-right: 0.65rem;
-    padding-left: 0.15rem;
+    display: block;
   }
 
   @media (min-width: 390px) {
-    .eco-inner {
-      padding-left: 1.15rem;
-      padding-right: 1.15rem;
+    .eco-intro {
+      padding-left: 1.35rem;
+      padding-right: 1.35rem;
+    }
+
+    .eco-nav {
+      padding-left: 1.35rem;
+      padding-right: 1.35rem;
     }
 
     .eco-heading {
-      font-size: clamp(1.45rem, 5.6vw, 1.85rem);
+      font-size: clamp(1.7rem, 6vw, 2.15rem);
     }
 
     .eco-visual-frame {
-      height: min(36vh, 14.5rem);
+      height: min(40vh, 16rem);
     }
   }
 
@@ -1416,11 +1314,15 @@
     }
 
     .eco-lede {
-      font-size: 0.9375rem;
+      font-size: 1rem;
+    }
+
+    .eco-visual-slide {
+      padding: 1rem 1.25rem;
     }
 
     .eco-visual-frame {
-      height: min(38vh, 16rem);
+      height: min(42vh, 17.5rem);
     }
   }
 
@@ -1436,73 +1338,88 @@
 
     .eco-inner {
       display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+      grid-template-columns: minmax(17rem, 0.46fr) minmax(0, 0.54fr);
       grid-template-areas: "copy visual";
-      column-gap: 1.5rem;
-      align-items: center;
-      padding: 1.1rem 2rem 1.4rem;
+      column-gap: 0;
+      align-items: stretch;
+      padding: 0;
     }
 
     .eco-copy {
       display: flex;
       flex-direction: column;
-      gap: 1.1rem;
+      justify-content: center;
+      gap: 1.75rem;
       grid-area: copy;
       min-width: 0;
       max-height: 100%;
       overflow: hidden;
+      padding: 1.75rem 1.75rem 1.75rem 2rem;
     }
 
     .eco-intro,
     .eco-nav,
     .eco-visual {
       order: unset;
-      margin-top: 0;
+      margin: 0;
+      padding: 0;
     }
 
     .eco-heading {
-      max-width: 14ch;
-      font-size: clamp(1.65rem, 3.2vw, 2.05rem);
+      max-width: 11.5ch;
+      font-size: clamp(1.85rem, 3.4vw, 2.35rem);
     }
 
     .eco-lede {
-      font-size: 0.9375rem;
-      line-height: 1.65;
+      font-size: 0.975rem;
+      line-height: 1.7;
+      margin-top: 1rem;
     }
 
     .eco-visual {
       grid-area: visual;
       height: 100%;
       display: flex;
-      align-items: center;
+      align-items: stretch;
+      background: #000;
     }
 
     .eco-visual-frame {
       width: 100%;
-      height: min(52vh, 24rem);
+      height: 100%;
+    }
+
+    .eco-visual-slide {
+      padding: 1.5rem 1.75rem;
     }
 
     .eco-nav {
-      flex: 1 1 auto;
+      flex: 0 1 auto;
       min-height: 0;
+      overflow-y: auto;
     }
 
-    .eco-item-copy {
-      -webkit-line-clamp: 3;
+    .eco-list {
+      padding-top: 0.15rem;
     }
 
-    .eco-item.is-active .eco-item-copy {
-      -webkit-line-clamp: 5;
+    .eco-item-btn {
+      padding: 0.95rem 0;
+    }
+
+    .eco-item-title {
+      font-size: 1.05rem;
     }
   }
 
   @media (min-width: 834px) {
-    .eco-inner {
-      column-gap: 1.85rem;
+    .eco-copy {
+      padding: 2rem 2rem 2rem 2.25rem;
+      gap: 2rem;
     }
 
-    .eco-visual-frame {
-      height: min(56vh, 26rem);
+    .eco-visual-slide {
+      padding: 1.75rem 2rem;
     }
   }
 
@@ -1512,106 +1429,106 @@
     }
 
     .eco-inner {
-      grid-template-columns: minmax(0, 0.4fr) minmax(0, 0.6fr);
-      column-gap: clamp(2rem, 4vw, 3.5rem);
-      padding: 1.5rem 2rem 1.75rem;
-      align-items: center;
+      grid-template-columns: minmax(20rem, 0.4fr) minmax(0, 0.6fr);
     }
 
     .eco-copy {
-      gap: 1.35rem;
+      padding: 2.5rem 2.75rem 2.5rem clamp(2rem, 5vw, 4.5rem);
+      gap: 2.35rem;
     }
 
     .eco-heading {
-      font-size: clamp(1.85rem, 2.4vw, 2.45rem);
-      max-width: 13ch;
+      font-size: clamp(2.15rem, 2.6vw, 2.75rem);
+      max-width: 11ch;
     }
 
     .eco-lede {
-      font-size: 1rem;
+      font-size: 1.05rem;
       line-height: 1.7;
+      max-width: 28rem;
     }
 
-    .eco-visual-frame {
-      height: min(68vh, 34rem);
+    .eco-visual-slide {
+      padding: 2.25rem 2.5rem;
     }
 
     .eco-item-btn {
-      padding-top: 0.7rem;
-      padding-bottom: 0.7rem;
+      padding-top: 1.05rem;
+      padding-bottom: 1.05rem;
     }
 
     .eco-item-title {
-      font-size: 1.05rem;
+      font-size: 1.125rem;
     }
 
     .eco-item-copy {
-      font-size: 0.875rem;
-      -webkit-line-clamp: 4;
+      font-size: 0.9375rem;
+      max-width: 26rem;
     }
   }
 
   @media (min-width: 1280px) {
-    .eco-inner {
-      padding-left: 2rem;
-      padding-right: 2rem;
+    .eco-copy {
+      padding-right: 3.25rem;
     }
 
-    .eco-visual-frame {
-      height: min(70vh, 36rem);
+    .eco-visual-slide {
+      padding: 2.5rem 3rem;
     }
   }
 
   @media (min-width: 1024px) and (max-height: 820px) {
-    .eco-inner {
-      padding-top: 1rem;
-      padding-bottom: 1.1rem;
+    .eco-copy {
+      padding-top: 1.5rem;
+      padding-bottom: 1.5rem;
+      gap: 1.5rem;
     }
 
     .eco-heading {
-      font-size: 1.85rem;
+      font-size: 2rem;
     }
 
-    .eco-visual-frame {
-      height: min(58vh, 26rem);
+    .eco-visual-slide {
+      padding: 1.5rem 2rem;
     }
 
-    .eco-item-copy {
-      -webkit-line-clamp: 2;
+    .eco-item-btn {
+      padding-top: 0.75rem;
+      padding-bottom: 0.75rem;
     }
   }
 
   @media (max-width: 767px) and (max-height: 720px) {
-    .eco-visual-frame {
-      height: min(28vh, 10.75rem);
+    .eco-heading {
+      font-size: clamp(1.45rem, 6.4vw, 1.8rem);
     }
 
     .eco-lede {
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
+      margin-top: 0.6rem;
+      font-size: 0.875rem;
+    }
+
+    .eco-visual {
+      margin-top: 0.7rem;
+    }
+
+    .eco-visual-frame {
+      height: min(32vh, 12rem);
+    }
+
+    .eco-visual-slide {
+      padding: 0.55rem 0.75rem;
     }
 
     .eco-item-btn {
-      padding-top: 0.4rem;
-      padding-bottom: 0.4rem;
-    }
-
-    .eco-item-copy {
-      -webkit-line-clamp: 1;
-    }
-
-    .eco-item.is-active .eco-item-copy {
-      -webkit-line-clamp: 3;
+      padding-top: 0.65rem;
+      padding-bottom: 0.65rem;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .eco-visual-slide,
-    .eco-item-index,
-    .eco-item-title,
-    .eco-item-copy {
+    .eco-item-title {
       transition: none;
     }
   }

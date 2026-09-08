@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useReducedMotion } from 'framer-motion';
-import FaIcon from '../FaIcon';
 import { sanitizeCmsImageUrl } from '../../utils/mediaUrl';
 import {
   HOME_ECOSYSTEM_DEFAULTS,
@@ -49,7 +48,6 @@ function FeatureVisual({ item, active, reduceMotion, allowLoad }) {
   const alt = ecosystemImageAlt(item);
   const displaySrc = loadedRef.current;
   const showImage = Boolean(displaySrc) && !failed;
-  const awaitingImage = Boolean(src) && !showImage && !failed;
 
   return (
     <div
@@ -66,16 +64,7 @@ function FeatureVisual({ item, active, reduceMotion, allowLoad }) {
           fetchPriority={active ? 'high' : 'low'}
           onError={() => setFailed(true)}
         />
-      ) : awaitingImage ? (
-        <span className="sr-only">{active ? alt : ''}</span>
-      ) : (
-        <div className="eco-visual-fallback" role={active ? 'img' : undefined} aria-label={active ? alt : undefined}>
-          <span className="eco-visual-fallback-icon">
-            <FaIcon icon={item.icon || 'fa-heart-pulse'} />
-          </span>
-          <span className="eco-visual-fallback-number">{item.number}</span>
-        </div>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -196,24 +185,12 @@ export default function CareEcosystemSection({ theme = 'home', sections = {} }) 
                         aria-controls={`${headingId}-visual`}
                         onClick={() => scrollToIndex(i)}
                       >
-                        <span className="eco-item-index" aria-hidden="true">
-                          {item.number || String(i + 1).padStart(2, '0')}
-                        </span>
-                        <span className="eco-item-body">
-                          <span className="eco-item-title-row">
-                            {item.icon ? (
-                              <span className="eco-item-icon">
-                                <FaIcon icon={item.icon} />
-                              </span>
-                            ) : null}
-                            <span className="eco-item-title">{item.title}</span>
+                        <span className="eco-item-title">{item.title}</span>
+                        {item.description ? (
+                          <span className="eco-item-copy" id={`${itemId}-desc`}>
+                            {item.description}
                           </span>
-                          {item.description ? (
-                            <span className="eco-item-copy" id={`${itemId}-desc`}>
-                              {item.description}
-                            </span>
-                          ) : null}
-                        </span>
+                        ) : null}
                       </button>
                     </li>
                   );
