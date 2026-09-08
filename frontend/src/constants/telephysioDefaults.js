@@ -1,4 +1,5 @@
 import { TELE_COMMUNITY_DEFAULTS } from './communityPreview';
+import { TELE_PAIN_MAP_DEFAULTS } from './painMapDefaults';
 
 /**
  * Default TelePhysio by Myoreset page content (CRF-2026-0006).
@@ -381,6 +382,7 @@ export const TELEPHYSIO_DEFAULTS = {
     final_primary_cta_link: TELEPHYSIO_BOOK_PATH,
     final_secondary_cta_label: 'Talk to Us',
     final_secondary_cta_type: 'whatsapp',
+    ...TELE_PAIN_MAP_DEFAULTS,
     ...TELE_COMMUNITY_DEFAULTS,
   },
 };
@@ -401,6 +403,7 @@ export function mergeTelePhysioSections(raw = {}) {
     'pricing_cards',
     'testimonials',
     'faqs',
+    'pain_areas',
   ];
   for (const k of listKeys) {
     if (!Array.isArray(out[k]) || out[k].length === 0) {

@@ -1,4 +1,5 @@
 import { HOME_COMMUNITY_DEFAULTS } from './communityPreview';
+import { HOME_PAIN_MAP_DEFAULTS } from './painMapDefaults';
 
 /** Default PhysioAtHome / Home Physiotherapy page content (CRF-2026-0006). */
 
@@ -371,6 +372,7 @@ export const HOME_PHYSIO_DEFAULTS = {
         a: 'Yes. You can start at home and move to clinic or video — or mix all three — while keeping the same physiotherapist and treatment history. Continuity of care is built into the platform.',
       },
     ],
+    ...HOME_PAIN_MAP_DEFAULTS,
     ...HOME_COMMUNITY_DEFAULTS,
   },
 };
@@ -394,6 +396,7 @@ export function mergeHomePhysioSections(raw = {}) {
     'areas',
     'testimonials',
     'faqs',
+    'pain_areas',
   ];
   listKeys.forEach((key) => {
     if (!Array.isArray(out[key]) || out[key].length === 0) {

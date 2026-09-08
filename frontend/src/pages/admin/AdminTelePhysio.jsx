@@ -5,13 +5,15 @@ import FaIcon from '../../components/FaIcon';
 import MediaUrlOrUpload from '../../components/admin/MediaUrlOrUpload';
 import { CmsField, CmsListEditor, CmsPanel } from '../../components/admin/CmsFormKit';
 import CommunityPreviewEditor from '../../components/admin/CommunityPreviewEditor';
+import PainMapEditor from '../../components/admin/PainMapEditor';
 import { admin, uploadCmsImage } from '../../services/api';
-import { TELEPHYSIO_DEFAULTS } from '../../constants/telephysioDefaults';
+import { TELEPHYSIO_DEFAULTS, mergeTelePhysioSections } from '../../constants/telephysioDefaults';
 import toast from 'react-hot-toast';
 
 const TABS = [
   { id: 'hero', label: 'Hero & trust', icon: 'fa-flag' },
   { id: 'overview', label: 'Overview & suitability', icon: 'fa-circle-info' },
+  { id: 'pain', label: 'Body areas', icon: 'fa-person-running' },
   { id: 'steps', label: 'Steps & timeline', icon: 'fa-list-ol' },
   { id: 'benefits', label: 'Benefits & conditions', icon: 'fa-certificate' },
   { id: 'pricing', label: 'Pricing & journey', icon: 'fa-tag' },
@@ -44,7 +46,7 @@ export default function AdminTelePhysio() {
           hero_image: d.hero_image || '',
           seo_title: d.seo_title || '',
           seo_description: d.seo_description || '',
-          sections: { ...TELEPHYSIO_DEFAULTS.sections, ...(d.sections || {}) },
+          sections: mergeTelePhysioSections(d.sections || {}),
         });
       })
       .catch((e) => toast.error(e.message || 'Could not load TelePhysio page settings'))
@@ -311,6 +313,18 @@ export default function AdminTelePhysio() {
                 />
               </CmsField>
             </CmsPanel>
+          </div>
+        )}
+
+        {tab === 'pain' && (
+          <div className="space-y-5" role="tabpanel">
+            <PainMapEditor
+              sections={s}
+              onChange={setSection}
+              uploadFn={uploadCmsImage}
+              accent="teal"
+              scopeNote="TeleRehab / TelePhysio only. The homepage Pain map and PhysioAtHome body areas are stored separately — edits here will not change those pages."
+            />
           </div>
         )}
 

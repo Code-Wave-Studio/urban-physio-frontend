@@ -503,6 +503,16 @@
     @apply py-10 md:py-16 lg:py-20;
   }
 
+  .hp-page .pain-map-section {
+    overflow-x: clip;
+    border-block: 1px solid rgb(255 237 213 / 0.85);
+  }
+
+  .telephysio-page .pain-map-section {
+    overflow-x: clip;
+    border-block: 1px solid rgb(204 251 241 / 0.8);
+  }
+
   .community-section {
     @apply relative bg-white;
   }

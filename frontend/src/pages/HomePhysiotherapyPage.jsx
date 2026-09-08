@@ -9,15 +9,17 @@ import { breadcrumbSchema, faqPageSchema, medicalWebPageSchema } from '../compon
 import Expandable, { AccordionItem } from '../components/homePhysio/Expandable';
 import { CheckRow, CtaLink, QuoteCard, SectionHead, bookHref } from '../components/homePhysio/HomePhysioUi';
 import CommunityPreviewSection from '../components/community/CommunityPreviewSection';
+import PainSelectionSection from '../components/home/PainSelectionSection';
 import { homePhysio } from '../services/api';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import { HEALTHCARE_IMAGES } from '../utils/healthcareImages';
-import { bookHomeVisitUrl } from '../utils/bookUrl';
+import { bookHomeVisitUrl, withPainAreaParams } from '../utils/bookUrl';
 import {
   HOME_PHYSIO_DEFAULTS,
   HOME_PHYSIO_SEO,
   mergeHomePhysioSections,
 } from '../constants/homePhysioDefaults';
+import { HOME_PAIN_MAP_DEFAULTS, isPainMapEnabled, painMapSectionProps, visiblePainAreas } from '../constants/painMapDefaults';
 
 function categoryItems(cat) {
   return Array.isArray(cat.items)
@@ -61,6 +63,18 @@ export default function HomePhysiotherapyPage() {
   const testimonials = s.testimonials || [];
   const featuredQuotes = testimonials.slice(0, 2);
   const carouselQuotes = testimonials.slice(2);
+  const painPoints = useMemo(() => visiblePainAreas(s.pain_areas), [s.pain_areas]);
+
+  const buildHomePainBookUrl = useMemo(
+    () => (area) => {
+      if (s.pain_book_link) return withPainAreaParams(s.pain_book_link, area);
+      return bookHomeVisitUrl({
+        pain_type: area.chipLabel,
+        pain_description: area.accordionDescription || area.headline,
+      });
+    },
+    [s.pain_book_link]
+  );
 
   const jsonLd = useMemo(
     () =>
@@ -162,6 +176,19 @@ export default function HomePhysiotherapyPage() {
           </ul>
         </div>
       </section>
+
+      {isPainMapEnabled(s) && (
+        <PainSelectionSection
+          {...painMapSectionProps(s, {
+            accent: 'primary',
+            headingId: 'hp-pain-map-heading',
+            painPoints,
+            buildBookUrl: buildHomePainBookUrl,
+            copyDefaults: HOME_PAIN_MAP_DEFAULTS,
+            className: 'pain-map-section hp-pain-map',
+          })}
+        />
+      )}
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-pad">
         <SectionHead eyebrow="Choose your format" heading={s.fit_heading} intro={s.fit_intro} />

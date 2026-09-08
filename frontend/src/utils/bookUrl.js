@@ -97,6 +97,7 @@ export function bookHomeVisitUrl(extra = {}) {
   params.set('mode', 'home-visit');
   if (extra.tier) params.set('tier', extra.tier);
   if (extra.pain_type) params.set('pain_type', extra.pain_type);
+  if (extra.pain_description) params.set('pain_description', extra.pain_description);
   return `/book?${params.toString()}`;
 }
 
@@ -113,6 +114,27 @@ export function bookTelePhysioUrl(extra = {}) {
   params.set('mode', 'telephysio');
   if (extra.package) params.set('package', extra.package);
   if (extra.pain_type) params.set('pain_type', extra.pain_type);
+  if (extra.pain_description) params.set('pain_description', extra.pain_description);
   return `/book?${params.toString()}`;
+}
+
+/** Attach selected body-area params onto a CMS booking URL override. */
+export function withPainAreaParams(link, area) {
+  if (!link) return '';
+  try {
+    const absolute = /^https?:\/\//i.test(link);
+    const url = new URL(link, 'https://placeholder.local');
+    if (area?.chipLabel && !url.searchParams.has('pain_type')) {
+      url.searchParams.set('pain_type', area.chipLabel);
+    }
+    const desc = area?.accordionDescription || area?.headline;
+    if (desc && !url.searchParams.has('pain_description')) {
+      url.searchParams.set('pain_description', desc);
+    }
+    if (absolute) return url.href;
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return link;
+  }
 }
 

@@ -8,9 +8,10 @@ import ManagedPageSeo from '../components/seo/ManagedPageSeo';
 import { breadcrumbSchema, faqPageSchema, medicalWebPageSchema } from '../components/seo/PageMeta';
 import { telephysio } from '../services/api';
 import CommunityPreviewSection from '../components/community/CommunityPreviewSection';
+import PainSelectionSection from '../components/home/PainSelectionSection';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import { HEALTHCARE_IMAGES } from '../utils/healthcareImages';
-import { bookTelePhysioUrl } from '../utils/bookUrl';
+import { bookTelePhysioUrl, withPainAreaParams } from '../utils/bookUrl';
 import { useContact } from '../contexts/ContactContext';
 import { whatsappChatUrl } from '../utils/whatsapp';
 import {
@@ -18,6 +19,7 @@ import {
   TELEPHYSIO_SEO,
   mergeTelePhysioSections,
 } from '../constants/telephysioDefaults';
+import { TELE_PAIN_MAP_DEFAULTS, isPainMapEnabled, painMapSectionProps, visiblePainAreas } from '../constants/painMapDefaults';
 
 export default function TelePhysioPage() {
   const { whatsapp } = useContact();
@@ -45,6 +47,17 @@ export default function TelePhysioPage() {
   const heroImage = resolveMediaUrl(data.hero_image) || data.hero_image || HEALTHCARE_IMAGES.onlineConsult;
   const faqs = s.faqs || [];
   const testimonials = s.testimonials || [];
+  const painPoints = useMemo(() => visiblePainAreas(s.pain_areas), [s.pain_areas]);
+  const buildTelePainBookUrl = useMemo(
+    () => (area) => {
+      if (s.pain_book_link) return withPainAreaParams(s.pain_book_link, area);
+      return bookTelePhysioUrl({
+        pain_type: area.chipLabel,
+        pain_description: area.accordionDescription || area.headline,
+      });
+    },
+    [s.pain_book_link]
+  );
 
   const jsonLd = useMemo(
     () =>
@@ -198,6 +211,19 @@ export default function TelePhysioPage() {
           </div>
         </div>
       </section>
+
+      {isPainMapEnabled(s) && (
+        <PainSelectionSection
+          {...painMapSectionProps(s, {
+            accent: 'teal',
+            headingId: 'tele-pain-map-heading',
+            painPoints,
+            buildBookUrl: buildTelePainBookUrl,
+            copyDefaults: TELE_PAIN_MAP_DEFAULTS,
+            className: 'pain-map-section tele-pain-map',
+          })}
+        />
+      )}
 
       {/* =========================================================================
           SECTION 3: WHAT IS TELEPHYSIO?

@@ -5,13 +5,15 @@ import FaIcon from '../../components/FaIcon';
 import MediaUrlOrUpload from '../../components/admin/MediaUrlOrUpload';
 import { CmsField, CmsListEditor, CmsPanel } from '../../components/admin/CmsFormKit';
 import CommunityPreviewEditor from '../../components/admin/CommunityPreviewEditor';
+import PainMapEditor from '../../components/admin/PainMapEditor';
 import { admin, uploadCmsImage } from '../../services/api';
-import { HOME_PHYSIO_DEFAULTS } from '../../constants/homePhysioDefaults';
+import { HOME_PHYSIO_DEFAULTS, mergeHomePhysioSections } from '../../constants/homePhysioDefaults';
 import toast from 'react-hot-toast';
 
 const TABS = [
   { id: 'hero', label: 'Hero & trust', icon: 'fa-flag' },
   { id: 'story', label: 'Story', icon: 'fa-book-open' },
+  { id: 'pain', label: 'Body areas', icon: 'fa-person-running' },
   { id: 'book', label: 'Tiers & booking', icon: 'fa-user-doctor' },
   { id: 'price', label: 'Pricing & areas', icon: 'fa-tag' },
   { id: 'voice', label: 'Reviews & FAQ', icon: 'fa-comments' },
@@ -43,7 +45,7 @@ export default function AdminHomePhysio() {
           hero_image: d.hero_image || '',
           seo_title: d.seo_title || '',
           seo_description: d.seo_description || '',
-          sections: { ...HOME_PHYSIO_DEFAULTS.sections, ...(d.sections || {}) },
+          sections: mergeHomePhysioSections(d.sections || {}),
         });
       })
       .catch((e) => toast.error(e.message || 'Could not load Home Physiotherapy page'))
@@ -269,6 +271,18 @@ export default function AdminHomePhysio() {
                 ]}
               />
             </CmsPanel>
+          </div>
+        )}
+
+        {tab === 'pain' && (
+          <div className="space-y-5" role="tabpanel">
+            <PainMapEditor
+              sections={s}
+              onChange={setSection}
+              uploadFn={uploadCmsImage}
+              accent="orange"
+              scopeNote="PhysioAtHome only. The homepage Pain map and TeleRehab body areas are stored separately — edits here will not change those pages."
+            />
           </div>
         )}
 
