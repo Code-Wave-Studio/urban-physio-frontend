@@ -126,11 +126,11 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
     >
       <div className={`roadmap-pin ${tokens.pin} text-white`}>
         <div className="absolute inset-0 roadmap-pin-grid pointer-events-none" aria-hidden />
-        <div className="roadmap-pin-inner relative z-[1] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="roadmap-pin-inner relative z-[1] max-w-7xl mx-auto">
           <div className={`roadmap-layout ${hasImage ? '' : 'is-empty-visual'}`.trim()}>
             <div className="roadmap-copy">
               <div className="roadmap-intro">
-                <p className={`text-[11px] sm:text-xs font-bold uppercase tracking-[0.18em] ${tokens.label}`}>
+                <p className={`roadmap-label ${tokens.label}`}>
                   {copy.roadmap_label}
                 </p>
                 <h2 id={headingId} className="roadmap-heading">
@@ -208,7 +208,7 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
                       <span className={`roadmap-spec-icon ${tokens.specIcon}`}>
                         <FaIcon icon={item.icon || 'fa-circle-check'} className="text-sm" />
                       </span>
-                      <div className="min-w-0">
+                      <div className="roadmap-spec-text">
                         <p className="roadmap-spec-title">{item.title}</p>
                         {item.description ? (
                           <p className={`roadmap-spec-copy ${tokens.specMuted}`}>{item.description}</p>
