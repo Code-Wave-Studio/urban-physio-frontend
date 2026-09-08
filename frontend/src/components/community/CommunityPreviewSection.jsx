@@ -28,7 +28,6 @@ export default function CommunityPreviewSection({ sections = {}, accent = 'orang
   const [lightboxIndex, setLightboxIndex] = useState(null);
   const isTeal = accent === 'teal';
   const accentText = isTeal ? 'text-teal-600' : 'text-primary-600';
-  const accentSoft = isTeal ? 'bg-teal-50 text-teal-700' : 'bg-orange-50 text-primary-700';
   const bar = isTeal ? 'bg-teal-500' : 'bg-primary-500';
 
   const socials = useMemo(() => visibleSocials(sections.community_socials), [sections.community_socials]);
@@ -51,18 +50,16 @@ export default function CommunityPreviewSection({ sections = {}, accent = 'orang
 
   return (
     <section className="community-section" aria-labelledby="community-heading">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 section-pad">
-        <div className="text-center max-w-2xl mx-auto">
-          <h2 id="community-heading" className="text-3xl sm:text-4xl md:text-[2.6rem] font-extrabold tracking-tight text-slate-900">
+      <div className="community-section__inner">
+        <div className="community-section__header">
+          <h2 id="community-heading" className="community-section__title">
             <Heading heading={heading} highlight={highlight} accentClass={accentText} />
           </h2>
-          {intro && (
-            <p className="mt-3 sm:mt-4 text-sm sm:text-base text-slate-600 leading-relaxed">{intro}</p>
-          )}
+          {intro && <p className="community-section__intro">{intro}</p>}
         </div>
 
         {socials.length > 0 && (
-          <div className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-3.5">
+          <div className="community-socials">
             {socials.map((item, i) => {
               const meta = platformMeta(item.platform);
               const label = item.label || `Join us on ${meta.label}`;
@@ -75,7 +72,7 @@ export default function CommunityPreviewSection({ sections = {}, accent = 'orang
                   className="community-social-pill"
                   aria-label={`${label} (opens in a new tab)`}
                 >
-                  <span className={`community-social-pill__icon ${accentSoft}`} aria-hidden>
+                  <span className="community-social-pill__icon" aria-hidden>
                     <FaIcon icon={meta.icon} brand={meta.brand} />
                   </span>
                   <span className="community-social-pill__label">{label}</span>
@@ -87,7 +84,7 @@ export default function CommunityPreviewSection({ sections = {}, accent = 'orang
         )}
 
         {galleryShots.length > 0 && (
-          <div className={`portal-gallery-wrap ${socials.length ? 'mt-10 sm:mt-12' : 'mt-8 sm:mt-10'}`}>
+          <div className={`portal-gallery-wrap ${socials.length ? 'portal-gallery-wrap--after-socials' : ''}`}>
             <PortalScreenshotGallery shots={galleryShots} onOpen={openShot} />
           </div>
         )}

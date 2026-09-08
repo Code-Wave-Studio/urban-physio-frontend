@@ -88,6 +88,8 @@ export function galleryScreenshots(list = []) {
   return visibleScreenshots(list).slice(0, GALLERY_VISIBLE_COUNT);
 }
 
+export const MOBILE_GALLERY_VISIBLE_COUNT = 3;
+
 export function galleryCenterIndex(count) {
   const n = Number(count) || 0;
   if (n <= 1) return 0;
@@ -102,6 +104,22 @@ export function stackRoles(count) {
   if (n === 3) return ['left', 'center', 'right'];
   if (n === 4) return ['far-left', 'left', 'center', 'right'];
   return ['far-left', 'left', 'center', 'right', 'far-right'];
+}
+
+/** Inner 3 screenshots for the mobile fan (skips outermost desktop phones). */
+export function mobileGalleryIndices(count) {
+  const n = Math.min(Math.max(0, Number(count) || 0), GALLERY_VISIBLE_COUNT);
+  if (n <= MOBILE_GALLERY_VISIBLE_COUNT) {
+    return Array.from({ length: n }, (_, i) => i);
+  }
+  const roles = stackRoles(n);
+  const centerIdx = roles.indexOf('center');
+  if (centerIdx < 0) {
+    return Array.from({ length: MOBILE_GALLERY_VISIBLE_COUNT }, (_, i) => i);
+  }
+  const start = Math.max(0, centerIdx - 1);
+  const end = Math.min(n, start + MOBILE_GALLERY_VISIBLE_COUNT);
+  return Array.from({ length: end - start }, (_, i) => start + i);
 }
 
 export function shortestOffset(index, active, total) {

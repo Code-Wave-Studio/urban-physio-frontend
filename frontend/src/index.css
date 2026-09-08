@@ -1085,7 +1085,38 @@
   }
 
   .community-section {
-    @apply relative bg-white overflow-x-hidden;
+    @apply relative bg-white overflow-x-clip;
+  }
+
+  .community-section__inner {
+    @apply max-w-6xl mx-auto px-4 sm:px-6 lg:px-8;
+    padding-top: 2.25rem;
+    padding-bottom: 1.35rem;
+  }
+
+  .community-section__header {
+    @apply text-center mx-auto;
+    max-width: 40rem;
+  }
+
+  .community-section__title {
+    @apply font-extrabold tracking-tight text-slate-900;
+    font-size: clamp(1.7rem, 1.2rem + 2.1vw, 2.55rem);
+    line-height: 1.15;
+  }
+
+  .community-section__intro {
+    @apply mx-auto text-slate-500 leading-relaxed;
+    max-width: 34rem;
+    margin-top: 0.7rem;
+    font-size: clamp(0.875rem, 0.82rem + 0.28vw, 1.05rem);
+  }
+
+  .community-socials {
+    @apply flex flex-wrap items-stretch justify-center;
+    width: 100%;
+    gap: 0.65rem 0.75rem;
+    margin-top: 1.55rem;
   }
 
   .community-section__rule {
@@ -1093,9 +1124,11 @@
   }
 
   .community-social-pill {
-    @apply inline-flex items-center gap-2.5 rounded-full bg-white text-sm font-semibold
-           text-primary-600 no-underline px-4 py-2.5 min-h-11
+    @apply inline-flex items-center justify-center gap-2.5 rounded-full bg-white
+           text-[0.8125rem] sm:text-sm font-semibold text-primary-600 no-underline
+           px-4 sm:px-5 py-2.5 min-h-11
            border border-slate-200/90;
+    max-width: 100%;
     box-shadow:
       0 1px 2px rgb(15 23 42 / 0.05),
       0 8px 18px -10px rgb(15 23 42 / 0.18);
@@ -1103,11 +1136,11 @@
   }
 
   .telephysio-page .community-social-pill {
-    @apply text-teal-700;
+    @apply text-teal-600;
   }
 
   .community-social-pill__icon {
-    @apply w-8 h-8 rounded-full inline-flex items-center justify-center text-sm shrink-0;
+    @apply inline-flex items-center justify-center text-[1.05rem] leading-none shrink-0;
   }
 
   .community-social-pill__label {
@@ -1115,7 +1148,7 @@
   }
 
   .community-social-pill__ext {
-    @apply text-[11px] text-slate-400;
+    @apply text-[11px] opacity-70 shrink-0;
   }
 
   @media (hover: hover) {
@@ -1128,7 +1161,7 @@
     }
 
     .telephysio-page .community-social-pill:hover {
-      border-color: rgb(20 184 166 / 0.4);
+      border-color: rgb(20 184 166 / 0.45);
     }
   }
 
@@ -1136,213 +1169,325 @@
     @apply outline-none ring-2 ring-primary-500 ring-offset-2;
   }
 
+  .telephysio-page .community-social-pill:focus-visible {
+    @apply ring-teal-500;
+  }
+
   .portal-gallery-wrap {
-    overflow-x: hidden;
+    overflow: visible;
+    margin-top: 1.35rem;
+  }
+
+  .portal-gallery-wrap--after-socials {
+    margin-top: 1.75rem;
+  }
+
+  .portal-gallery {
+    width: 100%;
   }
 
   .portal-stack {
-    @apply relative items-end justify-center w-full;
-    flex-wrap: nowrap;
+    --phone-w: 7.35rem;
+    --phone-ratio: 19.5 / 9;
+    --shift-l: 0.42;
+    --shift-fl: 1.14;
+    --rot-l: 6.5deg;
+    --rot-fl: 13deg;
+    --lift: 0.4rem;
+    --scale-l: 0.86;
+    --scale-fl: 0.78;
+    --scale-c: 1.1;
+    position: relative;
     isolation: isolate;
-    padding: 0.35rem 0.25rem 1.1rem;
-  }
-
-  .portal-stack__card,
-  .portal-coverflow__card {
-    appearance: none;
-    line-height: 0;
-  }
-
-  .portal-stack__card {
-    @apply relative bg-transparent border-0 p-0 cursor-pointer shrink-0;
-    width: clamp(6.6rem, 13.2vw, 10.15rem);
-    margin-inline: clamp(-1.55rem, -2.8vw, -0.95rem);
-    z-index: 2;
-  }
-
-  .portal-stack__card--left,
-  .portal-stack__card--right {
-    width: clamp(7.35rem, 14.6vw, 11.15rem);
-    z-index: 4;
-    transform: translateY(0.2rem);
-  }
-
-  .portal-stack__card--center {
-    width: clamp(8.15rem, 16.8vw, 12.75rem);
-    margin-inline: clamp(-1.05rem, -1.8vw, -0.45rem);
-    z-index: 5;
-    transform: translateY(-0.55rem);
+    width: 100%;
+    max-width: 72rem;
+    margin-inline: auto;
+    height: calc(var(--phone-w) * var(--phone-ratio) * var(--scale-c) + var(--lift) + 0.35rem);
   }
 
   .portal-stack__card--far-left,
   .portal-stack__card--far-right {
-    transform: translateY(0.7rem);
+    display: none;
   }
 
-  .portal-stack--n1 .portal-stack__card,
-  .portal-stack--n2 .portal-stack__card {
-    margin-inline: 0.35rem;
-    transform: none;
-  }
-
-  .portal-shot-frame {
-    @apply block w-full overflow-hidden bg-slate-50;
-    aspect-ratio: 9 / 19.5;
-    border-radius: 1.15rem;
-    border: 1px solid rgb(226 232 240 / 0.95);
-    box-shadow:
-      0 1px 2px rgb(15 23 42 / 0.06),
-      0 14px 30px -16px rgb(15 23 42 / 0.3);
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-  }
-
-  .portal-stack__card--center .portal-shot-frame {
-    box-shadow:
-      0 2px 4px rgb(15 23 42 / 0.07),
-      0 18px 36px -16px rgb(15 23 42 / 0.38);
-  }
-
-  .portal-shot-frame img {
-    @apply block w-full h-full object-contain object-center bg-slate-50;
-    pointer-events: none;
-  }
-
-  .portal-coverflow {
-    --shot-w: min(48vw, 13.75rem);
-    position: relative;
-    height: calc(var(--shot-w) * 19.5 / 9 + 0.85rem);
-    overflow: hidden;
-    touch-action: pan-y;
-    user-select: none;
-  }
-
-  .portal-coverflow__card {
+  .portal-stack__card {
+    appearance: none;
+    line-height: 0;
     position: absolute;
     left: 50%;
-    bottom: 0.4rem;
-    width: var(--shot-w);
-    margin-left: calc(var(--shot-w) / -2);
+    bottom: 0.2rem;
+    width: var(--phone-w);
+    margin: 0;
     padding: 0;
     border: 0;
     background: transparent;
     cursor: pointer;
-    transform-origin: center bottom;
-    transition:
-      transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
-      opacity 0.3s ease;
+    transform: translateX(-50%);
+    transform-origin: 50% 88%;
+    z-index: 2;
+    animation: community-phone-in 0.55s ease both;
   }
 
-  .portal-coverflow__card--center {
+  .portal-stack__card--far-left {
+    z-index: 1;
+    animation-delay: 0.02s;
+    transform: translateX(calc(-50% - var(--phone-w) * var(--shift-fl))) rotate(calc(var(--rot-fl) * -1));
+    width: calc(var(--phone-w) * var(--scale-fl));
+  }
+
+  .portal-stack__card--left {
+    z-index: 3;
+    animation-delay: 0.08s;
+    transform: translateX(calc(-50% - var(--phone-w) * var(--shift-l))) rotate(calc(var(--rot-l) * -1));
+    width: calc(var(--phone-w) * var(--scale-l));
+  }
+
+  .portal-stack__card--center {
     z-index: 5;
-    transform: translateX(0) scale(1);
+    animation-delay: 0.12s;
+    bottom: calc(0.2rem + var(--lift));
+    width: calc(var(--phone-w) * var(--scale-c));
+    transform: translateX(-50%);
   }
 
-  .portal-coverflow__card--left {
-    z-index: 4;
-    transform: translateX(calc(var(--shot-w) * -0.58)) scale(0.82);
+  .portal-stack__card--right {
+    z-index: 3;
+    animation-delay: 0.08s;
+    transform: translateX(calc(-50% + var(--phone-w) * var(--shift-l))) rotate(var(--rot-l));
+    width: calc(var(--phone-w) * var(--scale-l));
   }
 
-  .portal-coverflow__card--right {
-    z-index: 4;
-    transform: translateX(calc(var(--shot-w) * 0.58)) scale(0.82);
-  }
-
-  .portal-coverflow__card--far-left {
+  .portal-stack__card--far-right {
     z-index: 1;
-    opacity: 0;
+    animation-delay: 0.02s;
+    transform: translateX(calc(-50% + var(--phone-w) * var(--shift-fl))) rotate(var(--rot-fl));
+    width: calc(var(--phone-w) * var(--scale-fl));
+  }
+
+  .portal-stack--n1 .portal-stack__card--center {
+    bottom: 0.2rem;
+  }
+
+  .portal-stack--n2 .portal-stack__card--left,
+  .portal-stack--n2 .portal-stack__card--right {
+    --shift-l: 0.3;
+    --rot-l: 6deg;
+    --scale-l: 0.96;
+    z-index: 4;
+  }
+
+  .portal-shot-frame {
+    @apply block w-full overflow-hidden bg-white;
+    aspect-ratio: 9 / 19.5;
+    border-radius: 1.35rem;
+    border: 1px solid rgb(226 232 240 / 0.95);
+    box-shadow:
+      0 1px 2px rgb(15 23 42 / 0.05),
+      0 12px 28px -14px rgb(15 23 42 / 0.28);
+    transition: transform 0.28s ease, box-shadow 0.28s ease;
+  }
+
+  .portal-stack__card--center .portal-shot-frame {
+    box-shadow:
+      0 2px 6px rgb(15 23 42 / 0.07),
+      0 22px 40px -16px rgb(15 23 42 / 0.38);
+  }
+
+  .portal-shot-frame img {
+    @apply block w-full h-full object-contain object-center bg-white;
     pointer-events: none;
-    transform: translateX(calc(var(--shot-w) * -1.08)) scale(0.7);
   }
 
-  .portal-coverflow__card--far-right {
-    z-index: 1;
-    opacity: 0;
-    pointer-events: none;
-    transform: translateX(calc(var(--shot-w) * 1.08)) scale(0.7);
-  }
-
-  .portal-coverflow__card--hidden {
-    z-index: 0;
-    opacity: 0;
-    pointer-events: none;
-    transform: scale(0.62);
-  }
-
-  .portal-coverflow__nav {
-    @apply mt-3 flex items-center justify-center gap-3;
-  }
-
-  .portal-coverflow__arrow {
-    @apply inline-flex items-center justify-center w-9 h-9 rounded-full border border-slate-200 bg-white text-slate-600;
-    box-shadow: 0 1px 2px rgb(15 23 42 / 0.06);
-  }
-
-  .portal-coverflow__dots {
-    @apply flex items-center justify-center gap-1.5;
-  }
-
-  .portal-coverflow__dot {
-    @apply w-1.5 h-1.5 rounded-full bg-slate-300 border-0 p-0;
-    transition: transform 0.2s ease, background-color 0.2s ease;
-  }
-
-  .portal-coverflow__dot.is-active {
-    @apply bg-slate-700;
-    transform: scale(1.35);
-  }
-
-  .telephysio-page .portal-coverflow__dot.is-active {
-    @apply bg-teal-700;
-  }
-
-  @media (max-width: 379px) {
-    .portal-coverflow {
-      --shot-w: min(52vw, 12.25rem);
+  @keyframes community-phone-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
     }
   }
 
-  @media (min-width: 768px) and (max-width: 1023px) {
-    .portal-stack__card {
-      width: clamp(6.1rem, 11.8vw, 8.75rem);
-      margin-inline: clamp(-1.15rem, -2.1vw, -0.7rem);
-    }
-
-    .portal-stack__card--left,
-    .portal-stack__card--right {
-      width: clamp(6.7rem, 13vw, 9.5rem);
-    }
-
-    .portal-stack__card--center {
-      width: clamp(7.5rem, 14.8vw, 10.75rem);
+  @media (min-width: 360px) {
+    .portal-stack {
+      --phone-w: 8.15rem;
+      --shift-l: 0.46;
     }
   }
 
-  @media (hover: hover) {
-    .portal-stack__card:hover,
-    .portal-coverflow__card:hover {
-      z-index: 8;
+  @media (min-width: 390px) {
+    .portal-stack {
+      --phone-w: 8.5rem;
+      --shift-l: 0.5;
+      --rot-l: 7deg;
+    }
+  }
+
+  @media (min-width: 414px) {
+    .portal-stack {
+      --phone-w: 8.75rem;
+      --shift-l: 0.52;
+    }
+  }
+
+  @media (min-width: 430px) {
+    .portal-stack {
+      --phone-w: 9rem;
+      --shift-l: 0.53;
+      --rot-l: 7.5deg;
+    }
+  }
+
+  @media (min-width: 480px) {
+    .community-section__inner {
+      padding-top: 2.5rem;
+      padding-bottom: 1.6rem;
     }
 
-    .portal-stack__card:hover .portal-shot-frame,
-    .portal-coverflow__card:hover .portal-shot-frame {
-      transform: translateY(-5px);
+    .community-socials {
+      margin-top: 1.7rem;
+    }
+
+    .portal-gallery-wrap--after-socials {
+      margin-top: 1.9rem;
+    }
+
+    .portal-stack {
+      --phone-w: 9.5rem;
+      --shift-l: 0.55;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .community-section__inner {
+      padding-top: 3.25rem;
+      padding-bottom: 2.25rem;
+    }
+
+    .community-section__intro {
+      margin-top: 0.85rem;
+    }
+
+    .community-socials {
+      gap: 0.75rem 0.9rem;
+      margin-top: 1.9rem;
+    }
+
+    .portal-gallery-wrap--after-socials {
+      margin-top: 2.35rem;
+    }
+
+    .portal-stack {
+      --phone-w: clamp(7.35rem, 9.6vw, 9.4rem);
+      --shift-l: 0.62;
+      --shift-fl: 1.14;
+      --rot-l: 7deg;
+      --rot-fl: 13.5deg;
+      --lift: 0.9rem;
+      --scale-l: 0.9;
+      --scale-fl: 0.78;
+      --scale-c: 1.1;
+      height: calc(var(--phone-w) * var(--phone-ratio) * var(--scale-c) + var(--lift) + 0.85rem);
+    }
+
+    .portal-stack__card--far-left,
+    .portal-stack__card--far-right {
+      display: block;
+    }
+
+    .portal-stack--n2 .portal-stack__card--left,
+    .portal-stack--n2 .portal-stack__card--right {
+      --shift-l: 0.34;
+    }
+  }
+
+  @media (min-width: 834px) {
+    .portal-stack {
+      --phone-w: clamp(8rem, 10.2vw, 10.35rem);
+      --shift-l: 0.66;
+      --shift-fl: 1.2;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .community-section__inner {
+      padding-top: 3.75rem;
+      padding-bottom: 2.75rem;
+    }
+
+    .community-socials {
+      margin-top: 2.1rem;
+    }
+
+    .portal-gallery-wrap--after-socials {
+      margin-top: 2.6rem;
+    }
+
+    .portal-stack {
+      --phone-w: clamp(9.4rem, 11.2vw, 12.15rem);
+      --shift-l: 0.7;
+      --shift-fl: 1.28;
+      --rot-l: 7.5deg;
+      --rot-fl: 14.5deg;
+      --lift: 1.05rem;
+      --scale-l: 0.91;
+      --scale-fl: 0.8;
+      --scale-c: 1.12;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .portal-stack {
+      --phone-w: 12.5rem;
+      --shift-l: 0.72;
+      --shift-fl: 1.32;
+      --lift: 1.15rem;
+    }
+  }
+
+  @media (min-width: 1440px) {
+    .community-section__inner {
+      padding-top: 4.25rem;
+      padding-bottom: 3.15rem;
+    }
+
+    .portal-stack {
+      --phone-w: 13.35rem;
+      --shift-l: 0.74;
+      --shift-fl: 1.36;
+      --scale-c: 1.13;
+    }
+  }
+
+  @media (min-width: 1920px) {
+    .portal-stack {
+      --phone-w: 14.5rem;
+      --shift-l: 0.76;
+      --shift-fl: 1.4;
+    }
+  }
+
+  @media (hover: hover) and (min-width: 768px) {
+    .portal-stack__card:hover .portal-shot-frame {
+      transform: translateY(-4px);
       box-shadow:
         0 2px 6px rgb(15 23 42 / 0.08),
         0 22px 40px -18px rgb(15 23 42 / 0.34);
     }
   }
 
-  .portal-stack__card:focus-visible .portal-shot-frame,
-  .portal-coverflow__card:focus-visible .portal-shot-frame,
-  .portal-coverflow__arrow:focus-visible,
-  .portal-coverflow__dot:focus-visible {
+  .portal-stack__card:focus-visible .portal-shot-frame {
     @apply outline-none ring-2 ring-primary-500 ring-offset-2;
   }
 
+  .telephysio-page .portal-stack__card:focus-visible .portal-shot-frame {
+    @apply ring-teal-500;
+  }
+
   @media (prefers-reduced-motion: reduce) {
+    .portal-stack__card,
     .portal-shot-frame,
-    .portal-coverflow__card,
-    .portal-coverflow__dot {
+    .community-social-pill {
+      animation: none;
       transition: none;
     }
   }
