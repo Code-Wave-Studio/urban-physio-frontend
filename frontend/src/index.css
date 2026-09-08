@@ -1173,416 +1173,48 @@
     @apply ring-teal-500;
   }
 
-  .portal-gallery-wrap {
-    overflow: visible;
-    margin-top: 1.35rem;
+  .community-section--has-visual .community-section__inner {
+    padding-bottom: 0;
   }
 
-  .portal-gallery-wrap--after-socials {
-    margin-top: 1.75rem;
-  }
-
-  .portal-gallery {
+  .community-visual {
+    margin: 1.75rem 0 0;
+    padding: 0;
     width: 100%;
+    line-height: 0;
   }
 
-  .portal-stack {
-    --phone-w: 7.35rem;
-    --phone-ratio: 19.5 / 9;
-    --shift-l: 0.42;
-    --shift-fl: 1.14;
-    --rot-l: 6.5deg;
-    --rot-fl: 13deg;
-    --lift: 0.4rem;
-    --scale-l: 0.86;
-    --scale-fl: 0.78;
-    --scale-c: 1.1;
-    position: relative;
-    isolation: isolate;
+  .community-visual__img {
+    display: block;
     width: 100%;
-    max-width: 72rem;
-    margin-inline: auto;
-    height: calc(var(--phone-w) * var(--phone-ratio) * var(--scale-c) + var(--lift) + 0.35rem);
+    max-width: 90rem;
+    height: auto;
+    margin: 0 auto;
+    padding: 0;
+    border: 0;
+    vertical-align: bottom;
   }
 
-  .portal-stack__card--far-left,
-  .portal-stack__card--far-right {
+  .community-visual__img--desktop {
     display: none;
   }
 
-  .portal-stack__card {
-    appearance: none;
-    line-height: 0;
-    position: absolute;
-    left: 50%;
-    bottom: 0.2rem;
-    width: var(--phone-w);
-    margin: 0;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    cursor: pointer;
-    transform: translateX(-50%);
-    transform-origin: 50% 88%;
-    z-index: 2;
-    animation: community-phone-in 0.55s ease both;
-  }
-
-  .portal-stack__card--far-left {
-    z-index: 1;
-    animation-delay: 0.02s;
-    transform: translateX(calc(-50% - var(--phone-w) * var(--shift-fl))) rotate(calc(var(--rot-fl) * -1));
-    width: calc(var(--phone-w) * var(--scale-fl));
-  }
-
-  .portal-stack__card--left {
-    z-index: 3;
-    animation-delay: 0.08s;
-    transform: translateX(calc(-50% - var(--phone-w) * var(--shift-l))) rotate(calc(var(--rot-l) * -1));
-    width: calc(var(--phone-w) * var(--scale-l));
-  }
-
-  .portal-stack__card--center {
-    z-index: 5;
-    animation-delay: 0.12s;
-    bottom: calc(0.2rem + var(--lift));
-    width: calc(var(--phone-w) * var(--scale-c));
-    transform: translateX(-50%);
-  }
-
-  .portal-stack__card--right {
-    z-index: 3;
-    animation-delay: 0.08s;
-    transform: translateX(calc(-50% + var(--phone-w) * var(--shift-l))) rotate(var(--rot-l));
-    width: calc(var(--phone-w) * var(--scale-l));
-  }
-
-  .portal-stack__card--far-right {
-    z-index: 1;
-    animation-delay: 0.02s;
-    transform: translateX(calc(-50% + var(--phone-w) * var(--shift-fl))) rotate(var(--rot-fl));
-    width: calc(var(--phone-w) * var(--scale-fl));
-  }
-
-  .portal-stack--n1 .portal-stack__card--center {
-    bottom: 0.2rem;
-  }
-
-  .portal-stack--n2 .portal-stack__card--left,
-  .portal-stack--n2 .portal-stack__card--right {
-    --shift-l: 0.3;
-    --rot-l: 6deg;
-    --scale-l: 0.96;
-    z-index: 4;
-  }
-
-  .portal-shot-frame {
-    @apply block w-full overflow-hidden bg-white;
-    aspect-ratio: 9 / 19.5;
-    border-radius: 1.35rem;
-    border: 1px solid rgb(226 232 240 / 0.95);
-    box-shadow:
-      0 1px 2px rgb(15 23 42 / 0.05),
-      0 12px 28px -14px rgb(15 23 42 / 0.28);
-    transition: transform 0.28s ease, box-shadow 0.28s ease;
-  }
-
-  .portal-stack__card--center .portal-shot-frame {
-    box-shadow:
-      0 2px 6px rgb(15 23 42 / 0.07),
-      0 22px 40px -16px rgb(15 23 42 / 0.38);
-  }
-
-  .portal-shot-frame img {
-    @apply block w-full h-full object-contain object-center bg-white;
-    pointer-events: none;
-  }
-
-  @keyframes community-phone-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  @media (min-width: 360px) {
-    .portal-stack {
-      --phone-w: 8.15rem;
-      --shift-l: 0.46;
-    }
-  }
-
-  @media (min-width: 390px) {
-    .portal-stack {
-      --phone-w: 8.5rem;
-      --shift-l: 0.5;
-      --rot-l: 7deg;
-    }
-  }
-
-  @media (min-width: 414px) {
-    .portal-stack {
-      --phone-w: 8.75rem;
-      --shift-l: 0.52;
-    }
-  }
-
-  @media (min-width: 430px) {
-    .portal-stack {
-      --phone-w: 9rem;
-      --shift-l: 0.53;
-      --rot-l: 7.5deg;
-    }
-  }
-
-  @media (min-width: 480px) {
-    .community-section__inner {
-      padding-top: 2.5rem;
-      padding-bottom: 1.6rem;
-    }
-
-    .community-socials {
-      margin-top: 1.7rem;
-    }
-
-    .portal-gallery-wrap--after-socials {
-      margin-top: 1.9rem;
-    }
-
-    .portal-stack {
-      --phone-w: 9.5rem;
-      --shift-l: 0.55;
-    }
-  }
-
-  @media (min-width: 768px) {
-    .community-section__inner {
-      padding-top: 3.25rem;
-      padding-bottom: 2.25rem;
-    }
-
-    .community-section__intro {
-      margin-top: 0.85rem;
-    }
-
-    .community-socials {
-      gap: 0.75rem 0.9rem;
-      margin-top: 1.9rem;
-    }
-
-    .portal-gallery-wrap--after-socials {
-      margin-top: 2.35rem;
-    }
-
-    .portal-stack {
-      --phone-w: clamp(7.35rem, 9.6vw, 9.4rem);
-      --shift-l: 0.62;
-      --shift-fl: 1.14;
-      --rot-l: 7deg;
-      --rot-fl: 13.5deg;
-      --lift: 0.9rem;
-      --scale-l: 0.9;
-      --scale-fl: 0.78;
-      --scale-c: 1.1;
-      height: calc(var(--phone-w) * var(--phone-ratio) * var(--scale-c) + var(--lift) + 0.85rem);
-    }
-
-    .portal-stack__card--far-left,
-    .portal-stack__card--far-right {
-      display: block;
-    }
-
-    .portal-stack--n2 .portal-stack__card--left,
-    .portal-stack--n2 .portal-stack__card--right {
-      --shift-l: 0.34;
-    }
-  }
-
-  @media (min-width: 834px) {
-    .portal-stack {
-      --phone-w: clamp(8rem, 10.2vw, 10.35rem);
-      --shift-l: 0.66;
-      --shift-fl: 1.2;
-    }
+  .community-visual__img--compact {
+    display: block;
   }
 
   @media (min-width: 1024px) {
-    .community-section__inner {
-      padding-top: 3.75rem;
-      padding-bottom: 2.75rem;
+    .community-visual {
+      margin-top: 2.35rem;
     }
 
-    .community-socials {
-      margin-top: 2.1rem;
+    .community-visual__img--desktop {
+      display: block;
     }
 
-    .portal-gallery-wrap--after-socials {
-      margin-top: 2.6rem;
+    .community-visual__img--compact {
+      display: none;
     }
-
-    .portal-stack {
-      --phone-w: clamp(9.4rem, 11.2vw, 12.15rem);
-      --shift-l: 0.7;
-      --shift-fl: 1.28;
-      --rot-l: 7.5deg;
-      --rot-fl: 14.5deg;
-      --lift: 1.05rem;
-      --scale-l: 0.91;
-      --scale-fl: 0.8;
-      --scale-c: 1.12;
-    }
-  }
-
-  @media (min-width: 1280px) {
-    .portal-stack {
-      --phone-w: 12.5rem;
-      --shift-l: 0.72;
-      --shift-fl: 1.32;
-      --lift: 1.15rem;
-    }
-  }
-
-  @media (min-width: 1440px) {
-    .community-section__inner {
-      padding-top: 4.25rem;
-      padding-bottom: 3.15rem;
-    }
-
-    .portal-stack {
-      --phone-w: 13.35rem;
-      --shift-l: 0.74;
-      --shift-fl: 1.36;
-      --scale-c: 1.13;
-    }
-  }
-
-  @media (min-width: 1920px) {
-    .portal-stack {
-      --phone-w: 14.5rem;
-      --shift-l: 0.76;
-      --shift-fl: 1.4;
-    }
-  }
-
-  @media (hover: hover) and (min-width: 768px) {
-    .portal-stack__card:hover .portal-shot-frame {
-      transform: translateY(-4px);
-      box-shadow:
-        0 2px 6px rgb(15 23 42 / 0.08),
-        0 22px 40px -18px rgb(15 23 42 / 0.34);
-    }
-  }
-
-  .portal-stack__card:focus-visible .portal-shot-frame {
-    @apply outline-none ring-2 ring-primary-500 ring-offset-2;
-  }
-
-  .telephysio-page .portal-stack__card:focus-visible .portal-shot-frame {
-    @apply ring-teal-500;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .portal-stack__card,
-    .portal-shot-frame,
-    .community-social-pill {
-      animation: none;
-      transition: none;
-    }
-  }
-
-  .community-lightbox {
-    @apply fixed inset-0 z-[10000] flex flex-col items-center justify-center p-3 sm:p-6;
-  }
-
-  .community-lightbox__backdrop {
-    @apply absolute inset-0 bg-slate-950/80 backdrop-blur-sm;
-  }
-
-  .community-lightbox__stage {
-    @apply relative z-[1] w-full max-w-5xl flex items-center justify-center gap-2 sm:gap-3;
-  }
-
-  .community-lightbox__figure {
-    @apply m-0 w-full max-w-lg touch-pan-y flex flex-col items-center;
-  }
-
-  .community-lightbox__img {
-    @apply w-auto max-w-full max-h-[82vh] object-contain rounded-xl sm:rounded-2xl bg-slate-900;
-    box-shadow: 0 24px 60px -20px rgb(0 0 0 / 0.55);
-  }
-
-  .community-lightbox__caption {
-    @apply mt-3 flex items-center justify-between gap-3 text-white px-1;
-  }
-
-  .community-lightbox__title {
-    @apply text-sm sm:text-base font-semibold;
-  }
-
-  .community-lightbox__count {
-    @apply text-xs text-white/70 font-medium;
-  }
-
-  .community-lightbox__close,
-  .community-lightbox__nav {
-    @apply inline-flex items-center justify-center rounded-full bg-white/95 text-slate-800
-           border border-white/80 shadow-lg;
-    width: 2.75rem;
-    height: 2.75rem;
-    transition: transform 0.2s ease, background-color 0.2s ease;
-  }
-
-  .community-lightbox__close:hover,
-  .community-lightbox__nav:hover {
-    @apply bg-white;
-    transform: scale(1.05);
-  }
-
-  .community-lightbox__close:focus-visible,
-  .community-lightbox__nav:focus-visible,
-  .community-lightbox__thumb:focus-visible {
-    @apply outline-none ring-2 ring-white ring-offset-2 ring-offset-slate-900;
-  }
-
-  .community-lightbox__close {
-    @apply absolute -top-1 right-0 sm:top-0 sm:right-0 z-[2];
-  }
-
-  .community-lightbox__nav--prev,
-  .community-lightbox__nav--next {
-    @apply shrink-0;
-  }
-
-  @media (max-width: 639px) {
-    .community-lightbox__nav--prev,
-    .community-lightbox__nav--next {
-      position: absolute;
-      top: 42%;
-    }
-    .community-lightbox__nav--prev {
-      left: 0.15rem;
-    }
-    .community-lightbox__nav--next {
-      right: 0.15rem;
-    }
-  }
-
-  .community-lightbox__thumbs {
-    @apply relative z-[1] mt-4 flex gap-2 overflow-x-auto max-w-5xl w-full justify-center pb-1;
-  }
-
-  .community-lightbox__thumb {
-    @apply w-10 h-[4.6rem] rounded-lg overflow-hidden border-2 border-transparent opacity-70 shrink-0 bg-slate-800;
-  }
-
-  .community-lightbox__thumb img {
-    @apply w-full h-full object-contain;
-  }
-
-  .community-lightbox__thumb.is-active {
-    @apply opacity-100 border-white;
   }
 
   /* Horizontal carousels — hide scrollbar, keep swipe */
