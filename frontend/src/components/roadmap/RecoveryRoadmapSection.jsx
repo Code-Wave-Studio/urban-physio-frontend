@@ -72,6 +72,12 @@ function phaseImageSrc(phase, theme, index) {
   return resolveMediaUrl(phase?.image) || phase?.image || roadmapFallbackImage(theme, index);
 }
 
+function specsGridClass(count) {
+  if (count >= 3) return 'roadmap-specs-grid roadmap-specs-grid--3';
+  if (count === 2) return 'roadmap-specs-grid roadmap-specs-grid--2';
+  return 'roadmap-specs-grid roadmap-specs-grid--1';
+}
+
 export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }) {
   const tokens = THEMES[theme] || THEMES.home;
   const copy = { ...tokens.defaults, ...sections };
@@ -159,13 +165,14 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
 
   const headingId = theme === 'tele' ? 'tele-roadmap-heading' : 'hp-roadmap-heading';
   const imageSrc = brokenImages[safeIndex] ? null : phaseImageSrc(phase, theme, safeIndex);
-  const duration = reduceMotion ? 0 : 0.38;
+  const duration = reduceMotion ? 0 : 0.34;
   const fade = {
-    initial: reduceMotion ? { opacity: 1 } : { opacity: 0, y: 12 },
+    initial: reduceMotion ? { opacity: 1 } : { opacity: 0, y: 10 },
     animate: { opacity: 1, y: 0 },
-    exit: reduceMotion ? { opacity: 1 } : { opacity: 0, y: -10 },
+    exit: reduceMotion ? { opacity: 1 } : { opacity: 0, y: -8 },
     transition: { duration, ease: [0.22, 1, 0.36, 1] },
   };
+  const phaseKey = phase.id || phase.number || safeIndex;
 
   return (
     <section
@@ -177,82 +184,46 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
     >
       <div className={`roadmap-pin ${tokens.pin} text-white`}>
         <div className="absolute inset-0 roadmap-pin-grid pointer-events-none" aria-hidden />
-        <div
-          className={`roadmap-pin-inner relative z-[1] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${
-            stickyMode ? 'h-full' : ''
-          }`}
-        >
-          <div className="grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] gap-6 lg:gap-10 xl:gap-14 items-stretch flex-1 min-h-0 lg:pt-6 xl:pt-8">
-            <div className="flex flex-col min-w-0 pt-8 sm:pt-10 lg:pt-2 lg:pb-0">
+        <div className="roadmap-pin-inner relative z-[1] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="roadmap-layout">
+            <div className="roadmap-intro">
               <p className={`text-[11px] sm:text-xs font-bold uppercase tracking-[0.18em] ${tokens.label}`}>
                 {copy.roadmap_label}
               </p>
-              <h2 id={headingId} className="mt-2 text-2xl sm:text-3xl lg:text-[2.05rem] xl:text-4xl font-bold tracking-tight leading-[1.15]">
+              <h2 id={headingId} className="roadmap-heading">
                 {copy.roadmap_heading}
               </h2>
               {copy.roadmap_intro ? (
-                <p className={`mt-3 text-sm sm:text-[15px] leading-relaxed max-w-xl ${tokens.intro}`}>
-                  {copy.roadmap_intro}
-                </p>
+                <p className={`roadmap-lede ${tokens.intro}`}>{copy.roadmap_intro}</p>
               ) : null}
-
-              <div className="mt-6 lg:mt-auto" aria-live="polite">
-                <AnimatePresence mode="wait">
-                  <motion.div key={phase.id || phase.number || safeIndex} {...fade}>
-                    <p className="roadmap-phase-number font-bold tracking-tight text-white/15 leading-none select-none">
-                      {phase.number || `Phase ${safeIndex + 1}`}
-                    </p>
-                    {phase.subtitle ? (
-                      <p className={`mt-2 text-xs font-bold uppercase tracking-[0.16em] ${tokens.live}`}>
-                        {phase.subtitle}
-                      </p>
-                    ) : null}
-                    <h3 className={`mt-1 text-xl sm:text-2xl lg:text-[1.7rem] font-bold leading-snug ${tokens.phaseTitle}`}>
-                      {phase.title}
-                    </h3>
-                    {phase.description ? (
-                      <p className="mt-2 text-sm sm:text-[15px] text-white/90 leading-relaxed max-w-xl">
-                        {phase.description}
-                      </p>
-                    ) : null}
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-
-              <PhaseProgress
-                phases={phases}
-                active={safeIndex}
-                tokens={tokens}
-                onSelect={goToPhase}
-              />
             </div>
 
             <div
-              className="relative flex items-end justify-center lg:items-center min-h-[240px] sm:min-h-[300px] lg:min-h-0 lg:h-full pb-2 lg:pb-0"
+              className="roadmap-visual"
               onTouchStart={onTouchStart}
               onTouchEnd={onTouchEnd}
             >
               <div className={`roadmap-orb ${tokens.circle}`} aria-hidden />
-              <div className={`relative w-full max-w-[420px] lg:max-w-md xl:max-w-lg aspect-[4/5] sm:aspect-[3/4] lg:aspect-[3/4] max-h-[48vh] lg:max-h-[62vh] rounded-2xl sm:rounded-3xl overflow-hidden ring-1 ${tokens.imageRing}`}>
+              <div className={`roadmap-visual-frame ring-1 ${tokens.imageRing}`}>
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={phase.id || `${theme}-${safeIndex}`}
-                    className="absolute inset-0 bg-black/10"
-                    initial={reduceMotion ? { opacity: 1 } : { opacity: 0, scale: 1.03, x: 18 }}
-                    animate={{ opacity: 1, scale: 1, x: 0 }}
-                    exit={reduceMotion ? { opacity: 1 } : { opacity: 0, scale: 0.98, x: -16 }}
+                    className="roadmap-visual-layer"
+                    initial={reduceMotion ? { opacity: 1 } : { opacity: 0, scale: 1.03 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={reduceMotion ? { opacity: 1 } : { opacity: 0, scale: 0.985 }}
                     transition={{ duration, ease: [0.22, 1, 0.36, 1] }}
                   >
                     {imageSrc ? (
                       <img
                         src={imageSrc}
                         alt={phase.image_alt || phase.title || 'Recovery phase'}
-                        className="w-full h-full object-cover object-center"
+                        className="roadmap-visual-img"
                         loading={safeIndex === 0 ? 'eager' : 'lazy'}
                         onError={() => setBrokenImages((prev) => ({ ...prev, [safeIndex]: true }))}
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-white/10">
+                      <div className="roadmap-visual-fallback">
                         <FaIcon icon="fa-user-nurse" className="text-5xl text-white/50" />
                       </div>
                     )}
@@ -260,56 +231,73 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
                 </AnimatePresence>
               </div>
             </div>
-          </div>
 
-          <div className="shrink-0 pb-8 sm:pb-10 lg:pb-6 xl:pb-8">
-            <AnimatePresence mode="wait">
-              <motion.ul
-                key={`specs-${phase.id || safeIndex}`}
-                className={`grid gap-4 sm:gap-6 ${
-                  specs.length >= 3 ? 'sm:grid-cols-2 lg:grid-cols-3' : specs.length === 2 ? 'sm:grid-cols-2' : ''
-                }`}
-                initial="hidden"
-                animate="show"
-                exit="hidden"
-                variants={{
-                  hidden: {},
-                  show: {
-                    transition: { staggerChildren: reduceMotion ? 0 : 0.07 },
-                  },
-                }}
-              >
-                {specs.map((item, i) => (
-                  <motion.li
-                    key={`${item.title}-${i}`}
-                    className="flex gap-3 min-w-0"
-                    variants={{
-                      hidden: reduceMotion ? { opacity: 1 } : { opacity: 0, y: 10 },
-                      show: { opacity: 1, y: 0, transition: { duration } },
-                    }}
-                  >
-                    <span
-                      className={`shrink-0 w-10 h-10 rounded-full border flex items-center justify-center ${tokens.specIcon}`}
+            <div className="roadmap-phase" aria-live="polite">
+              <AnimatePresence mode="wait">
+                <motion.div key={phaseKey} {...fade}>
+                  <p className="roadmap-phase-number">{String(safeIndex + 1).padStart(2, '0')}</p>
+                  {phase.subtitle || phase.number ? (
+                    <p className={`roadmap-phase-kicker ${tokens.live}`}>
+                      {phase.subtitle || phase.number}
+                    </p>
+                  ) : null}
+                  <h3 className={`roadmap-phase-title ${tokens.phaseTitle}`}>{phase.title}</h3>
+                  {phase.description ? (
+                    <p className="roadmap-phase-copy">{phase.description}</p>
+                  ) : null}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            <PhaseProgress
+              phases={phases}
+              active={safeIndex}
+              tokens={tokens}
+              onSelect={goToPhase}
+            />
+
+            <div className="roadmap-specs">
+              <AnimatePresence mode="wait">
+                <motion.ul
+                  key={`specs-${phaseKey}`}
+                  className={specsGridClass(specs.length)}
+                  initial="hidden"
+                  animate="show"
+                  exit="hidden"
+                  variants={{
+                    hidden: {},
+                    show: {
+                      transition: { staggerChildren: reduceMotion ? 0 : 0.06 },
+                    },
+                  }}
+                >
+                  {specs.map((item, i) => (
+                    <motion.li
+                      key={`${item.title}-${i}`}
+                      className="roadmap-spec"
+                      variants={{
+                        hidden: reduceMotion ? { opacity: 1 } : { opacity: 0, y: 8 },
+                        show: { opacity: 1, y: 0, transition: { duration } },
+                      }}
                     >
-                      <FaIcon icon={item.icon || 'fa-circle-check'} className="text-sm" />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="font-bold text-sm sm:text-[15px] text-white leading-snug">{item.title}</p>
-                      {item.description ? (
-                        <p className={`mt-1 text-xs sm:text-sm leading-relaxed ${tokens.specMuted}`}>{item.description}</p>
-                      ) : null}
-                    </div>
-                  </motion.li>
-                ))}
-              </motion.ul>
-            </AnimatePresence>
+                      <span className={`roadmap-spec-icon ${tokens.specIcon}`}>
+                        <FaIcon icon={item.icon || 'fa-circle-check'} className="text-sm" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="roadmap-spec-title">{item.title}</p>
+                        {item.description ? (
+                          <p className={`roadmap-spec-copy ${tokens.specMuted}`}>{item.description}</p>
+                        ) : null}
+                      </div>
+                    </motion.li>
+                  ))}
+                </motion.ul>
+              </AnimatePresence>
+            </div>
 
             {copy.roadmap_cta_label && copy.roadmap_cta_link ? (
-              <div className="mt-7">
-                <Link
-                  to={copy.roadmap_cta_link}
-                  className={`${tokens.cta} inline-flex items-center justify-center gap-2 min-h-11 px-6 rounded-xl font-semibold`}
-                >
+              <div className="roadmap-cta-wrap">
+                <Link to={copy.roadmap_cta_link} className={`roadmap-cta ${tokens.cta}`}>
                   <FaIcon icon="fa-calendar-check" />
                   {copy.roadmap_cta_label}
                 </Link>
@@ -317,7 +305,7 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
             ) : null}
 
             {!stickyMode && count > 1 ? (
-              <div className="mt-5 flex items-center justify-between gap-3 lg:hidden">
+              <div className="roadmap-mobile-nav">
                 <button
                   type="button"
                   className="roadmap-nav-btn"
@@ -366,13 +354,13 @@ function PhaseProgress({ phases, active, tokens, onSelect }) {
   };
 
   return (
-    <nav className="mt-6 lg:mt-8" aria-label="Recovery phases" onKeyDown={onKeyDown}>
-      <ol className="flex items-center gap-0 min-w-0">
+    <nav className="roadmap-progress" aria-label="Recovery phases" onKeyDown={onKeyDown}>
+      <ol className="roadmap-progress-list">
         {phases.map((item, i) => {
           const current = i === active;
           const done = i < active;
           return (
-            <li key={item.id || item.number || i} className="flex items-center min-w-0 flex-1 last:flex-none">
+            <li key={item.id || item.number || i} className="roadmap-progress-item">
               <button
                 type="button"
                 onClick={() => onSelect(i)}
