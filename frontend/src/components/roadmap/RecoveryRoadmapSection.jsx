@@ -143,7 +143,7 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
 
               <div className="roadmap-phase" aria-live="polite">
                 <AnimatePresence mode="wait">
-                  <motion.div key={phaseKey} {...fade}>
+                  <motion.div key={phaseKey} className="roadmap-phase-stack" {...fade}>
                     <p className="roadmap-phase-number">{String(safeIndex + 1).padStart(2, '0')}</p>
                     {phase.subtitle || phase.number ? (
                       <p className={`roadmap-phase-kicker ${tokens.live}`}>
@@ -208,12 +208,10 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
                       <span className={`roadmap-spec-icon ${tokens.specIcon}`}>
                         <FaIcon icon={item.icon || 'fa-circle-check'} className="text-sm" />
                       </span>
-                      <div className="roadmap-spec-text">
-                        <p className="roadmap-spec-title">{item.title}</p>
-                        {item.description ? (
-                          <p className={`roadmap-spec-copy ${tokens.specMuted}`}>{item.description}</p>
-                        ) : null}
-                      </div>
+                      <p className="roadmap-spec-title">{item.title}</p>
+                      {item.description ? (
+                        <p className={`roadmap-spec-copy ${tokens.specMuted}`}>{item.description}</p>
+                      ) : null}
                     </motion.li>
                   ))}
                 </motion.ul>
