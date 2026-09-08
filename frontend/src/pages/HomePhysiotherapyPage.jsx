@@ -11,6 +11,7 @@ import { CheckRow, CtaLink, QuoteCard, SectionHead, bookHref } from '../componen
 import CommunityPreviewSection from '../components/community/CommunityPreviewSection';
 import PainSelectionSection from '../components/home/PainSelectionSection';
 import RecoveryRoadmapSection from '../components/roadmap/RecoveryRoadmapSection';
+import CareEcosystemSection from '../components/ecosystem/CareEcosystemSection';
 import { homePhysio } from '../services/api';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import { HEALTHCARE_IMAGES } from '../utils/healthcareImages';
@@ -22,6 +23,7 @@ import {
 } from '../constants/homePhysioDefaults';
 import { HOME_PAIN_MAP_DEFAULTS, isPainMapEnabled, painMapSectionProps, visiblePainAreas } from '../constants/painMapDefaults';
 import { isRoadmapEnabled } from '../constants/recoveryRoadmapDefaults';
+import { isEcosystemEnabled } from '../constants/careEcosystemDefaults';
 
 function categoryItems(cat) {
   return Array.isArray(cat.items)
@@ -193,6 +195,8 @@ export default function HomePhysiotherapyPage() {
       )}
 
       {isRoadmapEnabled(s) && <RecoveryRoadmapSection theme="home" sections={s} />}
+
+      {isEcosystemEnabled(s) && <CareEcosystemSection theme="home" sections={s} />}
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-pad">
         <SectionHead eyebrow="Choose your format" heading={s.fit_heading} intro={s.fit_intro} />

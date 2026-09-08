@@ -10,6 +10,7 @@ import { telephysio } from '../services/api';
 import CommunityPreviewSection from '../components/community/CommunityPreviewSection';
 import PainSelectionSection from '../components/home/PainSelectionSection';
 import RecoveryRoadmapSection from '../components/roadmap/RecoveryRoadmapSection';
+import CareEcosystemSection from '../components/ecosystem/CareEcosystemSection';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import { HEALTHCARE_IMAGES } from '../utils/healthcareImages';
 import { bookTelePhysioUrl, withPainAreaParams } from '../utils/bookUrl';
@@ -22,6 +23,7 @@ import {
 } from '../constants/telephysioDefaults';
 import { TELE_PAIN_MAP_DEFAULTS, isPainMapEnabled, painMapSectionProps, visiblePainAreas } from '../constants/painMapDefaults';
 import { isRoadmapEnabled } from '../constants/recoveryRoadmapDefaults';
+import { isEcosystemEnabled } from '../constants/careEcosystemDefaults';
 
 export default function TelePhysioPage() {
   const { whatsapp } = useContact();
@@ -228,6 +230,8 @@ export default function TelePhysioPage() {
       )}
 
       {isRoadmapEnabled(s) && <RecoveryRoadmapSection theme="tele" sections={s} />}
+
+      {isEcosystemEnabled(s) && <CareEcosystemSection theme="tele" sections={s} />}
 
       {/* =========================================================================
           SECTION 3: WHAT IS TELEPHYSIO?
