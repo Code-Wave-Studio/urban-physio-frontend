@@ -19,10 +19,6 @@ const THEMES = {
     phaseTitle: 'text-amber-200',
     specIcon: 'border-white/30 bg-white/10 text-white',
     specMuted: 'text-orange-50/80',
-    progressActive: 'bg-white text-primary-800 shadow-md',
-    progressIdle: 'text-white/55 hover:text-white',
-    progressLine: 'bg-white/25',
-    progressFill: 'bg-amber-200',
     circle: 'bg-orange-400/20',
     imageRing: 'ring-white/20 shadow-[0_24px_48px_-18px_rgb(67_20_7_/_0.55)]',
     live: 'text-amber-100',
@@ -36,10 +32,6 @@ const THEMES = {
     phaseTitle: 'text-teal-200',
     specIcon: 'border-white/30 bg-white/10 text-white',
     specMuted: 'text-teal-50/80',
-    progressActive: 'bg-white text-teal-900 shadow-md',
-    progressIdle: 'text-white/55 hover:text-white',
-    progressLine: 'bg-white/25',
-    progressFill: 'bg-teal-200',
     circle: 'bg-teal-400/20',
     imageRing: 'ring-white/15 shadow-[0_24px_48px_-18px_rgb(15_23_42_/_0.55)]',
     live: 'text-teal-100',
@@ -109,18 +101,6 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
   useEffect(() => {
     setActive((prev) => (count ? Math.min(prev, count - 1) : 0));
   }, [count]);
-
-  const goToPhase = useCallback(
-    (index) => {
-      const next = Math.max(0, Math.min(count - 1, index));
-      const el = trackRef.current;
-      if (!el || count < 1) return;
-      const total = Math.max(el.offsetHeight - window.innerHeight, 0);
-      const target = el.getBoundingClientRect().top + window.scrollY + (next / count) * total + 8;
-      window.scrollTo({ top: target, behavior: reduceMotion ? 'auto' : 'smooth' });
-    },
-    [count, reduceMotion]
-  );
 
   if (!phase) return null;
 
@@ -201,13 +181,6 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
               </AnimatePresence>
             </div>
 
-            <PhaseProgress
-              phases={phases}
-              active={safeIndex}
-              tokens={tokens}
-              onSelect={goToPhase}
-            />
-
             <div className="roadmap-specs">
               <AnimatePresence mode="wait">
                 <motion.ul
@@ -250,57 +223,5 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
         </div>
       </div>
     </section>
-  );
-}
-
-function PhaseProgress({ phases, active, tokens, onSelect }) {
-  const onKeyDown = (event) => {
-    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
-      event.preventDefault();
-      onSelect(Math.min(phases.length - 1, active + 1));
-    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
-      event.preventDefault();
-      onSelect(Math.max(0, active - 1));
-    } else if (event.key === 'Home') {
-      event.preventDefault();
-      onSelect(0);
-    } else if (event.key === 'End') {
-      event.preventDefault();
-      onSelect(phases.length - 1);
-    }
-  };
-
-  return (
-    <nav className="roadmap-progress" aria-label="Recovery phases" onKeyDown={onKeyDown}>
-      <ol className="roadmap-progress-list">
-        {phases.map((item, i) => {
-          const current = i === active;
-          const done = i < active;
-          return (
-            <li key={item.id || item.number || i} className="roadmap-progress-item">
-              <button
-                type="button"
-                onClick={() => onSelect(i)}
-                aria-current={current ? 'step' : undefined}
-                aria-label={`${item.number || `Phase ${i + 1}`}${item.title ? `: ${item.title}` : ''}`}
-                className={`roadmap-step-btn ${current ? tokens.progressActive : tokens.progressIdle} ${
-                  current ? 'font-bold' : 'font-semibold'
-                }`}
-              >
-                <span className="sr-only">{item.number || `Phase ${i + 1}`}</span>
-              </button>
-              {i < phases.length - 1 ? (
-                <span className={`roadmap-step-line ${tokens.progressLine}`} aria-hidden>
-                  <span
-                    className={`roadmap-step-line-fill ${tokens.progressFill}`}
-                    style={{ transform: `scaleX(${done ? 1 : 0})` }}
-                  />
-                </span>
-              ) : null}
-            </li>
-          );
-        })}
-      </ol>
-    </nav>
   );
 }

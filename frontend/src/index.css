@@ -561,7 +561,6 @@
       "intro"
       "visual"
       "phase"
-      "progress"
       "specs";
     gap: 0.7rem 0;
   }
@@ -570,14 +569,12 @@
     grid-template-areas:
       "intro"
       "phase"
-      "progress"
       "specs";
   }
 
   .roadmap-intro { grid-area: intro; min-width: 0; }
   .roadmap-visual { grid-area: visual; min-width: 0; }
   .roadmap-phase { grid-area: phase; min-width: 0; }
-  .roadmap-progress { grid-area: progress; min-width: 0; }
   .roadmap-specs { grid-area: specs; min-width: 0; }
 
   .roadmap-heading {
@@ -648,38 +645,6 @@
   .roadmap-phase-copy {
     @apply mt-2 text-sm text-white/90 leading-relaxed;
     max-width: 100%;
-  }
-
-  .roadmap-progress-list {
-    @apply flex items-center gap-0 min-w-0;
-  }
-
-  .roadmap-progress-item {
-    @apply flex items-center min-w-0 flex-1 last:flex-none;
-  }
-
-  .roadmap-step-btn {
-    @apply shrink-0 w-9 h-9 sm:w-11 sm:h-11 rounded-full text-xs sm:text-sm
-           inline-flex items-center justify-center transition
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2;
-  }
-
-  .roadmap-theme-home .roadmap-step-btn:focus-visible {
-    --tw-ring-offset-color: #9a3412;
-  }
-
-  .roadmap-theme-tele .roadmap-step-btn:focus-visible {
-    --tw-ring-offset-color: #134e4a;
-  }
-
-  .roadmap-step-line {
-    @apply relative mx-1.5 sm:mx-2 h-px flex-1 min-w-[12px] overflow-hidden rounded-full;
-  }
-
-  .roadmap-step-line-fill {
-    @apply absolute inset-0 origin-left;
-    transform: scaleX(0);
-    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .roadmap-specs {
@@ -817,10 +782,9 @@
       width: 100%;
       height: auto;
       grid-template-columns: minmax(0, 1fr) minmax(16rem, 20.5rem);
-      grid-template-rows: auto auto auto;
+      grid-template-rows: auto auto;
       grid-template-areas:
         "copy visual"
-        "progress progress"
         "specs specs";
       column-gap: clamp(1.75rem, 3.2vw, 3rem);
       row-gap: 1.5rem;
