@@ -69,6 +69,8 @@ export default function PhysioTeamSection() {
   const selectorRef = useRef(null);
   const detailRef = useRef(null);
   const itemRefs = useRef({});
+  const skipScrollSelect = useRef(false);
+  const scrollSelectTimer = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -103,15 +105,30 @@ export default function PhysioTeamSection() {
 
   const selectProfile = useCallback((id, opts = {}) => {
     if (!id) return;
+    skipScrollSelect.current = true;
     setSelectedId(id);
-    const el = itemRefs.current[id];
-    if (el && typeof el.scrollIntoView === 'function') {
-      el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
-    }
     if (opts.scrollDetail && detailRef.current && typeof detailRef.current.scrollIntoView === 'function') {
       detailRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }, []);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    const mobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
+    const el = mobile ? itemRefs.current[`m-${selectedId}`] : itemRefs.current[selectedId];
+    if (!el || typeof el.scrollIntoView !== 'function') return undefined;
+    skipScrollSelect.current = true;
+    const isLast = Boolean(list.length) && list[list.length - 1]?.id === selectedId;
+    el.scrollIntoView({
+      behavior: reduceMotion ? 'auto' : 'smooth',
+      inline: mobile ? (isLast ? 'end' : 'start') : 'nearest',
+      block: 'nearest',
+    });
+    const t = window.setTimeout(() => {
+      skipScrollSelect.current = false;
+    }, 480);
+    return () => window.clearTimeout(t);
+  }, [selectedId, reduceMotion, list]);
 
   const loopCards = useMemo(() => {
     if (!carousel.length) return [];
@@ -122,25 +139,40 @@ export default function PhysioTeamSection() {
 
   const activeDot = Math.max(0, list.findIndex((p) => p.id === selected?.id));
 
-  const onSelectorScroll = useCallback(() => {
+  const pickFromSelectorScroll = useCallback(() => {
+    if (skipScrollSelect.current) return;
     const scroller = selectorRef.current;
     if (!scroller || !list.length) return;
     const cards = [...scroller.querySelectorAll('[data-pt-id]')];
     if (!cards.length) return;
-    const mid = scroller.getBoundingClientRect().left + scroller.clientWidth / 2;
+    const origin = scroller.getBoundingClientRect().left + 6;
     let best = cards[0];
     let bestDist = Infinity;
     cards.forEach((card) => {
-      const rect = card.getBoundingClientRect();
-      const dist = Math.abs(rect.left + rect.width / 2 - mid);
+      const dist = Math.abs(card.getBoundingClientRect().left - origin);
       if (dist < bestDist) {
         bestDist = dist;
         best = card;
       }
     });
     const id = best.getAttribute('data-pt-id');
-    if (id && id !== selectedId) setSelectedId(id);
-  }, [list.length, selectedId]);
+    if (id) setSelectedId((cur) => (id !== cur ? id : cur));
+  }, [list.length]);
+
+  const onSelectorScroll = useCallback(() => {
+    window.clearTimeout(scrollSelectTimer.current);
+    scrollSelectTimer.current = window.setTimeout(pickFromSelectorScroll, 90);
+  }, [pickFromSelectorScroll]);
+
+  useEffect(() => () => window.clearTimeout(scrollSelectTimer.current), []);
+
+  useEffect(() => {
+    const scroller = selectorRef.current;
+    if (!scroller || typeof scroller.addEventListener !== 'function') return undefined;
+    const onEnd = () => pickFromSelectorScroll();
+    scroller.addEventListener('scrollend', onEnd);
+    return () => scroller.removeEventListener('scrollend', onEnd);
+  }, [pickFromSelectorScroll, list.length]);
 
   if (loading) {
     return (
@@ -213,14 +245,14 @@ export default function PhysioTeamSection() {
           </div>
           ) : null}
 
-          {list.length > 0 ? (
+          {list.length > 1 ? (
           <div
             ref={selectorRef}
             className="pt-selector"
-            hidden
-            aria-hidden="true"
             onScroll={onSelectorScroll}
+            role="listbox"
             aria-label="Choose a physiotherapist"
+            aria-activedescendant={selected.id ? `pt-select-${selected.id}` : undefined}
           >
             {list.map((p) => {
               const active = p.id === selected.id;
@@ -229,13 +261,15 @@ export default function PhysioTeamSection() {
                 <button
                   key={p.id}
                   type="button"
+                  id={`pt-select-${p.id}`}
+                  role="option"
+                  aria-selected={active}
                   data-pt-id={p.id}
                   ref={(el) => {
                     itemRefs.current[`m-${p.id}`] = el;
                   }}
                   className={`pt-selector-card${active ? ' is-active' : ''}`}
                   onClick={() => selectProfile(p.id)}
-                  aria-pressed={active}
                 >
                   <span className="pt-list-avatar">
                     <Portrait
@@ -362,8 +396,12 @@ export default function PhysioTeamSection() {
           </article>
         </div>
 
-        {list.length > 1 && list.length <= 8 ? (
-          <div className="pt-dots" hidden aria-hidden="true" role="tablist" aria-label="Physiotherapist pages">
+        {list.length > 1 ? (
+          <div
+            className={`pt-dots${list.length > 12 ? ' is-dense' : ''}`}
+            role="tablist"
+            aria-label="Physiotherapist pages"
+          >
             {list.map((p, i) => (
               <button
                 key={p.id}
