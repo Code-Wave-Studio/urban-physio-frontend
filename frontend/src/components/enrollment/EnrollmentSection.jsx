@@ -54,6 +54,36 @@ function HexButton({ step, index, state, onSelect, hexRef }) {
   );
 }
 
+function stepNumber(step, index) {
+  const raw = Number(step?.sort_order);
+  if (Number.isFinite(raw) && raw > 0) return String(Math.trunc(raw));
+  return String(index + 1);
+}
+
+function MobileTimeline({ steps, activeIndex }) {
+  return (
+    <ol className="enrol-timeline" aria-label="Enrollment steps">
+      {steps.map((step, index) => {
+        const state = index === activeIndex ? 'active' : index < activeIndex ? 'done' : 'upcoming';
+        const title = String(step.title || step.label || `Step ${index + 1}`).trim();
+        return (
+          <li key={step.id || `timeline-${index}`} className={`enrol-timeline-item is-${state}`}>
+            <div className="enrol-timeline-marker" aria-hidden="true">
+              <span className="enrol-timeline-hex">
+                <span className="enrol-timeline-num">{stepNumber(step, index)}</span>
+              </span>
+            </div>
+            <div className="enrol-timeline-copy">
+              <h3 className="enrol-timeline-title">{title}</h3>
+              {step.description ? <p className="enrol-timeline-body">{step.description}</p> : null}
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 function DetailVisual({ step }) {
   const src = sanitizeCmsImageUrl(step?.image);
   const [failed, setFailed] = useState(false);
@@ -134,7 +164,9 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
     [count]
   );
 
-  usePreloadStepImages(steps);
+  const isCompact = viewport <= 900;
+
+  usePreloadStepImages(isCompact ? [] : steps);
 
   const groups = useMemo(() => {
     const linear = [];
@@ -203,6 +235,7 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
   }, []);
 
   useLayoutEffect(() => {
+    if (isCompact) return undefined;
     hexRefs.current = hexRefs.current.slice(0, count);
     measure();
     const frame = window.requestAnimationFrame(measure);
@@ -218,9 +251,10 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
       ro.disconnect();
       window.removeEventListener('resize', measure);
     };
-  }, [count, groups.linear.length, groups.loop.length, loopRadius, measure, safeIndex]);
+  }, [count, groups.linear.length, groups.loop.length, isCompact, loopRadius, measure, safeIndex]);
 
   useEffect(() => {
+    if (isCompact) return undefined;
     const stage = stageRef.current;
     if (!stage) return undefined;
     const io = new IntersectionObserver(
@@ -231,7 +265,7 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
     );
     io.observe(stage);
     return () => io.disconnect();
-  }, []);
+  }, [isCompact]);
 
   if (!count || !isFlagOn(copy.enrol_enabled ?? '1') || !current) return null;
 
@@ -257,7 +291,7 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
 
   return (
     <section
-      className={`enrol-section ${tokens.section}`}
+      className={`enrol-section ${tokens.section}${isCompact ? ' is-compact' : ''}`}
       id={theme === 'tele' ? 'telephysio-how-to-enrol' : 'physioathome-how-to-enrol'}
       aria-labelledby={headingId}
       data-active-step={safeIndex}
@@ -271,68 +305,44 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
           {copy.enrol_intro ? <p className="enrol-intro">{copy.enrol_intro}</p> : null}
         </header>
 
-        <div
-          className={`enrol-stage${groups.loop.length ? ' has-loop' : ''}${drawn ? ' is-drawn' : ''}`}
-          ref={stageRef}
-          role="navigation"
-          aria-label="Enrollment steps"
-        >
-          <svg className="enrol-path" aria-hidden="true">
-            {loopCircle ? (
-              <circle
-                className="enrol-path-loop"
-                cx={loopCircle.cx}
-                cy={loopCircle.cy}
-                r={loopCircle.r}
-              />
-            ) : null}
-            {pathD ? (
-              <>
-                <path className="enrol-path-track" d={pathD} pathLength="100" />
-                <path
-                  className="enrol-path-progress"
-                  d={pathD}
-                  pathLength="100"
-                  style={{
-                    strokeDasharray: `${progressPct} 100`,
-                    transitionDuration: reduceMotion ? '0.01ms' : '0.35s',
-                  }}
-                />
-              </>
-            ) : null}
-          </svg>
+        <MobileTimeline steps={steps} activeIndex={safeIndex} />
 
-          {groups.linear.length > 0 ? (
-            <ol className="enrol-linear" aria-label="Enrollment pathway">
-              {groups.linear.map(({ step, index }) => (
-                <li key={step.id || `linear-${index}`} className="enrol-linear-item">
-                  <HexButton
-                    step={step}
-                    index={index}
-                    state={hexState(index)}
-                    onSelect={goToStep}
-                    hexRef={(el) => {
-                      hexRefs.current[index] = el;
+        <div className="enrol-desktop">
+          <div
+            className={`enrol-stage${groups.loop.length ? ' has-loop' : ''}${drawn ? ' is-drawn' : ''}`}
+            ref={stageRef}
+            role="navigation"
+            aria-label="Enrollment steps"
+          >
+            <svg className="enrol-path" aria-hidden="true">
+              {loopCircle ? (
+                <circle
+                  className="enrol-path-loop"
+                  cx={loopCircle.cx}
+                  cy={loopCircle.cy}
+                  r={loopCircle.r}
+                />
+              ) : null}
+              {pathD ? (
+                <>
+                  <path className="enrol-path-track" d={pathD} pathLength="100" />
+                  <path
+                    className="enrol-path-progress"
+                    d={pathD}
+                    pathLength="100"
+                    style={{
+                      strokeDasharray: `${progressPct} 100`,
+                      transitionDuration: reduceMotion ? '0.01ms' : '0.35s',
                     }}
                   />
-                </li>
-              ))}
-            </ol>
-          ) : null}
+                </>
+              ) : null}
+            </svg>
 
-          {groups.loop.length > 0 ? (
-            <div className="enrol-loop" ref={loopRef} aria-label="Ongoing care loop">
-              <span className="enrol-loop-disk" aria-hidden="true" />
-              {groups.loop.map(({ step, index }, loopIndex) => {
-                const pos = loopOffset(loopIndex, groups.loop.length, loopRadius);
-                return (
-                  <div
-                    key={step.id || `loop-${index}`}
-                    className="enrol-loop-item"
-                    style={{
-                      transform: `translate(-50%, -50%) translate(${pos.x}px, ${pos.y}px)`,
-                    }}
-                  >
+            {groups.linear.length > 0 ? (
+              <ol className="enrol-linear" aria-label="Enrollment pathway">
+                {groups.linear.map(({ step, index }) => (
+                  <li key={step.id || `linear-${index}`} className="enrol-linear-item">
                     <HexButton
                       step={step}
                       index={index}
@@ -342,37 +352,65 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
                         hexRefs.current[index] = el;
                       }}
                     />
-                  </div>
-                );
-              })}
-            </div>
-          ) : null}
-        </div>
+                  </li>
+                ))}
+              </ol>
+            ) : null}
 
-        <div className="enrol-detail" aria-live="polite">
-          <AnimatePresence mode="popLayout" initial={false}>
-            <motion.div
-              key={current.id || safeIndex}
-              className="enrol-detail-grid"
-              initial={reduceMotion ? false : { opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reduceMotion ? undefined : { opacity: 0, y: -4 }}
-              transition={fade}
-            >
-              <div className="enrol-detail-copy">
-                <h3 className="enrol-detail-title">{current.title || current.label}</h3>
-                {current.description ? (
-                  <p className="enrol-detail-body">{current.description}</p>
-                ) : null}
+            {groups.loop.length > 0 ? (
+              <div className="enrol-loop" ref={loopRef} aria-label="Ongoing care loop">
+                <span className="enrol-loop-disk" aria-hidden="true" />
+                {groups.loop.map(({ step, index }, loopIndex) => {
+                  const pos = loopOffset(loopIndex, groups.loop.length, loopRadius);
+                  return (
+                    <div
+                      key={step.id || `loop-${index}`}
+                      className="enrol-loop-item"
+                      style={{
+                        transform: `translate(-50%, -50%) translate(${pos.x}px, ${pos.y}px)`,
+                      }}
+                    >
+                      <HexButton
+                        step={step}
+                        index={index}
+                        state={hexState(index)}
+                        onSelect={goToStep}
+                        hexRef={(el) => {
+                          hexRefs.current[index] = el;
+                        }}
+                      />
+                    </div>
+                  );
+                })}
               </div>
-              <div className="enrol-detail-media">
-                <div className="enrol-detail-media-frame">
-                  <span className="sr-only">{enrolImageAlt(current)}</span>
-                  <DetailVisual step={current} />
+            ) : null}
+          </div>
+
+          <div className="enrol-detail" aria-live="polite">
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.div
+                key={current.id || safeIndex}
+                className="enrol-detail-grid"
+                initial={reduceMotion ? false : { opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reduceMotion ? undefined : { opacity: 0, y: -4 }}
+                transition={fade}
+              >
+                <div className="enrol-detail-copy">
+                  <h3 className="enrol-detail-title">{current.title || current.label}</h3>
+                  {current.description ? (
+                    <p className="enrol-detail-body">{current.description}</p>
+                  ) : null}
                 </div>
-              </div>
-            </motion.div>
-          </AnimatePresence>
+                <div className="enrol-detail-media">
+                  <div className="enrol-detail-media-frame">
+                    <span className="sr-only">{enrolImageAlt(current)}</span>
+                    {!isCompact ? <DetailVisual step={current} /> : null}
+                  </div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </div>
       </div>
     </section>
