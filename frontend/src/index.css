@@ -822,7 +822,7 @@
     max-height: var(--roadmap-frame);
     overflow: hidden;
     overflow-x: clip;
-    overscroll-behavior-y: contain;
+    overscroll-behavior-y: auto;
     touch-action: pan-y;
   }
 

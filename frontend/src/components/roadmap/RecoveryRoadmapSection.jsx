@@ -186,9 +186,11 @@ function preloadPhaseImages(themeKey, phases) {
   });
 }
 
-const STEP_COOLDOWN_MS = 780;
-const WHEEL_STEP_PX = 38;
-const SWIPE_STEP_PX = 46;
+const STEP_COOLDOWN_MS = 520;
+const WHEEL_STEP_PX = 40;
+const SWIPE_STEP_PX = 42;
+const IN_VIEW_RATIO = 0.55;
+const LEFT_VIEW_RATIO = 0.22;
 
 function wheelDeltaY(event) {
   if (event.deltaMode === 1) return event.deltaY * 16;
@@ -209,6 +211,10 @@ function measureSection(section) {
   return { rect, vh, top: rect.top, ratio: Math.max(0, visible) / vh };
 }
 
+function holdScroll(event) {
+  if (event.cancelable) event.preventDefault();
+}
+
 /** Mobile/tablet: one swipe or wheel tick = one phase. Desktop scroll is unchanged. */
 function useSteppedPhaseScroll({ enabled, count, sectionRef, activeRef, setActive }) {
   useEffect(() => {
@@ -216,8 +222,8 @@ function useSteppedPhaseScroll({ enabled, count, sectionRef, activeRef, setActiv
     const section = sectionRef.current;
     if (!section) return undefined;
 
-    let engaged = false;
-    let released = 0;
+    let locked = false;
+    let exitDir = 0;
     let lastStepAt = 0;
     let eatUntil = 0;
     let wheelAcc = 0;
@@ -226,13 +232,13 @@ function useSteppedPhaseScroll({ enabled, count, sectionRef, activeRef, setActiv
     let near = false;
     let frame = 0;
 
-    const holdScroll = (event) => {
-      if (event.cancelable) event.preventDefault();
-    };
-
     const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
     const index = () => activeRef.current;
-    const canGo = (dir) => (dir > 0 ? index() < count - 1 : index() > 0);
+    const canGo = (dir) => {
+      if (dir > 0) return index() < count - 1;
+      if (dir < 0) return index() > 0;
+      return false;
+    };
 
     const goTo = (next) => {
       const clamped = Math.min(count - 1, Math.max(0, next));
@@ -242,11 +248,6 @@ function useSteppedPhaseScroll({ enabled, count, sectionRef, activeRef, setActiv
       return true;
     };
 
-    const snap = () => {
-      const top = section.getBoundingClientRect().top;
-      if (Math.abs(top) >= 2) window.scrollBy(0, top);
-    };
-
     const step = (dir) => {
       if (!canGo(dir)) return false;
       if (!goTo(index() + dir)) return false;
@@ -254,51 +255,99 @@ function useSteppedPhaseScroll({ enabled, count, sectionRef, activeRef, setActiv
       lastStepAt = t;
       eatUntil = t + STEP_COOLDOWN_MS;
       wheelAcc = 0;
-      snap();
+      locked = true;
+      exitDir = 0;
       return true;
     };
 
-    const engageFrom = (side) => {
-      engaged = true;
-      released = 0;
+    const release = (dir) => {
+      locked = false;
+      exitDir = dir;
       wheelAcc = 0;
-      eatUntil = now() + STEP_COOLDOWN_MS;
-      if (side === 'below') goTo(count - 1);
-      else goTo(0);
-      snap();
+      eatUntil = 0;
+      const { ratio } = measureSection(section);
+      if (ratio > 0.8) {
+        const nudge = Math.round((window.innerHeight || 640) * 0.22);
+        window.scrollBy(0, dir * nudge);
+      }
     };
 
-    const updateEngagement = (dirHint = 0) => {
+    const capture = (side) => {
+      locked = true;
+      exitDir = 0;
+      wheelAcc = 0;
+      eatUntil = now() + 280;
+      if (side === 'below') goTo(count - 1);
+      else if (side === 'above') goTo(0);
+    };
+
+    const syncLockFromView = (dirHint = 0) => {
       syncSteppedFrameHeight(section);
       const { ratio, top } = measureSection(section);
 
-      if (released === 1) {
-        if (ratio < 0.18) released = 0;
-        else if (dirHint < 0 && ratio >= 0.48) engageFrom('below');
-        return;
-      }
-      if (released === -1) {
-        if (ratio < 0.18) released = 0;
-        else if (dirHint > 0 && ratio >= 0.48) engageFrom('above');
+      if (exitDir) {
+        if (ratio < LEFT_VIEW_RATIO) {
+          exitDir = 0;
+          locked = false;
+          return;
+        }
+        if (dirHint && dirHint === -exitDir && ratio >= IN_VIEW_RATIO) {
+          capture(exitDir > 0 ? 'below' : 'above');
+        }
         return;
       }
 
-      if (!engaged && ratio >= 0.52) {
-        engageFrom(top < -48 ? 'below' : 'above');
+      if (locked) {
+        if (ratio < LEFT_VIEW_RATIO) locked = false;
         return;
       }
-      if (engaged && ratio < 0.18) {
-        engaged = false;
-        wheelAcc = 0;
-      }
+
+      if (ratio < IN_VIEW_RATIO) return;
+      if (dirHint > 0) capture('above');
+      else if (dirHint < 0) capture('below');
+      else if (top >= -12 && top <= 32) capture(top < -64 ? 'below' : 'above');
     };
 
     const onScrollOrResize = () => {
       if (frame) return;
       frame = window.requestAnimationFrame(() => {
         frame = 0;
-        updateEngagement(0);
+        syncLockFromView(0);
       });
+    };
+
+    const consumePhaseGesture = (event, dir, dyAbs, t) => {
+      if (!canGo(dir)) {
+        const sameGesture = event.type === 'wheel' ? t < eatUntil : touchConsumed;
+        if (sameGesture) {
+          holdScroll(event);
+          return false;
+        }
+        release(dir);
+        return false;
+      }
+
+      if (t < eatUntil) {
+        holdScroll(event);
+        return false;
+      }
+
+      holdScroll(event);
+
+      if (event.type === 'wheel') {
+        wheelAcc += dyAbs * dir;
+        if (Math.abs(wheelAcc) < WHEEL_STEP_PX) return false;
+        if (t - lastStepAt < STEP_COOLDOWN_MS) {
+          wheelAcc = 0;
+          return false;
+        }
+        return step(dir);
+      }
+
+      if (touchConsumed || dyAbs < SWIPE_STEP_PX) return false;
+      if (t - lastStepAt < STEP_COOLDOWN_MS) return false;
+      touchConsumed = true;
+      return step(dir);
     };
 
     const onWheel = (event) => {
@@ -308,86 +357,44 @@ function useSteppedPhaseScroll({ enabled, count, sectionRef, activeRef, setActiv
       const dir = dy > 0 ? 1 : -1;
       const t = now();
 
-      if (!engaged) {
-        updateEngagement(dir);
-        if (!engaged) return;
-        holdScroll(event);
-        snap();
-        return;
+      if (exitDir === dir) return;
+      if (exitDir && dir === -exitDir) {
+        syncLockFromView(dir);
+      } else if (!locked) {
+        syncLockFromView(dir);
       }
 
-      if (t < eatUntil) {
-        holdScroll(event);
-        snap();
-        return;
-      }
-
-      if (!canGo(dir)) {
-        released = dir;
-        engaged = false;
-        wheelAcc = 0;
-        return;
-      }
-
-      holdScroll(event);
-      snap();
-      wheelAcc += dy;
-      if (Math.abs(wheelAcc) < WHEEL_STEP_PX) return;
-      if (t - lastStepAt < STEP_COOLDOWN_MS) {
-        wheelAcc = 0;
-        return;
-      }
-      step(dir);
+      if (exitDir === dir || !locked) return;
+      consumePhaseGesture(event, dir, Math.abs(dy), t);
     };
 
     const onTouchStart = (event) => {
-      if (!event.touches[0]) return;
-      if (!section.contains(event.target)) return;
+      if (!event.touches[0] || !section.contains(event.target)) return;
       touchStartY = event.touches[0].clientY;
       touchConsumed = false;
     };
 
     const onTouchMove = (event) => {
-      if (!near || !event.touches[0]) return;
-      if (!section.contains(event.target)) return;
-      const y = event.touches[0].clientY;
-      const dy = touchStartY - y;
+      if (!near || !event.touches[0] || !section.contains(event.target)) return;
+      const dy = touchStartY - event.touches[0].clientY;
       const dir = dy > 0 ? 1 : dy < 0 ? -1 : 0;
+      if (!dir) return;
       const t = now();
 
-      if (!engaged) {
-        if (dir !== 0) updateEngagement(dir);
-        if (!engaged) return;
-        holdScroll(event);
-        snap();
-        return;
+      if (exitDir === dir) return;
+      if (exitDir && dir === -exitDir) {
+        syncLockFromView(dir);
+      } else if (!locked) {
+        syncLockFromView(dir);
       }
 
-      if (t < eatUntil) {
-        holdScroll(event);
-        snap();
-        return;
-      }
-
-      if (dir !== 0 && !canGo(dir)) {
-        released = dir;
-        engaged = false;
-        return;
-      }
-
-      if (canGo(1) || canGo(-1)) {
-        holdScroll(event);
-        snap();
-      }
-
-      if (dir === 0 || touchConsumed || Math.abs(dy) < SWIPE_STEP_PX) return;
-      if (t - lastStepAt < STEP_COOLDOWN_MS) return;
-      touchConsumed = true;
-      step(dir);
+      if (exitDir === dir || !locked) return;
+      consumePhaseGesture(event, dir, Math.abs(dy), t);
     };
 
     const onTouchEnd = () => {
       touchConsumed = false;
+      if (locked && (!canGo(1) || !canGo(-1))) eatUntil = 0;
     };
 
     const attach = () => {
@@ -399,14 +406,14 @@ function useSteppedPhaseScroll({ enabled, count, sectionRef, activeRef, setActiv
       window.addEventListener('touchmove', onTouchMove, { passive: false, capture: true });
       window.addEventListener('touchend', onTouchEnd, { passive: true, capture: true });
       window.addEventListener('touchcancel', onTouchEnd, { passive: true, capture: true });
-      updateEngagement(0);
+      syncLockFromView(0);
     };
 
     const detach = () => {
       if (!near) return;
       near = false;
-      engaged = false;
-      released = 0;
+      locked = false;
+      exitDir = 0;
       wheelAcc = 0;
       window.removeEventListener('wheel', onWheel, { capture: true });
       window.removeEventListener('touchstart', onTouchStart, { capture: true });
@@ -420,7 +427,7 @@ function useSteppedPhaseScroll({ enabled, count, sectionRef, activeRef, setActiv
         if (entry.isIntersecting) attach();
         else detach();
       },
-      { rootMargin: '35% 0px', threshold: 0 }
+      { rootMargin: '20% 0px', threshold: 0 }
     );
 
     syncSteppedFrameHeight(section);
