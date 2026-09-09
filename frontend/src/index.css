@@ -3176,10 +3176,6 @@
     display: none;
   }
 
-  .pt-detail {
-    order: 1;
-  }
-
   .pt-selector {
     order: 2;
     display: flex;
@@ -3320,79 +3316,213 @@
   }
 
   .pt-detail {
+    order: 1;
     position: relative;
     background: #fff;
+    border: 1px solid rgb(226 232 240 / 0.9);
     border-radius: 1.35rem;
-    box-shadow: 0 18px 40px -28px rgb(15 23 42 / 0.45);
-    min-height: 26rem;
+    box-shadow: 0 18px 40px -28px rgb(15 23 42 / 0.4);
     overflow: hidden;
   }
 
-  .pt-detail-inner {
-    position: relative;
-    min-height: inherit;
-    padding: 1.35rem 1.2rem 1.1rem;
-    animation: fadeIn 0.28s ease-out;
+  .pt-profile {
+    display: grid;
+    grid-template-columns: 5.25rem minmax(0, 1fr);
+    grid-template-areas:
+      'media head'
+      'body body';
+    gap: 0.95rem 1rem;
+    align-items: start;
+    padding: 1.1rem 1.05rem 1.2rem;
   }
 
-  .pt-quote {
-    position: absolute;
-    top: 0.35rem;
-    left: 0.85rem;
-    font-size: 4.4rem;
-    line-height: 1;
-    color: rgb(253 186 116 / 0.55);
-    font-family: Georgia, 'Times New Roman', serif;
-    pointer-events: none;
-    user-select: none;
+  .pt-profile.is-animating {
+    animation: ptProfileIn 0.38s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .pt-badge {
-    position: relative;
-    z-index: 2;
+  @keyframes ptProfileIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .pt-profile-media {
+    grid-area: media;
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 1rem;
+    overflow: hidden;
+    background: linear-gradient(165deg, #fff7ed, #ffedd5);
+    border: 1px solid rgb(254 215 170 / 0.7);
+    box-shadow: 0 8px 18px -12px rgb(194 65 12 / 0.35);
+  }
+
+  .pt-profile-photo,
+  .pt-profile-fallback {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    display: block;
+  }
+
+  .pt-profile-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #c2410c;
+  }
+
+  .pt-profile-head {
+    grid-area: head;
+    min-width: 0;
+    align-self: center;
+  }
+
+  .pt-profile-body {
+    grid-area: body;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .pt-profile-kicker {
+    margin: 0 0 0.2rem;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #2563eb;
+  }
+
+  .pt-profile-name {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    color: rgb(15 23 42);
+    overflow-wrap: anywhere;
+  }
+
+  .pt-profile-quals,
+  .pt-profile-role {
+    margin: 0.22rem 0 0;
+    color: rgb(71 85 105);
+    font-size: 0.82rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  .pt-profile-role {
+    color: #c2410c;
+    font-weight: 600;
+    font-size: 0.78rem;
+  }
+
+  .pt-profile-stars {
+    display: inline-flex;
+    gap: 0.14rem;
+    margin-top: 0.4rem;
+    font-size: 0.7rem;
+  }
+
+  .pt-profile-stats {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .pt-profile-stats li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    min-width: 0;
+    padding: 0.62rem 0.7rem;
+    border-radius: 0.85rem;
+    background: #f8fafc;
+    border: 1px solid rgb(226 232 240 / 0.9);
+  }
+
+  .pt-stat-icon {
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 0.55rem;
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
-    margin: 0 0 0.7rem auto;
-    max-width: 100%;
-    float: right;
-    border-radius: 999px;
+    justify-content: center;
+    flex-shrink: 0;
+    background: #fff7ed;
+    color: #ea580c;
+    font-size: 0.72rem;
+  }
+
+  .pt-stat-icon.is-blue {
     background: #eff6ff;
-    color: #1d4ed8;
-    font-size: 0.7rem;
+    color: #2563eb;
+  }
+
+  .pt-stat-label {
+    display: block;
+    font-size: 0.62rem;
     font-weight: 700;
-    padding: 0.38rem 0.7rem;
-    line-height: 1.25;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgb(100 116 139);
   }
 
-  .pt-badge span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 14rem;
+  .pt-stat-value {
+    display: block;
+    margin-top: 0.12rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: rgb(15 23 42);
+    line-height: 1.35;
+    overflow-wrap: anywhere;
   }
 
-  .pt-detail-body {
-    position: relative;
-    z-index: 1;
-    clear: both;
-    padding: 0.35rem 0 8.75rem;
-    max-width: 38rem;
+  .pt-profile-block {
+    padding-top: 0.85rem;
+    border-top: 1px solid rgb(226 232 240);
+  }
+
+  .pt-block-label {
+    margin: 0 0 0.5rem;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgb(100 116 139);
   }
 
   .pt-bio {
-    margin: 0 0 0.8rem;
+    margin: 0;
     color: rgb(51 65 85);
-    font-size: 0.9rem;
-    line-height: 1.7;
+    font-size: 0.88rem;
+    line-height: 1.65;
     overflow-wrap: anywhere;
+  }
+
+  .pt-bio + .pt-bio {
+    margin-top: 0.55rem;
   }
 
   .pt-chips {
     display: flex;
     flex-wrap: wrap;
     gap: 0.4rem;
-    margin: 0 0 0.9rem;
+    margin: 0;
     padding: 0;
     list-style: none;
   }
@@ -3401,94 +3531,55 @@
     border-radius: 999px;
     background: #fff7ed;
     color: #9a3412;
-    font-size: 0.68rem;
+    border: 1px solid rgb(254 215 170 / 0.8);
+    font-size: 0.7rem;
     font-weight: 700;
-    padding: 0.22rem 0.55rem;
+    padding: 0.26rem 0.62rem;
+    line-height: 1.3;
   }
 
-  .pt-approach-heading {
-    margin: 0 0 0.45rem;
-    font-weight: 700;
-    color: rgb(15 23 42);
-    font-size: 0.9rem;
-  }
-
-  .pt-approach ul {
+  .pt-principles {
+    display: grid;
+    gap: 0.55rem;
     margin: 0;
-    padding: 0 0 0 1.05rem;
-    color: rgb(51 65 85);
-    font-size: 0.88rem;
-    line-height: 1.6;
+    padding: 0;
+    list-style: none;
+    counter-reset: none;
   }
 
-  .pt-approach li + li {
-    margin-top: 0.35rem;
+  .pt-principles li {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: 0.65rem;
+    align-items: start;
+    padding: 0.7rem 0.75rem;
+    border-radius: 0.9rem;
+    background: #fffaf5;
+    border: 1px solid rgb(255 237 213 / 0.95);
   }
 
-  .pt-approach li::marker {
-    color: #ea580c;
-  }
-
-  .pt-exp {
-    margin: 0.85rem 0 0;
-    color: rgb(100 116 139);
-    font-size: 0.8rem;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-  }
-
-  .pt-detail-foot {
-    position: absolute;
-    left: 1.2rem;
-    bottom: 1.1rem;
-    z-index: 2;
-    max-width: 52%;
-  }
-
-  .pt-detail-name {
-    margin: 0;
+  .pt-principles-num {
+    font-size: 0.72rem;
     font-weight: 800;
+    letter-spacing: 0.04em;
     color: #ea580c;
-    font-size: 1.05rem;
-    line-height: 1.2;
-    overflow-wrap: anywhere;
+    line-height: 1.4;
   }
 
-  .pt-detail-qual {
-    margin: 0.15rem 0 0;
-    color: #fb923c;
-    font-size: 0.82rem;
-    font-weight: 600;
-  }
-
-  .pt-detail-photo-wrap {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    z-index: 1;
-    width: min(46%, 13.5rem);
-    height: 58%;
-    pointer-events: none;
-  }
-
-  .pt-detail-photo,
-  .pt-detail-fallback {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    object-position: bottom right;
+  .pt-principles li strong {
     display: block;
+    color: rgb(15 23 42);
+    font-size: 0.84rem;
+    line-height: 1.35;
   }
 
-  .pt-detail-fallback {
-    display: flex;
-    align-items: flex-end;
-    justify-content: flex-end;
-    padding: 0 1rem 1rem 0;
-    font-size: 2.4rem;
-    font-weight: 800;
-    color: rgb(253 186 116 / 0.85);
+  .pt-principles-body {
+    display: block;
+    margin-top: 0.18rem;
+    color: rgb(71 85 105);
+    font-size: 0.8rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
   }
 
   .pt-photo--bw {
@@ -3657,6 +3748,38 @@
     border-radius: 1.35rem;
   }
 
+  @media (min-width: 640px) {
+    .pt-profile-stats {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .pt-profile {
+      grid-template-columns: minmax(11rem, 13rem) minmax(0, 1fr);
+      grid-template-areas:
+        'media head'
+        'media body';
+      gap: 1rem 1.2rem;
+      padding: 1.25rem;
+    }
+
+    .pt-profile-media {
+      aspect-ratio: 4 / 5;
+      max-height: 20rem;
+      align-self: start;
+      border-radius: 1.1rem;
+    }
+
+    .pt-profile-head {
+      align-self: start;
+    }
+
+    .pt-profile-name {
+      font-size: 1.32rem;
+    }
+  }
+
   @media (min-width: 1024px) {
     .pt-section {
       padding: 4rem 0 4.25rem;
@@ -3713,28 +3836,43 @@
 
     .pt-detail {
       min-height: 100%;
+      background: #f8fafc;
+      border: 1px solid rgb(226 232 240 / 0.85);
       box-shadow: none;
-      border-radius: 1.15rem;
-      background: transparent;
+      border-radius: 1.2rem;
     }
 
-    .pt-detail-inner {
-      padding: 1.1rem 0.4rem 0.4rem 0.65rem;
-      min-height: 28.5rem;
+    .pt-profile {
+      grid-template-columns: minmax(13rem, 15.25rem) minmax(0, 1fr);
+      grid-template-areas:
+        'media head'
+        'media body';
+      gap: 1rem 1.35rem;
+      padding: 1.15rem 1.15rem 1.25rem;
+      min-height: 100%;
     }
 
-    .pt-detail-body {
-      padding: 0.2rem 38% 5.5rem 0;
-      max-width: none;
+    .pt-profile-media {
+      aspect-ratio: 4 / 5;
+      max-height: 22.5rem;
+      border-radius: 1.1rem;
+      align-self: start;
     }
 
-    .pt-detail-photo-wrap {
-      width: min(46%, 17.5rem);
-      height: 78%;
+    .pt-profile-head {
+      align-self: start;
     }
 
-    .pt-detail-name {
-      font-size: 1.2rem;
+    .pt-profile-name {
+      font-size: 1.45rem;
+    }
+
+    .pt-profile-stats {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .pt-principles {
+      grid-template-columns: 1fr;
     }
 
     .pt-card {
@@ -3757,6 +3895,10 @@
     }
 
     .pt-detail-inner {
+      animation: none;
+    }
+
+    .pt-profile.is-animating {
       animation: none;
     }
   }

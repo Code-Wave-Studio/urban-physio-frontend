@@ -255,65 +255,101 @@ export default function PhysioTeamSection() {
           ) : null}
 
           <article className="pt-detail" aria-live="polite">
-            <div key={selected.id} className="pt-detail-inner">
-              {selected.badge ? (
-                <p className="pt-badge">
-                  <FaIcon icon="fa-stethoscope" />
-                  <span>{selected.badge}</span>
-                </p>
-              ) : null}
-              <span className="pt-quote" aria-hidden="true">
-                “
-              </span>
-              <div className="pt-detail-body">
-                {selected.description
-                  ? selected.description.split(/\n{2,}/).map((para, i) => (
-                      <p key={i} className="pt-bio">
-                        {para}
-                      </p>
-                    ))
-                  : null}
-                {(selected.specialties || []).length > 0 ? (
-                  <ul className="pt-chips">
-                    {selected.specialties.map((s) => (
-                      <li key={s}>{s}</li>
-                    ))}
-                  </ul>
-                ) : null}
-                {selected.approach_heading || (selected.approach || []).length ? (
-                  <div className="pt-approach">
-                    {selected.approach_heading ? (
-                      <p className="pt-approach-heading">{selected.approach_heading}</p>
-                    ) : null}
-                    <ul>
-                      {(selected.approach || []).map((row, i) => (
-                        <li key={`${row.title}-${i}`}>
-                          {row.title ? <strong>{row.title}</strong> : null}
-                          {row.title && row.body ? ' — ' : null}
-                          {row.body || ''}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-                {selected.experience ? (
-                  <p className="pt-exp">
-                    <FaIcon icon="fa-briefcase" /> {selected.experience} experience
-                    {selected.designation ? ` · ${selected.designation}` : ''}
-                  </p>
-                ) : null}
-              </div>
-              <footer className="pt-detail-foot">
-                <p className="pt-detail-name">{selected.name}</p>
-                <p className="pt-detail-qual">{selected.qualification || selected.designation}</p>
-              </footer>
-              <div className="pt-detail-photo-wrap">
+            <div
+              key={selected.id}
+              className={`pt-profile${reduceMotion ? '' : ' is-animating'}`}
+            >
+              <div className="pt-profile-media">
                 <Portrait
                   src={photo}
                   alt={photoAlt}
-                  className="pt-detail-photo"
-                  fallback={<span className="pt-detail-fallback">{initialsFrom(selected.name)}</span>}
+                  className="pt-profile-photo"
+                  fallback={<span className="pt-profile-fallback">{initialsFrom(selected.name)}</span>}
                 />
+              </div>
+
+              <header className="pt-profile-head">
+                <div className="pt-profile-identity">
+                  <p className="pt-profile-kicker">Physiotherapist</p>
+                  <h3 className="pt-profile-name">{selected.name}</h3>
+                  {selected.qualification ? (
+                    <p className="pt-profile-quals">{selected.qualification}</p>
+                  ) : null}
+                  {selected.designation ? (
+                    <p className="pt-profile-role">{selected.designation}</p>
+                  ) : null}
+                  <Stars value={selected.rating} className="pt-profile-stars" />
+                </div>
+              </header>
+
+              <div className="pt-profile-body">
+                {(selected.experience || selected.badge) ? (
+                  <ul className="pt-profile-stats">
+                    {selected.experience ? (
+                      <li>
+                        <span className="pt-stat-icon" aria-hidden="true">
+                          <FaIcon icon="fa-briefcase" />
+                        </span>
+                        <span>
+                          <span className="pt-stat-label">Experience</span>
+                          <span className="pt-stat-value">{selected.experience}</span>
+                        </span>
+                      </li>
+                    ) : null}
+                    {selected.badge ? (
+                      <li>
+                        <span className="pt-stat-icon is-blue" aria-hidden="true">
+                          <FaIcon icon="fa-stethoscope" />
+                        </span>
+                        <span>
+                          <span className="pt-stat-label">Patients treated</span>
+                          <span className="pt-stat-value">{selected.badge}</span>
+                        </span>
+                      </li>
+                    ) : null}
+                  </ul>
+                ) : null}
+
+                {(selected.specialties || []).length > 0 ? (
+                  <section className="pt-profile-block" aria-label="Specialties">
+                    <p className="pt-block-label">Specialties</p>
+                    <ul className="pt-chips">
+                      {selected.specialties.map((s) => (
+                        <li key={s}>{s}</li>
+                      ))}
+                    </ul>
+                  </section>
+                ) : null}
+
+                {selected.description ? (
+                  <section className="pt-profile-block" aria-label="Professional summary">
+                    <p className="pt-block-label">Professional summary</p>
+                    {selected.description.split(/\n{2,}/).map((para, i) => (
+                      <p key={i} className="pt-bio">
+                        {para}
+                      </p>
+                    ))}
+                  </section>
+                ) : null}
+
+                {selected.approach_heading || (selected.approach || []).length ? (
+                  <section className="pt-profile-block" aria-label="Treatment approach">
+                    <p className="pt-block-label">
+                      {selected.approach_heading || 'Treatment approach'}
+                    </p>
+                    <ol className="pt-principles">
+                      {(selected.approach || []).map((row, i) => (
+                        <li key={`${row.title}-${i}`}>
+                          <span className="pt-principles-num">{String(i + 1).padStart(2, '0')}</span>
+                          <span>
+                            {row.title ? <strong>{row.title}</strong> : null}
+                            {row.body ? <span className="pt-principles-body">{row.body}</span> : null}
+                          </span>
+                        </li>
+                      ))}
+                    </ol>
+                  </section>
+                ) : null}
               </div>
             </div>
           </article>
