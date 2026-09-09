@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import FaIcon from '../FaIcon';
 import { sanitizeCmsImageUrl } from '../../utils/mediaUrl';
 import {
@@ -35,12 +34,28 @@ const THEMES = {
   },
 };
 
-const EASE = [0.22, 1, 0.36, 1];
+const DESKTOP_MQ = '(min-width: 1024px)';
 
 function specsGridClass(count) {
   if (count >= 3) return 'roadmap-specs-grid roadmap-specs-grid--3';
   if (count === 2) return 'roadmap-specs-grid roadmap-specs-grid--2';
   return 'roadmap-specs-grid roadmap-specs-grid--1';
+}
+
+function useIsDesktopLayout() {
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia(DESKTOP_MQ).matches : false
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia(DESKTOP_MQ);
+    const sync = () => setIsDesktop(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+
+  return isDesktop;
 }
 
 function useViewportHeight() {
@@ -58,7 +73,7 @@ function useViewportHeight() {
   return vh;
 }
 
-function RoadmapPhaseImage({ themeKey, phase, phaseIndex, reduceMotion, duration, className = '' }) {
+function RoadmapPhaseImage({ themeKey, phase, phaseIndex, eager = false, className = '' }) {
   const fallbackSrc = roadmapFallbackImage(themeKey, phaseIndex);
   const customSrc = sanitizeCmsImageUrl(phase?.image);
   const [failedCustom, setFailedCustom] = useState(false);
@@ -74,16 +89,13 @@ function RoadmapPhaseImage({ themeKey, phase, phaseIndex, reduceMotion, duration
   if (!displaySrc || (usingFallback && failedFallback)) return null;
 
   return (
-    <motion.img
+    <img
       src={displaySrc}
       alt={phase.image_alt || phase.title || 'Recovery phase'}
       className={`roadmap-visual-img ${className}`.trim()}
-      loading={phaseIndex === 0 ? 'eager' : 'lazy'}
+      loading={eager ? 'eager' : 'lazy'}
       decoding="async"
-      initial={reduceMotion ? false : { opacity: 0, scale: 0.985, y: 12 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={reduceMotion ? undefined : { opacity: 0, scale: 0.99, y: -8 }}
-      transition={{ duration, ease: EASE }}
+      draggable="false"
       onError={() => {
         if (!usingFallback) {
           setFailedCustom(true);
@@ -92,6 +104,75 @@ function RoadmapPhaseImage({ themeKey, phase, phaseIndex, reduceMotion, duration
         setFailedFallback(true);
       }}
     />
+  );
+}
+
+function RoadmapIntro({ copy, headingId, tokens }) {
+  return (
+    <div className="roadmap-intro">
+      <p className={`roadmap-label ${tokens.label}`}>{copy.roadmap_label}</p>
+      <h2 id={headingId} className="roadmap-heading">
+        {copy.roadmap_heading}
+      </h2>
+      {copy.roadmap_intro ? (
+        <p className={`roadmap-lede ${tokens.intro}`}>{copy.roadmap_intro}</p>
+      ) : null}
+    </div>
+  );
+}
+
+function PhaseCopy({ phase, index, tokens }) {
+  if (!phase) return null;
+  return (
+    <div className="roadmap-phase">
+      <div className="roadmap-phase-stack">
+        <div className="roadmap-phase-meta">
+          <p className="roadmap-phase-number">{String(index + 1).padStart(2, '0')}</p>
+          {phase.subtitle || phase.number ? (
+            <p className={`roadmap-phase-kicker ${tokens.live}`}>
+              {phase.subtitle || phase.number}
+            </p>
+          ) : null}
+        </div>
+        <h3 className={`roadmap-phase-title ${tokens.phaseTitle}`}>{phase.title}</h3>
+        {phase.description ? <p className="roadmap-phase-copy">{phase.description}</p> : null}
+      </div>
+    </div>
+  );
+}
+
+function SpecList({ specs, tokens }) {
+  if (!specs.length) return null;
+  return (
+    <div className="roadmap-specs">
+      <ul className={specsGridClass(specs.length)}>
+        {specs.map((item, i) => (
+          <li key={`${item.title}-${i}`} className="roadmap-spec">
+            <span className={`roadmap-spec-icon ${tokens.specIcon}`}>
+              <FaIcon icon={item.icon || 'fa-circle-check'} className="text-sm" />
+            </span>
+            <p className="roadmap-spec-title">{item.title}</p>
+            {item.description ? (
+              <p className={`roadmap-spec-copy ${tokens.specMuted}`}>{item.description}</p>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function PhaseVisual({ themeKey, phase, phaseIndex, eager }) {
+  return (
+    <div className="roadmap-visual has-image">
+      <div className="roadmap-visual-glow" aria-hidden="true" />
+      <RoadmapPhaseImage
+        themeKey={themeKey}
+        phase={phase}
+        phaseIndex={phaseIndex}
+        eager={eager}
+      />
+    </div>
   );
 }
 
@@ -109,12 +190,11 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
   const tokens = THEMES[theme] || THEMES.home;
   const copy = { ...tokens.defaults, ...sections };
   const phases = useMemo(() => visibleRoadmapPhases(copy.roadmap_phases), [copy.roadmap_phases]);
-  const reduceMotion = useReducedMotion();
+  const isDesktop = useIsDesktopLayout();
   const trackRef = useRef(null);
   const activeRef = useRef(0);
   const vh = useViewportHeight();
   const [active, setActive] = useState(0);
-  const [entered, setEntered] = useState(false);
 
   const count = phases.length;
   const safeIndex = count ? Math.min(active, count - 1) : 0;
@@ -123,7 +203,7 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
   const themeKey = theme === 'tele' ? 'tele' : 'home';
 
   const syncFromScroll = useCallback(() => {
-    if (count < 1) return;
+    if (!isDesktop || count < 1) return;
     const el = trackRef.current;
     if (!el) return;
 
@@ -139,10 +219,8 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
     if (ideal === prev) {
       next = prev;
     } else if (ideal > prev) {
-      // Enter the next phase only after a small buffer past the boundary.
       next = raw >= ideal + 0.12 ? ideal : prev;
     } else {
-      // Leave the current phase only after scrolling back past a buffer.
       next = raw <= ideal + 0.88 ? ideal : prev;
     }
 
@@ -150,9 +228,10 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
       activeRef.current = next;
       setActive(next);
     }
-  }, [count, vh]);
+  }, [count, vh, isDesktop]);
 
   useEffect(() => {
+    if (!isDesktop) return undefined;
     let frame = 0;
     const onScroll = () => {
       if (frame) return;
@@ -169,26 +248,13 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
       window.removeEventListener('resize', onScroll);
       if (frame) cancelAnimationFrame(frame);
     };
-  }, [syncFromScroll]);
+  }, [syncFromScroll, isDesktop]);
 
   useEffect(() => {
-    const el = trackRef.current;
-    if (!el) return undefined;
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) setEntered(true);
-      },
-      { threshold: 0.12 }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!entered || !count) return undefined;
+    if (!count) return undefined;
     preloadPhaseImages(themeKey, phases);
     return undefined;
-  }, [entered, count, phases, themeKey]);
+  }, [count, phases, themeKey]);
 
   useEffect(() => {
     setActive((prev) => {
@@ -198,39 +264,15 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
     });
   }, [count]);
 
-  const goToPhase = useCallback(
-    (index) => {
-      const el = trackRef.current;
-      if (!el || count < 1) return;
-      const next = Math.min(Math.max(index, 0), count - 1);
-      const total = Math.max(el.offsetHeight - window.innerHeight, 0);
-      const ratio = count <= 1 ? 0 : (next + 0.35) / count;
-      const top = el.getBoundingClientRect().top + window.scrollY + ratio * total;
-      window.scrollTo({ top, behavior: reduceMotion ? 'auto' : 'smooth' });
-      activeRef.current = next;
-      setActive(next);
-    },
-    [count, reduceMotion]
-  );
-
   if (!phase) return null;
 
   const headingId = theme === 'tele' ? 'tele-roadmap-heading' : 'hp-roadmap-heading';
-  const duration = reduceMotion ? 0 : 0.32;
   const phaseKey = phase.id || phase.number || safeIndex;
-  const progressPct = count <= 1 ? 100 : ((safeIndex + 1) / count) * 100;
-
-  const contentFade = {
-    initial: reduceMotion ? false : { opacity: 0, y: 14 },
-    animate: { opacity: 1, y: 0 },
-    exit: reduceMotion ? undefined : { opacity: 0, y: -10 },
-    transition: { duration, ease: EASE },
-  };
 
   return (
     <section
       ref={trackRef}
-      className={`roadmap-section ${tokens.section}${entered ? ' is-entered' : ''}`}
+      className={`roadmap-section ${tokens.section}${isDesktop ? ' is-pinned' : ' is-flow'}`}
       id={theme === 'tele' ? 'telerehab-recovery-roadmap' : 'physioathome-recovery-roadmap'}
       style={{ '--roadmap-phases': String(count) }}
       aria-labelledby={headingId}
@@ -238,122 +280,48 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
       <div className={`roadmap-pin ${tokens.pin} text-white`}>
         <div className="absolute inset-0 roadmap-pin-grid pointer-events-none" aria-hidden />
         <div className="roadmap-pin-inner relative z-[1] max-w-7xl mx-auto">
-          <div className="roadmap-layout">
-            <div className="roadmap-copy">
-              <div className="roadmap-intro">
-                <p className={`roadmap-label ${tokens.label}`}>{copy.roadmap_label}</p>
-                <h2 id={headingId} className="roadmap-heading">
-                  {copy.roadmap_heading}
-                </h2>
-                {copy.roadmap_intro ? (
-                  <p className={`roadmap-lede ${tokens.intro}`}>{copy.roadmap_intro}</p>
-                ) : null}
-
-                {count > 1 ? (
-                  <div className="roadmap-progress" aria-hidden="true">
-                    <div className="roadmap-progress-track">
-                      <span
-                        className="roadmap-progress-fill"
-                        style={{
-                          width: `${progressPct}%`,
-                          transitionDuration: reduceMotion ? '0.01ms' : '0.35s',
-                        }}
-                      />
-                    </div>
-                    <ol className="roadmap-progress-steps">
-                      {phases.map((item, i) => (
-                        <li key={item.id || `step-${i}`}>
-                          <button
-                            type="button"
-                            className={`roadmap-progress-dot${i === safeIndex ? ' is-active' : ''}${i < safeIndex ? ' is-done' : ''}`}
-                            onClick={() => goToPhase(i)}
-                            aria-label={`Go to phase ${i + 1}: ${item.title || item.number || ''}`}
-                            aria-current={i === safeIndex ? 'step' : undefined}
-                          >
-                            <span>{String(i + 1).padStart(2, '0')}</span>
-                          </button>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-                ) : null}
+          {isDesktop ? (
+            <div className="roadmap-layout">
+              <div className="roadmap-copy">
+                <RoadmapIntro copy={copy} headingId={headingId} tokens={tokens} />
+                <div className="roadmap-phase-slot" aria-live="polite">
+                  <PhaseCopy key={phaseKey} phase={phase} index={safeIndex} tokens={tokens} />
+                </div>
               </div>
 
-              <div className="roadmap-phase" aria-live="polite">
-                <AnimatePresence mode="popLayout" initial={false}>
-                  <motion.div key={phaseKey} className="roadmap-phase-stack" {...contentFade}>
-                    <div className="roadmap-phase-meta">
-                      <p className="roadmap-phase-number">{String(safeIndex + 1).padStart(2, '0')}</p>
-                      {phase.subtitle || phase.number ? (
-                        <p className={`roadmap-phase-kicker ${tokens.live}`}>
-                          {phase.subtitle || phase.number}
-                        </p>
-                      ) : null}
-                    </div>
-                    <h3 className={`roadmap-phase-title ${tokens.phaseTitle}`}>{phase.title}</h3>
-                    {phase.description ? (
-                      <p className="roadmap-phase-copy">{phase.description}</p>
-                    ) : null}
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-            </div>
+              <PhaseVisual
+                themeKey={themeKey}
+                phase={phase}
+                phaseIndex={safeIndex}
+                eager
+              />
 
-            <div className="roadmap-visual has-image">
-              <div className="roadmap-visual-glow" aria-hidden="true" />
-              <AnimatePresence mode="popLayout" initial={false}>
-                <RoadmapPhaseImage
-                  key={phase.id || `${themeKey}-${safeIndex}`}
-                  themeKey={themeKey}
-                  phase={phase}
-                  phaseIndex={safeIndex}
-                  reduceMotion={reduceMotion}
-                  duration={duration}
-                />
-              </AnimatePresence>
+              <SpecList specs={specs} tokens={tokens} />
             </div>
-
-            <div className="roadmap-specs">
-              <AnimatePresence mode="popLayout" initial={false}>
-                <motion.ul
-                  key={`specs-${phaseKey}`}
-                  className={specsGridClass(specs.length)}
-                  initial="hidden"
-                  animate="show"
-                  exit="hidden"
-                  variants={{
-                    hidden: {},
-                    show: {
-                      transition: { staggerChildren: reduceMotion ? 0 : 0.05 },
-                    },
-                  }}
-                >
-                  {specs.map((item, i) => (
-                    <motion.li
-                      key={`${item.title}-${i}`}
-                      className="roadmap-spec"
-                      variants={{
-                        hidden: reduceMotion ? { opacity: 1 } : { opacity: 0, y: 10 },
-                        show: {
-                          opacity: 1,
-                          y: 0,
-                          transition: { duration, ease: EASE },
-                        },
-                      }}
-                    >
-                      <span className={`roadmap-spec-icon ${tokens.specIcon}`}>
-                        <FaIcon icon={item.icon || 'fa-circle-check'} className="text-sm" />
-                      </span>
-                      <p className="roadmap-spec-title">{item.title}</p>
-                      {item.description ? (
-                        <p className={`roadmap-spec-copy ${tokens.specMuted}`}>{item.description}</p>
-                      ) : null}
-                    </motion.li>
-                  ))}
-                </motion.ul>
-              </AnimatePresence>
+          ) : (
+            <div className="roadmap-flow">
+              <RoadmapIntro copy={copy} headingId={headingId} tokens={tokens} />
+              {phases.map((item, i) => {
+                const itemSpecs = visibleRoadmapSpecs(item?.specs);
+                return (
+                  <article
+                    key={item.id || `phase-${i}`}
+                    className="roadmap-flow-phase"
+                    aria-label={`Phase ${i + 1}${item.title ? `: ${item.title}` : ''}`}
+                  >
+                    <PhaseCopy phase={item} index={i} tokens={tokens} />
+                    <PhaseVisual
+                      themeKey={themeKey}
+                      phase={item}
+                      phaseIndex={i}
+                      eager={i === 0}
+                    />
+                    <SpecList specs={itemSpecs} tokens={tokens} />
+                  </article>
+                );
+              })}
             </div>
-          </div>
+          )}
         </div>
       </div>
     </section>
