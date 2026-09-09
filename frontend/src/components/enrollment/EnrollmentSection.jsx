@@ -10,6 +10,7 @@ import {
   visibleEnrolSteps,
 } from '../../constants/enrollmentDefaults';
 import EnrolStepVisual from './EnrolStepVisual';
+import useEnrolScrollNav from './useEnrolScrollNav';
 
 const THEMES = {
   home: { defaults: HOME_ENROL_DEFAULTS, section: 'enrol-theme-home' },
@@ -87,6 +88,7 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
   const [loopCircle, setLoopCircle] = useState(null);
   const [drawn, setDrawn] = useState(false);
   const [viewport, setViewport] = useState(1280);
+  const sectionRef = useRef(null);
   const stageRef = useRef(null);
   const hexRefs = useRef([]);
   const loopRef = useRef(null);
@@ -97,6 +99,14 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
   useEffect(() => {
     setActive(defaultEnrolIndex(steps, copy.enrol_default_step));
   }, [copy.enrol_default_step, steps]);
+
+  useEnrolScrollNav({
+    sectionRef,
+    count,
+    active: safeIndex,
+    setActive,
+    reduceMotion: Boolean(reduceMotion),
+  });
 
   const groups = useMemo(() => {
     const linear = [];
@@ -240,9 +250,11 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
 
   return (
     <section
+      ref={sectionRef}
       className={`enrol-section ${tokens.section}`}
       id={theme === 'tele' ? 'telephysio-how-to-enrol' : 'physioathome-how-to-enrol'}
       aria-labelledby={headingId}
+      data-enrol-scroll-nav="1"
     >
       <div className="enrol-inner">
         <header className="enrol-header">
