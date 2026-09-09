@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useReducedMotion } from 'framer-motion';
 import { sanitizeCmsImageUrl } from '../../utils/mediaUrl';
 import {
@@ -34,7 +34,7 @@ function Heading({ heading, highlight }) {
   return heading;
 }
 
-function FeatureVisual({ item, active, reduceMotion, allowLoad }) {
+function FeatureVisual({ item, index, allowLoad, slideRef }) {
   const src = sanitizeCmsImageUrl(item?.image);
   const [failed, setFailed] = useState(false);
   const loadedRef = useRef('');
@@ -45,23 +45,19 @@ function FeatureVisual({ item, active, reduceMotion, allowLoad }) {
     setFailed(false);
   }, [src]);
 
-  const alt = ecosystemImageAlt(item);
   const displaySrc = loadedRef.current;
   const showImage = Boolean(displaySrc) && !failed;
 
   return (
-    <div
-      className={`eco-visual-slide${active ? ' is-active' : ''}${reduceMotion ? ' is-static' : ''}`}
-      aria-hidden={!active}
-    >
+    <div ref={slideRef} className="eco-visual-slide" aria-hidden="true">
       {showImage ? (
         <img
           src={displaySrc}
-          alt={active ? alt : ''}
+          alt=""
           className="eco-visual-img"
           loading="lazy"
           decoding="async"
-          fetchPriority={active ? 'high' : 'low'}
+          fetchPriority={index === 0 ? 'high' : 'low'}
           onError={() => setFailed(true)}
         />
       ) : null}
@@ -75,11 +71,44 @@ export default function CareEcosystemSection({ theme = 'home', sections = {} }) 
   const items = useMemo(() => visibleEcosystemItems(copy.ecosystem_items), [copy.ecosystem_items]);
   const reduceMotion = useReducedMotion();
   const trackRef = useRef(null);
+  const slidesRef = useRef([]);
+  const progressRef = useRef(0);
   const [active, setActive] = useState(0);
   const [inView, setInView] = useState(false);
 
   const count = items.length;
   const safeIndex = count ? Math.min(active, count - 1) : 0;
+  const maxProgress = Math.max(count - 1, 0);
+
+  const applyProgress = useCallback(
+    (progress) => {
+      progressRef.current = progress;
+      const snaps = reduceMotion ? Math.round(progress) : progress;
+      slidesRef.current.forEach((el, i) => {
+        if (!el) return;
+        const y = (i - snaps) * 100;
+        el.style.transform = `translate3d(0, ${y}%, 0)`;
+      });
+    },
+    [reduceMotion]
+  );
+
+  const readProgress = useCallback(() => {
+    const el = trackRef.current;
+    if (!el || count < 1) return 0;
+    const total = el.offsetHeight - window.innerHeight;
+    if (total <= 0) return 0;
+    const scrolled = Math.min(Math.max(-el.getBoundingClientRect().top, 0), total);
+    return (scrolled / total) * maxProgress;
+  }, [count, maxProgress]);
+
+  const syncFromScroll = useCallback(() => {
+    if (count < 1) return;
+    const progress = readProgress();
+    applyProgress(progress);
+    const next = Math.min(count - 1, Math.max(0, Math.round(progress)));
+    setActive((prev) => (prev === next ? prev : next));
+  }, [applyProgress, count, readProgress]);
 
   useEffect(() => {
     const el = trackRef.current;
@@ -93,22 +122,6 @@ export default function CareEcosystemSection({ theme = 'home', sections = {} }) 
     io.observe(el);
     return () => io.disconnect();
   }, []);
-
-  const syncFromScroll = useCallback(() => {
-    if (count < 1) return;
-    const el = trackRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const total = el.offsetHeight - window.innerHeight;
-    if (total <= 0) {
-      setActive(0);
-      return;
-    }
-    const scrolled = Math.min(Math.max(-rect.top, 0), total);
-    const ratio = scrolled / total;
-    const next = Math.min(count - 1, Math.floor(ratio * count + 1e-4));
-    setActive(next);
-  }, [count]);
 
   useEffect(() => {
     let frame = 0;
@@ -129,28 +142,31 @@ export default function CareEcosystemSection({ theme = 'home', sections = {} }) 
     };
   }, [syncFromScroll]);
 
-  useEffect(() => {
-    setActive((prev) => (count ? Math.min(prev, count - 1) : 0));
-  }, [count]);
+  useLayoutEffect(() => {
+    slidesRef.current = slidesRef.current.slice(0, count);
+    applyProgress(readProgress());
+  }, [applyProgress, count, readProgress]);
 
   const scrollToIndex = useCallback(
     (index) => {
       const el = trackRef.current;
       if (!el || count < 1) return;
       const total = Math.max(el.offsetHeight - window.innerHeight, 0);
-      const start = (index / count) * total;
-      const mid = start + (count > 0 ? total / count / 2 : 0);
-      const top = el.getBoundingClientRect().top + window.scrollY + mid;
+      const ratio = maxProgress <= 0 ? 0 : index / maxProgress;
+      const top = el.getBoundingClientRect().top + window.scrollY + ratio * total;
       window.scrollTo({ top, behavior: reduceMotion ? 'auto' : 'smooth' });
+      applyProgress(index);
       setActive(index);
     },
-    [count, reduceMotion]
+    [applyProgress, count, maxProgress, reduceMotion]
   );
 
   if (!count) return null;
 
   const headingId = theme === 'tele' ? 'tele-ecosystem-heading' : 'hp-ecosystem-heading';
   const navId = `${headingId}-nav`;
+  const activeItem = items[safeIndex];
+  const visualAlt = activeItem ? ecosystemImageAlt(activeItem) : 'Care ecosystem visual';
 
   return (
     <section
@@ -163,15 +179,16 @@ export default function CareEcosystemSection({ theme = 'home', sections = {} }) 
       <div className="eco-pin">
         <div className="eco-inner">
           <div className="eco-copy">
-            <header className="eco-intro">
-              {copy.ecosystem_label ? <p className="eco-label">{copy.ecosystem_label}</p> : null}
+            {copy.ecosystem_label ? <p className="eco-label">{copy.ecosystem_label}</p> : null}
+
+            <header className="eco-intro eco-box">
               <h2 id={headingId} className="eco-heading">
                 <Heading heading={copy.ecosystem_heading} highlight={copy.ecosystem_highlight} />
               </h2>
               {copy.ecosystem_intro ? <p className="eco-lede">{copy.ecosystem_intro}</p> : null}
             </header>
 
-            <nav className="eco-nav" aria-label="Care ecosystem features" id={navId}>
+            <nav className="eco-nav eco-box" aria-label="Care ecosystem features" id={navId}>
               <ol className="eco-list">
                 {items.map((item, i) => {
                   const isActive = i === safeIndex;
@@ -199,15 +216,18 @@ export default function CareEcosystemSection({ theme = 'home', sections = {} }) 
             </nav>
           </div>
 
-          <div className="eco-visual" id={`${headingId}-visual`} aria-live="polite">
-            <div className="eco-visual-frame">
+          <div className="eco-visual" id={`${headingId}-visual`}>
+            <div className="eco-visual-frame" aria-live="polite">
+              <span className="sr-only">{visualAlt}</span>
               {items.map((item, i) => (
                 <FeatureVisual
                   key={item.id || `visual-${i}`}
                   item={item}
-                  active={i === safeIndex}
-                  allowLoad={inView && (i === 0 || Math.abs(i - safeIndex) <= 1)}
-                  reduceMotion={reduceMotion}
+                  index={i}
+                  allowLoad={inView && Math.abs(i - safeIndex) <= 1}
+                  slideRef={(el) => {
+                    slidesRef.current[i] = el;
+                  }}
                 />
               ))}
             </div>
