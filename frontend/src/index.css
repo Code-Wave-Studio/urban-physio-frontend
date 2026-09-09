@@ -521,6 +521,26 @@
     height: auto;
   }
 
+  .roadmap-section.is-pinned {
+    height: calc(100svh + (var(--roadmap-phases, 4) - 1) * 100svh);
+    overflow-x: clip;
+    overflow-y: visible;
+  }
+
+  .roadmap-section.is-pinned .roadmap-pin {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .roadmap-section.is-pinned .roadmap-pin-inner {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
   .roadmap-theme-home {
     --roadmap-accent: #fbbf24;
     --roadmap-accent-soft: rgb(251 191 36 / 0.35);
@@ -815,27 +835,7 @@
     align-items: center;
   }
 
-  .roadmap-section.is-stepped {
-    --roadmap-frame: var(--roadmap-vvh, 100dvh);
-    height: 100svh;
-    height: var(--roadmap-frame);
-    max-height: var(--roadmap-frame);
-    overflow: hidden;
-    overflow-x: clip;
-    overscroll-behavior-y: auto;
-    touch-action: pan-y;
-  }
-
-  .roadmap-section.is-stepped .roadmap-pin {
-    height: 100%;
-    overflow: hidden;
-  }
-
   .roadmap-section.is-stepped .roadmap-pin-inner {
-    height: 100%;
-    min-height: 0;
-    overflow: hidden;
-    overflow-x: clip;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -979,9 +979,7 @@
     overflow: hidden;
   }
 
-  .roadmap-section.is-stepped .roadmap-phase,
-  .roadmap-section.is-stepped .roadmap-visual,
-  .roadmap-section.is-stepped .roadmap-specs {
+  .roadmap-section.is-stepped .roadmap-phase {
     animation: roadmap-step-fade 0.34s ease;
   }
 
@@ -1473,9 +1471,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .roadmap-section.is-stepped .roadmap-phase,
-    .roadmap-section.is-stepped .roadmap-visual,
-    .roadmap-section.is-stepped .roadmap-specs {
+    .roadmap-section.is-stepped .roadmap-phase {
       animation: none;
     }
   }

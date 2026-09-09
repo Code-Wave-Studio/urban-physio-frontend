@@ -64,10 +64,14 @@ function useViewportHeight() {
   );
 
   useEffect(() => {
-    const sync = () => setVh(window.innerHeight);
+    const sync = () => setVh(window.visualViewport?.height || window.innerHeight);
     sync();
     window.addEventListener('resize', sync, { passive: true });
-    return () => window.removeEventListener('resize', sync);
+    window.visualViewport?.addEventListener('resize', sync);
+    return () => {
+      window.removeEventListener('resize', sync);
+      window.visualViewport?.removeEventListener('resize', sync);
+    };
   }, []);
 
   return vh;
@@ -186,267 +190,6 @@ function preloadPhaseImages(themeKey, phases) {
   });
 }
 
-const STEP_COOLDOWN_MS = 520;
-const WHEEL_STEP_PX = 40;
-const SWIPE_STEP_PX = 42;
-const IN_VIEW_RATIO = 0.55;
-const LEFT_VIEW_RATIO = 0.22;
-
-function wheelDeltaY(event) {
-  if (event.deltaMode === 1) return event.deltaY * 16;
-  if (event.deltaMode === 2) return event.deltaY * (window.innerHeight || 1);
-  return event.deltaY;
-}
-
-function syncSteppedFrameHeight(section) {
-  if (!section) return;
-  const h = Math.round(window.visualViewport?.height || window.innerHeight || 0);
-  if (h > 0) section.style.setProperty('--roadmap-vvh', `${h}px`);
-}
-
-function measureSection(section) {
-  const rect = section.getBoundingClientRect();
-  const vh = window.innerHeight || 1;
-  const visible = Math.min(rect.bottom, vh) - Math.max(rect.top, 0);
-  return { rect, vh, top: rect.top, ratio: Math.max(0, visible) / vh };
-}
-
-function holdScroll(event) {
-  if (event.cancelable) event.preventDefault();
-}
-
-/** Mobile/tablet: one swipe or wheel tick = one phase. Desktop scroll is unchanged. */
-function useSteppedPhaseScroll({ enabled, count, sectionRef, activeRef, setActive }) {
-  useEffect(() => {
-    if (!enabled || count < 2) return undefined;
-    const section = sectionRef.current;
-    if (!section) return undefined;
-
-    let locked = false;
-    let exitDir = 0;
-    let lastStepAt = 0;
-    let eatUntil = 0;
-    let wheelAcc = 0;
-    let touchStartY = 0;
-    let touchConsumed = false;
-    let near = false;
-    let frame = 0;
-
-    const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
-    const index = () => activeRef.current;
-    const canGo = (dir) => {
-      if (dir > 0) return index() < count - 1;
-      if (dir < 0) return index() > 0;
-      return false;
-    };
-
-    const goTo = (next) => {
-      const clamped = Math.min(count - 1, Math.max(0, next));
-      if (clamped === index()) return false;
-      activeRef.current = clamped;
-      setActive(clamped);
-      return true;
-    };
-
-    const step = (dir) => {
-      if (!canGo(dir)) return false;
-      if (!goTo(index() + dir)) return false;
-      const t = now();
-      lastStepAt = t;
-      eatUntil = t + STEP_COOLDOWN_MS;
-      wheelAcc = 0;
-      locked = true;
-      exitDir = 0;
-      return true;
-    };
-
-    const release = (dir) => {
-      locked = false;
-      exitDir = dir;
-      wheelAcc = 0;
-      eatUntil = 0;
-      const { ratio } = measureSection(section);
-      if (ratio > 0.8) {
-        const nudge = Math.round((window.innerHeight || 640) * 0.22);
-        window.scrollBy(0, dir * nudge);
-      }
-    };
-
-    const capture = (side) => {
-      locked = true;
-      exitDir = 0;
-      wheelAcc = 0;
-      eatUntil = now() + 280;
-      if (side === 'below') goTo(count - 1);
-      else if (side === 'above') goTo(0);
-    };
-
-    const syncLockFromView = (dirHint = 0) => {
-      syncSteppedFrameHeight(section);
-      const { ratio, top } = measureSection(section);
-
-      if (exitDir) {
-        if (ratio < LEFT_VIEW_RATIO) {
-          exitDir = 0;
-          locked = false;
-          return;
-        }
-        if (dirHint && dirHint === -exitDir && ratio >= IN_VIEW_RATIO) {
-          capture(exitDir > 0 ? 'below' : 'above');
-        }
-        return;
-      }
-
-      if (locked) {
-        if (ratio < LEFT_VIEW_RATIO) locked = false;
-        return;
-      }
-
-      if (ratio < IN_VIEW_RATIO) return;
-      if (dirHint > 0) capture('above');
-      else if (dirHint < 0) capture('below');
-      else if (top >= -12 && top <= 32) capture(top < -64 ? 'below' : 'above');
-    };
-
-    const onScrollOrResize = () => {
-      if (frame) return;
-      frame = window.requestAnimationFrame(() => {
-        frame = 0;
-        syncLockFromView(0);
-      });
-    };
-
-    const consumePhaseGesture = (event, dir, dyAbs, t) => {
-      if (!canGo(dir)) {
-        const sameGesture = event.type === 'wheel' ? t < eatUntil : touchConsumed;
-        if (sameGesture) {
-          holdScroll(event);
-          return false;
-        }
-        release(dir);
-        return false;
-      }
-
-      if (t < eatUntil) {
-        holdScroll(event);
-        return false;
-      }
-
-      holdScroll(event);
-
-      if (event.type === 'wheel') {
-        wheelAcc += dyAbs * dir;
-        if (Math.abs(wheelAcc) < WHEEL_STEP_PX) return false;
-        if (t - lastStepAt < STEP_COOLDOWN_MS) {
-          wheelAcc = 0;
-          return false;
-        }
-        return step(dir);
-      }
-
-      if (touchConsumed || dyAbs < SWIPE_STEP_PX) return false;
-      if (t - lastStepAt < STEP_COOLDOWN_MS) return false;
-      touchConsumed = true;
-      return step(dir);
-    };
-
-    const onWheel = (event) => {
-      if (!near || event.ctrlKey) return;
-      const dy = wheelDeltaY(event);
-      if (dy === 0) return;
-      const dir = dy > 0 ? 1 : -1;
-      const t = now();
-
-      if (exitDir === dir) return;
-      if (exitDir && dir === -exitDir) {
-        syncLockFromView(dir);
-      } else if (!locked) {
-        syncLockFromView(dir);
-      }
-
-      if (exitDir === dir || !locked) return;
-      consumePhaseGesture(event, dir, Math.abs(dy), t);
-    };
-
-    const onTouchStart = (event) => {
-      if (!event.touches[0] || !section.contains(event.target)) return;
-      touchStartY = event.touches[0].clientY;
-      touchConsumed = false;
-    };
-
-    const onTouchMove = (event) => {
-      if (!near || !event.touches[0] || !section.contains(event.target)) return;
-      const dy = touchStartY - event.touches[0].clientY;
-      const dir = dy > 0 ? 1 : dy < 0 ? -1 : 0;
-      if (!dir) return;
-      const t = now();
-
-      if (exitDir === dir) return;
-      if (exitDir && dir === -exitDir) {
-        syncLockFromView(dir);
-      } else if (!locked) {
-        syncLockFromView(dir);
-      }
-
-      if (exitDir === dir || !locked) return;
-      consumePhaseGesture(event, dir, Math.abs(dy), t);
-    };
-
-    const onTouchEnd = () => {
-      touchConsumed = false;
-      if (locked && (!canGo(1) || !canGo(-1))) eatUntil = 0;
-    };
-
-    const attach = () => {
-      if (near) return;
-      near = true;
-      syncSteppedFrameHeight(section);
-      window.addEventListener('wheel', onWheel, { passive: false, capture: true });
-      window.addEventListener('touchstart', onTouchStart, { passive: true, capture: true });
-      window.addEventListener('touchmove', onTouchMove, { passive: false, capture: true });
-      window.addEventListener('touchend', onTouchEnd, { passive: true, capture: true });
-      window.addEventListener('touchcancel', onTouchEnd, { passive: true, capture: true });
-      syncLockFromView(0);
-    };
-
-    const detach = () => {
-      if (!near) return;
-      near = false;
-      locked = false;
-      exitDir = 0;
-      wheelAcc = 0;
-      window.removeEventListener('wheel', onWheel, { capture: true });
-      window.removeEventListener('touchstart', onTouchStart, { capture: true });
-      window.removeEventListener('touchmove', onTouchMove, { capture: true });
-      window.removeEventListener('touchend', onTouchEnd, { capture: true });
-      window.removeEventListener('touchcancel', onTouchEnd, { capture: true });
-    };
-
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) attach();
-        else detach();
-      },
-      { rootMargin: '20% 0px', threshold: 0 }
-    );
-
-    syncSteppedFrameHeight(section);
-    io.observe(section);
-    window.addEventListener('scroll', onScrollOrResize, { passive: true });
-    window.addEventListener('resize', onScrollOrResize, { passive: true });
-    window.visualViewport?.addEventListener('resize', onScrollOrResize);
-
-    return () => {
-      detach();
-      io.disconnect();
-      window.removeEventListener('scroll', onScrollOrResize);
-      window.removeEventListener('resize', onScrollOrResize);
-      window.visualViewport?.removeEventListener('resize', onScrollOrResize);
-      if (frame) window.cancelAnimationFrame(frame);
-    };
-  }, [activeRef, count, enabled, sectionRef, setActive]);
-}
-
 export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }) {
   const tokens = THEMES[theme] || THEMES.home;
   const copy = { ...tokens.defaults, ...sections };
@@ -463,16 +206,8 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
   const specs = visibleRoadmapSpecs(phase?.specs);
   const themeKey = theme === 'tele' ? 'tele' : 'home';
 
-  useSteppedPhaseScroll({
-    enabled: !isDesktop,
-    count,
-    sectionRef: trackRef,
-    activeRef,
-    setActive,
-  });
-
   const syncFromScroll = useCallback(() => {
-    if (!isDesktop || count < 1) return;
+    if (count < 1) return;
     const el = trackRef.current;
     if (!el) return;
 
@@ -497,10 +232,9 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
       activeRef.current = next;
       setActive(next);
     }
-  }, [count, vh, isDesktop]);
+  }, [count, vh]);
 
   useEffect(() => {
-    if (!isDesktop) return undefined;
     let frame = 0;
     const onScroll = () => {
       if (frame) return;
@@ -512,12 +246,14 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
     syncFromScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll, { passive: true });
+    window.visualViewport?.addEventListener('resize', onScroll);
     return () => {
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
+      window.visualViewport?.removeEventListener('resize', onScroll);
       if (frame) cancelAnimationFrame(frame);
     };
-  }, [syncFromScroll, isDesktop]);
+  }, [syncFromScroll]);
 
   useEffect(() => {
     if (!count) return undefined;
@@ -541,7 +277,7 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
   return (
     <section
       ref={trackRef}
-      className={`roadmap-section ${tokens.section}${isDesktop ? ' is-pinned' : ' is-stepped'}`}
+      className={`roadmap-section ${tokens.section} is-pinned${isDesktop ? '' : ' is-stepped'}`}
       id={theme === 'tele' ? 'telerehab-recovery-roadmap' : 'physioathome-recovery-roadmap'}
       style={{ '--roadmap-phases': String(count) }}
       aria-labelledby={headingId}
@@ -575,13 +311,12 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
                 <PhaseCopy key={phaseKey} phase={phase} index={safeIndex} tokens={tokens} />
               </div>
               <PhaseVisual
-                key={`visual-${phaseKey}`}
                 themeKey={themeKey}
                 phase={phase}
                 phaseIndex={safeIndex}
                 eager
               />
-              <SpecList key={`specs-${phaseKey}`} specs={specs} tokens={tokens} />
+              <SpecList specs={specs} tokens={tokens} />
             </div>
           )}
         </div>
