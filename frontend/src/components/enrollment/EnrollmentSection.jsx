@@ -60,21 +60,39 @@ function stepNumber(step, index) {
   return String(index + 1);
 }
 
-function MobileTimeline({ steps, activeIndex }) {
+function MobileTimeline({ steps, activeIndex, onSelect }) {
   return (
     <ol className="enrol-timeline" aria-label="Enrollment steps">
       {steps.map((step, index) => {
-        const state = index === activeIndex ? 'active' : index < activeIndex ? 'done' : 'upcoming';
+        const isActive = index === activeIndex;
         const title = String(step.title || step.label || `Step ${index + 1}`).trim();
+        const num = stepNumber(step, index);
         return (
-          <li key={step.id || `timeline-${index}`} className={`enrol-timeline-item is-${state}`}>
-            <div className="enrol-timeline-marker" aria-hidden="true">
-              <span className="enrol-timeline-hex">
-                <span className="enrol-timeline-num">{stepNumber(step, index)}</span>
-              </span>
+          <li
+            key={step.id || `timeline-${index}`}
+            className={`enrol-timeline-item${isActive ? ' is-active' : ''}`}
+          >
+            <div className="enrol-timeline-marker">
+              <button
+                type="button"
+                className="enrol-timeline-hex"
+                onClick={() => onSelect(index)}
+                aria-current={isActive ? 'step' : undefined}
+                aria-label={`Step ${num}: ${title}${isActive ? ', selected' : ''}`}
+              >
+                <span className="enrol-timeline-num">{num}</span>
+              </button>
             </div>
             <div className="enrol-timeline-copy">
-              <h3 className="enrol-timeline-title">{title}</h3>
+              <h3 className="enrol-timeline-title">
+                <button
+                  type="button"
+                  className="enrol-timeline-title-btn"
+                  onClick={() => onSelect(index)}
+                >
+                  {title}
+                </button>
+              </h3>
               {step.description ? <p className="enrol-timeline-body">{step.description}</p> : null}
             </div>
           </li>
@@ -305,7 +323,7 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
           {copy.enrol_intro ? <p className="enrol-intro">{copy.enrol_intro}</p> : null}
         </header>
 
-        <MobileTimeline steps={steps} activeIndex={safeIndex} />
+        <MobileTimeline steps={steps} activeIndex={safeIndex} onSelect={goToStep} />
 
         <div className="enrol-desktop">
           <div

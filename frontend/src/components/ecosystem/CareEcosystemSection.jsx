@@ -19,6 +19,24 @@ const THEMES = {
   },
 };
 
+const MOBILE_MQ = '(max-width: 767px)';
+
+function useIsEcoMobile() {
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia(MOBILE_MQ).matches : false
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia(MOBILE_MQ);
+    const sync = () => setIsMobile(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+
+  return isMobile;
+}
+
 function Heading({ heading, highlight }) {
   if (!heading) return null;
   if (highlight && heading.includes(highlight)) {
@@ -65,14 +83,76 @@ function FeatureVisual({ item, index, allowLoad, slideRef }) {
   );
 }
 
+function CarouselSlide({ item, index, offset, allowLoad, reduceMotion }) {
+  const src = sanitizeCmsImageUrl(item?.image);
+  const [failed, setFailed] = useState(false);
+  const abs = Math.abs(offset);
+  const isActive = offset === 0;
+  const hidden = abs > 1;
+
+  useEffect(() => {
+    setFailed(false);
+  }, [src]);
+
+  const showImage = Boolean(src) && !failed && allowLoad;
+
+  return (
+    <div
+      className={`eco-carousel-slide${isActive ? ' is-active' : ''}${hidden ? ' is-hidden' : ''}`}
+      style={{
+        transform: reduceMotion
+          ? `translate3d(${offset * 100}%, 0, 0)`
+          : `translate3d(${offset * 42}%, 0, 0) scale(${isActive ? 1 : 0.86})`,
+        zIndex: isActive ? 3 : 2 - abs,
+        opacity: hidden ? 0 : isActive ? 1 : 0.72,
+      }}
+      aria-hidden={!isActive}
+    >
+      <div className="eco-carousel-card">
+        {showImage ? (
+          <img
+            src={src}
+            alt=""
+            className="eco-carousel-img"
+            loading={abs <= 1 ? 'eager' : 'lazy'}
+            decoding="async"
+            draggable={false}
+            onError={() => setFailed(true)}
+          />
+        ) : (
+          <div className="eco-carousel-placeholder" aria-hidden="true" />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Chevron({ dir }) {
+  const isPrev = dir === 'prev';
+  return (
+    <svg viewBox="0 0 24 24" className="eco-carousel-chevron" aria-hidden="true">
+      <path
+        d={isPrev ? 'M14.5 6.5 L9 12 l5.5 5.5' : 'M9.5 6.5 L15 12 l-5.5 5.5'}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export default function CareEcosystemSection({ theme = 'home', sections = {} }) {
   const tokens = THEMES[theme] || THEMES.home;
   const copy = { ...tokens.defaults, ...sections };
   const items = useMemo(() => visibleEcosystemItems(copy.ecosystem_items), [copy.ecosystem_items]);
   const reduceMotion = useReducedMotion();
+  const isMobile = useIsEcoMobile();
   const trackRef = useRef(null);
   const slidesRef = useRef([]);
   const progressRef = useRef(0);
+  const touchRef = useRef({ x: 0, y: 0, active: false });
   const [active, setActive] = useState(0);
   const [inView, setInView] = useState(false);
 
@@ -103,12 +183,12 @@ export default function CareEcosystemSection({ theme = 'home', sections = {} }) 
   }, [count, maxProgress]);
 
   const syncFromScroll = useCallback(() => {
-    if (count < 1) return;
+    if (isMobile || count < 1) return;
     const progress = readProgress();
     applyProgress(progress);
     const next = Math.min(count - 1, Math.max(0, Math.round(progress)));
     setActive((prev) => (prev === next ? prev : next));
-  }, [applyProgress, count, readProgress]);
+  }, [applyProgress, count, isMobile, readProgress]);
 
   useEffect(() => {
     const el = trackRef.current;
@@ -124,6 +204,7 @@ export default function CareEcosystemSection({ theme = 'home', sections = {} }) 
   }, []);
 
   useEffect(() => {
+    if (isMobile) return undefined;
     let frame = 0;
     const onScroll = () => {
       if (frame) return;
@@ -140,15 +221,36 @@ export default function CareEcosystemSection({ theme = 'home', sections = {} }) 
       window.removeEventListener('resize', onScroll);
       if (frame) cancelAnimationFrame(frame);
     };
-  }, [syncFromScroll]);
+  }, [isMobile, syncFromScroll]);
 
   useLayoutEffect(() => {
+    if (isMobile) return;
     slidesRef.current = slidesRef.current.slice(0, count);
     applyProgress(readProgress());
-  }, [applyProgress, count, readProgress]);
+  }, [applyProgress, count, isMobile, readProgress]);
+
+  useEffect(() => {
+    setActive((prev) => {
+      if (!count) return 0;
+      return Math.min(prev, count - 1);
+    });
+  }, [count]);
+
+  const goToIndex = useCallback(
+    (index) => {
+      if (!count) return;
+      const next = Math.min(Math.max(index, 0), count - 1);
+      setActive(next);
+    },
+    [count]
+  );
 
   const scrollToIndex = useCallback(
     (index) => {
+      if (isMobile) {
+        goToIndex(index);
+        return;
+      }
       const el = trackRef.current;
       if (!el || count < 1) return;
       const total = Math.max(el.offsetHeight - window.innerHeight, 0);
@@ -158,7 +260,36 @@ export default function CareEcosystemSection({ theme = 'home', sections = {} }) 
       applyProgress(index);
       setActive(index);
     },
-    [applyProgress, count, maxProgress, reduceMotion]
+    [applyProgress, count, goToIndex, isMobile, maxProgress, reduceMotion]
+  );
+
+  const goPrev = useCallback(() => {
+    goToIndex(safeIndex - 1);
+  }, [goToIndex, safeIndex]);
+
+  const goNext = useCallback(() => {
+    goToIndex(safeIndex + 1);
+  }, [goToIndex, safeIndex]);
+
+  const onTouchStart = useCallback((event) => {
+    const touch = event.changedTouches?.[0] || event.touches?.[0];
+    if (!touch) return;
+    touchRef.current = { x: touch.clientX, y: touch.clientY, active: true };
+  }, []);
+
+  const onTouchEnd = useCallback(
+    (event) => {
+      if (!touchRef.current.active) return;
+      const touch = event.changedTouches?.[0];
+      touchRef.current.active = false;
+      if (!touch) return;
+      const dx = touch.clientX - touchRef.current.x;
+      const dy = touch.clientY - touchRef.current.y;
+      if (Math.abs(dx) < 42 || Math.abs(dx) < Math.abs(dy)) return;
+      if (dx < 0) goNext();
+      else goPrev();
+    },
+    [goNext, goPrev]
   );
 
   if (!count) return null;
@@ -167,11 +298,13 @@ export default function CareEcosystemSection({ theme = 'home', sections = {} }) 
   const navId = `${headingId}-nav`;
   const activeItem = items[safeIndex];
   const visualAlt = activeItem ? ecosystemImageAlt(activeItem) : 'Care ecosystem visual';
+  const canPrev = safeIndex > 0;
+  const canNext = safeIndex < count - 1;
 
   return (
     <section
       ref={trackRef}
-      className={`eco-section ${tokens.section}${inView ? ' is-entered' : ''}`}
+      className={`eco-section ${tokens.section}${inView ? ' is-entered' : ''}${isMobile ? ' is-mobile-carousel' : ''}`}
       id={theme === 'tele' ? 'telerehab-care-ecosystem' : 'physioathome-care-ecosystem'}
       style={{ '--eco-items': String(count) }}
       aria-labelledby={headingId}
@@ -216,7 +349,7 @@ export default function CareEcosystemSection({ theme = 'home', sections = {} }) 
             </nav>
           </div>
 
-          <div className="eco-visual" id={`${headingId}-visual`}>
+          <div className="eco-visual eco-visual--desktop" id={`${headingId}-visual`}>
             <div className="eco-visual-frame" aria-live="polite">
               <span className="sr-only">{visualAlt}</span>
               {items.map((item, i) => (
@@ -224,12 +357,82 @@ export default function CareEcosystemSection({ theme = 'home', sections = {} }) 
                   key={item.id || `visual-${i}`}
                   item={item}
                   index={i}
-                  allowLoad={inView && Math.abs(i - safeIndex) <= 1}
+                  allowLoad={!isMobile && inView && Math.abs(i - safeIndex) <= 1}
                   slideRef={(el) => {
                     slidesRef.current[i] = el;
                   }}
                 />
               ))}
+            </div>
+          </div>
+
+          <div
+            className="eco-carousel"
+            role="region"
+            aria-roledescription="carousel"
+            aria-label="Care ecosystem visuals"
+          >
+            <div className="eco-carousel-stage">
+              <button
+                type="button"
+                className="eco-carousel-nav eco-carousel-nav--prev"
+                onClick={goPrev}
+                disabled={!canPrev}
+                aria-label="Previous feature"
+              >
+                <Chevron dir="prev" />
+              </button>
+
+              <div
+                className="eco-carousel-window"
+                onTouchStart={onTouchStart}
+                onTouchEnd={onTouchEnd}
+              >
+                <span className="sr-only" aria-live="polite">
+                  {visualAlt}
+                </span>
+                {items.map((item, i) => (
+                  <CarouselSlide
+                    key={item.id || `carousel-${i}`}
+                    item={item}
+                    index={i}
+                    offset={i - safeIndex}
+                    allowLoad={inView && Math.abs(i - safeIndex) <= 1}
+                    reduceMotion={reduceMotion}
+                  />
+                ))}
+              </div>
+
+              <button
+                type="button"
+                className="eco-carousel-nav eco-carousel-nav--next"
+                onClick={goNext}
+                disabled={!canNext}
+                aria-label="Next feature"
+              >
+                <Chevron dir="next" />
+              </button>
+            </div>
+
+            {activeItem?.title ? (
+              <p className="eco-carousel-caption">{activeItem.title}</p>
+            ) : null}
+
+            <div className="eco-carousel-dots" role="tablist" aria-label="Feature slides">
+              {items.map((item, i) => {
+                const selected = i === safeIndex;
+                return (
+                  <button
+                    key={item.id || `dot-${i}`}
+                    type="button"
+                    role="tab"
+                    className={`eco-carousel-dot${selected ? ' is-active' : ''}`}
+                    aria-label={`Show ${item.title || `feature ${i + 1}`}`}
+                    aria-selected={selected}
+                    onClick={() => goToIndex(i)}
+                  />
+                );
+              })}
             </div>
           </div>
         </div>
