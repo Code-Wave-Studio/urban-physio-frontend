@@ -1,14 +1,14 @@
 import { useEffect, useRef } from 'react';
 
-const WHEEL_MIN_DELTA = 10;
-const TOUCH_MIN_DELTA = 42;
-const TOUCH_DOMINANCE = 1.15;
-const WHEEL_GESTURE_IDLE_MS = 140;
+const WHEEL_MIN_DELTA = 12;
+const TOUCH_MIN_DELTA = 48;
+const TOUCH_DOMINANCE = 1.2;
+const WHEEL_GESTURE_IDLE_MS = 180;
 
 /**
- * Temporary scroll capture for the enrollment pathway:
- * one wheel / swipe / key gesture → one step, then release at either boundary.
- * Does not set document overflow:hidden — only preventDefault while mid-journey.
+ * Temporary scroll capture for the enrollment pathway.
+ * One gesture → one step. Releases at first/last boundary.
+ * Never sets document overflow:hidden.
  */
 export default function useEnrolScrollNav({
   sectionRef,
@@ -19,6 +19,8 @@ export default function useEnrolScrollNav({
 }) {
   const activeRef = useRef(active);
   const armedRef = useRef(false);
+  const pinnedRef = useRef(false);
+  const transitioningRef = useRef(false);
   const cooldownUntilRef = useRef(0);
   const wheelGestureRef = useRef(false);
   const wheelIdleTimerRef = useRef(0);
@@ -27,13 +29,14 @@ export default function useEnrolScrollNav({
 
   useEffect(() => {
     activeRef.current = active;
+    transitioningRef.current = false;
   }, [active]);
 
   useEffect(() => {
     const section = sectionRef.current;
     if (!section || count < 2) return undefined;
 
-    const cooldownMs = reduceMotion ? 260 : 480;
+    const cooldownMs = reduceMotion ? 220 : 420;
 
     const isArmed = () => {
       const rect = section.getBoundingClientRect();
@@ -41,34 +44,50 @@ export default function useEnrolScrollNav({
       const visible = Math.min(rect.bottom, vh) - Math.max(rect.top, 0);
       if (visible <= 0) return false;
       const ratio = visible / Math.min(rect.height, vh);
-      const mid = rect.top < vh * 0.62 && rect.bottom > vh * 0.28;
-      return ratio >= 0.28 && mid;
+      // Arm when the section occupies a meaningful portion of the viewport.
+      return ratio >= 0.42 && rect.top < vh * 0.55 && rect.bottom > vh * 0.4;
     };
 
-    const softAlign = () => {
+    const pinSection = () => {
+      if (pinnedRef.current) return;
       const rect = section.getBoundingClientRect();
       const headerRaw = getComputedStyle(document.documentElement).getPropertyValue('--site-header-height');
       const header = Number.parseFloat(headerRaw) || 56;
-      const idealTop = header + 12;
-      if (rect.top >= idealTop - 24 && rect.top <= idealTop + 140) return;
+      // Align section top under the sticky site header.
+      const idealTop = header;
+      if (Math.abs(rect.top - idealTop) < 10) {
+        pinnedRef.current = true;
+        return;
+      }
+      pinnedRef.current = true;
       const top = window.scrollY + rect.top - idealTop;
-      window.scrollTo({ top: Math.max(0, top), behavior: reduceMotion ? 'auto' : 'smooth' });
+      window.scrollTo({ top: Math.max(0, top), behavior: reduceMotion ? 'auto' : 'auto' });
     };
 
     const tryStep = (dir) => {
+      if (transitioningRef.current) return 'cooldown';
       const idx = activeRef.current;
       const next = idx + dir;
       if (next < 0 || next >= count) return 'boundary';
+
       const now = performance.now();
       if (now < cooldownUntilRef.current) return 'cooldown';
+
+      // Single source of truth: update ref immediately, then React state.
+      activeRef.current = next;
+      transitioningRef.current = true;
       cooldownUntilRef.current = now + cooldownMs;
-      setActive(next);
-      softAlign();
+      setActive(next); // controlled index setter (goToStep)
+      window.setTimeout(() => {
+        transitioningRef.current = false;
+      }, Math.min(cooldownMs, 320));
       return 'moved';
     };
 
     const syncArmed = () => {
-      armedRef.current = isArmed();
+      const next = isArmed();
+      if (!next) pinnedRef.current = false;
+      armedRef.current = next;
     };
 
     const onWheel = (event) => {
@@ -83,15 +102,15 @@ export default function useEnrolScrollNav({
       const idx = activeRef.current;
       const exiting = (dir > 0 && idx >= count - 1) || (dir < 0 && idx <= 0);
 
-      // Boundary exit: do not trap — resume normal page scrolling immediately.
       if (exiting) {
         wheelGestureRef.current = false;
+        pinnedRef.current = false;
         if (wheelIdleTimerRef.current) window.clearTimeout(wheelIdleTimerRef.current);
         return;
       }
 
-      // Mid-journey: block page scroll for the whole gesture (including cooldown ticks).
       event.preventDefault();
+      pinSection();
 
       window.clearTimeout(wheelIdleTimerRef.current);
       wheelIdleTimerRef.current = window.setTimeout(() => {
@@ -101,9 +120,7 @@ export default function useEnrolScrollNav({
       if (wheelGestureRef.current) return;
 
       const result = tryStep(dir);
-      if (result === 'moved') {
-        wheelGestureRef.current = true;
-      }
+      if (result === 'moved') wheelGestureRef.current = true;
     };
 
     const onTouchStart = (event) => {
@@ -126,7 +143,6 @@ export default function useEnrolScrollNav({
       if (!start || !start.armed || event.touches.length !== 1) return;
 
       if (touchConsumedRef.current) {
-        // Keep the page from sliding away mid-gesture after we already took a step.
         event.preventDefault();
         return;
       }
@@ -135,27 +151,26 @@ export default function useEnrolScrollNav({
       const dx = t.clientX - start.x;
       const dy = t.clientY - start.y;
 
-      // Ambiguous / tiny gestures pass through so users are never trapped.
       if (Math.abs(dy) < TOUCH_MIN_DELTA) return;
       if (Math.abs(dy) < Math.abs(dx) * TOUCH_DOMINANCE) return;
 
       syncArmed();
       if (!armedRef.current) return;
 
-      const dir = dy < 0 ? 1 : -1; // swipe up → next
+      const dir = dy < 0 ? 1 : -1;
       const idx = activeRef.current;
       const exiting = (dir > 0 && idx >= count - 1) || (dir < 0 && idx <= 0);
       if (exiting) {
         touchStartRef.current = null;
+        pinnedRef.current = false;
         return;
       }
 
+      pinSection();
       const result = tryStep(dir);
-      if (result === 'moved') {
+      if (result === 'moved' || result === 'cooldown') {
         event.preventDefault();
-        touchConsumedRef.current = true;
-      } else if (result === 'cooldown') {
-        event.preventDefault();
+        if (result === 'moved') touchConsumedRef.current = true;
       }
     };
 
@@ -174,8 +189,8 @@ export default function useEnrolScrollNav({
       if (!armedRef.current) return;
 
       let dir = 0;
-      if (event.key === 'ArrowDown' || event.key === 'PageDown') dir = 1;
-      else if (event.key === 'ArrowUp' || event.key === 'PageUp') dir = -1;
+      if (event.key === 'ArrowDown' || event.key === 'PageDown' || event.key === 'ArrowRight') dir = 1;
+      else if (event.key === 'ArrowUp' || event.key === 'PageUp' || event.key === 'ArrowLeft') dir = -1;
       else return;
 
       const idx = activeRef.current;
@@ -183,6 +198,7 @@ export default function useEnrolScrollNav({
       if (exiting) return;
 
       event.preventDefault();
+      pinSection();
       tryStep(dir);
     };
 

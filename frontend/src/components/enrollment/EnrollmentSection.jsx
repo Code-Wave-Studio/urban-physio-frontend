@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { sanitizeCmsImageUrl } from '../../utils/mediaUrl';
 import { isFlagOn } from '../../constants/communityPreview';
 import {
@@ -55,7 +55,7 @@ function HexButton({ step, index, state, onSelect, hexRef }) {
   );
 }
 
-function DetailVisual({ step, loaded }) {
+function DetailVisual({ step }) {
   const src = sanitizeCmsImageUrl(step?.image);
   const [failed, setFailed] = useState(false);
 
@@ -63,18 +63,38 @@ function DetailVisual({ step, loaded }) {
     setFailed(false);
   }, [src]);
 
-  if (src && !failed && loaded) {
+  if (src && !failed) {
     return (
       <img
         src={src}
         alt=""
         className="enrol-detail-img"
+        loading="eager"
+        decoding="async"
         onError={() => setFailed(true)}
       />
     );
   }
 
   return <EnrolStepVisual visual={step?.visual || 'consult'} />;
+}
+
+function usePreloadStepImages(steps) {
+  useEffect(() => {
+    const urls = (steps || [])
+      .map((step) => sanitizeCmsImageUrl(step?.image))
+      .filter(Boolean);
+    const loaders = urls.map((url) => {
+      const img = new Image();
+      img.src = url;
+      return img;
+    });
+    return () => {
+      loaders.forEach((img) => {
+        img.src = '';
+      });
+    };
+  }, [steps]);
 }
 
 export default function EnrollmentSection({ theme = 'home', sections = {} }) {
@@ -87,26 +107,46 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
   const [pathD, setPathD] = useState('');
   const [loopCircle, setLoopCircle] = useState(null);
   const [drawn, setDrawn] = useState(false);
-  const [viewport, setViewport] = useState(1280);
+  const [viewport, setViewport] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth : 1280
+  );
   const sectionRef = useRef(null);
   const stageRef = useRef(null);
   const hexRefs = useRef([]);
   const loopRef = useRef(null);
 
   const count = steps.length;
-  const safeIndex = count ? Math.min(active, count - 1) : 0;
+  // Single source of truth for the active step index.
+  const safeIndex = count ? Math.min(Math.max(active, 0), count - 1) : 0;
+  const current = steps[safeIndex] || null;
 
   useEffect(() => {
-    setActive(defaultEnrolIndex(steps, copy.enrol_default_step));
-  }, [copy.enrol_default_step, steps]);
+    const next = defaultEnrolIndex(steps, copy.enrol_default_step);
+    setActive((prev) => {
+      if (!count) return 0;
+      if (prev >= count) return next;
+      return prev;
+    });
+  }, [copy.enrol_default_step, steps, count]);
+
+  const goToStep = useCallback(
+    (index) => {
+      if (!count) return;
+      const next = Math.min(Math.max(index, 0), count - 1);
+      setActive(next);
+    },
+    [count]
+  );
 
   useEnrolScrollNav({
     sectionRef,
     count,
     active: safeIndex,
-    setActive,
+    setActive: goToStep,
     reduceMotion: Boolean(reduceMotion),
   });
+
+  usePreloadStepImages(steps);
 
   const groups = useMemo(() => {
     const linear = [];
@@ -120,10 +160,11 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
   }, [steps]);
 
   const loopRadius = useMemo(() => {
-    if (viewport < 480) return groups.loop.length > 4 ? 92 : 82;
-    if (viewport < 900) return groups.loop.length > 4 ? 102 : 92;
-    if (viewport < 1100) return groups.loop.length > 4 ? 98 : 90;
-    return groups.loop.length > 4 ? 118 : 108;
+    if (viewport < 480) return groups.loop.length > 4 ? 88 : 78;
+    if (viewport < 900) return groups.loop.length > 4 ? 96 : 86;
+    if (viewport < 1100) return groups.loop.length > 4 ? 92 : 84;
+    if (viewport < 1280) return groups.loop.length > 4 ? 104 : 96;
+    return groups.loop.length > 4 ? 112 : 102;
   }, [groups.loop.length, viewport]);
 
   const measure = useCallback(() => {
@@ -199,14 +240,10 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
       ([entry]) => {
         if (entry.isIntersecting) setDrawn(true);
       },
-      { threshold: 0.25 }
+      { threshold: 0.2 }
     );
     io.observe(stage);
     return () => io.disconnect();
-  }, []);
-
-  const selectStep = useCallback((index) => {
-    setActive(index);
   }, []);
 
   const onKeyDown = useCallback(
@@ -214,24 +251,23 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
       if (!count) return;
       if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
         event.preventDefault();
-        setActive((prev) => Math.min(count - 1, prev + 1));
+        goToStep(safeIndex + 1);
       } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
         event.preventDefault();
-        setActive((prev) => Math.max(0, prev - 1));
+        goToStep(safeIndex - 1);
       } else if (event.key === 'Home') {
         event.preventDefault();
-        setActive(0);
+        goToStep(0);
       } else if (event.key === 'End') {
         event.preventDefault();
-        setActive(count - 1);
+        goToStep(count - 1);
       }
     },
-    [count]
+    [count, goToStep, safeIndex]
   );
 
-  if (!count || !isFlagOn(copy.enrol_enabled ?? '1')) return null;
+  if (!count || !isFlagOn(copy.enrol_enabled ?? '1') || !current) return null;
 
-  const current = steps[safeIndex];
   const headingId = theme === 'tele' ? 'tele-enrol-heading' : 'hp-enrol-heading';
   const hexState = (index) => {
     if (index === safeIndex) return 'active';
@@ -248,6 +284,10 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
         ? (linearPos / lineStops) * 100
         : 100;
 
+  const transition = reduceMotion
+    ? { duration: 0 }
+    : { duration: 0.28, ease: [0.22, 1, 0.36, 1] };
+
   return (
     <section
       ref={sectionRef}
@@ -255,6 +295,7 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
       id={theme === 'tele' ? 'telephysio-how-to-enrol' : 'physioathome-how-to-enrol'}
       aria-labelledby={headingId}
       data-enrol-scroll-nav="1"
+      data-active-step={safeIndex}
     >
       <div className="enrol-inner">
         <header className="enrol-header">
@@ -290,7 +331,7 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
                   pathLength="100"
                   style={{
                     strokeDasharray: `${progressPct} 100`,
-                    transitionDuration: reduceMotion ? '0.01ms' : '0.45s',
+                    transitionDuration: reduceMotion ? '0.01ms' : '0.4s',
                   }}
                 />
               </>
@@ -305,7 +346,7 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
                     step={step}
                     index={index}
                     state={hexState(index)}
-                    onSelect={selectStep}
+                    onSelect={goToStep}
                     hexRef={(el) => {
                       hexRefs.current[index] = el;
                     }}
@@ -332,7 +373,7 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
                       step={step}
                       index={index}
                       state={hexState(index)}
-                      onSelect={selectStep}
+                      onSelect={goToStep}
                       hexRef={(el) => {
                         hexRefs.current[index] = el;
                       }}
@@ -345,25 +386,36 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
         </div>
 
         <div className="enrol-detail" aria-live="polite">
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={current.id || safeIndex}
-              className="enrol-detail-grid"
-              initial={reduceMotion ? false : { opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
-              transition={{ duration: reduceMotion ? 0 : 0.28, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <div className="enrol-detail-copy">
-                <h3 className="enrol-detail-title">{current.title || current.label}</h3>
-                {current.description ? <p className="enrol-detail-body">{current.description}</p> : null}
-              </div>
-              <div className="enrol-detail-visual" aria-hidden={!enrolImageAlt(current)}>
-                <span className="sr-only">{enrolImageAlt(current)}</span>
-                <DetailVisual step={current} loaded />
-              </div>
-            </motion.div>
-          </AnimatePresence>
+          {/*
+            Crossfade all step panels against one shared index (safeIndex).
+            Avoids AnimatePresence mode="wait" blank gaps when scrolling quickly.
+          */}
+          {steps.map((step, index) => {
+            const isActive = index === safeIndex;
+            return (
+              <motion.div
+                key={step.id || `detail-${index}`}
+                className={`enrol-detail-grid${isActive ? ' is-active' : ''}`}
+                initial={false}
+                animate={{
+                  opacity: isActive ? 1 : 0,
+                  y: reduceMotion ? 0 : isActive ? 0 : 8,
+                  pointerEvents: isActive ? 'auto' : 'none',
+                }}
+                transition={transition}
+                aria-hidden={!isActive}
+              >
+                <div className="enrol-detail-copy">
+                  <h3 className="enrol-detail-title">{step.title || step.label}</h3>
+                  {step.description ? <p className="enrol-detail-body">{step.description}</p> : null}
+                </div>
+                <div className="enrol-detail-visual">
+                  {isActive ? <span className="sr-only">{enrolImageAlt(step)}</span> : null}
+                  <DetailVisual step={step} />
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>
