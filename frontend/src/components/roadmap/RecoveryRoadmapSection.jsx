@@ -186,6 +186,260 @@ function preloadPhaseImages(themeKey, phases) {
   });
 }
 
+const STEP_COOLDOWN_MS = 780;
+const WHEEL_STEP_PX = 38;
+const SWIPE_STEP_PX = 46;
+
+function wheelDeltaY(event) {
+  if (event.deltaMode === 1) return event.deltaY * 16;
+  if (event.deltaMode === 2) return event.deltaY * (window.innerHeight || 1);
+  return event.deltaY;
+}
+
+function syncSteppedFrameHeight(section) {
+  if (!section) return;
+  const h = Math.round(window.visualViewport?.height || window.innerHeight || 0);
+  if (h > 0) section.style.setProperty('--roadmap-vvh', `${h}px`);
+}
+
+function measureSection(section) {
+  const rect = section.getBoundingClientRect();
+  const vh = window.innerHeight || 1;
+  const visible = Math.min(rect.bottom, vh) - Math.max(rect.top, 0);
+  return { rect, vh, top: rect.top, ratio: Math.max(0, visible) / vh };
+}
+
+/** Mobile/tablet: one swipe or wheel tick = one phase. Desktop scroll is unchanged. */
+function useSteppedPhaseScroll({ enabled, count, sectionRef, activeRef, setActive }) {
+  useEffect(() => {
+    if (!enabled || count < 2) return undefined;
+    const section = sectionRef.current;
+    if (!section) return undefined;
+
+    let engaged = false;
+    let released = 0;
+    let lastStepAt = 0;
+    let eatUntil = 0;
+    let wheelAcc = 0;
+    let touchStartY = 0;
+    let touchConsumed = false;
+    let near = false;
+    let frame = 0;
+
+    const holdScroll = (event) => {
+      if (event.cancelable) event.preventDefault();
+    };
+
+    const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    const index = () => activeRef.current;
+    const canGo = (dir) => (dir > 0 ? index() < count - 1 : index() > 0);
+
+    const goTo = (next) => {
+      const clamped = Math.min(count - 1, Math.max(0, next));
+      if (clamped === index()) return false;
+      activeRef.current = clamped;
+      setActive(clamped);
+      return true;
+    };
+
+    const snap = () => {
+      const top = section.getBoundingClientRect().top;
+      if (Math.abs(top) >= 2) window.scrollBy(0, top);
+    };
+
+    const step = (dir) => {
+      if (!canGo(dir)) return false;
+      if (!goTo(index() + dir)) return false;
+      const t = now();
+      lastStepAt = t;
+      eatUntil = t + STEP_COOLDOWN_MS;
+      wheelAcc = 0;
+      snap();
+      return true;
+    };
+
+    const engageFrom = (side) => {
+      engaged = true;
+      released = 0;
+      wheelAcc = 0;
+      eatUntil = now() + STEP_COOLDOWN_MS;
+      if (side === 'below') goTo(count - 1);
+      else goTo(0);
+      snap();
+    };
+
+    const updateEngagement = (dirHint = 0) => {
+      syncSteppedFrameHeight(section);
+      const { ratio, top } = measureSection(section);
+
+      if (released === 1) {
+        if (ratio < 0.18) released = 0;
+        else if (dirHint < 0 && ratio >= 0.48) engageFrom('below');
+        return;
+      }
+      if (released === -1) {
+        if (ratio < 0.18) released = 0;
+        else if (dirHint > 0 && ratio >= 0.48) engageFrom('above');
+        return;
+      }
+
+      if (!engaged && ratio >= 0.52) {
+        engageFrom(top < -48 ? 'below' : 'above');
+        return;
+      }
+      if (engaged && ratio < 0.18) {
+        engaged = false;
+        wheelAcc = 0;
+      }
+    };
+
+    const onScrollOrResize = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        updateEngagement(0);
+      });
+    };
+
+    const onWheel = (event) => {
+      if (!near || event.ctrlKey) return;
+      const dy = wheelDeltaY(event);
+      if (dy === 0) return;
+      const dir = dy > 0 ? 1 : -1;
+      const t = now();
+
+      if (!engaged) {
+        updateEngagement(dir);
+        if (!engaged) return;
+        holdScroll(event);
+        snap();
+        return;
+      }
+
+      if (t < eatUntil) {
+        holdScroll(event);
+        snap();
+        return;
+      }
+
+      if (!canGo(dir)) {
+        released = dir;
+        engaged = false;
+        wheelAcc = 0;
+        return;
+      }
+
+      holdScroll(event);
+      snap();
+      wheelAcc += dy;
+      if (Math.abs(wheelAcc) < WHEEL_STEP_PX) return;
+      if (t - lastStepAt < STEP_COOLDOWN_MS) {
+        wheelAcc = 0;
+        return;
+      }
+      step(dir);
+    };
+
+    const onTouchStart = (event) => {
+      if (!event.touches[0]) return;
+      if (!section.contains(event.target)) return;
+      touchStartY = event.touches[0].clientY;
+      touchConsumed = false;
+    };
+
+    const onTouchMove = (event) => {
+      if (!near || !event.touches[0]) return;
+      if (!section.contains(event.target)) return;
+      const y = event.touches[0].clientY;
+      const dy = touchStartY - y;
+      const dir = dy > 0 ? 1 : dy < 0 ? -1 : 0;
+      const t = now();
+
+      if (!engaged) {
+        if (dir !== 0) updateEngagement(dir);
+        if (!engaged) return;
+        holdScroll(event);
+        snap();
+        return;
+      }
+
+      if (t < eatUntil) {
+        holdScroll(event);
+        snap();
+        return;
+      }
+
+      if (dir !== 0 && !canGo(dir)) {
+        released = dir;
+        engaged = false;
+        return;
+      }
+
+      if (canGo(1) || canGo(-1)) {
+        holdScroll(event);
+        snap();
+      }
+
+      if (dir === 0 || touchConsumed || Math.abs(dy) < SWIPE_STEP_PX) return;
+      if (t - lastStepAt < STEP_COOLDOWN_MS) return;
+      touchConsumed = true;
+      step(dir);
+    };
+
+    const onTouchEnd = () => {
+      touchConsumed = false;
+    };
+
+    const attach = () => {
+      if (near) return;
+      near = true;
+      syncSteppedFrameHeight(section);
+      window.addEventListener('wheel', onWheel, { passive: false, capture: true });
+      window.addEventListener('touchstart', onTouchStart, { passive: true, capture: true });
+      window.addEventListener('touchmove', onTouchMove, { passive: false, capture: true });
+      window.addEventListener('touchend', onTouchEnd, { passive: true, capture: true });
+      window.addEventListener('touchcancel', onTouchEnd, { passive: true, capture: true });
+      updateEngagement(0);
+    };
+
+    const detach = () => {
+      if (!near) return;
+      near = false;
+      engaged = false;
+      released = 0;
+      wheelAcc = 0;
+      window.removeEventListener('wheel', onWheel, { capture: true });
+      window.removeEventListener('touchstart', onTouchStart, { capture: true });
+      window.removeEventListener('touchmove', onTouchMove, { capture: true });
+      window.removeEventListener('touchend', onTouchEnd, { capture: true });
+      window.removeEventListener('touchcancel', onTouchEnd, { capture: true });
+    };
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) attach();
+        else detach();
+      },
+      { rootMargin: '35% 0px', threshold: 0 }
+    );
+
+    syncSteppedFrameHeight(section);
+    io.observe(section);
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onScrollOrResize, { passive: true });
+    window.visualViewport?.addEventListener('resize', onScrollOrResize);
+
+    return () => {
+      detach();
+      io.disconnect();
+      window.removeEventListener('scroll', onScrollOrResize);
+      window.removeEventListener('resize', onScrollOrResize);
+      window.visualViewport?.removeEventListener('resize', onScrollOrResize);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, [activeRef, count, enabled, sectionRef, setActive]);
+}
+
 export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }) {
   const tokens = THEMES[theme] || THEMES.home;
   const copy = { ...tokens.defaults, ...sections };
@@ -201,6 +455,14 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
   const phase = phases[safeIndex] || null;
   const specs = visibleRoadmapSpecs(phase?.specs);
   const themeKey = theme === 'tele' ? 'tele' : 'home';
+
+  useSteppedPhaseScroll({
+    enabled: !isDesktop,
+    count,
+    sectionRef: trackRef,
+    activeRef,
+    setActive,
+  });
 
   const syncFromScroll = useCallback(() => {
     if (!isDesktop || count < 1) return;
@@ -272,10 +534,11 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
   return (
     <section
       ref={trackRef}
-      className={`roadmap-section ${tokens.section}${isDesktop ? ' is-pinned' : ' is-flow'}`}
+      className={`roadmap-section ${tokens.section}${isDesktop ? ' is-pinned' : ' is-stepped'}`}
       id={theme === 'tele' ? 'telerehab-recovery-roadmap' : 'physioathome-recovery-roadmap'}
       style={{ '--roadmap-phases': String(count) }}
       aria-labelledby={headingId}
+      data-active-phase={safeIndex}
     >
       <div className={`roadmap-pin ${tokens.pin} text-white`}>
         <div className="absolute inset-0 roadmap-pin-grid pointer-events-none" aria-hidden />
@@ -299,27 +562,19 @@ export default function RecoveryRoadmapSection({ theme = 'home', sections = {} }
               <SpecList specs={specs} tokens={tokens} />
             </div>
           ) : (
-            <div className="roadmap-flow">
+            <div className="roadmap-step">
               <RoadmapIntro copy={copy} headingId={headingId} tokens={tokens} />
-              {phases.map((item, i) => {
-                const itemSpecs = visibleRoadmapSpecs(item?.specs);
-                return (
-                  <article
-                    key={item.id || `phase-${i}`}
-                    className="roadmap-flow-phase"
-                    aria-label={`Phase ${i + 1}${item.title ? `: ${item.title}` : ''}`}
-                  >
-                    <PhaseCopy phase={item} index={i} tokens={tokens} />
-                    <PhaseVisual
-                      themeKey={themeKey}
-                      phase={item}
-                      phaseIndex={i}
-                      eager={i === 0}
-                    />
-                    <SpecList specs={itemSpecs} tokens={tokens} />
-                  </article>
-                );
-              })}
+              <div className="roadmap-phase-slot" aria-live="polite">
+                <PhaseCopy key={phaseKey} phase={phase} index={safeIndex} tokens={tokens} />
+              </div>
+              <PhaseVisual
+                key={`visual-${phaseKey}`}
+                themeKey={themeKey}
+                phase={phase}
+                phaseIndex={safeIndex}
+                eager
+              />
+              <SpecList key={`specs-${phaseKey}`} specs={specs} tokens={tokens} />
             </div>
           )}
         </div>

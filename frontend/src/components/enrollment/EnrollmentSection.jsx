@@ -83,18 +83,15 @@ function MobileTimeline({ steps, activeIndex, onSelect }) {
                 <span className="enrol-timeline-num">{num}</span>
               </button>
             </div>
-            <div className="enrol-timeline-copy">
-              <h3 className="enrol-timeline-title">
-                <button
-                  type="button"
-                  className="enrol-timeline-title-btn"
-                  onClick={() => onSelect(index)}
-                >
-                  {title}
-                </button>
-              </h3>
+            <button
+              type="button"
+              className="enrol-timeline-copy"
+              onClick={() => onSelect(index)}
+              aria-current={isActive ? 'step' : undefined}
+            >
+              <h3 className="enrol-timeline-title">{title}</h3>
               {step.description ? <p className="enrol-timeline-body">{step.description}</p> : null}
-            </div>
+            </button>
           </li>
         );
       })}
