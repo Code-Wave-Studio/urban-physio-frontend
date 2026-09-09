@@ -26,8 +26,6 @@ export default function AdminPhysioTeam() {
   const [heading, setHeading] = useState(PHYSIO_TEAM_COPY.heading);
   const [highlight, setHighlight] = useState(PHYSIO_TEAM_COPY.heading_highlight);
   const [description, setDescription] = useState(PHYSIO_TEAM_COPY.description);
-  const [ctaLabel, setCtaLabel] = useState(PHYSIO_TEAM_COPY.cta_label);
-  const [ctaLink, setCtaLink] = useState(PHYSIO_TEAM_COPY.cta_link);
   const [items, setItems] = useState([]);
   const [openId, setOpenId] = useState('');
   const [loading, setLoading] = useState(true);
@@ -43,8 +41,6 @@ export default function AdminPhysioTeam() {
         setHeading(d.heading || PHYSIO_TEAM_COPY.heading);
         setHighlight(d.heading_highlight || PHYSIO_TEAM_COPY.heading_highlight);
         setDescription(d.description || '');
-        setCtaLabel(d.cta_label || '');
-        setCtaLink(d.cta_link || PHYSIO_TEAM_COPY.cta_link);
         const next = Array.isArray(d.items) ? d.items : [];
         setItems(next);
         if (next[0]?.id) setOpenId(next[0].id);
@@ -142,8 +138,6 @@ export default function AdminPhysioTeam() {
         heading,
         heading_highlight: highlight,
         description,
-        cta_label: ctaLabel,
-        cta_link: ctaLink,
         items: items.map((it, i) => ({
           ...it,
           specialties: specialtiesToText(it.specialties),
@@ -198,7 +192,7 @@ export default function AdminPhysioTeam() {
               </span>
             </label>
 
-            <CmsPanel title="Heading & call to action" icon="fa-heading">
+            <CmsPanel title="Heading" icon="fa-heading">
               <div className="grid sm:grid-cols-2 gap-3">
                 <CmsField label="Heading">
                   <input className="input-field" value={heading} onChange={(e) => setHeading(e.target.value)} />
@@ -214,19 +208,6 @@ export default function AdminPhysioTeam() {
                   onChange={(e) => setDescription(e.target.value)}
                 />
               </CmsField>
-              <div className="grid sm:grid-cols-2 gap-3">
-                <CmsField label="Button label" hint="Leave blank to hide the button.">
-                  <input className="input-field" value={ctaLabel} onChange={(e) => setCtaLabel(e.target.value)} />
-                </CmsField>
-                <CmsField label="Button link">
-                  <input
-                    className="input-field"
-                    value={ctaLink}
-                    onChange={(e) => setCtaLink(e.target.value)}
-                    placeholder="/book"
-                  />
-                </CmsField>
-              </div>
             </CmsPanel>
 
             <div className="flex flex-wrap items-center justify-between gap-3">

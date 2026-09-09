@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useReducedMotion } from 'framer-motion';
 import FaIcon from '../FaIcon';
 import { physioTeam } from '../../services/api';
 import { sanitizeCmsImageUrl } from '../../utils/mediaUrl';
 import {
-  PHYSIO_TEAM_COPY,
   carouselProfiles,
   headingParts,
   listProfiles,
@@ -47,30 +45,6 @@ function Portrait({ src, alt, className, grayscale = false, fallback = null }) {
       decoding="async"
       onError={() => setFailed(true)}
     />
-  );
-}
-
-function TeamCta({ label, href }) {
-  if (!label) return null;
-  const to = href || PHYSIO_TEAM_COPY.cta_link;
-  const external = /^(https?:|mailto:|tel:)/i.test(to);
-  const inner = (
-    <>
-      <span>{label}</span>
-      <FaIcon icon="fa-arrow-up-right-from-square" />
-    </>
-  );
-  if (external) {
-    return (
-      <a href={to} className="pt-cta" target="_blank" rel="noopener noreferrer">
-        {inner}
-      </a>
-    );
-  }
-  return (
-    <Link to={to} className="pt-cta">
-      {inner}
-    </Link>
   );
 }
 
@@ -361,50 +335,47 @@ export default function PhysioTeamSection() {
           </div>
         ) : null}
 
-        {carousel.length > 0 ? (
-          <div
-            className={`pt-marquee${reduceMotion ? ' is-static' : ''}${marqueePaused ? ' is-paused' : ''}`}
-            onPointerEnter={() => setMarqueePaused(true)}
-            onPointerLeave={() => setMarqueePaused(false)}
-            onPointerDown={() => setMarqueePaused(true)}
-            style={{ '--pt-marquee-ms': `${marqueeMs}s` }}
-          >
-            <div className="pt-marquee-track">
-              {loopCards.map((p, i) => {
-                const src = sanitizeCmsImageUrl(p.carousel_image || p.image);
-                return (
-                  <button
-                    key={`${p.id}-${i}`}
-                    type="button"
-                    className={`pt-card${p.id === selected.id ? ' is-active' : ''}`}
-                    onClick={() => selectProfile(p.id)}
-                    aria-label={`View ${p.name}`}
-                  >
-                    <span className="pt-card-photo">
-                      <Portrait
-                        src={src}
-                        alt=""
-                        className="pt-card-img"
-                        grayscale
-                        fallback={<span className="pt-avatar-fallback pt-card-fallback">{initialsFrom(p.name)}</span>}
-                      />
-                    </span>
-                    <span className="pt-card-meta">
-                      <span className="pt-card-name">{p.name}</span>
-                      <span className="pt-card-qual">{p.qualification || p.designation}</span>
-                      {p.experience ? <span className="pt-card-exp">{p.experience}</span> : null}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ) : null}
-
-        <div className="pt-cta-row">
-          <TeamCta label={payload.cta_label} href={payload.cta_link} />
-        </div>
       </div>
+
+      {carousel.length > 0 ? (
+        <div
+          className={`pt-marquee${reduceMotion ? ' is-static' : ''}${marqueePaused ? ' is-paused' : ''}`}
+          onPointerEnter={() => setMarqueePaused(true)}
+          onPointerLeave={() => setMarqueePaused(false)}
+          onPointerDown={() => setMarqueePaused(true)}
+          style={{ '--pt-marquee-ms': `${marqueeMs}s` }}
+        >
+          <div className="pt-marquee-track">
+            {loopCards.map((p, i) => {
+              const src = sanitizeCmsImageUrl(p.carousel_image || p.image);
+              return (
+                <button
+                  key={`${p.id}-${i}`}
+                  type="button"
+                  className={`pt-card${p.id === selected.id ? ' is-active' : ''}`}
+                  onClick={() => selectProfile(p.id)}
+                  aria-label={`View ${p.name}`}
+                >
+                  <span className="pt-card-photo">
+                    <Portrait
+                      src={src}
+                      alt=""
+                      className="pt-card-img"
+                      grayscale
+                      fallback={<span className="pt-avatar-fallback pt-card-fallback">{initialsFrom(p.name)}</span>}
+                    />
+                  </span>
+                  <span className="pt-card-meta">
+                    <span className="pt-card-name">{p.name}</span>
+                    <span className="pt-card-qual">{p.qualification || p.designation}</span>
+                    {p.experience ? <span className="pt-card-exp">{p.experience}</span> : null}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
