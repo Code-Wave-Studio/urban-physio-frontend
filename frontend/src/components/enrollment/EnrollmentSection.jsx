@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { sanitizeCmsImageUrl } from '../../utils/mediaUrl';
 import { isFlagOn } from '../../constants/communityPreview';
 import {
@@ -10,7 +10,6 @@ import {
   visibleEnrolSteps,
 } from '../../constants/enrollmentDefaults';
 import EnrolStepVisual from './EnrolStepVisual';
-import useEnrolScrollNav from './useEnrolScrollNav';
 
 const THEMES = {
   home: { defaults: HOME_ENROL_DEFAULTS, section: 'enrol-theme-home' },
@@ -110,13 +109,11 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
   const [viewport, setViewport] = useState(() =>
     typeof window !== 'undefined' ? window.innerWidth : 1280
   );
-  const sectionRef = useRef(null);
   const stageRef = useRef(null);
   const hexRefs = useRef([]);
   const loopRef = useRef(null);
 
   const count = steps.length;
-  // Single source of truth for the active step index.
   const safeIndex = count ? Math.min(Math.max(active, 0), count - 1) : 0;
   const current = steps[safeIndex] || null;
 
@@ -132,19 +129,10 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
   const goToStep = useCallback(
     (index) => {
       if (!count) return;
-      const next = Math.min(Math.max(index, 0), count - 1);
-      setActive(next);
+      setActive(Math.min(Math.max(index, 0), count - 1));
     },
     [count]
   );
-
-  useEnrolScrollNav({
-    sectionRef,
-    count,
-    active: safeIndex,
-    setActive: goToStep,
-    reduceMotion: Boolean(reduceMotion),
-  });
 
   usePreloadStepImages(steps);
 
@@ -162,9 +150,9 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
   const loopRadius = useMemo(() => {
     if (viewport < 480) return groups.loop.length > 4 ? 88 : 78;
     if (viewport < 900) return groups.loop.length > 4 ? 96 : 86;
-    if (viewport < 1100) return groups.loop.length > 4 ? 92 : 84;
-    if (viewport < 1280) return groups.loop.length > 4 ? 104 : 96;
-    return groups.loop.length > 4 ? 112 : 102;
+    if (viewport < 1100) return groups.loop.length > 4 ? 94 : 86;
+    if (viewport < 1280) return groups.loop.length > 4 ? 108 : 98;
+    return groups.loop.length > 4 ? 118 : 108;
   }, [groups.loop.length, viewport]);
 
   const measure = useCallback(() => {
@@ -189,8 +177,7 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
     }
 
     if (pts.length >= 2) {
-      const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
-      setPathD(d);
+      setPathD(pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' '));
     } else {
       setPathD('');
     }
@@ -246,26 +233,6 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
     return () => io.disconnect();
   }, []);
 
-  const onKeyDown = useCallback(
-    (event) => {
-      if (!count) return;
-      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
-        event.preventDefault();
-        goToStep(safeIndex + 1);
-      } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
-        event.preventDefault();
-        goToStep(safeIndex - 1);
-      } else if (event.key === 'Home') {
-        event.preventDefault();
-        goToStep(0);
-      } else if (event.key === 'End') {
-        event.preventDefault();
-        goToStep(count - 1);
-      }
-    },
-    [count, goToStep, safeIndex]
-  );
-
   if (!count || !isFlagOn(copy.enrol_enabled ?? '1') || !current) return null;
 
   const headingId = theme === 'tele' ? 'tele-enrol-heading' : 'hp-enrol-heading';
@@ -284,17 +251,15 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
         ? (linearPos / lineStops) * 100
         : 100;
 
-  const transition = reduceMotion
+  const fade = reduceMotion
     ? { duration: 0 }
-    : { duration: 0.28, ease: [0.22, 1, 0.36, 1] };
+    : { duration: 0.22, ease: [0.22, 1, 0.36, 1] };
 
   return (
     <section
-      ref={sectionRef}
       className={`enrol-section ${tokens.section}`}
       id={theme === 'tele' ? 'telephysio-how-to-enrol' : 'physioathome-how-to-enrol'}
       aria-labelledby={headingId}
-      data-enrol-scroll-nav="1"
       data-active-step={safeIndex}
     >
       <div className="enrol-inner">
@@ -311,7 +276,6 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
           ref={stageRef}
           role="navigation"
           aria-label="Enrollment steps"
-          onKeyDown={onKeyDown}
         >
           <svg className="enrol-path" aria-hidden="true">
             {loopCircle ? (
@@ -331,7 +295,7 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
                   pathLength="100"
                   style={{
                     strokeDasharray: `${progressPct} 100`,
-                    transitionDuration: reduceMotion ? '0.01ms' : '0.4s',
+                    transitionDuration: reduceMotion ? '0.01ms' : '0.35s',
                   }}
                 />
               </>
@@ -386,36 +350,29 @@ export default function EnrollmentSection({ theme = 'home', sections = {} }) {
         </div>
 
         <div className="enrol-detail" aria-live="polite">
-          {/*
-            Crossfade all step panels against one shared index (safeIndex).
-            Avoids AnimatePresence mode="wait" blank gaps when scrolling quickly.
-          */}
-          {steps.map((step, index) => {
-            const isActive = index === safeIndex;
-            return (
-              <motion.div
-                key={step.id || `detail-${index}`}
-                className={`enrol-detail-grid${isActive ? ' is-active' : ''}`}
-                initial={false}
-                animate={{
-                  opacity: isActive ? 1 : 0,
-                  y: reduceMotion ? 0 : isActive ? 0 : 8,
-                  pointerEvents: isActive ? 'auto' : 'none',
-                }}
-                transition={transition}
-                aria-hidden={!isActive}
-              >
-                <div className="enrol-detail-copy">
-                  <h3 className="enrol-detail-title">{step.title || step.label}</h3>
-                  {step.description ? <p className="enrol-detail-body">{step.description}</p> : null}
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.div
+              key={current.id || safeIndex}
+              className="enrol-detail-grid"
+              initial={reduceMotion ? false : { opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduceMotion ? undefined : { opacity: 0, y: -4 }}
+              transition={fade}
+            >
+              <div className="enrol-detail-copy">
+                <h3 className="enrol-detail-title">{current.title || current.label}</h3>
+                {current.description ? (
+                  <p className="enrol-detail-body">{current.description}</p>
+                ) : null}
+              </div>
+              <div className="enrol-detail-media">
+                <div className="enrol-detail-media-frame">
+                  <span className="sr-only">{enrolImageAlt(current)}</span>
+                  <DetailVisual step={current} />
                 </div>
-                <div className="enrol-detail-visual">
-                  {isActive ? <span className="sr-only">{enrolImageAlt(step)}</span> : null}
-                  <DetailVisual step={step} />
-                </div>
-              </motion.div>
-            );
-          })}
+              </div>
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
     </section>
