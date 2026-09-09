@@ -10,7 +10,6 @@ import { resolveMediaUrl } from '../../utils/mediaUrl';
 import {
   PHYSIO_TEAM_COPY,
   PHYSIO_TEAM_MAX_ITEMS,
-  PHYSIO_TEAM_MAX_LIST,
   blankPhysio,
   isPhysioComplete,
 } from '../../constants/physioTeamDefaults';
@@ -94,8 +93,7 @@ export default function AdminPhysioTeam() {
       return;
     }
     const next = blankPhysio(items.length);
-    const listCount = items.filter((it) => it.show_in_list).length;
-    if (listCount < PHYSIO_TEAM_MAX_LIST) next.show_in_list = true;
+    next.show_in_list = true;
     setItems((list) => [...list, next]);
     setOpenId(next.id);
   };
@@ -115,14 +113,6 @@ export default function AdminPhysioTeam() {
   };
 
   const toggleList = (index, on) => {
-    const current = items[index];
-    if (on && !current.show_in_list) {
-      const used = items.filter((it) => it.show_in_list).length;
-      if (used >= PHYSIO_TEAM_MAX_LIST) {
-        toast.error(`The main showcase list can include at most ${PHYSIO_TEAM_MAX_LIST} physiotherapists`);
-        return;
-      }
-    }
     setItem(index, 'show_in_list', on);
   };
 
@@ -212,7 +202,7 @@ export default function AdminPhysioTeam() {
 
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-sm font-bold text-slate-800">
-                Profiles ({readyCount}/{items.length} ready) · list {listCount}/{PHYSIO_TEAM_MAX_LIST}
+                Profiles ({readyCount}/{items.length} ready) · {listCount} in main list
               </h2>
               <button
                 type="button"
@@ -299,7 +289,7 @@ export default function AdminPhysioTeam() {
                               checked={!!item.show_in_list}
                               onChange={(e) => toggleList(index, e.target.checked)}
                             />
-                            Main list (max {PHYSIO_TEAM_MAX_LIST})
+                            Main list
                           </label>
                           <label className="inline-flex items-center gap-2 cursor-pointer">
                             <input

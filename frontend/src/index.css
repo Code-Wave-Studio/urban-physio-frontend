@@ -3821,10 +3821,10 @@
       grid-template-columns: minmax(17.5rem, 0.86fr) minmax(0, 1.45fr);
       gap: 1.15rem;
       align-items: start;
-      background: #fff;
-      border-radius: 1.6rem;
-      box-shadow: 0 22px 50px -32px rgb(15 23 42 / 0.45);
-      padding: 1rem;
+      background: transparent;
+      border-radius: 0;
+      box-shadow: none;
+      padding: 0;
     }
 
     .pt-list,
@@ -3838,6 +3838,15 @@
       flex-direction: column;
       gap: 0.55rem;
       min-width: 0;
+      height: max-content;
+      max-height: min(70vh, 46rem);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: 0.7rem;
+      background: #fff;
+      border: 1px solid rgb(226 232 240 / 0.9);
+      border-radius: 1.4rem;
+      box-shadow: 0 18px 40px -28px rgb(15 23 42 / 0.4);
     }
 
     .pt-list-card {
@@ -3863,10 +3872,11 @@
 
     .pt-detail {
       min-height: 0;
-      background: #f8fafc;
-      border: 1px solid rgb(226 232 240 / 0.85);
-      box-shadow: none;
-      border-radius: 1.2rem;
+      height: max-content;
+      background: #fff;
+      border: 1px solid rgb(226 232 240 / 0.9);
+      box-shadow: 0 18px 40px -28px rgb(15 23 42 / 0.4);
+      border-radius: 1.4rem;
     }
 
     .pt-profile {

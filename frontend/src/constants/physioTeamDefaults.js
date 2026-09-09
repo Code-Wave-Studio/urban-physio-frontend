@@ -1,7 +1,6 @@
 /** Shared “Meet Our Physiotherapists” copy fallbacks. Profiles always come from the API. */
 
-export const PHYSIO_TEAM_MAX_LIST = 6;
-export const PHYSIO_TEAM_MAX_ITEMS = 24;
+export const PHYSIO_TEAM_MAX_ITEMS = 100;
 
 export const PHYSIO_TEAM_COPY = {
   heading: 'Meet Our Physiotherapists',
@@ -32,7 +31,7 @@ export function blankPhysio(order = 0) {
     image: '',
     carousel_image: '',
     image_alt: '',
-    show_in_list: false,
+    show_in_list: true,
     show_in_carousel: true,
     is_enabled: true,
     sort_order: order,
@@ -46,7 +45,7 @@ export function isPhysioComplete(item) {
 }
 
 export function listProfiles(profiles = []) {
-  return profiles.filter((p) => p.show_in_list).slice(0, PHYSIO_TEAM_MAX_LIST);
+  return profiles.filter((p) => p.show_in_list);
 }
 
 export function carouselProfiles(profiles = []) {

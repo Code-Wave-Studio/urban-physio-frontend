@@ -357,7 +357,7 @@ export default function PhysioTeamSection() {
           </article>
         </div>
 
-        {list.length > 1 ? (
+        {list.length > 1 && list.length <= 8 ? (
           <div className="pt-dots" role="tablist" aria-label="Physiotherapist pages">
             {list.map((p, i) => (
               <button
