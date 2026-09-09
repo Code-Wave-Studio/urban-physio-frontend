@@ -67,6 +67,7 @@ export default function PhysioTeamSection() {
   const [selectedId, setSelectedId] = useState('');
   const [marqueePaused, setMarqueePaused] = useState(false);
   const selectorRef = useRef(null);
+  const detailRef = useRef(null);
   const itemRefs = useRef({});
 
   useEffect(() => {
@@ -100,13 +101,15 @@ export default function PhysioTeamSection() {
     [profiles, list, selectedId]
   );
 
-  const selectProfile = useCallback((id) => {
+  const selectProfile = useCallback((id, opts = {}) => {
     if (!id) return;
     setSelectedId(id);
-    const mobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches;
-    const el = mobile ? itemRefs.current[`m-${id}`] : itemRefs.current[id];
+    const el = itemRefs.current[id];
     if (el && typeof el.scrollIntoView === 'function') {
-      el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    }
+    if (opts.scrollDetail && detailRef.current && typeof detailRef.current.scrollIntoView === 'function') {
+      detailRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }, []);
 
@@ -214,6 +217,8 @@ export default function PhysioTeamSection() {
           <div
             ref={selectorRef}
             className="pt-selector"
+            hidden
+            aria-hidden="true"
             onScroll={onSelectorScroll}
             aria-label="Choose a physiotherapist"
           >
@@ -254,7 +259,7 @@ export default function PhysioTeamSection() {
           </div>
           ) : null}
 
-          <article className="pt-detail" aria-live="polite">
+          <article ref={detailRef} className="pt-detail" aria-live="polite">
             <div
               key={selected.id}
               className={`pt-profile${reduceMotion ? '' : ' is-animating'}`}
@@ -358,7 +363,7 @@ export default function PhysioTeamSection() {
         </div>
 
         {list.length > 1 && list.length <= 8 ? (
-          <div className="pt-dots" role="tablist" aria-label="Physiotherapist pages">
+          <div className="pt-dots" hidden aria-hidden="true" role="tablist" aria-label="Physiotherapist pages">
             {list.map((p, i) => (
               <button
                 key={p.id}
@@ -391,7 +396,7 @@ export default function PhysioTeamSection() {
                   key={`${p.id}-${i}`}
                   type="button"
                   className={`pt-card${p.id === selected.id ? ' is-active' : ''}`}
-                  onClick={() => selectProfile(p.id)}
+                  onClick={() => selectProfile(p.id, { scrollDetail: true })}
                   aria-label={`View ${p.name}`}
                 >
                   <span className="pt-card-photo">
