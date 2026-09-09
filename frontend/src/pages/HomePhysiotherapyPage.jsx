@@ -13,6 +13,7 @@ import PainSelectionSection from '../components/home/PainSelectionSection';
 import RecoveryRoadmapSection from '../components/roadmap/RecoveryRoadmapSection';
 import CareEcosystemSection from '../components/ecosystem/CareEcosystemSection';
 import PhysioTeamSection from '../components/physioTeam/PhysioTeamSection';
+import OrgLogosSection from '../components/orgLogos/OrgLogosSection';
 import { homePhysio } from '../services/api';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import { HEALTHCARE_IMAGES } from '../utils/healthcareImages';
@@ -195,6 +196,8 @@ export default function HomePhysiotherapyPage() {
           </ul>
         </div>
       </section>
+
+      <OrgLogosSection />
 
       {isPainMapEnabled(s) && (
         <PainSelectionSection

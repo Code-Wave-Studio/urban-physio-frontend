@@ -48,6 +48,7 @@ export const ADMIN_NAV = [
   { to: '/admin/home-physio', label: 'Home Physiotherapy', icon: 'fa-house-medical', section: 'content' },
   { to: '/admin/telephysio', label: 'TelePhysio by Myoreset', icon: 'fa-video', section: 'content' },
   { to: '/admin/physiotherapists', label: 'Our Physiotherapists', icon: 'fa-user-doctor', section: 'content' },
+  { to: '/admin/org-logos', label: 'Organisation logos', icon: 'fa-building', section: 'content' },
 
   // Finance & Promos
   { to: '/admin/offers', label: 'Offers & Campaigns', icon: 'fa-bullhorn', section: 'finance_promos' },

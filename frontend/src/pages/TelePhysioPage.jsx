@@ -12,6 +12,7 @@ import PainSelectionSection from '../components/home/PainSelectionSection';
 import RecoveryRoadmapSection from '../components/roadmap/RecoveryRoadmapSection';
 import CareEcosystemSection from '../components/ecosystem/CareEcosystemSection';
 import PhysioTeamSection from '../components/physioTeam/PhysioTeamSection';
+import OrgLogosSection from '../components/orgLogos/OrgLogosSection';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import { HEALTHCARE_IMAGES } from '../utils/healthcareImages';
 import { bookTelePhysioUrl, withPainAreaParams } from '../utils/bookUrl';
@@ -230,6 +231,8 @@ export default function TelePhysioPage() {
           </div>
         </div>
       </section>
+
+      <OrgLogosSection />
 
       {isPainMapEnabled(s) && (
         <PainSelectionSection

@@ -589,6 +589,8 @@ export const admin = {
   updateTestimonialsSettings: (data) => api.put('/admin/testimonials-settings', data),
   physioTeamSettings: () => api.get('/admin/physio-team-settings'),
   updatePhysioTeamSettings: (data) => api.put('/admin/physio-team-settings', data),
+  orgLogosSettings: () => api.get('/admin/org-logos-settings'),
+  updateOrgLogosSettings: (data) => api.put('/admin/org-logos-settings', data),
   contactMessages: (params) => api.get('/admin/contact-messages', { params }),
   markContactMessageRead: (id) => api.post(`/admin/contact-messages/${id}/read`),
   deleteContactMessage: (id) => api.delete(`/admin/contact-messages/${id}`),
@@ -1091,6 +1093,10 @@ export const home = {
 
 export const physioTeam = {
   settings: () => api.get('/physio-team'),
+};
+
+export const orgLogos = {
+  settings: () => api.get('/org-logos'),
 };
 
 export const reviews = {
