@@ -8,6 +8,7 @@ import CommunityPreviewEditor from '../../components/admin/CommunityPreviewEdito
 import PainMapEditor from '../../components/admin/PainMapEditor';
 import RecoveryRoadmapEditor from '../../components/admin/RecoveryRoadmapEditor';
 import CareEcosystemEditor from '../../components/admin/CareEcosystemEditor';
+import EnrollmentEditor from '../../components/admin/EnrollmentEditor';
 import { admin, uploadCmsImage } from '../../services/api';
 import { TELEPHYSIO_DEFAULTS, mergeTelePhysioSections } from '../../constants/telephysioDefaults';
 import toast from 'react-hot-toast';
@@ -18,6 +19,7 @@ const TABS = [
   { id: 'pain', label: 'Body areas', icon: 'fa-person-running' },
   { id: 'roadmap', label: 'Recovery journey', icon: 'fa-route' },
   { id: 'ecosystem', label: 'Care ecosystem', icon: 'fa-layer-group' },
+  { id: 'enrol', label: 'How to enrol', icon: 'fa-hexagon' },
   { id: 'steps', label: 'Steps & timeline', icon: 'fa-list-ol' },
   { id: 'benefits', label: 'Benefits & conditions', icon: 'fa-certificate' },
   { id: 'pricing', label: 'Pricing & journey', icon: 'fa-tag' },
@@ -359,6 +361,18 @@ export default function AdminTelePhysio() {
               uploadFn={uploadCmsImage}
               accent="teal"
               scopeNote="TeleRehab / TelePhysio only. PhysioAtHome care-ecosystem items and images are stored separately — edits here will not change that page."
+            />
+          </div>
+        )}
+
+        {tab === 'enrol' && (
+          <div className="space-y-5" role="tabpanel">
+            <EnrollmentEditor
+              sections={s}
+              onChange={setSection}
+              uploadFn={uploadCmsImage}
+              accent="teal"
+              scopeNote="TelePhysio only. PhysioAtHome enrollment copy, steps and images are stored separately — edits here will not change that page."
             />
           </div>
         )}

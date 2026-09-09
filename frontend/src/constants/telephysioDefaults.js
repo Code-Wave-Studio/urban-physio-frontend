@@ -2,6 +2,7 @@ import { TELE_COMMUNITY_DEFAULTS } from './communityPreview';
 import { TELE_PAIN_MAP_DEFAULTS } from './painMapDefaults';
 import { TELE_ROADMAP_DEFAULTS } from './recoveryRoadmapDefaults';
 import { TELE_ECOSYSTEM_DEFAULTS } from './careEcosystemDefaults';
+import { TELE_ENROL_DEFAULTS } from './enrollmentDefaults';
 
 /**
  * Default TelePhysio by Myoreset page content (CRF-2026-0006).
@@ -387,6 +388,7 @@ export const TELEPHYSIO_DEFAULTS = {
     ...TELE_PAIN_MAP_DEFAULTS,
     ...TELE_ROADMAP_DEFAULTS,
     ...TELE_ECOSYSTEM_DEFAULTS,
+    ...TELE_ENROL_DEFAULTS,
     ...TELE_COMMUNITY_DEFAULTS,
   },
 };
@@ -410,6 +412,7 @@ export function mergeTelePhysioSections(raw = {}) {
     'pain_areas',
     'roadmap_phases',
     'ecosystem_items',
+    'enrol_steps',
   ];
   for (const k of listKeys) {
     if (!Array.isArray(out[k]) || out[k].length === 0) {

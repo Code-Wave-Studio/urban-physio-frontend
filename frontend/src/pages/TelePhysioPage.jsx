@@ -13,6 +13,7 @@ import RecoveryRoadmapSection from '../components/roadmap/RecoveryRoadmapSection
 import CareEcosystemSection from '../components/ecosystem/CareEcosystemSection';
 import PhysioTeamSection from '../components/physioTeam/PhysioTeamSection';
 import OrgLogosSection from '../components/orgLogos/OrgLogosSection';
+import EnrollmentSection from '../components/enrollment/EnrollmentSection';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import { HEALTHCARE_IMAGES } from '../utils/healthcareImages';
 import { bookTelePhysioUrl, withPainAreaParams } from '../utils/bookUrl';
@@ -26,6 +27,7 @@ import {
 import { TELE_PAIN_MAP_DEFAULTS, isPainMapEnabled, painMapSectionProps, visiblePainAreas } from '../constants/painMapDefaults';
 import { isRoadmapEnabled } from '../constants/recoveryRoadmapDefaults';
 import { isEcosystemEnabled } from '../constants/careEcosystemDefaults';
+import { isEnrolEnabled } from '../constants/enrollmentDefaults';
 
 export default function TelePhysioPage() {
   const { whatsapp } = useContact();
@@ -252,6 +254,8 @@ export default function TelePhysioPage() {
       {isEcosystemEnabled(s) && <CareEcosystemSection theme="tele" sections={s} />}
 
       <PhysioTeamSection />
+
+      {isEnrolEnabled(s) && <EnrollmentSection theme="tele" sections={s} />}
 
       {/* =========================================================================
           SECTION 3: WHAT IS TELEPHYSIO?

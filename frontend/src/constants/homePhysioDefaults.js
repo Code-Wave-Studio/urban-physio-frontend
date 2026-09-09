@@ -2,6 +2,7 @@ import { HOME_COMMUNITY_DEFAULTS } from './communityPreview';
 import { HOME_PAIN_MAP_DEFAULTS } from './painMapDefaults';
 import { HOME_ROADMAP_DEFAULTS } from './recoveryRoadmapDefaults';
 import { HOME_ECOSYSTEM_DEFAULTS } from './careEcosystemDefaults';
+import { HOME_ENROL_DEFAULTS } from './enrollmentDefaults';
 
 /** Default PhysioAtHome / Home Physiotherapy page content (CRF-2026-0006). */
 
@@ -377,6 +378,7 @@ export const HOME_PHYSIO_DEFAULTS = {
     ...HOME_PAIN_MAP_DEFAULTS,
     ...HOME_ROADMAP_DEFAULTS,
     ...HOME_ECOSYSTEM_DEFAULTS,
+    ...HOME_ENROL_DEFAULTS,
     ...HOME_COMMUNITY_DEFAULTS,
   },
 };
@@ -403,6 +405,7 @@ export function mergeHomePhysioSections(raw = {}) {
     'pain_areas',
     'roadmap_phases',
     'ecosystem_items',
+    'enrol_steps',
   ];
   listKeys.forEach((key) => {
     if (!Array.isArray(out[key]) || out[key].length === 0) {
