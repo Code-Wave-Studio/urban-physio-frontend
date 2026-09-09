@@ -103,32 +103,41 @@ export default function PhysioTeamSection() {
     [profiles, list, selectedId]
   );
 
+  const alignActivePicker = useCallback((id) => {
+    if (!id || typeof window === 'undefined') return;
+    const mobile = window.matchMedia('(max-width: 767px)').matches;
+    const el = mobile ? itemRefs.current[`m-${id}`] : itemRefs.current[id];
+    const container = mobile ? selectorRef.current : el?.closest?.('.pt-list');
+    if (!el || !container) return;
+    const c = container.getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    const behavior = reduceMotion ? 'auto' : 'smooth';
+    if (mobile) {
+      const isLast = Boolean(list.length) && list[list.length - 1]?.id === id;
+      const delta = isLast ? r.right - c.right : r.left - c.left;
+      if (Math.abs(delta) > 1) container.scrollBy({ left: delta, behavior });
+      return;
+    }
+    let dy = 0;
+    if (r.top < c.top) dy = r.top - c.top;
+    else if (r.bottom > c.bottom) dy = r.bottom - c.bottom;
+    if (dy) container.scrollBy({ top: dy, behavior });
+  }, [list, reduceMotion]);
+
   const selectProfile = useCallback((id, opts = {}) => {
     if (!id) return;
     skipScrollSelect.current = true;
     setSelectedId(id);
+    requestAnimationFrame(() => {
+      alignActivePicker(id);
+      window.setTimeout(() => {
+        skipScrollSelect.current = false;
+      }, 480);
+    });
     if (opts.scrollDetail && detailRef.current && typeof detailRef.current.scrollIntoView === 'function') {
       detailRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
-  }, []);
-
-  useEffect(() => {
-    if (!selectedId) return;
-    const mobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
-    const el = mobile ? itemRefs.current[`m-${selectedId}`] : itemRefs.current[selectedId];
-    if (!el || typeof el.scrollIntoView !== 'function') return undefined;
-    skipScrollSelect.current = true;
-    const isLast = Boolean(list.length) && list[list.length - 1]?.id === selectedId;
-    el.scrollIntoView({
-      behavior: reduceMotion ? 'auto' : 'smooth',
-      inline: mobile ? (isLast ? 'end' : 'start') : 'nearest',
-      block: 'nearest',
-    });
-    const t = window.setTimeout(() => {
-      skipScrollSelect.current = false;
-    }, 480);
-    return () => window.clearTimeout(t);
-  }, [selectedId, reduceMotion, list]);
+  }, [alignActivePicker]);
 
   const loopCards = useMemo(() => {
     if (!carousel.length) return [];

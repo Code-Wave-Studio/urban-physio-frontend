@@ -48,6 +48,20 @@ export default function TelePhysioPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    if (loading || typeof window === 'undefined') return undefined;
+    const hash = window.location.hash.replace(/^#/, '');
+    if (hash) {
+      const el = document.getElementById(hash);
+      if (el) el.scrollIntoView({ behavior: 'auto', block: 'start' });
+      return undefined;
+    }
+    const toTop = () => window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    toTop();
+    const t = window.setTimeout(toTop, 80);
+    return () => window.clearTimeout(t);
+  }, [loading]);
+
   const s = data.sections || TELEPHYSIO_DEFAULTS.sections;
   const heroImage = resolveMediaUrl(data.hero_image) || data.hero_image || HEALTHCARE_IMAGES.onlineConsult;
   const faqs = s.faqs || [];
