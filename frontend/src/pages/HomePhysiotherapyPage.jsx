@@ -12,6 +12,7 @@ import CommunityPreviewSection from '../components/community/CommunityPreviewSec
 import PainSelectionSection from '../components/home/PainSelectionSection';
 import RecoveryRoadmapSection from '../components/roadmap/RecoveryRoadmapSection';
 import CareEcosystemSection from '../components/ecosystem/CareEcosystemSection';
+import PhysioTeamSection from '../components/physioTeam/PhysioTeamSection';
 import { homePhysio } from '../services/api';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import { HEALTHCARE_IMAGES } from '../utils/healthcareImages';
@@ -197,6 +198,8 @@ export default function HomePhysiotherapyPage() {
       {isRoadmapEnabled(s) && <RecoveryRoadmapSection theme="home" sections={s} />}
 
       {isEcosystemEnabled(s) && <CareEcosystemSection theme="home" sections={s} />}
+
+      <PhysioTeamSection />
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-pad">
         <SectionHead eyebrow="Choose your format" heading={s.fit_heading} intro={s.fit_intro} />

@@ -149,6 +149,7 @@ import AdminHomeHero from './pages/admin/AdminHomeHero';
 import AdminHomeImages from './pages/admin/AdminHomeImages';
 import AdminHomeBanners from './pages/admin/AdminHomeBanners';
 import AdminTestimonials from './pages/admin/AdminTestimonials';
+import AdminPhysioTeam from './pages/admin/AdminPhysioTeam';
 import AdminBadges from './pages/admin/AdminBadges';
 import AdminCoupons from './pages/admin/AdminCoupons';
 import AdminReviews from './pages/admin/AdminReviews';
@@ -400,6 +401,7 @@ export default function App() {
       <Route path="/admin/about" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminAbout /></ProtectedRoute>} />
       <Route path="/admin/home-physio" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminHomePhysio /></ProtectedRoute>} />
       <Route path="/admin/telephysio" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminTelePhysio /></ProtectedRoute>} />
+      <Route path="/admin/physiotherapists" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminPhysioTeam /></ProtectedRoute>} />
       <Route path="/admin/offers" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminOffers /></ProtectedRoute>} />
       <Route path="/admin/offers/submissions/:id" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminOffersSubmissionReview /></ProtectedRoute>} />
       <Route path="/admin/offers/review/:id" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminOffersSubmissionReview /></ProtectedRoute>} />

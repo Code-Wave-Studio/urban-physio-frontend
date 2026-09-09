@@ -11,6 +11,7 @@ import CommunityPreviewSection from '../components/community/CommunityPreviewSec
 import PainSelectionSection from '../components/home/PainSelectionSection';
 import RecoveryRoadmapSection from '../components/roadmap/RecoveryRoadmapSection';
 import CareEcosystemSection from '../components/ecosystem/CareEcosystemSection';
+import PhysioTeamSection from '../components/physioTeam/PhysioTeamSection';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import { HEALTHCARE_IMAGES } from '../utils/healthcareImages';
 import { bookTelePhysioUrl, withPainAreaParams } from '../utils/bookUrl';
@@ -232,6 +233,8 @@ export default function TelePhysioPage() {
       {isRoadmapEnabled(s) && <RecoveryRoadmapSection theme="tele" sections={s} />}
 
       {isEcosystemEnabled(s) && <CareEcosystemSection theme="tele" sections={s} />}
+
+      <PhysioTeamSection />
 
       {/* =========================================================================
           SECTION 3: WHAT IS TELEPHYSIO?

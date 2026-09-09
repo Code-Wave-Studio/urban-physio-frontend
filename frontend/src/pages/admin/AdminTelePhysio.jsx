@@ -105,6 +105,13 @@ export default function AdminTelePhysio() {
             Preview live page
           </Link>
         </div>
+        <Link
+          to="/admin/physiotherapists"
+          className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-teal-800 bg-white/80 border border-teal-200 rounded-xl px-3 py-2 hover:bg-teal-50"
+        >
+          <FaIcon icon="fa-user-doctor" />
+          Manage Our Physiotherapists (shared with Home Physiotherapy)
+        </Link>
       </div>
 
       <form onSubmit={save} className="max-w-5xl space-y-6">
