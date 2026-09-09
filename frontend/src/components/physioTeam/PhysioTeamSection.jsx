@@ -280,9 +280,8 @@ export default function PhysioTeamSection() {
                   ) : null}
                   <Stars value={selected.rating} className="pt-profile-stars" />
                 </div>
-              </header>
 
-              <div className="pt-profile-body">
+                <div className="pt-profile-meta">
                 {(selected.experience || selected.badge) ? (
                   <ul className="pt-profile-stats">
                     {selected.experience ? (
@@ -311,7 +310,7 @@ export default function PhysioTeamSection() {
                 ) : null}
 
                 {(selected.specialties || []).length > 0 ? (
-                  <section className="pt-profile-block" aria-label="Specialties">
+                  <section className="pt-profile-block pt-profile-block--flush" aria-label="Specialties">
                     <p className="pt-block-label">Specialties</p>
                     <ul className="pt-chips">
                       {selected.specialties.map((s) => (
@@ -320,7 +319,10 @@ export default function PhysioTeamSection() {
                     </ul>
                   </section>
                 ) : null}
+                </div>
+              </header>
 
+              <div className="pt-profile-body">
                 {selected.description ? (
                   <section className="pt-profile-block" aria-label="Professional summary">
                     <p className="pt-block-label">Professional summary</p>
