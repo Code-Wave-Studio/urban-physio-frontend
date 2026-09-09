@@ -171,7 +171,7 @@ export default function CareEcosystemSection({ theme = 'home', sections = {} }) 
   return (
     <section
       ref={trackRef}
-      className={`eco-section ${tokens.section}`}
+      className={`eco-section ${tokens.section}${inView ? ' is-entered' : ''}`}
       id={theme === 'tele' ? 'telerehab-care-ecosystem' : 'physioathome-care-ecosystem'}
       style={{ '--eco-items': String(count) }}
       aria-labelledby={headingId}
@@ -181,14 +181,14 @@ export default function CareEcosystemSection({ theme = 'home', sections = {} }) 
           <div className="eco-copy">
             {copy.ecosystem_label ? <p className="eco-label">{copy.ecosystem_label}</p> : null}
 
-            <header className="eco-intro eco-box">
+            <header className="eco-intro">
               <h2 id={headingId} className="eco-heading">
                 <Heading heading={copy.ecosystem_heading} highlight={copy.ecosystem_highlight} />
               </h2>
               {copy.ecosystem_intro ? <p className="eco-lede">{copy.ecosystem_intro}</p> : null}
             </header>
 
-            <nav className="eco-nav eco-box" aria-label="Care ecosystem features" id={navId}>
+            <nav className="eco-nav" aria-label="Care ecosystem features" id={navId}>
               <ol className="eco-list">
                 {items.map((item, i) => {
                   const isActive = i === safeIndex;
