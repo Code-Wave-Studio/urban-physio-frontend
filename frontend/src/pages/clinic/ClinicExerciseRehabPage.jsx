@@ -17,7 +17,13 @@ import FaIcon from '../../components/FaIcon';
 import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
 import GlassModal, { GlassModalBody, GlassModalFooter, GlassModalHeader } from '../../components/GlassModal';
 import useClinicPortal from '../../hooks/useClinicPortal';
-import { clinicPortal, exercisePrescriptions } from '../../services/api';
+import { clinicPortal, exercisePrescriptions, kinestex } from '../../services/api';
+import KinesteXMappingFields, {
+  EMPTY_KINESTEX,
+  kinestexFromExercise,
+  kinestexPayload,
+  showAiReadyBadge,
+} from '../../components/exercise/KinesteXMappingFields';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Tooltip, Legend, Filler);
 
@@ -44,6 +50,7 @@ const EMPTY_EX = {
   video_url: '',
   image_url: '',
   pdf_url: '',
+  kinestex: { ...EMPTY_KINESTEX },
 };
 
 function youtubeEmbed(url) {
@@ -151,7 +158,9 @@ export default function ClinicExerciseRehabPage() {
     hold_seconds: '',
     frequency: 'Daily',
     publish: true,
+    ai_monitoring_enabled: false,
   });
+  const [kinestexOn, setKinestexOn] = useState(false);
 
   const loadDash = useCallback(async () => {
     if (!clinicId) return;
@@ -181,6 +190,16 @@ export default function ClinicExerciseRehabPage() {
     }, libQ ? 300 : 0);
     return () => clearTimeout(t);
   }, [clinicId, section, libScope, libQ]);
+
+  useEffect(() => {
+    kinestex
+      .settings()
+      .then((res) => {
+        const d = res.data || res || {};
+        setKinestexOn(!!(d.enabled && d.configured !== false));
+      })
+      .catch(() => setKinestexOn(false));
+  }, []);
 
   useEffect(() => {
     if (!clinicId || (section !== 'hep' && section !== 'progress')) return;
@@ -256,7 +275,7 @@ export default function ClinicExerciseRehabPage() {
 
   const openCreateEx = () => {
     setEditingEx(null);
-    setExForm(EMPTY_EX);
+    setExForm({ ...EMPTY_EX, kinestex: { ...EMPTY_KINESTEX } });
     setExModal(true);
   };
 
@@ -280,6 +299,7 @@ export default function ClinicExerciseRehabPage() {
       video_url: ex.video_url || '',
       image_url: ex.image_url || '',
       pdf_url: ex.pdf_url || '',
+      kinestex: kinestexFromExercise(ex),
     });
     setExModal(true);
   };
@@ -290,12 +310,27 @@ export default function ClinicExerciseRehabPage() {
       toast.error('Name and instructions required');
       return;
     }
+    if (exForm.kinestex?.ai_supported && !(exForm.kinestex.kinestex_exercise_id || '').trim()) {
+      toast.error('Paste an official KinesteX Exercise ID, or turn off AI monitoring');
+      return;
+    }
     setSaving(true);
     try {
       const payload = {
-        ...exForm,
-        default_hold_seconds: exForm.default_hold_seconds ? Number(exForm.default_hold_seconds) : null,
+        name: exForm.name,
+        body_area: exForm.body_area,
+        category: exForm.category,
+        difficulty: exForm.difficulty,
+        instructions: exForm.instructions,
+        precautions: exForm.precautions,
+        equipment: exForm.equipment,
         default_sets: Number(exForm.default_sets) || 3,
+        default_reps: exForm.default_reps,
+        default_hold_seconds: exForm.default_hold_seconds ? Number(exForm.default_hold_seconds) : null,
+        video_url: exForm.video_url,
+        image_url: exForm.image_url,
+        pdf_url: exForm.pdf_url,
+        kinestex: kinestexPayload(exForm.kinestex),
       };
       if (editingEx) {
         await clinicPortal.hepUpdateExercise(Number(clinicId), editingEx.id, payload);
@@ -331,6 +366,7 @@ export default function ClinicExerciseRehabPage() {
 
   const openAssign = async (ex) => {
     setAssignEx(ex);
+    const eligible = kinestexOn && showAiReadyBadge(ex?.kinestex);
     setAssignForm({
       patient_id: '',
       title: `HEP · ${ex.name}`,
@@ -339,6 +375,8 @@ export default function ClinicExerciseRehabPage() {
       hold_seconds: ex.default_hold_seconds || '',
       frequency: 'Daily',
       publish: true,
+      ai_monitoring_enabled: false,
+      _ai_eligible: eligible,
     });
     if (!clinicId) return;
     setPatientsLoading(true);
@@ -389,6 +427,7 @@ export default function ClinicExerciseRehabPage() {
             hold_seconds: assignForm.hold_seconds ? Number(assignForm.hold_seconds) : null,
             frequency: assignForm.frequency || 'Daily',
             is_mandatory: true,
+            ai_monitoring_enabled: !!assignForm.ai_monitoring_enabled,
           },
         ],
       };
@@ -615,6 +654,7 @@ export default function ClinicExerciseRehabPage() {
                           {isGlobal ? 'TUP Global' : 'Clinic library'}
                           {ex.difficulty ? ` · ${ex.difficulty}` : ''}
                           {ex.body_area ? ` · ${ex.body_area}` : ''}
+                          {showAiReadyBadge(ex.kinestex) ? ' · AI ready' : ''}
                         </p>
                       </div>
                       <div className="mt-auto flex flex-wrap gap-2 pt-1">
@@ -940,6 +980,13 @@ export default function ClinicExerciseRehabPage() {
                   inputMode="url"
                 />
               </label>
+              <div className="sm:col-span-2">
+                <KinesteXMappingFields
+                  value={exForm.kinestex || EMPTY_KINESTEX}
+                  onChange={(kinestex) => setExForm((f) => ({ ...f, kinestex }))}
+                  disabled={saving}
+                />
+              </div>
             </div>
           </GlassModalBody>
           <GlassModalFooter>
@@ -1097,6 +1144,24 @@ export default function ClinicExerciseRehabPage() {
                 <option value="As needed">As needed</option>
               </select>
             </label>
+            {assignForm._ai_eligible || (kinestexOn && showAiReadyBadge(assignEx?.kinestex)) ? (
+              <label className="flex items-center justify-between gap-3 text-sm text-slate-700 rounded-lg border border-teal-100 bg-teal-50/50 px-3 py-2">
+                <span>
+                  <span className="font-semibold text-teal-800">AI Monitoring</span>
+                  <span className="block text-[11px] text-slate-500">Enable for this rehab plan assignment only</span>
+                </span>
+                <input
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={!!assignForm.ai_monitoring_enabled}
+                  onChange={(e) => setAssignForm((f) => ({ ...f, ai_monitoring_enabled: e.target.checked }))}
+                />
+              </label>
+            ) : (
+              <p className="text-xs text-slate-500 rounded-lg bg-slate-100/80 px-3 py-2">
+                AI Monitoring — Not available for this exercise
+              </p>
+            )}
             <label className="inline-flex items-center gap-2 text-sm text-slate-700">
               <input
                 type="checkbox"

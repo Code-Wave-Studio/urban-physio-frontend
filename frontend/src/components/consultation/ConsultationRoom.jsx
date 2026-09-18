@@ -11,9 +11,11 @@ import {
   treatmentJourney,
   doctors as doctorsApi,
   clinicPortal,
+  kinestex,
 } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { formatTime } from '../../utils/appointmentListUtils';
+import { showAiReadyBadge } from '../exercise/KinesteXMappingFields';
 
 const TABS = [
   { id: 'video', label: 'Video Call', icon: 'fa-video' },
@@ -193,6 +195,7 @@ function VideoPanel({ room, canStart, onSessionStarted }) {
 function ExercisePanel({ room, onReload }) {
   const isDoctor = room.permissions?.can_prescribe;
   const [library, setLibrary] = useState([]);
+  const [kinestexOn, setKinestexOn] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState(null);
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -203,14 +206,27 @@ function ExercisePanel({ room, onReload }) {
     diagnosis_notes: '',
     therapist_notes: '',
     start_date: new Date().toISOString().slice(0, 10),
-    exercises: [{ exercise_id: '', sets: 3, reps: '10', frequency: 'Daily', special_instructions: '' }],
+    exercises: [{ exercise_id: '', sets: 3, reps: '10', frequency: 'Daily', special_instructions: '', ai_monitoring_enabled: false }],
   });
 
   const plans = room.exercise_plans || [];
 
+  const rowEligible = (exerciseId) => {
+    if (!kinestexOn || !exerciseId) return false;
+    const ex = library.find((e) => String(e.id) === String(exerciseId));
+    return showAiReadyBadge(ex?.kinestex);
+  };
+
   useEffect(() => {
     if (isDoctor) {
       exercisesApi.list().then((r) => setLibrary(r.data || [])).catch(() => {});
+      kinestex
+        .settings()
+        .then((res) => {
+          const d = res.data || res || {};
+          setKinestexOn(!!(d.enabled && d.configured !== false));
+        })
+        .catch(() => setKinestexOn(false));
     }
   }, [isDoctor]);
 
@@ -242,6 +258,12 @@ function ExercisePanel({ room, onReload }) {
     setForm((f) => {
       const exercises = [...f.exercises];
       exercises[i] = { ...exercises[i], [k]: v };
+      if (k === 'exercise_id') {
+        const ex = library.find((e) => String(e.id) === String(v));
+        if (!(kinestexOn && showAiReadyBadge(ex?.kinestex))) {
+          exercises[i].ai_monitoring_enabled = false;
+        }
+      }
       return { ...f, exercises };
     });
   };
@@ -271,6 +293,7 @@ function ExercisePanel({ room, onReload }) {
             reps: String(e.reps || '10'),
             frequency: e.frequency || 'Daily',
             special_instructions: e.special_instructions || '',
+            ai_monitoring_enabled: !!e.ai_monitoring_enabled,
           })),
       });
       toast.success('Exercise plan shared with patient');
@@ -325,6 +348,20 @@ function ExercisePanel({ room, onReload }) {
               <input className="input sm:col-span-2" type="number" min="1" placeholder="Sets" value={row.sets} onChange={(e) => setEx(i, 'sets', e.target.value)} />
               <input className="input sm:col-span-2" placeholder="Reps" value={row.reps} onChange={(e) => setEx(i, 'reps', e.target.value)} />
               <input className="input sm:col-span-3" placeholder="Instructions for patient" value={row.special_instructions} onChange={(e) => setEx(i, 'special_instructions', e.target.value)} />
+              <div className="sm:col-span-12">
+                {rowEligible(row.exercise_id) ? (
+                  <label className="inline-flex items-center gap-2 text-xs text-teal-800 font-medium">
+                    <input
+                      type="checkbox"
+                      checked={!!row.ai_monitoring_enabled}
+                      onChange={(e) => setEx(i, 'ai_monitoring_enabled', e.target.checked)}
+                    />
+                    AI Monitoring ON for this plan item
+                  </label>
+                ) : (
+                  <p className="text-[11px] text-slate-500">AI Monitoring — Not available for this exercise</p>
+                )}
+              </div>
             </div>
           ))}
           <div className="flex flex-wrap gap-2">
@@ -334,7 +371,7 @@ function ExercisePanel({ room, onReload }) {
               onClick={() =>
                 setForm((f) => ({
                   ...f,
-                  exercises: [...f.exercises, { exercise_id: '', sets: 3, reps: '10', frequency: 'Daily', special_instructions: '' }],
+                  exercises: [...f.exercises, { exercise_id: '', sets: 3, reps: '10', frequency: 'Daily', special_instructions: '', ai_monitoring_enabled: false }],
                 }))
               }
             >

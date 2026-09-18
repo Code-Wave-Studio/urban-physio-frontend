@@ -9,8 +9,10 @@
 # as JavaScript and the browser would try to execute it.
 
 # Google Identity Services popup needs postMessage back to opener.
+# KinesteX AI iframe (https://ai.kinestex.com) needs camera + sensor Permissions-Policy.
 /*
   Cross-Origin-Opener-Policy: same-origin-allow-popups
+  Permissions-Policy: camera=(self "https://ai.kinestex.com"), microphone=(self "https://ai.kinestex.com"), accelerometer=(self "https://ai.kinestex.com"), gyroscope=(self "https://ai.kinestex.com"), magnetometer=(self "https://ai.kinestex.com")
 
 # SPA shell must always revalidate so clients pick up new /app/*.js hashes.
 /

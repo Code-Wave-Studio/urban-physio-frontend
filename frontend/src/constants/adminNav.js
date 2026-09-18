@@ -69,6 +69,7 @@ export const ADMIN_NAV = [
   { to: '/admin/contact', label: 'Contact & Footer', icon: 'fa-envelope', section: 'settings_marketing' },
 
   // Settings · System
+  { to: '/admin/kinestex', label: 'KinesteX AI', icon: 'fa-person-walking', section: 'settings_system' },
   { to: '/admin/notifications', label: 'Notifications', icon: 'fa-bell', section: 'settings_system', notifyKey: true },
   { to: '/admin/notification-settings', label: 'Notification Rules', icon: 'fa-bell-concierge', section: 'settings_system' },
   { to: '/admin/documents', label: 'Documents', icon: 'fa-folder-tree', section: 'settings_system' },

@@ -575,6 +575,8 @@ export const admin = {
   updateHomePhysioSettings: (data) => api.put('/admin/home-physio-settings', data),
   telephysioSettings: () => api.get('/admin/telephysio-settings'),
   updateTelePhysioSettings: (data) => api.put('/admin/telephysio-settings', data),
+  kinestexSettings: () => api.get('/admin/kinestex-settings'),
+  updateKinesteXSettings: (data) => api.put('/admin/kinestex-settings', data),
   offersSettings: () => api.get('/admin/offers-settings'),
   updateOffersSettings: (data) => api.put('/admin/offers-settings', data),
   offersSubmissions: (params) => api.get('/admin/offers-submissions', { params }),
@@ -1083,6 +1085,12 @@ export const homePhysio = {
 
 export const telephysio = {
   settings: () => api.get('/telephysio/settings'),
+};
+
+export const kinestex = {
+  settings: () => api.get('/kinestex/settings'),
+  /** Patient-only: validate eligibility and return official SDK Custom Workout init payload */
+  prepareSession: (data) => api.post('/kinestex/session/prepare', data),
 };
 
 export const home = {

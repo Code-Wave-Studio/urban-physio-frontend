@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../../components/FaIcon';
 import ExerciseBottomSheet from '../../components/exercise/ExerciseBottomSheet';
-import { exercisePrescriptions } from '../../services/api';
+import KinesteXExerciseSession from '../../components/exercise/KinesteXExerciseSession';
+import { exercisePrescriptions, kinestex } from '../../services/api';
 import { PATIENT_NAV } from '../../constants/patientNav';
 import toast from 'react-hot-toast';
 
@@ -42,6 +43,12 @@ export default function PatientExercises() {
   const [tab, setTab] = useState('today'); // today | progress | history
   const [lastTap, setLastTap] = useState({ id: null, at: 0 });
   const [streak, setStreak] = useState(0);
+
+  // Phase 4 — KinesteX AI session (prep → SDK → result boundary)
+  const [aiPrepEx, setAiPrepEx] = useState(null);
+  const [aiSessionPayload, setAiSessionPayload] = useState(null);
+  const [aiPreparing, setAiPreparing] = useState(false);
+  const aiStartLock = useRef(false);
 
   const loadPlans = useCallback(() => {
     setLoading(true);
@@ -165,6 +172,50 @@ export default function PatientExercises() {
       toast.error(err.message || 'Could not save');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const openAiPrep = (ex) => {
+    if (!ex?.ai_monitoring_effective || aiStartLock.current || aiPreparing || aiSessionPayload) return;
+    setAiPrepEx(ex);
+  };
+
+  const closeAiFlow = () => {
+    aiStartLock.current = false;
+    setAiPreparing(false);
+    setAiPrepEx(null);
+    setAiSessionPayload(null);
+  };
+
+  const continueAiSession = async () => {
+    if (!detail || !aiPrepEx || aiStartLock.current) return;
+    if (!aiPrepEx.ai_monitoring_effective) {
+      toast.error('AI monitoring is not available for this exercise.');
+      return;
+    }
+    aiStartLock.current = true;
+    setAiPreparing(true);
+    try {
+      const res = await kinestex.prepareSession({
+        prescription_id: detail.id,
+        item_id: aiPrepEx.id,
+      });
+      const payload = res.data;
+      if (!payload?.sdk?.key || !payload?.sdk?.company || !payload?.sdk?.customWorkoutExercises?.length) {
+        throw new Error('AI session could not be prepared.');
+      }
+      setAiSessionPayload(payload);
+      setAiPrepEx(null);
+    } catch (err) {
+      aiStartLock.current = false;
+      const msg = err.message || 'Could not start AI monitoring';
+      if (/camera/i.test(msg)) {
+        toast.error('Camera access is required for AI monitoring. Please allow camera access and try again.');
+      } else {
+        toast.error(msg);
+      }
+    } finally {
+      setAiPreparing(false);
     }
   };
 
@@ -317,13 +368,24 @@ export default function PatientExercises() {
                               {ex.sets} sets · {ex.reps} reps · {ex.frequency}
                               {ex.hold_seconds ? ` · hold ${ex.hold_seconds}s` : ''}
                             </p>
+                            {ex.ai_monitoring_effective && (
+                              <span className="inline-block mt-1 text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-100 font-semibold">
+                                AI Monitoring
+                              </span>
+                            )}
                             {ex.difficulty && (
-                              <span className="inline-block mt-1 text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 capitalize">
+                              <span className="inline-block mt-1 ml-1 text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 capitalize">
                                 {ex.difficulty}
                               </span>
                             )}
                           </div>
                         </div>
+
+                        {ex.ai_monitoring_effective && (
+                          <p className="text-xs text-teal-700 bg-teal-50/80 rounded-lg px-2.5 py-2 border border-teal-100">
+                            AI-powered exercise guidance available
+                          </p>
+                        )}
 
                         {ex.special_instructions && (
                           <p className="text-xs text-slate-600 bg-slate-50 rounded-lg px-2.5 py-2">{ex.special_instructions}</p>
@@ -333,6 +395,16 @@ export default function PatientExercises() {
                           <button type="button" className="btn-outline !py-1.5 !px-3 text-xs" onClick={() => setPreviewEx(ex)}>
                             <FaIcon icon="fa-eye" className="mr-1" /> View
                           </button>
+                          {ex.ai_monitoring_effective && (
+                            <button
+                              type="button"
+                              className="btn-outline !py-1.5 !px-3 text-xs border-teal-300 text-teal-800 hover:bg-teal-50"
+                              disabled={!!aiSessionPayload || aiPreparing}
+                              onClick={() => openAiPrep(ex)}
+                            >
+                              <FaIcon icon="fa-person-walking" className="mr-1" /> Start AI Monitoring
+                            </button>
+                          )}
                           {!done && (
                             <button type="button" className="btn-primary !py-1.5 !px-3 text-xs" onClick={() => openLog(ex, 'completed')}>
                               <FaIcon icon="fa-check" className="mr-1" /> Complete
@@ -609,6 +681,84 @@ export default function PatientExercises() {
           </div>
         </form>
       </ExerciseBottomSheet>
+
+      {/* Phase 4 — AI preparation (before KinesteX SDK / camera) */}
+      <ExerciseBottomSheet
+        open={!!aiPrepEx && !aiSessionPayload}
+        onClose={() => {
+          if (!aiPreparing) setAiPrepEx(null);
+        }}
+        title="Prepare for AI Exercise"
+        subtitle={aiPrepEx?.exercise_name}
+        icon="fa-person-walking"
+        footer={
+          <>
+            <button
+              type="button"
+              className="btn-outline text-xs sm:text-sm"
+              disabled={aiPreparing}
+              onClick={() => setAiPrepEx(null)}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="btn-primary text-xs sm:text-sm"
+              disabled={aiPreparing}
+              onClick={continueAiSession}
+            >
+              {aiPreparing ? 'Starting…' : 'Continue'}
+            </button>
+          </>
+        }
+      >
+        {aiPrepEx && (
+          <div className="space-y-4 text-sm text-slate-700">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Exercise</p>
+              <p className="font-semibold text-slate-900 mt-0.5">{aiPrepEx.exercise_name}</p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Target</p>
+              <p className="mt-0.5">
+                {aiPrepEx.sets || 1} sets × {aiPrepEx.reps || 10} reps
+                {aiPrepEx.hold_seconds ? ` · hold ${aiPrepEx.hold_seconds}s` : ''}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Camera</p>
+              <p className="mt-0.5">Required — your browser will ask for permission when the session starts.</p>
+            </div>
+            {(aiPrepEx.instructions || aiPrepEx.special_instructions) && (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Instructions</p>
+                <p className="mt-0.5 whitespace-pre-wrap text-slate-600">
+                  {aiPrepEx.special_instructions || aiPrepEx.instructions}
+                </p>
+              </div>
+            )}
+            <p className="text-xs text-slate-500 bg-slate-50 rounded-lg px-3 py-2">
+              Please position yourself so your full movement is visible. Mark Complete and Skip remain available after you exit.
+            </p>
+          </div>
+        )}
+      </ExerciseBottomSheet>
+
+      {aiSessionPayload && (
+        <KinesteXExerciseSession
+          sessionPayload={aiSessionPayload}
+          onClose={closeAiFlow}
+          onCompleted={() => {
+            toast.success('AI session complete');
+          }}
+          onCancelled={() => {
+            toast('AI session cancelled');
+          }}
+          onFailed={() => {
+            toast.error('AI monitoring could not finish. You can mark the exercise complete manually.');
+          }}
+        />
+      )}
     </DashboardLayout>
   );
 }

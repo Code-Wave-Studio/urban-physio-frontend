@@ -143,6 +143,7 @@ import AdminPhysioFeed from './pages/admin/AdminPhysioFeed';
 import AdminAbout from './pages/admin/AdminAbout';
 import AdminHomePhysio from './pages/admin/AdminHomePhysio';
 import AdminTelePhysio from './pages/admin/AdminTelePhysio';
+import AdminKinesteX from './pages/admin/AdminKinesteX';
 import AdminOffers from './pages/admin/AdminOffers';
 import AdminOffersSubmissionReview from './pages/admin/AdminOffersSubmissionReview';
 import AdminHomeHero from './pages/admin/AdminHomeHero';
@@ -402,6 +403,7 @@ export default function App() {
       <Route path="/admin/about" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminAbout /></ProtectedRoute>} />
       <Route path="/admin/home-physio" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminHomePhysio /></ProtectedRoute>} />
       <Route path="/admin/telephysio" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminTelePhysio /></ProtectedRoute>} />
+      <Route path="/admin/kinestex" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminKinesteX /></ProtectedRoute>} />
       <Route path="/admin/physiotherapists" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminPhysioTeam /></ProtectedRoute>} />
       <Route path="/admin/org-logos" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminOrgLogos /></ProtectedRoute>} />
       <Route path="/admin/offers" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminOffers /></ProtectedRoute>} />

@@ -3,12 +3,13 @@ import { Navigate, Link } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../../components/FaIcon';
 import GlassModal, { GlassModalBody, GlassModalFooter, GlassModalHeader } from '../../components/GlassModal';
-import { clinicPortal, doctors, exercisePrescriptions, exercises } from '../../services/api';
+import { clinicPortal, doctors, exercisePrescriptions, exercises, kinestex } from '../../services/api';
 import { DOCTOR_NAV } from '../../constants/doctorNav';
 import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
 import { useAuth } from '../../contexts/AuthContext';
 import useClinicPortal from '../../hooks/useClinicPortal';
 import toast from 'react-hot-toast';
+import { showAiReadyBadge } from '../../components/exercise/KinesteXMappingFields';
 
 const EMPTY_ITEM = {
   exercise_id: '',
@@ -24,6 +25,7 @@ const EMPTY_ITEM = {
   special_instructions: '',
   therapist_notes: '',
   progression_rules: '',
+  ai_monitoring_enabled: false,
 };
 
 const emptyForm = () => ({
@@ -73,6 +75,13 @@ export default function DoctorPrescriptions() {
 
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [kinestexOn, setKinestexOn] = useState(false);
+
+  const exerciseAiEligible = (exerciseId) => {
+    if (!kinestexOn || !exerciseId) return false;
+    const ex = exerciseList.find((e) => String(e.id) === String(exerciseId));
+    return showAiReadyBadge(ex?.kinestex);
+  };
 
   const load = useCallback(() => {
     setLoading(true);
@@ -116,6 +125,13 @@ export default function DoctorPrescriptions() {
       exercises.list().then((res) => setExerciseList(res.data || [])).catch(() => {});
       doctors.patients().then((res) => setPatients(res.data || [])).catch(() => {});
     }
+    kinestex
+      .settings()
+      .then((res) => {
+        const d = res.data || res || {};
+        setKinestexOn(!!(d.enabled && d.configured !== false));
+      })
+      .catch(() => setKinestexOn(false));
   }, [isClinic, clinicId]);
 
   if (isClinic && !portalBoot && (!isAdminMode || !can('exercises.manage'))) {
@@ -160,6 +176,7 @@ export default function DoctorPrescriptions() {
           special_instructions: ex.special_instructions || '',
           therapist_notes: ex.therapist_notes || '',
           progression_rules: ex.progression_rules || '',
+          ai_monitoring_enabled: !!ex.ai_monitoring_enabled,
         })) || [{ ...EMPTY_ITEM }],
       });
       setModalOpen(true);
@@ -196,6 +213,10 @@ export default function DoctorPrescriptions() {
           next[idx].reps = ex.default_reps || '10';
           next[idx].hold_seconds = ex.default_hold_seconds ?? '';
         }
+        const eligible = kinestexOn && showAiReadyBadge(ex?.kinestex);
+        if (!eligible) {
+          next[idx].ai_monitoring_enabled = false;
+        }
       }
       return { ...f, exercises: next };
     });
@@ -218,6 +239,7 @@ export default function DoctorPrescriptions() {
         special_instructions: x.special_instructions,
         therapist_notes: x.therapist_notes,
         progression_rules: x.progression_rules || null,
+        ai_monitoring_enabled: !!x.ai_monitoring_enabled,
       }));
 
   const submit = async (e) => {
@@ -474,6 +496,11 @@ export default function DoctorPrescriptions() {
                         <p className="text-xs text-slate-500">
                           {ex.sets} sets · {ex.reps} reps · {ex.frequency}
                           {ex.hold_seconds ? ` · hold ${ex.hold_seconds}s` : ''}
+                          {ex.ai_monitoring_effective || (ex.ai_monitoring_enabled && ex.ai_monitoring_available)
+                            ? ' · AI on'
+                            : ex.ai_monitoring_available
+                              ? ' · AI available'
+                              : ''}
                         </p>
                         {ex.today_log && (
                           <p className="text-[11px] mt-1 text-emerald-700 capitalize">Today: {ex.today_log.status}{ex.today_log.pain_level ? ` · pain ${ex.today_log.pain_level}/10` : ''}</p>
@@ -618,6 +645,25 @@ export default function DoctorPrescriptions() {
                       <input type="checkbox" checked={!!item.is_mandatory} onChange={(e) => updateExercise(idx, 'is_mandatory', e.target.checked)} />
                       Mandatory
                     </label>
+                    {exerciseAiEligible(item.exercise_id) ? (
+                      <label className="flex items-center justify-between gap-3 text-sm text-slate-700 rounded-lg border border-teal-100 bg-teal-50/50 px-3 py-2">
+                        <span>
+                          <span className="font-semibold text-teal-800">AI Monitoring</span>
+                          <span className="block text-[11px] text-slate-500">KinesteX-enabled for this rehab plan item only</span>
+                        </span>
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4"
+                          checked={!!item.ai_monitoring_enabled}
+                          onChange={(e) => updateExercise(idx, 'ai_monitoring_enabled', e.target.checked)}
+                        />
+                      </label>
+                    ) : (
+                      <p className="text-xs text-slate-500 rounded-lg bg-slate-100/80 px-3 py-2">
+                        AI Monitoring — Not available for this exercise
+                        {!kinestexOn ? ' (KinesteX integration off or incomplete)' : ''}
+                      </p>
+                    )}
                     <input className="input-field w-full" placeholder="Special instructions / precautions for patient" value={item.special_instructions} onChange={(e) => updateExercise(idx, 'special_instructions', e.target.value)} />
                     <input className="input-field w-full" placeholder="Progression rules (e.g. increase reps after 1 week)" value={item.progression_rules || ''} onChange={(e) => updateExercise(idx, 'progression_rules', e.target.value)} />
                     {form.exercises.length > 1 && (

@@ -2,6 +2,12 @@ import { useCallback, useEffect, useState } from 'react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import GlassModal, { GlassModalBody, GlassModalFooter, GlassModalHeader } from '../../components/GlassModal';
 import MediaUrlOrUpload from '../../components/admin/MediaUrlOrUpload';
+import KinesteXMappingFields, {
+  EMPTY_KINESTEX,
+  kinestexFromExercise,
+  kinestexPayload,
+  showAiReadyBadge,
+} from '../../components/exercise/KinesteXMappingFields';
 import FaIcon from '../../components/FaIcon';
 import { admin, uploadCmsImage, uploadCmsVideo } from '../../services/api';
 import toast from 'react-hot-toast';
@@ -20,6 +26,7 @@ const EMPTY = {
   image_url: '',
   is_active: 1,
   sort_order: 0,
+  kinestex: { ...EMPTY_KINESTEX },
 };
 
 export default function AdminExercises() {
@@ -49,7 +56,7 @@ export default function AdminExercises() {
 
   const openCreate = () => {
     setEditingId(null);
-    setForm(EMPTY);
+    setForm({ ...EMPTY, kinestex: { ...EMPTY_KINESTEX } });
     setModalOpen(true);
   };
 
@@ -73,6 +80,7 @@ export default function AdminExercises() {
         image_url: ex.image_url || '',
         is_active: ex.is_active ? 1 : 0,
         sort_order: ex.sort_order ?? 0,
+        kinestex: kinestexFromExercise(ex),
       });
     } catch (err) {
       toast.error(err.message);
@@ -86,13 +94,26 @@ export default function AdminExercises() {
       toast.error('Name and instructions are required');
       return;
     }
+    if (form.kinestex?.ai_supported && !(form.kinestex.kinestex_exercise_id || '').trim()) {
+      toast.error('Paste an official KinesteX Exercise ID, or turn off AI monitoring');
+      return;
+    }
     setSaving(true);
     const payload = {
-      ...form,
+      name: form.name,
+      slug: form.slug,
+      body_area: form.body_area,
+      difficulty: form.difficulty,
+      instructions: form.instructions,
       default_sets: parseInt(form.default_sets, 10) || 3,
+      default_reps: form.default_reps,
       default_hold_seconds: form.default_hold_seconds ? parseInt(form.default_hold_seconds, 10) : null,
+      equipment: form.equipment,
+      video_url: form.video_url,
+      image_url: form.image_url,
       is_active: form.is_active ? 1 : 0,
       sort_order: parseInt(form.sort_order, 10) || 0,
+      kinestex: kinestexPayload(form.kinestex),
     };
     try {
       if (editingId) {
@@ -151,9 +172,16 @@ export default function AdminExercises() {
                     {ex.body_area} · {ex.difficulty} · {ex.default_sets}×{ex.default_reps}
                   </p>
                 </div>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${ex.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100'}`}>
-                  {ex.is_active ? 'Active' : 'Off'}
-                </span>
+                <div className="flex flex-col items-end gap-1">
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${ex.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100'}`}>
+                    {ex.is_active ? 'Active' : 'Off'}
+                  </span>
+                  {showAiReadyBadge(ex.kinestex) && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-100 font-semibold">
+                      AI ready
+                    </span>
+                  )}
+                </div>
               </div>
               <p className="text-sm text-slate-600 mt-2 line-clamp-2">{ex.instructions}</p>
               <div className="flex gap-3 mt-3">
@@ -225,6 +253,11 @@ export default function AdminExercises() {
               <input type="checkbox" checked={!!form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked ? 1 : 0 })} />
               Active on website
             </label>
+            <KinesteXMappingFields
+              value={form.kinestex}
+              onChange={(kinestex) => setForm((f) => ({ ...f, kinestex }))}
+              disabled={saving}
+            />
           </GlassModalBody>
           <GlassModalFooter>
             <button type="button" onClick={() => setModalOpen(false)} className="btn-outline" disabled={saving}>Cancel</button>

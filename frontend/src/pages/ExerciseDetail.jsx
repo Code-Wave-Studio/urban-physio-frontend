@@ -113,6 +113,11 @@ export default function ExerciseDetail() {
             >
               {item.difficulty || 'beginner'}
             </span>
+            {item.kinestex?.ai_supported && item.kinestex?.mapped && (
+              <span className="text-xs font-bold px-2.5 py-1 rounded-full border border-teal-200 bg-teal-50 text-teal-800">
+                AI-ready exercise
+              </span>
+            )}
           </div>
           <h1 className="text-2xl md:text-4xl font-bold text-slate-800">{item.name}</h1>
         </div>
