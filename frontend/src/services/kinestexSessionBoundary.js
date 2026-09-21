@@ -5,7 +5,7 @@
  * https://www.kinestex.com/docs/data-points
  * https://www.kinestex.com/docs/integration/custom-workout
  *
- * Phase 4 keeps results in memory / callback only — no persistence.
+ * Phase 5 persists the same envelope via POST /kinestex/session/result.
  */
 
 /** @typedef {'idle'|'preparing'|'starting'|'active'|'paused'|'completed'|'cancelled'|'failed'} KinesteXSessionLifecycle */
@@ -18,6 +18,9 @@
  * @param {object} [params.eventData] Official event payload (may be the whole message object)
  * @param {object} [params.context] Our prepare-session context (prescription/item/exercise)
  * @param {object} [params.collected] Accumulated events during the session
+ * @param {string} [params.clientSessionId] Local UUID for this iframe mount (not a KinesteX id)
+ * @param {string} [params.startedAt] ISO timestamp when this local session started
+ * @param {string} [params.statusOverride] Terminal status when exit follows workout stats
  * @returns {object}
  */
 export function buildKinesteXSessionResult({
@@ -25,6 +28,9 @@ export function buildKinesteXSessionResult({
   eventData = {},
   context = {},
   collected = {},
+  clientSessionId = null,
+  startedAt = null,
+  statusOverride = null,
 }) {
   const data = eventData && typeof eventData === 'object' ? eventData : {};
   // SDK sometimes nests fields under data / value; keep raw for Phase 5.
@@ -39,15 +45,18 @@ export function buildKinesteXSessionResult({
     provider: 'kinestex',
     integration: 'CUSTOM_WORKOUT',
     completion_event: eventType,
+    started_at: startedAt || new Date().toISOString(),
     completed_at: new Date().toISOString(),
-    status: mapCompletionStatus(eventType),
+    status: statusOverride || mapCompletionStatus(eventType),
     // Local HEP refs (not KinesteX fields)
     prescription_id: context.prescription_id ?? null,
     item_id: context.item_id ?? null,
     exercise_id: context.exercise_id ?? null,
     kinestex_exercise_id: context.kinestex_exercise_id ?? null,
-    // Official provider references when present
-    provider_session_id: sessionId,
+    client_session_id: clientSessionId || null,
+    // Official provider references when present — never invent a KinesteX session id
+    provider_session_id: sessionId || null,
+    cancellation_reason: typeof data.reason === 'string' ? data.reason : null,
     // Documented performance-related payloads when emitted
     exercise_completed: collected.exercise_completed || null,
     exercise_overview: collected.exercise_overview || null,
@@ -61,7 +70,7 @@ export function buildKinesteXSessionResult({
   };
 }
 
-function mapCompletionStatus(eventType) {
+export function mapCompletionStatus(eventType) {
   switch (eventType) {
     case 'workout_completed':
     case 'finished_workout':
@@ -79,32 +88,49 @@ function mapCompletionStatus(eventType) {
   }
 }
 
-/**
- * Phase 5 hook — persistence will attach here.
- * Phase 4: validate shape and return the envelope without writing to the DB.
- *
- * @param {object} result from buildKinesteXSessionResult
- * @returns {object} same result
- */
-export function onKinesteXSessionCompleted(result) {
+export function validateKinesteXSessionResult(result) {
   if (!result || typeof result !== 'object') {
     throw new Error('KinesteX session result missing');
   }
   if (!result.provider || result.provider !== 'kinestex') {
     throw new Error('Invalid KinesteX session result provider');
   }
-  // Intentionally no API/DB write in Phase 4.
-  if (typeof console !== 'undefined' && console.info) {
-    console.info('[KinesteX Phase4] session result ready for Phase 5', {
-      status: result.status,
-      completion_event: result.completion_event,
-      prescription_id: result.prescription_id,
-      item_id: result.item_id,
-      exercise_id: result.exercise_id,
-      provider_session_id: result.provider_session_id,
-    });
+  if (!result.client_session_id) {
+    throw new Error('KinesteX session result is missing a local session id');
   }
   return result;
+}
+
+/**
+ * Persist the Phase 4 envelope through the authenticated backend.
+ * Does not log API keys. Success is only returned after the API accepts the save.
+ *
+ * @param {object} result from buildKinesteXSessionResult
+ * @param {(payload: object) => Promise<object>} [persistFn]
+ * @returns {Promise<object>} API data `{ session, duplicate, created }`
+ */
+export async function onKinesteXSessionCompleted(result, persistFn) {
+  validateKinesteXSessionResult(result);
+  if (typeof persistFn !== 'function') {
+    throw new Error('KinesteX persist function missing');
+  }
+  return persistFn(result);
+}
+
+export function newClientSessionId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  const bytes = new Uint8Array(16);
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    crypto.getRandomValues(bytes);
+  } else {
+    for (let i = 0; i < 16; i += 1) bytes[i] = Math.floor(Math.random() * 256);
+  }
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
 /** Patient-safe messages for known failure modes (no raw SDK/API text). */
@@ -124,4 +150,22 @@ export function patientFriendlyKinesteXError(eventType, eventData) {
     return 'AI monitoring could not start. Please try again in a supported browser with a working camera.';
   }
   return 'AI monitoring stopped unexpectedly. You can try again or mark the exercise complete manually.';
+}
+
+export function patientFriendlySaveError(err) {
+  const status = err?.status;
+  const msg = String(err?.message || '');
+  if (status === 401) return 'Please sign in again to save this AI session.';
+  if (status === 403) return 'This AI session could not be saved for your account.';
+  if (status === 413) return 'The AI session result was too large to save. Please try the exercise again.';
+  if (status === 422) {
+    if (/not enabled/i.test(msg)) return 'AI monitoring is not enabled for this exercise.';
+    if (/not found/i.test(msg)) return 'This exercise is no longer on your rehab plan.';
+    if (/not match/i.test(msg)) return 'This AI session does not match your assigned exercise.';
+    return 'The AI session result could not be saved. Please try again.';
+  }
+  if (status === 503 || /not installed/i.test(msg)) {
+    return 'AI session storage is not ready yet. Your therapist can still review a manual completion.';
+  }
+  return 'Could not save the AI session result. Please try again. This session is not marked complete.';
 }

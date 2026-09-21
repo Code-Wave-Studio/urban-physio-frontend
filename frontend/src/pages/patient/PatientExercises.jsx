@@ -748,14 +748,20 @@ export default function PatientExercises() {
         <KinesteXExerciseSession
           sessionPayload={aiSessionPayload}
           onClose={closeAiFlow}
-          onCompleted={() => {
-            toast.success('AI session complete');
+          onCompleted={(result) => {
+            if (result?.persisted) {
+              toast.success('AI session saved');
+            }
           }}
-          onCancelled={() => {
-            toast('AI session cancelled');
+          onCancelled={(result) => {
+            if (result?.persisted) {
+              toast('AI session cancelled');
+            }
           }}
-          onFailed={() => {
-            toast.error('AI monitoring could not finish. You can mark the exercise complete manually.');
+          onFailed={(result) => {
+            if (result?.persisted) {
+              toast.error('AI monitoring could not finish. You can mark the exercise complete manually.');
+            }
           }}
         />
       )}

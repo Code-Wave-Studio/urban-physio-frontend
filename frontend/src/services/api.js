@@ -1091,6 +1091,11 @@ export const kinestex = {
   settings: () => api.get('/kinestex/settings'),
   /** Patient-only: validate eligibility and return official SDK Custom Workout init payload */
   prepareSession: (data) => api.post('/kinestex/session/prepare', data),
+  /** Patient-only: persist Phase 4 session result envelope */
+  saveSessionResult: (data) => api.post('/kinestex/session/result', data),
+  /** Authenticated: patient own rows; doctor/clinic scoped by prescription ownership */
+  listSessions: (params) => api.get('/kinestex/sessions', { params }),
+  getSession: (id) => api.get(`/kinestex/sessions/${id}`),
 };
 
 export const home = {
