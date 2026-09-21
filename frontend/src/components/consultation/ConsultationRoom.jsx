@@ -118,8 +118,8 @@ function VideoPanel({ room, canStart, onSessionStarted }) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-slate-100 bg-slate-900 text-white overflow-hidden min-h-[280px] md:min-h-[360px] relative">
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+      <div className="rounded-2xl border border-slate-100 bg-slate-900 text-white overflow-hidden min-h-[220px] sm:min-h-[280px] md:min-h-[360px] relative">
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 sm:p-6 text-center">
           <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mb-4">
             <FaIcon icon="fa-video" className="text-2xl text-primary-300" />
           </div>
@@ -428,8 +428,8 @@ function ExercisePanel({ room, onReload, onStartAi, aiSessionActive, aiTick }) {
                 const yt = youtubeEmbed(ex.video_url);
                 return (
                   <div key={ex.id} className="rounded-2xl border border-slate-100 bg-white overflow-hidden">
-                    <div className="grid md:grid-cols-2 gap-0">
-                      <div className="bg-slate-900 min-h-[180px] relative">
+                    <div className="grid md:grid-cols-2 gap-0 min-w-0">
+                      <div className="bg-slate-900 aspect-video md:aspect-auto md:min-h-[220px] relative min-h-0">
                         {yt ? (
                           <iframe title={ex.exercise_name} src={yt} className="absolute inset-0 w-full h-full border-0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
                         ) : ex.image_url ? (
@@ -753,7 +753,7 @@ export default function ConsultationRoom({ appointmentId, backTo, layout: Layout
       </button>
     </div>
   ) : !room ? null : (
-    <div className="space-y-4">
+    <div className="space-y-4 min-w-0 max-w-full">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -764,7 +764,7 @@ export default function ConsultationRoom({ appointmentId, backTo, layout: Layout
             )}
             <StatusPill join={room.join} status={room.appointment.status} />
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Consultation Room</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 leading-tight">Consultation Room</h1>
           <p className="text-sm text-slate-500 mt-0.5">
             {room.appointment.booking_id} · {fmtDate(room.appointment.appointment_date)} ·{' '}
             {formatTime(room.appointment.start_time)}
@@ -783,13 +783,13 @@ export default function ConsultationRoom({ appointmentId, backTo, layout: Layout
         </div>
       </div>
 
-      <div className="portal-tabs p-1 rounded-xl bg-slate-100/80">
+      <div className="flex flex-wrap gap-1 p-1 rounded-xl bg-slate-100/80 w-full min-w-0">
         {TABS.map((t) => (
           <button
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
-            className={`flex-1 min-w-[7.5rem] sm:min-w-[120px] inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 sm:py-2 text-sm font-semibold transition ${
+            className={`flex-1 min-w-[calc(50%-0.25rem)] sm:min-w-[7.5rem] inline-flex items-center justify-center gap-2 rounded-lg px-2 sm:px-3 py-2.5 sm:py-2 text-xs sm:text-sm font-semibold transition ${
               tab === t.id ? 'bg-white text-primary-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
             }`}
           >

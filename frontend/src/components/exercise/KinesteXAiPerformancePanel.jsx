@@ -149,11 +149,11 @@ export default function KinesteXAiPerformancePanel({
         KinesteX AI sessions recorded for this patient. Separate from manual HEP completion. Missing metrics show as N/A.
       </p>
 
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3">
-        <div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 mb-3 min-w-0">
+        <div className="min-w-0">
           <label className="text-[10px] uppercase text-slate-400 font-semibold">Exercise</label>
           <select
-            className="input-field w-full !py-1.5 text-sm mt-0.5"
+            className="input-field w-full min-w-0 !py-1.5 text-sm mt-0.5"
             value={exerciseId}
             onChange={(e) => setExerciseId(e.target.value)}
           >
@@ -165,10 +165,10 @@ export default function KinesteXAiPerformancePanel({
             ))}
           </select>
         </div>
-        <div>
+        <div className="min-w-0">
           <label className="text-[10px] uppercase text-slate-400 font-semibold">Status</label>
           <select
-            className="input-field w-full !py-1.5 text-sm mt-0.5"
+            className="input-field w-full min-w-0 !py-1.5 text-sm mt-0.5"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
           >
@@ -178,20 +178,20 @@ export default function KinesteXAiPerformancePanel({
             <option value="failed">Failed</option>
           </select>
         </div>
-        <div>
+        <div className="min-w-0">
           <label className="text-[10px] uppercase text-slate-400 font-semibold">From</label>
           <input
             type="date"
-            className="input-field w-full !py-1.5 text-sm mt-0.5"
+            className="input-field w-full min-w-0 !py-1.5 text-sm mt-0.5"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
           />
         </div>
-        <div>
+        <div className="min-w-0">
           <label className="text-[10px] uppercase text-slate-400 font-semibold">To</label>
           <input
             type="date"
-            className="input-field w-full !py-1.5 text-sm mt-0.5"
+            className="input-field w-full min-w-0 !py-1.5 text-sm mt-0.5"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
           />
@@ -254,49 +254,83 @@ export default function KinesteXAiPerformancePanel({
               No AI-monitored sessions yet for this patient.
             </div>
           ) : (
-            <div className="overflow-x-auto -mx-1">
-              <table className="w-full text-sm min-w-[640px]">
-                <thead>
-                  <tr className="text-[10px] uppercase tracking-wide text-slate-400 text-left">
-                    <th className="py-2 px-2">Exercise</th>
-                    <th className="py-2 px-2">Date</th>
-                    <th className="py-2 px-2">Status</th>
-                    <th className="py-2 px-2">Reps</th>
-                    <th className="py-2 px-2">Accuracy</th>
-                    <th className="py-2 px-2">Score</th>
-                    <th className="py-2 px-2" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {sessions.map((s) => (
-                    <tr key={s.id} className="border-t border-slate-100">
-                      <td className="py-2 px-2">
+            <>
+              <ul className="md:hidden space-y-2">
+                {sessions.map((s) => (
+                  <li key={s.id} className="rounded-xl border border-slate-100 bg-white px-3 py-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
                         <p className="font-medium text-slate-800">{s.exercise_name || 'Exercise'}</p>
-                        <p className="text-[10px] text-teal-700 font-semibold">AI Monitored</p>
-                      </td>
-                      <td className="py-2 px-2 text-slate-600 whitespace-nowrap">{formatWhen(s.session_at)}</td>
-                      <td className="py-2 px-2">
-                        <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${statusClass(s.session_status)}`}>
-                          {s.session_status}
-                        </span>
-                      </td>
-                      <td className="py-2 px-2">{na(s.metrics?.repetitions)}</td>
-                      <td className="py-2 px-2">{na(s.metrics?.accuracy)}</td>
-                      <td className="py-2 px-2">{na(s.metrics?.score)}</td>
-                      <td className="py-2 px-2 text-right">
-                        <button type="button" className="text-xs font-semibold text-teal-700" onClick={() => openDetail(s)}>
-                          Details
-                        </button>
-                      </td>
+                        <p className="text-[11px] text-slate-500 mt-0.5">{formatWhen(s.session_at)}</p>
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          <span className="text-[10px] uppercase font-bold tracking-wide px-2 py-0.5 rounded-full bg-teal-50 text-teal-700">
+                            AI Monitored
+                          </span>
+                          <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${statusClass(s.session_status)}`}>
+                            {s.session_status}
+                          </span>
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                            Reps {na(s.metrics?.repetitions)}
+                          </span>
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                            Accuracy {na(s.metrics?.accuracy)}
+                          </span>
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                            Score {na(s.metrics?.score)}
+                          </span>
+                        </div>
+                      </div>
+                      <button type="button" className="text-xs font-semibold text-teal-700 shrink-0 min-h-10" onClick={() => openDetail(s)}>
+                        Details
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <div className="hidden md:block overflow-x-auto -mx-1">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-[10px] uppercase tracking-wide text-slate-400 text-left">
+                      <th className="py-2 px-2">Exercise</th>
+                      <th className="py-2 px-2">Date</th>
+                      <th className="py-2 px-2">Status</th>
+                      <th className="py-2 px-2">Reps</th>
+                      <th className="py-2 px-2">Accuracy</th>
+                      <th className="py-2 px-2">Score</th>
+                      <th className="py-2 px-2" />
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {sessions.map((s) => (
+                      <tr key={s.id} className="border-t border-slate-100">
+                        <td className="py-2 px-2">
+                          <p className="font-medium text-slate-800">{s.exercise_name || 'Exercise'}</p>
+                          <p className="text-[10px] text-teal-700 font-semibold">AI Monitored</p>
+                        </td>
+                        <td className="py-2 px-2 text-slate-600 whitespace-nowrap">{formatWhen(s.session_at)}</td>
+                        <td className="py-2 px-2">
+                          <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${statusClass(s.session_status)}`}>
+                            {s.session_status}
+                          </span>
+                        </td>
+                        <td className="py-2 px-2">{na(s.metrics?.repetitions)}</td>
+                        <td className="py-2 px-2">{na(s.metrics?.accuracy)}</td>
+                        <td className="py-2 px-2">{na(s.metrics?.score)}</td>
+                        <td className="py-2 px-2 text-right">
+                          <button type="button" className="text-xs font-semibold text-teal-700" onClick={() => openDetail(s)}>
+                            Details
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
 
           {pagination.pages > 1 && (
-            <div className="flex items-center justify-between gap-2 mt-3 text-xs text-slate-500">
+            <div className="flex flex-wrap items-center justify-between gap-2 mt-3 text-xs text-slate-500">
               <span>
                 Page {pagination.page} of {pagination.pages} · {pagination.total} sessions
               </span>

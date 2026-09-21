@@ -182,7 +182,7 @@ export default function ConsultationAiMonitoring({
                   {isPatient ? (
                     <button
                       type="button"
-                      className="btn-outline !py-1.5 !px-3 text-xs border-teal-300 text-teal-800 hover:bg-teal-50 self-start"
+                      className="btn-outline !py-1.5 !px-3 text-xs min-h-10 border-teal-300 text-teal-800 hover:bg-teal-50 self-start w-full sm:w-auto"
                       disabled={aiSessionActive || preparing}
                       onClick={() => openPrep(ex)}
                     >

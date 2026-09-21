@@ -45,9 +45,11 @@ export default function GlassModal({
       if (e.key === 'Escape' && !preventClose) onClose();
     };
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
     window.addEventListener('keydown', onKey);
     return () => {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
       window.removeEventListener('keydown', onKey);
     };
   }, [open, preventClose, onClose]);
@@ -71,10 +73,18 @@ export default function GlassModal({
         onClick={() => closeOnBackdrop && !preventClose && onClose()}
       />
 
-      <div className="fixed inset-0 overflow-hidden pointer-events-none p-3 sm:p-5 md:p-6 flex items-center justify-center">
-        <div className={`flex h-full max-h-full w-full items-center justify-center ${className}`}>
+      <div
+        className="fixed inset-0 overflow-hidden pointer-events-none flex items-center justify-center"
+        style={{
+          paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))',
+          paddingRight: 'max(0.75rem, env(safe-area-inset-right, 0px))',
+          paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))',
+          paddingLeft: 'max(0.75rem, env(safe-area-inset-left, 0px))',
+        }}
+      >
+        <div className={`flex h-full max-h-full w-full min-w-0 items-center justify-center ${className}`}>
           <div
-            className={`glass-modal-panel relative w-full my-auto max-h-[calc(100dvh-2.5rem)] sm:max-h-[min(calc(100dvh-3.5rem),840px)] ${widthClass} pointer-events-auto flex flex-col rounded-2xl md:rounded-3xl ${panelClassName}`}
+            className={`glass-modal-panel relative w-full min-w-0 my-auto max-h-[calc(100dvh-1.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] sm:max-h-[min(calc(100dvh-3.5rem),840px)] ${widthClass} pointer-events-auto flex flex-col rounded-2xl md:rounded-3xl ${panelClassName}`}
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
           >
@@ -148,7 +158,7 @@ export function GlassModalHeader({
             type="button"
             onClick={onClose}
             disabled={disabledClose}
-            className="glass-modal-close shrink-0"
+            className="glass-modal-close shrink-0 min-h-10 min-w-10"
             aria-label="Close"
           >
             <FaIcon icon="fa-xmark" className="text-sm" />
@@ -185,7 +195,7 @@ export function GlassModalFooter({ children, className = '' }) {
 /** Scrollable modal body — use between header and footer for long forms */
 export function GlassModalBody({ children, className = '' }) {
   return (
-    <div className={`flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-4 md:px-6 md:py-5 ${className}`}>
+    <div className={`flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5 md:px-6 md:py-5 ${className}`}>
       {children}
     </div>
   );

@@ -208,11 +208,11 @@ export default function KinesteXPatientAiHistory({ refreshTick = 0, onGoToExerci
         Missing metrics show as N/A.
       </p>
 
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3">
-        <div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 mb-3 min-w-0">
+        <div className="min-w-0">
           <label className="text-[10px] uppercase text-slate-400 font-semibold">Exercise</label>
           <select
-            className="input-field w-full !py-1.5 text-sm mt-0.5"
+            className="input-field w-full min-w-0 !py-1.5 text-sm mt-0.5"
             value={exerciseId}
             onChange={(e) => setExerciseId(e.target.value)}
           >
@@ -224,10 +224,10 @@ export default function KinesteXPatientAiHistory({ refreshTick = 0, onGoToExerci
             ))}
           </select>
         </div>
-        <div>
+        <div className="min-w-0">
           <label className="text-[10px] uppercase text-slate-400 font-semibold">Status</label>
           <select
-            className="input-field w-full !py-1.5 text-sm mt-0.5"
+            className="input-field w-full min-w-0 !py-1.5 text-sm mt-0.5"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
           >
@@ -237,20 +237,20 @@ export default function KinesteXPatientAiHistory({ refreshTick = 0, onGoToExerci
             <option value="failed">Failed</option>
           </select>
         </div>
-        <div>
+        <div className="min-w-0">
           <label className="text-[10px] uppercase text-slate-400 font-semibold">From</label>
           <input
             type="date"
-            className="input-field w-full !py-1.5 text-sm mt-0.5"
+            className="input-field w-full min-w-0 !py-1.5 text-sm mt-0.5"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
           />
         </div>
-        <div>
+        <div className="min-w-0">
           <label className="text-[10px] uppercase text-slate-400 font-semibold">To</label>
           <input
             type="date"
-            className="input-field w-full !py-1.5 text-sm mt-0.5"
+            className="input-field w-full min-w-0 !py-1.5 text-sm mt-0.5"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
           />
@@ -349,7 +349,7 @@ export default function KinesteXPatientAiHistory({ refreshTick = 0, onGoToExerci
           )}
 
           {pagination.pages > 1 && (
-            <div className="flex items-center justify-between gap-2 mt-3 text-xs text-slate-500">
+            <div className="flex flex-wrap items-center justify-between gap-2 mt-3 text-xs text-slate-500">
               <span>
                 Page {pagination.page} of {pagination.pages} · {pagination.total} sessions
               </span>

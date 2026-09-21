@@ -223,8 +223,8 @@ export default function PatientExercises() {
 
   return (
     <DashboardLayout links={PATIENT_NAV} variant="patient">
-      <div className="mb-5 md:mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-slate-900">My Rehab Plan</h1>
+      <div className="mb-5 md:mb-6 min-w-0 max-w-full">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 leading-tight">My Rehab Plan</h1>
         <p className="text-sm text-slate-600 mt-1">Daily schedule, videos, and recovery progress — double-tap a card to complete.</p>
       </div>
 
@@ -321,7 +321,7 @@ export default function PatientExercises() {
                   </span>
                 </div>
                 <ProgressBar percent={progress?.today?.percent ?? 0} />
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 mt-4">
                   {[
                     { label: 'Completion', value: `${progress?.today?.percent ?? 0}%` },
                     { label: 'This week', value: `${progress?.week?.percent ?? 0}%` },
@@ -350,11 +350,11 @@ export default function PatientExercises() {
                       {nextExercise.hold_seconds ? ` · hold ${nextExercise.hold_seconds}s` : ''}
                     </p>
                   </div>
-                  <div className="flex gap-2">
-                    <button type="button" className="btn-outline !py-1.5 !px-3 text-xs" onClick={() => setPreviewEx(nextExercise)}>
+                  <div className="flex flex-wrap gap-2">
+                    <button type="button" className="btn-outline !py-1.5 !px-3 text-xs min-h-10" onClick={() => setPreviewEx(nextExercise)}>
                       Watch
                     </button>
-                    <button type="button" className="btn-primary !py-1.5 !px-3 text-xs" onClick={() => openLog(nextExercise, 'completed')}>
+                    <button type="button" className="btn-primary !py-1.5 !px-3 text-xs min-h-10" onClick={() => openLog(nextExercise, 'completed')}>
                       Start
                     </button>
                   </div>
@@ -364,7 +364,7 @@ export default function PatientExercises() {
               )}
 
               {/* Tabs */}
-              <div className="flex gap-1 overflow-x-auto pb-1">
+              <div className="flex gap-1 overflow-x-auto pb-1 min-w-0 -mx-1 px-1">
                 {[
                   { key: 'today', label: 'Today', icon: 'fa-calendar-day' },
                   { key: 'progress', label: 'Progress', icon: 'fa-chart-line' },
@@ -375,7 +375,7 @@ export default function PatientExercises() {
                     key={t.key}
                     type="button"
                     onClick={() => setTab(t.key)}
-                    className={`px-3 py-2 text-sm font-medium rounded-xl transition whitespace-nowrap ${
+                    className={`shrink-0 min-h-10 px-3 py-2 text-sm font-medium rounded-xl transition whitespace-nowrap ${
                       tab === t.key ? 'bg-primary-50 text-primary-700' : 'text-slate-500 hover:bg-slate-100'
                     }`}
                   >
@@ -386,7 +386,7 @@ export default function PatientExercises() {
               </div>
 
               {tab === 'today' && (
-                <div className="flex sm:grid sm:grid-cols-2 gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-1 px-1 sm:overflow-visible">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
                   {exercises.map((ex) => {
                     const done = ex.today_log?.status === 'completed';
                     const skipped = ex.today_log?.status === 'skipped';
@@ -394,7 +394,7 @@ export default function PatientExercises() {
                       <div
                         key={ex.id}
                         onClick={() => onCardTap(ex)}
-                        className={`snap-center shrink-0 w-[85%] sm:w-auto glass-card !p-4 flex flex-col gap-3 transition active:scale-[0.98] ${
+                        className={`min-w-0 glass-card !p-3 sm:!p-4 flex flex-col gap-3 transition active:scale-[0.98] ${
                           done ? 'ring-1 ring-emerald-200 bg-emerald-50/30' : skipped ? 'opacity-80' : ''
                         }`}
                       >
@@ -441,13 +441,13 @@ export default function PatientExercises() {
                         )}
 
                         <div className="flex flex-wrap gap-2 mt-auto" onClick={(e) => e.stopPropagation()}>
-                          <button type="button" className="btn-outline !py-1.5 !px-3 text-xs" onClick={() => setPreviewEx(ex)}>
+                          <button type="button" className="btn-outline !py-1.5 !px-3 text-xs min-h-10" onClick={() => setPreviewEx(ex)}>
                             <FaIcon icon="fa-eye" className="mr-1" /> View
                           </button>
                           {ex.ai_monitoring_effective && (
                             <button
                               type="button"
-                              className="btn-outline !py-1.5 !px-3 text-xs border-teal-300 text-teal-800 hover:bg-teal-50"
+                              className="btn-outline !py-1.5 !px-3 text-xs min-h-10 border-teal-300 text-teal-800 hover:bg-teal-50"
                               disabled={!!aiSessionPayload || aiPreparing}
                               onClick={() => openAiPrep(ex)}
                             >
@@ -455,7 +455,7 @@ export default function PatientExercises() {
                             </button>
                           )}
                           {!done && (
-                            <button type="button" className="btn-primary !py-1.5 !px-3 text-xs" onClick={() => openLog(ex, 'completed')}>
+                            <button type="button" className="btn-primary !py-1.5 !px-3 text-xs min-h-10" onClick={() => openLog(ex, 'completed')}>
                               <FaIcon icon="fa-check" className="mr-1" /> Complete
                             </button>
                           )}
@@ -597,11 +597,11 @@ export default function PatientExercises() {
               }
               if (previewEx.video_url) {
                 return (
-                  <video src={previewEx.video_url} controls className="w-full rounded-xl bg-black max-h-[360px]" />
+                  <video src={previewEx.video_url} controls className="w-full rounded-xl bg-black max-h-[min(360px,50dvh)] object-contain" />
                 );
               }
               if (previewEx.image_url) {
-                return <img src={previewEx.image_url} alt="" className="w-full max-h-[320px] object-contain rounded-xl bg-slate-50" />;
+                return <img src={previewEx.image_url} alt="" className="w-full max-h-[min(320px,45dvh)] object-contain rounded-xl bg-slate-50" />;
               }
               return null;
             })()}

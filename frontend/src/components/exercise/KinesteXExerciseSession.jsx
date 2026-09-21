@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { KinesteXSDK, IntegrationOption } from 'kinestex-sdk-react-ts';
 import FaIcon from '../FaIcon';
 import {
@@ -219,7 +220,18 @@ export default function KinesteXExerciseSession({
   const mountKey = useRef(`kx-${context.item_id || 0}-${clientSessionIdRef.current}`);
 
   useEffect(() => {
+    const html = document.documentElement;
+    const { body } = document;
+    const prevHtmlOverflow = html.style.overflow;
+    const prevBodyOverflow = body.style.overflow;
+    const prevOverscroll = body.style.overscrollBehavior;
+    html.style.overflow = 'hidden';
+    body.style.overflow = 'hidden';
+    body.style.overscrollBehavior = 'none';
     return () => {
+      html.style.overflow = prevHtmlOverflow;
+      body.style.overflow = prevBodyOverflow;
+      body.style.overscrollBehavior = prevOverscroll;
       startedRef.current = false;
     };
   }, []);
@@ -229,25 +241,38 @@ export default function KinesteXExerciseSession({
     saveState !== 'idle';
 
   if (!postData) {
-    return (
-      <div className="fixed inset-0 z-[80] bg-slate-900/80 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl p-6 max-w-md w-full text-center">
+    return createPortal(
+      <div
+        className="kinestex-session-overlay items-center justify-center p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-label="AI session"
+      >
+        <div className="bg-white rounded-2xl p-6 max-w-md w-full text-center max-h-full overflow-y-auto">
           <p className="text-slate-700 font-medium">AI session configuration is missing.</p>
-          <button type="button" className="btn-primary mt-4" onClick={onClose}>
+          <button type="button" className="btn-primary mt-4 min-h-10" onClick={onClose}>
             Close
           </button>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
-  return (
-    <div className="fixed inset-0 z-[80] bg-slate-950 flex flex-col">
+  return createPortal(
+    <div
+      className="kinestex-session-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label={context.exercise_name ? `AI exercise: ${context.exercise_name}` : 'AI exercise session'}
+    >
       {!showResultCard && (
-        <div className="flex items-center justify-between gap-3 px-4 py-3 bg-slate-900 text-white border-b border-slate-800">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold truncate">{context.exercise_name || 'AI Exercise'}</p>
-            <p className="text-xs text-slate-400">
+        <div className="shrink-0 flex items-center justify-between gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-slate-900 text-white border-b border-slate-800">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm sm:text-base font-semibold truncate leading-tight">
+              {context.exercise_name || 'AI Exercise'}
+            </p>
+            <p className="text-[11px] sm:text-xs text-slate-400 truncate">
               Target: {context.sets || 1} sets × {context.reps || 10} reps
               {lifecycle === 'paused'
                 ? ' · Stay in camera view'
@@ -258,7 +283,8 @@ export default function KinesteXExerciseSession({
           </div>
           <button
             type="button"
-            className="shrink-0 text-sm font-semibold px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20"
+            className="shrink-0 min-h-10 px-3 sm:px-4 text-sm font-semibold rounded-lg bg-white/10 hover:bg-white/20"
+            aria-label="Exit AI session"
             onClick={() => {
               if (bestStatusRef.current !== 'completed' && saveState !== 'saved') {
                 emitBoundary('workout_exit_request', { reason: 'user_exit' }, 'cancelled');
@@ -272,7 +298,7 @@ export default function KinesteXExerciseSession({
         </div>
       )}
 
-      <div className={`flex-1 relative min-h-0 ${showResultCard ? 'hidden' : ''}`} key={mountKey.current}>
+      <div className={`kinestex-session-stage ${showResultCard ? 'hidden' : ''}`} key={mountKey.current}>
         <KinesteXSDK
           ref={sdkRef}
           data={postData}
@@ -280,13 +306,13 @@ export default function KinesteXExerciseSession({
           baseUrl={sdk.base_url || 'https://ai.kinestex.com'}
           handleMessage={handleMessage}
           iframeTitle={`KinesteX — ${context.exercise_name || 'Exercise'}`}
-          style={{ width: '100%', height: '100%' }}
+          style={{ width: '100%', height: '100%', position: 'relative' }}
         />
       </div>
 
       {showResultCard && (
-        <div className="flex-1 flex items-center justify-center p-4 bg-slate-900/80">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full text-center shadow-xl">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-2xl p-5 sm:p-6 max-w-md w-full text-center shadow-xl max-h-full overflow-y-auto">
             {saveState === 'saving' && (
               <>
                 <div className="w-14 h-14 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center mx-auto mb-3">
@@ -311,7 +337,7 @@ export default function KinesteXExerciseSession({
                 <p className="text-xs text-slate-400 mt-2">
                   You can still use Mark Complete on your rehab plan if needed.
                 </p>
-                <button type="button" className="btn-primary mt-5 w-full" onClick={onClose}>
+                <button type="button" className="btn-primary mt-5 w-full min-h-10" onClick={onClose}>
                   Done
                 </button>
               </>
@@ -321,7 +347,7 @@ export default function KinesteXExerciseSession({
               <>
                 <h2 className="text-lg font-bold text-slate-900">Session Ended</h2>
                 <p className="text-sm text-slate-600 mt-2">AI monitoring was cancelled and recorded.</p>
-                <button type="button" className="btn-primary mt-5 w-full" onClick={onClose}>
+                <button type="button" className="btn-primary mt-5 w-full min-h-10" onClick={onClose}>
                   Close
                 </button>
               </>
@@ -333,7 +359,7 @@ export default function KinesteXExerciseSession({
                 <p className="text-sm text-slate-600 mt-2">
                   {errorMessage || 'Something went wrong with AI monitoring. The attempt was recorded.'}
                 </p>
-                <button type="button" className="btn-primary mt-5 w-full" onClick={onClose}>
+                <button type="button" className="btn-primary mt-5 w-full min-h-10" onClick={onClose}>
                   Close
                 </button>
               </>
@@ -346,10 +372,10 @@ export default function KinesteXExerciseSession({
                   {saveError || 'The session result was not stored. This is not marked as saved.'}
                 </p>
                 <div className="mt-5 grid grid-cols-2 gap-2">
-                  <button type="button" className="btn-outline w-full" onClick={onClose}>
+                  <button type="button" className="btn-outline w-full min-h-10" onClick={onClose}>
                     Close
                   </button>
-                  <button type="button" className="btn-primary w-full" onClick={retrySave}>
+                  <button type="button" className="btn-primary w-full min-h-10" onClick={retrySave}>
                     Try again
                   </button>
                 </div>
@@ -358,6 +384,7 @@ export default function KinesteXExerciseSession({
           </div>
         </div>
       )}
-    </div>
+    </div>,
+    document.body
   );
 }

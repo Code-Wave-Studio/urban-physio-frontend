@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import FaIcon from '../FaIcon';
 
@@ -12,7 +13,7 @@ export default function ExerciseBottomSheet({
   children,
   footer,
   className = '',
-  maxHeight = 'max-h-[90vh]',
+  maxHeight = '',
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const contentRef = useRef(null);
@@ -44,11 +45,21 @@ export default function ExerciseBottomSheet({
     }
   };
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end md:justify-center md:items-center p-2 sm:p-4 md:p-6">
-          {/* Backdrop — background page remains visible behind sheet */}
+        <div
+          className="fixed inset-0 z-[11000] flex flex-col justify-end md:justify-center md:items-center"
+          style={{
+            paddingTop: 'max(0.5rem, env(safe-area-inset-top, 0px))',
+            paddingRight: 'max(0.5rem, env(safe-area-inset-right, 0px))',
+            paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0px))',
+            paddingLeft: 'max(0.5rem, env(safe-area-inset-left, 0px))',
+          }}
+          role="dialog"
+          aria-modal="true"
+          aria-label={title || 'Dialog'}
+        >
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -59,7 +70,6 @@ export default function ExerciseBottomSheet({
             aria-hidden="true"
           />
 
-          {/* Bottom Sheet Container */}
           <motion.div
             drag="y"
             dragConstraints={{ top: 0, bottom: 0 }}
@@ -69,11 +79,12 @@ export default function ExerciseBottomSheet({
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 16, opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className={`relative z-10 w-full bg-white rounded-t-3xl md:rounded-3xl shadow-2xl border border-slate-200/80 flex flex-col overflow-hidden transition-all duration-200 md:max-w-xl max-h-[calc(100dvh-2.5rem)] md:max-h-[min(calc(100dvh-3.5rem),840px)] ${
-              isExpanded ? 'h-[calc(100dvh-5rem)]' : maxHeight
+            className={`relative z-10 w-full min-w-0 max-w-full bg-white rounded-t-3xl md:rounded-3xl shadow-2xl border border-slate-200/80 flex flex-col overflow-hidden transition-all duration-200 md:max-w-xl max-h-[calc(100dvh-1.25rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] md:max-h-[min(calc(100dvh-3.5rem),840px)] ${
+              isExpanded
+                ? 'h-[calc(100dvh-1.25rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))]'
+                : maxHeight
             } ${className}`}
           >
-            {/* Mobile Drag Handle Bar */}
             <div className="w-full pt-2.5 pb-1 flex flex-col items-center justify-center shrink-0 cursor-grab active:cursor-grabbing touch-none select-none md:hidden bg-slate-100/70 border-b border-slate-200/50">
               <div className="w-12 h-1.5 rounded-full bg-slate-300 hover:bg-slate-400 transition-colors" />
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-1">
@@ -81,10 +92,9 @@ export default function ExerciseBottomSheet({
               </span>
             </div>
 
-            {/* Header */}
             {(title || subtitle || headerGradient) && (
               <div
-                className={`p-4 sm:p-5 border-b border-slate-100 flex items-start justify-between gap-3 shrink-0 ${
+                className={`p-3 sm:p-5 border-b border-slate-100 flex items-start justify-between gap-3 shrink-0 ${
                   headerGradient || 'bg-white'
                 }`}
               >
@@ -95,14 +105,20 @@ export default function ExerciseBottomSheet({
                     </div>
                   )}
                   <div className="min-w-0">
-                    {title && <h2 className="font-bold text-slate-800 text-lg md:text-xl truncate">{title}</h2>}
-                    {subtitle && <p className="text-xs text-slate-600 font-medium truncate mt-0.5">{subtitle}</p>}
+                    {title && (
+                      <h2 className="font-bold text-slate-800 text-base sm:text-lg md:text-xl truncate">
+                        {title}
+                      </h2>
+                    )}
+                    {subtitle && (
+                      <p className="text-xs text-slate-600 font-medium truncate mt-0.5">{subtitle}</p>
+                    )}
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700 flex items-center justify-center shrink-0 transition"
+                  className="w-10 h-10 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700 flex items-center justify-center shrink-0 transition"
                   aria-label="Close"
                 >
                   <FaIcon icon="fa-xmark" className="text-sm" />
@@ -110,20 +126,22 @@ export default function ExerciseBottomSheet({
               </div>
             )}
 
-            {/* Scrollable Content Body */}
-            <div ref={contentRef} className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4 touch-pan-y">
+            <div
+              ref={contentRef}
+              className="p-4 sm:p-6 overflow-y-auto overscroll-contain flex-1 min-h-0 space-y-4 touch-pan-y"
+            >
               {children}
             </div>
 
-            {/* Footer */}
             {footer && (
-              <div className="p-4 border-t border-slate-100 bg-slate-50/90 shrink-0 flex flex-wrap items-center justify-end gap-2">
+              <div className="px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] border-t border-slate-100 bg-slate-50/90 shrink-0 flex flex-wrap items-center justify-end gap-2">
                 {footer}
               </div>
             )}
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
