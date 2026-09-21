@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import FaIcon from '../FaIcon';
 import ExerciseBottomSheet from '../exercise/ExerciseBottomSheet';
 import KinesteXAiPerformancePanel from '../exercise/KinesteXAiPerformancePanel';
+import GlassModal, { GlassModalBody, GlassModalFooter, GlassModalHeader } from '../GlassModal';
 import { kinestex } from '../../services/api';
 
 function formatWhen(value) {
@@ -34,6 +35,20 @@ function latestByItem(sessions) {
   return map;
 }
 
+function na(value) {
+  if (value === null || value === undefined || value === '') return 'N/A';
+  return value;
+}
+
+function PeekMetric({ label, value }) {
+  return (
+    <div className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5 text-center min-w-0">
+      <p className="text-[10px] uppercase tracking-wide text-slate-400">{label}</p>
+      <p className="text-sm font-bold text-slate-800 mt-0.5 break-words">{value}</p>
+    </div>
+  );
+}
+
 /**
  * Consultation Room KinesteX layer (Phase 8).
  * Patient starts the existing SDK session; clinicians view the same kinestex_sessions rows.
@@ -55,6 +70,7 @@ export default function ConsultationAiMonitoring({
   const [latest, setLatest] = useState({});
   const [aiPrepEx, setAiPrepEx] = useState(null);
   const [preparing, setPreparing] = useState(false);
+  const [peek, setPeek] = useState(null);
   const startLock = useRef(false);
 
   const eligible = useMemo(
@@ -132,11 +148,13 @@ export default function ConsultationAiMonitoring({
     }
   };
 
+  const peekMetrics = peek?.metrics || {};
+
   return (
-    <div className="rounded-2xl border border-teal-100 bg-teal-50/40 p-3 md:p-4 space-y-3">
+    <div className="rounded-2xl border border-teal-100 bg-teal-50/40 p-3 md:p-4 space-y-3 min-w-0">
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <p className="text-sm font-bold text-slate-800 flex items-center gap-2">
+        <div className="min-w-0">
+          <p className="text-sm font-bold text-slate-800 flex flex-wrap items-center gap-2">
             <FaIcon icon="fa-person-walking" className="text-teal-700" />
             AI Exercise Monitoring
             <span className="text-[10px] uppercase font-bold tracking-wide px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-100">
@@ -144,10 +162,11 @@ export default function ConsultationAiMonitoring({
             </span>
           </p>
           <p className="text-[11px] text-slate-500 mt-0.5">
-            Optional KinesteX layer. Manual HEP Complete / Skip is unchanged. AI cancel or fail does not change this consultation.
+            Optional KinesteX layer on the patient’s device. Zoom consultation stays open. Manual HEP Complete / Skip is
+            unchanged.
           </p>
         </div>
-        <button type="button" onClick={loadLatest} className="text-xs text-slate-500 hover:text-teal-700 font-medium">
+        <button type="button" onClick={loadLatest} className="text-xs text-slate-500 hover:text-teal-700 font-medium min-h-10 px-2">
           <FaIcon icon="fa-arrows-rotate" className="mr-1" />
           Refresh
         </button>
@@ -161,10 +180,15 @@ export default function ConsultationAiMonitoring({
             const session = latest[String(ex.id)];
             const metrics = session?.metrics || {};
             return (
-              <li key={ex.id} className="rounded-xl bg-white border border-teal-100 px-3 py-2.5">
-                <div className="flex flex-col sm:flex-row sm:items-start gap-2">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-slate-900">{ex.exercise_name}</p>
+              <li key={ex.id} className="rounded-xl bg-white border border-teal-100 px-3 py-2.5 min-w-0">
+                <div className="flex flex-col gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-slate-900 break-words">
+                      {ex.exercise_name}
+                      <span className="ml-2 align-middle text-[10px] uppercase font-bold tracking-wide px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-100">
+                        AI enabled
+                      </span>
+                    </p>
                     {session ? (
                       <p className="text-[11px] text-slate-500 mt-0.5">
                         Latest: {formatWhen(session.session_at || session.completed_at || session.created_at)} ·{' '}
@@ -179,20 +203,31 @@ export default function ConsultationAiMonitoring({
                       <p className="text-[11px] text-slate-500 mt-0.5">No AI-monitored session saved yet for this exercise.</p>
                     )}
                   </div>
-                  {isPatient ? (
-                    <button
-                      type="button"
-                      className="btn-outline !py-1.5 !px-3 text-xs min-h-10 border-teal-300 text-teal-800 hover:bg-teal-50 self-start w-full sm:w-auto"
-                      disabled={aiSessionActive || preparing}
-                      onClick={() => openPrep(ex)}
-                    >
-                      <FaIcon icon="fa-person-walking" className="mr-1" /> Start AI Monitoring
-                    </button>
-                  ) : (
-                    <p className="text-[11px] text-teal-800 font-medium self-start">
-                      Patient starts this on their device
-                    </p>
-                  )}
+                  <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2">
+                    {isPatient ? (
+                      <button
+                        type="button"
+                        className="btn-outline !py-1.5 !px-3 text-xs min-h-10 border-teal-300 text-teal-800 hover:bg-teal-50 w-full sm:w-auto"
+                        disabled={aiSessionActive || preparing}
+                        onClick={() => openPrep(ex)}
+                      >
+                        <FaIcon icon="fa-person-walking" className="mr-1" /> Start AI Monitoring
+                      </button>
+                    ) : (
+                      <p className="text-[11px] text-teal-800 font-medium bg-teal-50 border border-teal-100 rounded-lg px-2.5 py-2">
+                        Patient starts this on their device
+                      </p>
+                    )}
+                    {session && (
+                      <button
+                        type="button"
+                        className="text-xs font-semibold text-teal-700 min-h-10 px-2 w-full sm:w-auto text-left sm:text-center"
+                        onClick={() => setPeek({ ...session, exercise_name: ex.exercise_name })}
+                      >
+                        View AI Performance
+                      </button>
+                    )}
+                  </div>
                 </div>
               </li>
             );
@@ -236,11 +271,55 @@ export default function ConsultationAiMonitoring({
               {aiPrepEx.hold_seconds ? ` · hold ${aiPrepEx.hold_seconds}s` : ''}
             </p>
             <p className="text-xs text-slate-500 bg-slate-50 rounded-lg px-3 py-2">
-              Camera is required. The Zoom consultation stays open — cancelling or failing AI monitoring will not end this visit.
+              Camera is required on this device. The Zoom consultation stays open — cancelling or failing AI monitoring will
+              not end this visit.
             </p>
           </div>
         )}
       </ExerciseBottomSheet>
+
+      <GlassModal open={!!peek} onClose={() => setPeek(null)} size="md" zIndex={10060}>
+        <GlassModalHeader
+          title="AI Performance"
+          subtitle={peek?.exercise_name || ''}
+          icon="fa-person-walking"
+          accent="emerald"
+          onClose={() => setPeek(null)}
+        />
+        <GlassModalBody>
+          {peek && (
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-700">
+                  AI Monitored
+                </span>
+                <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${statusClass(peek.session_status)}`}>
+                  {peek.session_status}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500">
+                {formatWhen(peek.session_at || peek.completed_at || peek.created_at)}
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <PeekMetric label="Repetitions" value={na(peekMetrics.repetitions)} />
+                <PeekMetric label="Accuracy" value={peekMetrics.accuracy == null ? 'N/A' : `${peekMetrics.accuracy}%`} />
+                <PeekMetric label="Score" value={na(peekMetrics.score)} />
+                <PeekMetric label="Sets" value={na(peekMetrics.sets_completed)} />
+                <PeekMetric label="Mistakes" value={na(peekMetrics.mistakes)} />
+                <PeekMetric label="Calories" value={na(peekMetrics.calories)} />
+              </div>
+              <p className="text-[11px] text-slate-400">
+                Same KinesteX session record as AI History and AI Performance.
+              </p>
+            </div>
+          )}
+        </GlassModalBody>
+        <GlassModalFooter className="[&>button]:w-full sm:[&>button]:w-auto">
+          <button type="button" className="btn-outline min-h-10" onClick={() => setPeek(null)}>
+            Close
+          </button>
+        </GlassModalFooter>
+      </GlassModal>
     </div>
   );
 }

@@ -36,6 +36,8 @@ export default function KinesteXExerciseSession({
   const startedRef = useRef(false);
   const persistInFlightRef = useRef(false);
   const bestStatusRef = useRef(null);
+  const notifiedRef = useRef({ completed: false, failed: false, cancelled: false });
+  const saveStateRef = useRef('idle');
   const clientSessionIdRef = useRef(newClientSessionId());
   const startedAtRef = useRef(new Date().toISOString());
   const eventsRef = useRef({});
@@ -46,6 +48,8 @@ export default function KinesteXExerciseSession({
   const [saveError, setSaveError] = useState('');
   const [lastResult, setLastResult] = useState(null);
   const [persisted, setPersisted] = useState(null);
+
+  saveStateRef.current = saveState;
 
   const postData = useMemo(() => {
     if (!sdk) return null;
@@ -61,6 +65,10 @@ export default function KinesteXExerciseSession({
 
   const finish = useCallback(
     (kind, result) => {
+      // Official SDK may emit finished_workout then workout_session_saved; notify once.
+      if (kind !== 'completed' && notifiedRef.current.completed) return;
+      if (notifiedRef.current[kind]) return;
+      notifiedRef.current[kind] = true;
       if (kind === 'completed' && onCompleted) onCompleted(result);
       else if (kind === 'failed' && onFailed) onFailed(result);
       else if (kind === 'cancelled' && onCancelled) onCancelled(result);
@@ -72,14 +80,17 @@ export default function KinesteXExerciseSession({
     async (result, kind) => {
       // Allow a later completed event (e.g. workout_session_saved) to merge into the same row.
       // Do not re-save cancelled/failed after a successful completed save.
-      if (saveState === 'saved' && kind !== 'completed') {
+      // Read saveState via ref: the SDK message listener does not refresh handleMessage.
+      const currentSave = saveStateRef.current;
+      if (currentSave === 'saved' && kind !== 'completed') {
         return;
       }
-      if (persistInFlightRef.current && saveState === 'saving' && kind !== 'completed') {
+      if (persistInFlightRef.current && currentSave === 'saving' && kind !== 'completed') {
         return;
       }
       persistInFlightRef.current = true;
-      if (saveState !== 'saved') {
+      if (currentSave !== 'saved') {
+        saveStateRef.current = 'saving';
         setSaveState('saving');
       }
       setSaveError('');
@@ -88,15 +99,18 @@ export default function KinesteXExerciseSession({
           kinestex.saveSessionResult(payload)
         );
         setPersisted(saved);
+        saveStateRef.current = 'saved';
         setSaveState('saved');
+        persistInFlightRef.current = false;
         finish(kind, { ...result, persisted: saved });
       } catch (err) {
         persistInFlightRef.current = false;
+        saveStateRef.current = 'save_failed';
         setSaveState('save_failed');
         setSaveError(patientFriendlySaveError(err));
       }
     },
-    [finish, saveState]
+    [finish]
   );
 
   const emitBoundary = useCallback(
@@ -125,7 +139,7 @@ export default function KinesteXExerciseSession({
         setLifecycle(kind === 'completed' ? 'completed' : kind === 'failed' ? 'failed' : 'cancelled');
         bestStatusRef.current = kind === 'completed' ? 'completed' : currentBest === 'completed' ? 'completed' : kind;
 
-        const alreadySaved = saveState === 'saved';
+        const alreadySaved = saveStateRef.current === 'saved';
         if (alreadySaved && kind !== 'completed') {
           return;
         }
@@ -133,11 +147,12 @@ export default function KinesteXExerciseSession({
       } catch (e) {
         setLifecycle('failed');
         setErrorMessage('Could not process the AI session result.');
+        saveStateRef.current = 'save_failed';
         setSaveState('save_failed');
         setSaveError('Could not process the AI session result.');
       }
     },
-    [context, persistResult, saveState]
+    [context, persistResult]
   );
 
   const retrySave = useCallback(() => {
@@ -196,7 +211,7 @@ export default function KinesteXExerciseSession({
           break;
         case 'workout_exit_request':
         case 'exit_kinestex':
-          if (bestStatusRef.current === 'completed' || saveState === 'saved') {
+          if (bestStatusRef.current === 'completed' || saveStateRef.current === 'saved') {
             break;
           }
           if (
@@ -214,7 +229,7 @@ export default function KinesteXExerciseSession({
           break;
       }
     },
-    [emitBoundary, saveState]
+    [emitBoundary]
   );
 
   const mountKey = useRef(`kx-${context.item_id || 0}-${clientSessionIdRef.current}`);
@@ -239,6 +254,9 @@ export default function KinesteXExerciseSession({
   const showResultCard =
     (lifecycle === 'completed' || lifecycle === 'failed' || lifecycle === 'cancelled') &&
     saveState !== 'idle';
+  // Stay mounted (CSS-hidden) while saving so a late workout_session_saved can merge.
+  // Unmount after saved / save_failed so the camera is released.
+  const keepSdkMounted = saveState !== 'saved' && saveState !== 'save_failed';
 
   if (!postData) {
     return createPortal(
@@ -286,7 +304,7 @@ export default function KinesteXExerciseSession({
             className="shrink-0 min-h-10 px-3 sm:px-4 text-sm font-semibold rounded-lg bg-white/10 hover:bg-white/20"
             aria-label="Exit AI session"
             onClick={() => {
-              if (bestStatusRef.current !== 'completed' && saveState !== 'saved') {
+              if (bestStatusRef.current !== 'completed' && saveStateRef.current !== 'saved') {
                 emitBoundary('workout_exit_request', { reason: 'user_exit' }, 'cancelled');
               } else {
                 onClose?.();
@@ -298,17 +316,19 @@ export default function KinesteXExerciseSession({
         </div>
       )}
 
-      <div className={`kinestex-session-stage ${showResultCard ? 'hidden' : ''}`} key={mountKey.current}>
-        <KinesteXSDK
-          ref={sdkRef}
-          data={postData}
-          integrationOption={IntegrationOption.CUSTOM_WORKOUT}
-          baseUrl={sdk.base_url || 'https://ai.kinestex.com'}
-          handleMessage={handleMessage}
-          iframeTitle={`KinesteX — ${context.exercise_name || 'Exercise'}`}
-          style={{ width: '100%', height: '100%', position: 'relative' }}
-        />
-      </div>
+      {keepSdkMounted && (
+        <div className={`kinestex-session-stage ${showResultCard ? 'hidden' : ''}`} key={mountKey.current}>
+          <KinesteXSDK
+            ref={sdkRef}
+            data={postData}
+            integrationOption={IntegrationOption.CUSTOM_WORKOUT}
+            baseUrl={sdk.base_url || 'https://ai.kinestex.com'}
+            handleMessage={handleMessage}
+            iframeTitle={`KinesteX — ${context.exercise_name || 'Exercise'}`}
+            style={{ width: '100%', height: '100%', position: 'relative' }}
+          />
+        </div>
+      )}
 
       {showResultCard && (
         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain flex items-center justify-center p-3 sm:p-4">
@@ -371,7 +391,7 @@ export default function KinesteXExerciseSession({
                 <p className="text-sm text-slate-600 mt-2">
                   {saveError || 'The session result was not stored. This is not marked as saved.'}
                 </p>
-                <div className="mt-5 grid grid-cols-2 gap-2">
+                <div className="mt-5 grid grid-cols-1 min-[380px]:grid-cols-2 gap-2">
                   <button type="button" className="btn-outline w-full min-h-10" onClick={onClose}>
                     Close
                   </button>

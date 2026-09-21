@@ -20,11 +20,11 @@ import { formatTime } from '../../utils/appointmentListUtils';
 import { showAiReadyBadge } from '../exercise/KinesteXMappingFields';
 
 const TABS = [
-  { id: 'video', label: 'Video Call', icon: 'fa-video' },
-  { id: 'chat', label: 'Chat', icon: 'fa-comments' },
-  { id: 'documents', label: 'Documents', icon: 'fa-folder-open' },
-  { id: 'exercises', label: 'Exercise Explain', icon: 'fa-dumbbell' },
-  { id: 'prescription', label: 'Prescription', icon: 'fa-file-prescription' },
+  { id: 'video', label: 'Video Call', shortLabel: 'Video', icon: 'fa-video' },
+  { id: 'chat', label: 'Chat', shortLabel: 'Chat', icon: 'fa-comments' },
+  { id: 'documents', label: 'Documents', shortLabel: 'Files', icon: 'fa-folder-open' },
+  { id: 'exercises', label: 'Exercise Explain', shortLabel: 'Exercises', icon: 'fa-dumbbell' },
+  { id: 'prescription', label: 'Prescription', shortLabel: 'Notes', icon: 'fa-file-prescription' },
 ];
 
 function fmtDate(d) {
@@ -118,13 +118,13 @@ function VideoPanel({ room, canStart, onSessionStarted }) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-slate-100 bg-slate-900 text-white overflow-hidden min-h-[220px] sm:min-h-[280px] md:min-h-[360px] relative">
+      <div className="rounded-2xl border border-slate-100 bg-slate-900 text-white overflow-hidden min-h-[200px] sm:min-h-[260px] md:min-h-[340px] relative">
         <div className="absolute inset-0 flex flex-col items-center justify-center p-4 sm:p-6 text-center">
           <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mb-4">
             <FaIcon icon="fa-video" className="text-2xl text-primary-300" />
           </div>
-          <h3 className="text-lg font-bold">Zoom Video Consultation</h3>
-          <p className="text-sm text-slate-300 mt-1 max-w-md">{helperText}</p>
+          <h3 className="text-lg font-bold px-1">Zoom Video Consultation</h3>
+          <p className="text-sm text-slate-300 mt-1 max-w-md px-1">{helperText}</p>
           <div className="flex flex-wrap gap-2 mt-3 justify-center text-[11px]">
             <span className="px-2.5 py-1 rounded-full bg-white/10 border border-white/15 capitalize">
               Status · {statusLabel}
@@ -391,14 +391,14 @@ function ExercisePanel({ room, onReload, onStartAi, aiSessionActive, aiTick }) {
           No exercise plans yet for this patient.
         </div>
       ) : (
-        <div className="grid lg:grid-cols-[220px_1fr] gap-3">
-          <div className="space-y-1.5">
+        <div className="grid md:grid-cols-[minmax(0,200px)_minmax(0,1fr)] xl:grid-cols-[220px_1fr] gap-3 min-w-0">
+          <div className="space-y-1.5 min-w-0 overflow-x-auto md:overflow-visible flex md:block gap-2 pb-1 md:pb-0">
             {plans.map((p) => (
               <button
                 key={p.id}
                 type="button"
                 onClick={() => setSelectedPlanId(p.id)}
-                className={`w-full text-left rounded-xl border px-3 py-2.5 text-sm transition ${
+                className={`w-full min-w-[10.5rem] md:min-w-0 text-left rounded-xl border px-3 py-2.5 text-sm transition ${
                   selectedPlanId === p.id ? 'border-primary-300 bg-primary-50 text-primary-800' : 'border-slate-100 bg-white hover:border-slate-200'
                 }`}
               >
@@ -427,9 +427,9 @@ function ExercisePanel({ room, onReload, onStartAi, aiSessionActive, aiTick }) {
               {(detail.exercises || []).map((ex) => {
                 const yt = youtubeEmbed(ex.video_url);
                 return (
-                  <div key={ex.id} className="rounded-2xl border border-slate-100 bg-white overflow-hidden">
+                  <div key={ex.id} className="rounded-2xl border border-slate-100 bg-white overflow-hidden min-w-0">
                     <div className="grid md:grid-cols-2 gap-0 min-w-0">
-                      <div className="bg-slate-900 aspect-video md:aspect-auto md:min-h-[220px] relative min-h-0">
+                      <div className="bg-slate-900 aspect-video md:aspect-auto md:min-h-[200px] relative min-h-0 min-w-0">
                         {yt ? (
                           <iframe title={ex.exercise_name} src={yt} className="absolute inset-0 w-full h-full border-0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
                         ) : ex.image_url ? (
@@ -440,12 +440,12 @@ function ExercisePanel({ room, onReload, onStartAi, aiSessionActive, aiTick }) {
                           </div>
                         )}
                       </div>
-                      <div className="p-4">
-                        <h4 className="font-bold text-slate-900">
+                      <div className="p-3 sm:p-4 min-w-0">
+                        <h4 className="font-bold text-slate-900 break-words">
                           {ex.exercise_name}
                           {ex.ai_monitoring_effective && (
-                            <span className="ml-2 text-[10px] uppercase font-bold tracking-wide px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-100">
-                              AI Monitoring
+                            <span className="ml-2 align-middle text-[10px] uppercase font-bold tracking-wide px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-100">
+                              AI-Guided
                             </span>
                           )}
                         </h4>
@@ -783,18 +783,19 @@ export default function ConsultationRoom({ appointmentId, backTo, layout: Layout
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-1 p-1 rounded-xl bg-slate-100/80 w-full min-w-0">
+      <div className="consultation-tabs flex gap-1 p-1 rounded-xl bg-slate-100/80 w-full min-w-0 overflow-x-auto">
         {TABS.map((t) => (
           <button
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
-            className={`flex-1 min-w-[calc(50%-0.25rem)] sm:min-w-[7.5rem] inline-flex items-center justify-center gap-2 rounded-lg px-2 sm:px-3 py-2.5 sm:py-2 text-xs sm:text-sm font-semibold transition ${
+            className={`shrink-0 flex-1 min-w-[4.75rem] sm:min-w-[7.25rem] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg px-2 sm:px-3 py-2.5 sm:py-2 text-xs sm:text-sm font-semibold transition ${
               tab === t.id ? 'bg-white text-primary-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <FaIcon icon={t.icon} />
-            {t.label}
+            <span className="sm:hidden">{t.shortLabel}</span>
+            <span className="hidden sm:inline">{t.label}</span>
           </button>
         ))}
       </div>

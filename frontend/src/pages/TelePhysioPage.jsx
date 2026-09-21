@@ -136,7 +136,7 @@ export default function TelePhysioPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-teal-500/20 via-transparent to-transparent pointer-events-none" aria-hidden />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16 relative w-full">
           <div className="grid lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] gap-8 lg:gap-14 items-center">
-            <div>
+            <div className="pl-14 lg:pl-0 min-w-0">
               <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider bg-white/15 border border-white/20 px-3.5 py-1.5 rounded-full mb-4 backdrop-blur-xs">
                 <FaIcon icon="fa-video" className="text-teal-300" />
                 <span>{s.hero_badge || 'TelePhysio by Myoreset'}</span>
@@ -169,7 +169,7 @@ export default function TelePhysioPage() {
               </div>
 
               {/* Trust indicators */}
-              <ul className="mt-8 grid sm:grid-cols-2 gap-3 pt-6 border-t border-white/15">
+              <ul className="mt-8 grid sm:grid-cols-2 gap-3 pt-6 border-t border-white/15 lg:pl-14">
                 {(s.trust_signals || []).map((item) => (
                   <li key={item} className="flex items-center gap-2.5 text-sm text-white/95">
                     <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-500/30 text-teal-300 text-xs">

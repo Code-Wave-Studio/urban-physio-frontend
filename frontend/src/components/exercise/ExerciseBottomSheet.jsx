@@ -16,7 +16,17 @@ export default function ExerciseBottomSheet({
   maxHeight = '',
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isMobile, setIsMobile] = useState(true);
   const contentRef = useRef(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined;
+    const mq = window.matchMedia('(max-width: 767px)');
+    const apply = () => setIsMobile(!!mq.matches);
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
 
   useEffect(() => {
     if (open) {
@@ -71,10 +81,10 @@ export default function ExerciseBottomSheet({
           />
 
           <motion.div
-            drag="y"
+            drag={isMobile ? 'y' : false}
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0.1, bottom: 0.9 }}
-            onDragEnd={handleDragEnd}
+            onDragEnd={isMobile ? handleDragEnd : undefined}
             initial={{ y: 16, opacity: 0, scale: 0.97 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 16, opacity: 0, scale: 0.97 }}
@@ -134,7 +144,7 @@ export default function ExerciseBottomSheet({
             </div>
 
             {footer && (
-              <div className="px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] border-t border-slate-100 bg-slate-50/90 shrink-0 flex flex-wrap items-center justify-end gap-2">
+              <div className="px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] border-t border-slate-100 bg-slate-50/90 shrink-0 flex flex-col-reverse sm:flex-row flex-wrap items-stretch sm:items-center justify-end gap-2 [&>button]:w-full sm:[&>button]:w-auto [&>button]:min-h-10 [&>a]:w-full sm:[&>a]:w-auto">
                 {footer}
               </div>
             )}

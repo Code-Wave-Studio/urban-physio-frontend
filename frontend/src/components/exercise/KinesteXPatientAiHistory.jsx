@@ -336,7 +336,7 @@ export default function KinesteXPatientAiHistory({ refreshTick = 0, onGoToExerci
                       </div>
                       <button
                         type="button"
-                        className="text-xs font-semibold text-teal-700 self-start sm:mt-1"
+                        className="text-xs font-semibold text-teal-700 self-start sm:mt-1 min-h-10 px-2"
                         onClick={() => openDetail(s)}
                       >
                         Details
@@ -441,8 +441,8 @@ export default function KinesteXPatientAiHistory({ refreshTick = 0, onGoToExerci
             </div>
           ) : null}
         </GlassModalBody>
-        <GlassModalFooter>
-          <button type="button" className="btn-outline" onClick={() => setDetail(null)}>
+        <GlassModalFooter className="[&>button]:w-full sm:[&>button]:w-auto">
+          <button type="button" className="btn-outline min-h-10" onClick={() => setDetail(null)}>
             Close
           </button>
         </GlassModalFooter>

@@ -350,13 +350,25 @@ export default function PatientExercises() {
                       {nextExercise.hold_seconds ? ` · hold ${nextExercise.hold_seconds}s` : ''}
                     </p>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button type="button" className="btn-outline !py-1.5 !px-3 text-xs min-h-10" onClick={() => setPreviewEx(nextExercise)}>
-                      Watch
-                    </button>
-                    <button type="button" className="btn-primary !py-1.5 !px-3 text-xs min-h-10" onClick={() => openLog(nextExercise, 'completed')}>
-                      Start
-                    </button>
+                  <div className="flex flex-col sm:flex-row flex-wrap gap-2 w-full sm:w-auto">
+                    {nextExercise.ai_monitoring_effective && (
+                      <button
+                        type="button"
+                        className="btn-outline !py-1.5 !px-3 text-xs min-h-10 border-teal-300 text-teal-800 hover:bg-teal-50 w-full sm:w-auto"
+                        disabled={!!aiSessionPayload || aiPreparing}
+                        onClick={() => openAiPrep(nextExercise)}
+                      >
+                        <FaIcon icon="fa-person-walking" className="mr-1" /> Start AI Monitoring
+                      </button>
+                    )}
+                    <div className="flex flex-wrap gap-2">
+                      <button type="button" className="btn-outline !py-1.5 !px-3 text-xs min-h-10 flex-1 sm:flex-none" onClick={() => setPreviewEx(nextExercise)}>
+                        Watch
+                      </button>
+                      <button type="button" className="btn-primary !py-1.5 !px-3 text-xs min-h-10 flex-1 sm:flex-none" onClick={() => openLog(nextExercise, 'completed')}>
+                        Complete
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -419,7 +431,7 @@ export default function PatientExercises() {
                             </p>
                             {ex.ai_monitoring_effective && (
                               <span className="inline-block mt-1 text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-100 font-semibold">
-                                AI Monitoring
+                                AI-Guided Exercise
                               </span>
                             )}
                             {ex.difficulty && (
@@ -432,7 +444,7 @@ export default function PatientExercises() {
 
                         {ex.ai_monitoring_effective && (
                           <p className="text-xs text-teal-700 bg-teal-50/80 rounded-lg px-2.5 py-2 border border-teal-100">
-                            AI-powered exercise guidance available
+                            AI-Guided Exercise — camera, motion tracking, and live feedback on this device.
                           </p>
                         )}
 
@@ -440,36 +452,38 @@ export default function PatientExercises() {
                           <p className="text-xs text-slate-600 bg-slate-50 rounded-lg px-2.5 py-2">{ex.special_instructions}</p>
                         )}
 
-                        <div className="flex flex-wrap gap-2 mt-auto" onClick={(e) => e.stopPropagation()}>
-                          <button type="button" className="btn-outline !py-1.5 !px-3 text-xs min-h-10" onClick={() => setPreviewEx(ex)}>
-                            <FaIcon icon="fa-eye" className="mr-1" /> View
-                          </button>
+                        <div className="flex flex-col gap-2 mt-auto" onClick={(e) => e.stopPropagation()}>
                           {ex.ai_monitoring_effective && (
                             <button
                               type="button"
-                              className="btn-outline !py-1.5 !px-3 text-xs min-h-10 border-teal-300 text-teal-800 hover:bg-teal-50"
+                              className="btn-outline !py-1.5 !px-3 text-xs min-h-10 w-full border-teal-300 text-teal-800 hover:bg-teal-50"
                               disabled={!!aiSessionPayload || aiPreparing}
                               onClick={() => openAiPrep(ex)}
                             >
                               <FaIcon icon="fa-person-walking" className="mr-1" /> Start AI Monitoring
                             </button>
                           )}
-                          {!done && (
-                            <button type="button" className="btn-primary !py-1.5 !px-3 text-xs min-h-10" onClick={() => openLog(ex, 'completed')}>
-                              <FaIcon icon="fa-check" className="mr-1" /> Complete
+                          <div className="flex flex-wrap items-center gap-2">
+                            <button type="button" className="btn-outline !py-1.5 !px-3 text-xs min-h-10" onClick={() => setPreviewEx(ex)}>
+                              <FaIcon icon="fa-eye" className="mr-1" /> View
                             </button>
-                          )}
-                          {!done && !skipped && (
-                            <button type="button" className="text-xs text-slate-500 font-medium px-2" onClick={() => openLog(ex, 'skipped')}>
-                              Skip
-                            </button>
-                          )}
-                          {(done || skipped) && (
-                            <span className={`text-xs font-semibold capitalize px-2 py-1 rounded-lg ${done ? 'text-emerald-700 bg-emerald-50' : 'text-slate-500 bg-slate-100'}`}>
-                              {ex.today_log.status}
-                              {ex.today_log.pain_level != null ? ` · pain ${ex.today_log.pain_level}` : ''}
-                            </span>
-                          )}
+                            {!done && (
+                              <button type="button" className="btn-primary !py-1.5 !px-3 text-xs min-h-10" onClick={() => openLog(ex, 'completed')}>
+                                <FaIcon icon="fa-check" className="mr-1" /> Complete
+                              </button>
+                            )}
+                            {!done && !skipped && (
+                              <button type="button" className="text-xs text-slate-500 font-medium min-h-10 px-3 rounded-lg hover:bg-slate-100" onClick={() => openLog(ex, 'skipped')}>
+                                Skip
+                              </button>
+                            )}
+                            {(done || skipped) && (
+                              <span className={`text-xs font-semibold capitalize px-2 py-1 rounded-lg ${done ? 'text-emerald-700 bg-emerald-50' : 'text-slate-500 bg-slate-100'}`}>
+                                {ex.today_log.status}
+                                {ex.today_log.pain_level != null ? ` · pain ${ex.today_log.pain_level}` : ''}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );

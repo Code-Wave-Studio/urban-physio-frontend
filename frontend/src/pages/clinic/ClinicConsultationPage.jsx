@@ -5,7 +5,7 @@ import { CLINIC_ADMIN_NAV } from '../../constants/clinicNav';
 
 function ClinicConsultLayout({ children }) {
   return (
-    <DashboardLayout links={CLINIC_ADMIN_NAV}>
+    <DashboardLayout links={CLINIC_ADMIN_NAV} variant="clinic">
       {children}
     </DashboardLayout>
   );

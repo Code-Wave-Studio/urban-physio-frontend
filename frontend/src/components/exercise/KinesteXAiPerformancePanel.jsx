@@ -280,7 +280,11 @@ export default function KinesteXAiPerformancePanel({
                           </span>
                         </div>
                       </div>
-                      <button type="button" className="text-xs font-semibold text-teal-700 shrink-0 min-h-10" onClick={() => openDetail(s)}>
+                      <button
+                        type="button"
+                        className="text-xs font-semibold text-teal-700 shrink-0 min-h-10 px-2"
+                        onClick={() => openDetail(s)}
+                      >
                         Details
                       </button>
                     </div>
@@ -446,8 +450,8 @@ export default function KinesteXAiPerformancePanel({
             </div>
           ) : null}
         </GlassModalBody>
-        <GlassModalFooter>
-          <button type="button" className="btn-outline" onClick={() => setDetail(null)}>
+        <GlassModalFooter className="[&>button]:w-full sm:[&>button]:w-auto">
+          <button type="button" className="btn-outline min-h-10" onClick={() => setDetail(null)}>
             Close
           </button>
         </GlassModalFooter>
