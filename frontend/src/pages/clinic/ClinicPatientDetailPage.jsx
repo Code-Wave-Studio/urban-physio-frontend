@@ -19,6 +19,7 @@ import PatientExerciseFeedbackTab from '../../components/clinic/patients/Patient
 import PatientPaymentsTab from '../../components/clinic/patients/PatientPaymentsTab';
 import PatientDocumentsTab from '../../components/clinic/patients/PatientDocumentsTab';
 import PatientCommLog from '../../components/clinic/communication/PatientCommLog';
+import KinesteXAiPerformancePanel from '../../components/exercise/KinesteXAiPerformancePanel';
 import CustomizableTabBar from '../../components/patient/CustomizableTabBar';
 
 const TABS = ['Overview', 'Clinical Notes', 'Exercise Feedback', 'Timeline', 'Assessments', 'Packages', 'Appointment History', 'Payments', 'Prescriptions', 'Documents', 'Reports', 'Consultation Room', 'Communication'];
@@ -739,6 +740,17 @@ export default function ClinicPatientDetailPage() {
                       </div>
                     ))}
                     {!data.exercise_prescriptions?.length && <Empty>No treatment protocols / exercise plans.</Empty>}
+                    {(patientIds.patient_id || profile.patient_id || data?.patient_id || data?.exercise_prescriptions?.[0]?.patient_id) && (
+                      <KinesteXAiPerformancePanel
+                        patientId={
+                          patientIds.patient_id
+                          || profile.patient_id
+                          || data?.patient_id
+                          || data?.exercise_prescriptions?.[0]?.patient_id
+                        }
+                        compact
+                      />
+                    )}
                   </div>
                 )}
 

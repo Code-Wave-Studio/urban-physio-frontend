@@ -24,6 +24,7 @@ import KinesteXMappingFields, {
   kinestexPayload,
   showAiReadyBadge,
 } from '../../components/exercise/KinesteXMappingFields';
+import KinesteXAiPerformancePanel from '../../components/exercise/KinesteXAiPerformancePanel';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Tooltip, Legend, Filler);
 
@@ -161,6 +162,7 @@ export default function ClinicExerciseRehabPage() {
     ai_monitoring_enabled: false,
   });
   const [kinestexOn, setKinestexOn] = useState(false);
+  const [aiPlan, setAiPlan] = useState(null);
 
   const loadDash = useCallback(async () => {
     if (!clinicId) return;
@@ -767,6 +769,15 @@ export default function ClinicExerciseRehabPage() {
                     <p className="text-[11px] text-slate-400 mt-2">
                       Today · pain {rx.progress_today?.pain_avg ?? '—'}
                     </p>
+                    {rx.patient_id && (
+                      <button
+                        type="button"
+                        className="mt-2 text-xs font-semibold text-teal-700"
+                        onClick={() => setAiPlan(rx)}
+                      >
+                        AI Performance
+                      </button>
+                    )}
                   </div>
                 );
               })}
@@ -1182,6 +1193,32 @@ export default function ClinicExerciseRehabPage() {
             </div>
           </GlassModalFooter>
         </form>
+      </GlassModal>
+
+      <GlassModal open={!!aiPlan} onClose={() => setAiPlan(null)} size="lg">
+        <GlassModalHeader
+          title="AI Performance"
+          subtitle={`${aiPlan?.patient_first_name || ''} ${aiPlan?.patient_last_name || ''} · ${aiPlan?.title || ''}`.trim()}
+          icon="fa-person-walking"
+          accent="emerald"
+          onClose={() => setAiPlan(null)}
+        />
+        <GlassModalBody>
+          {aiPlan?.patient_id ? (
+            <KinesteXAiPerformancePanel
+              patientId={aiPlan.patient_id}
+              prescriptionId={aiPlan.id}
+              compact
+            />
+          ) : (
+            <p className="text-sm text-slate-500">Patient not linked.</p>
+          )}
+        </GlassModalBody>
+        <GlassModalFooter>
+          <button type="button" className="btn-outline" onClick={() => setAiPlan(null)}>
+            Close
+          </button>
+        </GlassModalFooter>
       </GlassModal>
     </ClinicPortalShell>
   );

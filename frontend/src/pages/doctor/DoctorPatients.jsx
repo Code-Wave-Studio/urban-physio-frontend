@@ -6,6 +6,7 @@ import PatientProfileCard from '../../components/PatientProfileCard';
 import AppointmentDetailCard from '../../components/AppointmentDetailCard';
 import { doctors } from '../../services/api';
 import PatientReportsSection from '../../components/PatientReportsSection';
+import KinesteXAiPerformancePanel from '../../components/exercise/KinesteXAiPerformancePanel';
 import toast from 'react-hot-toast';
 import { DOCTOR_NAV } from '../../constants/doctorNav';
 
@@ -139,6 +140,7 @@ export default function DoctorPatients() {
                   <div className="space-y-4 pl-0 sm:pl-2 animate-slide-up">
                     <PatientProfileCard patient={p} />
                     <PatientReportsSection patientId={p.patient_id ?? p.id} />
+                    <KinesteXAiPerformancePanel patientId={p.patient_id ?? p.id} />
                     <div>
                       <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
                         <FaIcon icon="fa-clock-rotate-left" className="text-primary-600" />

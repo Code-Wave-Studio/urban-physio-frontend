@@ -10,6 +10,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import useClinicPortal from '../../hooks/useClinicPortal';
 import toast from 'react-hot-toast';
 import { showAiReadyBadge } from '../../components/exercise/KinesteXMappingFields';
+import KinesteXAiPerformancePanel from '../../components/exercise/KinesteXAiPerformancePanel';
 
 const EMPTY_ITEM = {
   exercise_id: '',
@@ -513,7 +514,7 @@ export default function DoctorPrescriptions() {
 
               {progress?.history?.length > 0 && (
                 <div>
-                  <p className="text-sm font-semibold text-slate-800 mb-2">Recent history</p>
+                  <p className="text-sm font-semibold text-slate-800 mb-2">Recent history (manual HEP)</p>
                   <ul className="space-y-1.5 max-h-40 overflow-y-auto">
                     {progress.history.slice(0, 15).map((h) => (
                       <li key={h.id} className="text-xs text-slate-600 flex justify-between gap-2">
@@ -524,6 +525,14 @@ export default function DoctorPrescriptions() {
                   </ul>
                 </div>
               )}
+
+              {detail.patient_id ? (
+                <KinesteXAiPerformancePanel
+                  patientId={detail.patient_id}
+                  prescriptionId={detail.id}
+                  compact
+                />
+              ) : null}
             </div>
           )}
         </GlassModalBody>

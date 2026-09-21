@@ -1096,6 +1096,9 @@ export const kinestex = {
   /** Authenticated: patient own rows; doctor/clinic scoped by prescription ownership */
   listSessions: (params) => api.get('/kinestex/sessions', { params }),
   getSession: (id) => api.get(`/kinestex/sessions/${id}`),
+  /** Doctor/clinic/admin only — patient JWT is rejected */
+  analysisSessions: (params) => api.get('/kinestex/analysis', { params }),
+  analysisSession: (id) => api.get(`/kinestex/analysis/${id}`),
 };
 
 export const home = {
