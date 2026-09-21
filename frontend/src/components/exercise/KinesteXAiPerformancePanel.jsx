@@ -58,6 +58,7 @@ export default function KinesteXAiPerformancePanel({
   prescriptionId = null,
   title = 'AI Performance',
   compact = false,
+  refreshTick = 0,
 }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -98,7 +99,7 @@ export default function KinesteXAiPerformancePanel({
         }
       })
       .finally(() => setLoading(false));
-  }, [patientId, prescriptionId, page, exerciseId, status, dateFrom, dateTo, compact]);
+  }, [patientId, prescriptionId, page, exerciseId, status, dateFrom, dateTo, compact, refreshTick]);
 
   useEffect(() => {
     load();

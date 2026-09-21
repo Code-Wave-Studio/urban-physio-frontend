@@ -4,6 +4,8 @@ import toast from 'react-hot-toast';
 import FaIcon from '../FaIcon';
 import DocumentsManager from '../documents/DocumentsManager';
 import ConsultationChatPanel from './ConsultationChatPanel';
+import ConsultationAiMonitoring from './ConsultationAiMonitoring';
+import KinesteXExerciseSession from '../exercise/KinesteXExerciseSession';
 import {
   consultation,
   exercisePrescriptions,
@@ -192,7 +194,7 @@ function VideoPanel({ room, canStart, onSessionStarted }) {
 }
 
 /* ---------- Exercise panel ---------- */
-function ExercisePanel({ room, onReload }) {
+function ExercisePanel({ room, onReload, onStartAi, aiSessionActive, aiTick }) {
   const isDoctor = room.permissions?.can_prescribe;
   const [library, setLibrary] = useState([]);
   const [kinestexOn, setKinestexOn] = useState(false);
@@ -413,7 +415,16 @@ function ExercisePanel({ room, onReload }) {
             ) : !detail ? (
               <p className="text-sm text-slate-400 p-4">Select a plan</p>
             ) : (
-              (detail.exercises || []).map((ex) => {
+              <>
+              <ConsultationAiMonitoring
+                room={room}
+                prescriptionId={selectedPlanId}
+                exercises={detail.exercises || []}
+                refreshTick={aiTick}
+                aiSessionActive={aiSessionActive}
+                onRequestStart={onStartAi}
+              />
+              {(detail.exercises || []).map((ex) => {
                 const yt = youtubeEmbed(ex.video_url);
                 return (
                   <div key={ex.id} className="rounded-2xl border border-slate-100 bg-white overflow-hidden">
@@ -430,7 +441,14 @@ function ExercisePanel({ room, onReload }) {
                         )}
                       </div>
                       <div className="p-4">
-                        <h4 className="font-bold text-slate-900">{ex.exercise_name}</h4>
+                        <h4 className="font-bold text-slate-900">
+                          {ex.exercise_name}
+                          {ex.ai_monitoring_effective && (
+                            <span className="ml-2 text-[10px] uppercase font-bold tracking-wide px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-100">
+                              AI Monitoring
+                            </span>
+                          )}
+                        </h4>
                         <p className="text-xs text-slate-500 mt-0.5 capitalize">
                           {ex.body_area || 'General'} · {ex.difficulty || 'beginner'}
                           {ex.equipment ? ` · ${ex.equipment}` : ''}
@@ -455,7 +473,8 @@ function ExercisePanel({ room, onReload }) {
                     </div>
                   </div>
                 );
-              })
+              })}
+              </>
             )}
           </div>
         </div>
@@ -664,6 +683,8 @@ export default function ConsultationRoom({ appointmentId, backTo, layout: Layout
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [tab, setTab] = useState('video');
+  const [aiSessionPayload, setAiSessionPayload] = useState(null);
+  const [aiTick, setAiTick] = useState(0);
 
   const load = useCallback((opts = {}) => {
     // Soft refresh keeps the video iframe mounted during prescribe/save.
@@ -794,9 +815,42 @@ export default function ConsultationRoom({ appointmentId, backTo, layout: Layout
             />
           </div>
         )}
-        {tab === 'exercises' && <ExercisePanel room={room} onReload={softReload} />}
+        {tab === 'exercises' && (
+          <ExercisePanel
+            room={room}
+            onReload={softReload}
+            onStartAi={setAiSessionPayload}
+            aiSessionActive={!!aiSessionPayload}
+            aiTick={aiTick}
+          />
+        )}
         {tab === 'prescription' && <PrescriptionPanel room={room} onReload={softReload} />}
       </div>
+
+      {aiSessionPayload && (
+        <KinesteXExerciseSession
+          sessionPayload={aiSessionPayload}
+          onClose={() => setAiSessionPayload(null)}
+          onCompleted={(result) => {
+            if (result?.persisted) {
+              toast.success('AI session saved');
+              setAiTick((n) => n + 1);
+            }
+          }}
+          onCancelled={(result) => {
+            if (result?.persisted) {
+              toast('AI session cancelled');
+              setAiTick((n) => n + 1);
+            }
+          }}
+          onFailed={(result) => {
+            if (result?.persisted) {
+              toast.error('AI monitoring could not finish. The consultation is unchanged.');
+              setAiTick((n) => n + 1);
+            }
+          }}
+        />
+      )}
     </div>
   );
 

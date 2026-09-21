@@ -1089,7 +1089,7 @@ export const telephysio = {
 
 export const kinestex = {
   settings: () => api.get('/kinestex/settings'),
-  /** Patient-only: validate eligibility and return official SDK Custom Workout init payload */
+  /** Patient-only: validate eligibility and return official SDK Custom Workout init payload. Optional appointment_id scopes a consultation start. */
   prepareSession: (data) => api.post('/kinestex/session/prepare', data),
   /** Patient-only: persist Phase 4 session result envelope */
   saveSessionResult: (data) => api.post('/kinestex/session/result', data),
