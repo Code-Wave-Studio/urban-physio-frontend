@@ -1093,7 +1093,7 @@ export const kinestex = {
   prepareSession: (data) => api.post('/kinestex/session/prepare', data),
   /** Patient-only: persist Phase 4 session result envelope */
   saveSessionResult: (data) => api.post('/kinestex/session/result', data),
-  /** Authenticated: patient own rows; doctor/clinic scoped by prescription ownership */
+  /** Patient: paginated own AI history (JWT identity). Doctor/clinic: scoped list. Never send patient_id from the browser for patients. */
   listSessions: (params) => api.get('/kinestex/sessions', { params }),
   getSession: (id) => api.get(`/kinestex/sessions/${id}`),
   /** Doctor/clinic/admin only — patient JWT is rejected */

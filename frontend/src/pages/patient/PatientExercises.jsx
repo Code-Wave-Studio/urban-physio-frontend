@@ -3,6 +3,7 @@ import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../../components/FaIcon';
 import ExerciseBottomSheet from '../../components/exercise/ExerciseBottomSheet';
 import KinesteXExerciseSession from '../../components/exercise/KinesteXExerciseSession';
+import KinesteXPatientAiHistory from '../../components/exercise/KinesteXPatientAiHistory';
 import { exercisePrescriptions, kinestex } from '../../services/api';
 import { PATIENT_NAV } from '../../constants/patientNav';
 import toast from 'react-hot-toast';
@@ -40,9 +41,10 @@ export default function PatientExercises() {
   });
   const [saving, setSaving] = useState(false);
   const [previewEx, setPreviewEx] = useState(null);
-  const [tab, setTab] = useState('today'); // today | progress | history
+  const [tab, setTab] = useState('today'); // today | progress | history | ai-history
   const [lastTap, setLastTap] = useState({ id: null, at: 0 });
   const [streak, setStreak] = useState(0);
+  const [aiHistoryTick, setAiHistoryTick] = useState(0);
 
   // Phase 4 — KinesteX AI session (prep → SDK → result boundary)
   const [aiPrepEx, setAiPrepEx] = useState(null);
@@ -228,16 +230,58 @@ export default function PatientExercises() {
 
       {loading ? (
         <div className="space-y-3">{[1, 2].map((i) => <div key={i} className="glass-card h-24 animate-pulse" />)}</div>
-      ) : plans.length === 0 ? (
-        <div className="glass-card text-center py-14 px-6">
-          <FaIcon icon="fa-dumbbell" className="text-4xl text-slate-300 mb-3" />
-          <p className="font-semibold text-slate-700">No active rehab plan</p>
-          <p className="text-sm text-slate-500 mt-1">When your physiotherapist assigns a program, it will appear here.</p>
+      ) : plans.length === 0 && tab !== 'ai-history' ? (
+        <div className="space-y-4">
+          <div className="flex gap-1 overflow-x-auto pb-1">
+            {[
+              { key: 'today', label: 'Today', icon: 'fa-calendar-day' },
+              { key: 'ai-history', label: 'AI History', icon: 'fa-person-walking' },
+            ].map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setTab(t.key)}
+                className={`px-3 py-2 text-sm font-medium rounded-xl transition whitespace-nowrap ${
+                  tab === t.key ? 'bg-primary-50 text-primary-700' : 'text-slate-500 hover:bg-slate-100'
+                }`}
+              >
+                <FaIcon icon={t.icon} className="mr-1.5" />
+                {t.label}
+              </button>
+            ))}
+          </div>
+          <div className="glass-card text-center py-14 px-6">
+            <FaIcon icon="fa-dumbbell" className="text-4xl text-slate-300 mb-3" />
+            <p className="font-semibold text-slate-700">No active rehab plan</p>
+            <p className="text-sm text-slate-500 mt-1">When your physiotherapist assigns a program, it will appear here.</p>
+          </div>
+        </div>
+      ) : plans.length === 0 && tab === 'ai-history' ? (
+        <div className="space-y-4">
+          <div className="flex gap-1 overflow-x-auto pb-1">
+            {[
+              { key: 'today', label: 'Today', icon: 'fa-calendar-day' },
+              { key: 'ai-history', label: 'AI History', icon: 'fa-person-walking' },
+            ].map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setTab(t.key)}
+                className={`px-3 py-2 text-sm font-medium rounded-xl transition whitespace-nowrap ${
+                  tab === t.key ? 'bg-primary-50 text-primary-700' : 'text-slate-500 hover:bg-slate-100'
+                }`}
+              >
+                <FaIcon icon={t.icon} className="mr-1.5" />
+                {t.label}
+              </button>
+            ))}
+          </div>
+          <KinesteXPatientAiHistory refreshTick={aiHistoryTick} onGoToExercises={() => setTab('today')} />
         </div>
       ) : (
         <>
           {/* Plan picker */}
-          {plans.length > 1 && (
+          {plans.length > 1 && tab !== 'ai-history' && (
             <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
               {plans.map((p) => (
                 <button
@@ -260,6 +304,8 @@ export default function PatientExercises() {
             <div className="glass-card h-48 animate-pulse" />
           ) : (
             <div className="space-y-5">
+              {tab !== 'ai-history' && (
+              <>
               {/* Summary card */}
               <div className="glass-card !p-4 md:!p-5">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4">
@@ -314,19 +360,22 @@ export default function PatientExercises() {
                   </div>
                 </div>
               )}
+              </>
+              )}
 
               {/* Tabs */}
-              <div className="flex gap-1">
+              <div className="flex gap-1 overflow-x-auto pb-1">
                 {[
                   { key: 'today', label: 'Today', icon: 'fa-calendar-day' },
                   { key: 'progress', label: 'Progress', icon: 'fa-chart-line' },
                   { key: 'history', label: 'History', icon: 'fa-clock-rotate-left' },
+                  { key: 'ai-history', label: 'AI History', icon: 'fa-person-walking' },
                 ].map((t) => (
                   <button
                     key={t.key}
                     type="button"
                     onClick={() => setTab(t.key)}
-                    className={`px-3 py-2 text-sm font-medium rounded-xl transition ${
+                    className={`px-3 py-2 text-sm font-medium rounded-xl transition whitespace-nowrap ${
                       tab === t.key ? 'bg-primary-50 text-primary-700' : 'text-slate-500 hover:bg-slate-100'
                     }`}
                   >
@@ -479,8 +528,11 @@ export default function PatientExercises() {
 
               {tab === 'history' && (
                 <div className="glass-card !p-4 md:!p-5">
+                  <p className="text-[11px] text-slate-500 mb-3">
+                    Manual HEP completions and skips. AI-monitored sessions are listed under AI History.
+                  </p>
                   {!progress?.history?.length ? (
-                    <p className="text-sm text-slate-500 text-center py-8">No history yet — complete an exercise to start tracking.</p>
+                    <p className="text-sm text-slate-500 text-center py-8">No manual HEP completions yet — mark an exercise complete or skipped to start tracking.</p>
                   ) : (
                     <ul className="space-y-2">
                       {progress.history.map((h) => (
@@ -496,6 +548,9 @@ export default function PatientExercises() {
                               {h.log_date} · <span className="capitalize">{h.status}</span>
                               {h.pain_level != null ? ` · pain ${h.pain_level}/10` : ''}
                             </p>
+                            <span className="inline-block mt-1 text-[10px] uppercase font-bold tracking-wide px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">
+                              Manual HEP completion
+                            </span>
                             {(h.feedback || h.patient_comment) && (
                               <p className="text-xs text-slate-600 mt-1">{h.feedback || h.patient_comment}</p>
                             )}
@@ -505,6 +560,10 @@ export default function PatientExercises() {
                     </ul>
                   )}
                 </div>
+              )}
+
+              {tab === 'ai-history' && (
+                <KinesteXPatientAiHistory refreshTick={aiHistoryTick} onGoToExercises={() => setTab('today')} />
               )}
             </div>
           )}
@@ -751,16 +810,19 @@ export default function PatientExercises() {
           onCompleted={(result) => {
             if (result?.persisted) {
               toast.success('AI session saved');
+              setAiHistoryTick((n) => n + 1);
             }
           }}
           onCancelled={(result) => {
             if (result?.persisted) {
               toast('AI session cancelled');
+              setAiHistoryTick((n) => n + 1);
             }
           }}
           onFailed={(result) => {
             if (result?.persisted) {
               toast.error('AI monitoring could not finish. You can mark the exercise complete manually.');
+              setAiHistoryTick((n) => n + 1);
             }
           }}
         />
