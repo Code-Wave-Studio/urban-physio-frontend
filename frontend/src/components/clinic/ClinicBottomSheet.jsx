@@ -89,7 +89,7 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
     <AnimatePresence>
       {open && (
         <>
-          {/* Backdrop */}
+          
           <motion.button
             type="button"
             aria-label="Close clinic preview"
@@ -121,7 +121,7 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
               style={{ y }}
               onDragEnd={handleDragEnd}
             >
-              {/* Touch Drag Bar (Mobile Only) */}
+              
               <div
                 className="shrink-0 pt-2.5 pb-1 md:hidden cursor-grab active:cursor-grabbing touch-none bg-white"
                 onPointerDown={(e) => dragControls.start(e)}
@@ -140,7 +140,7 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/45 to-transparent" />
 
-                {/* Floating Close Button */}
+                
                 <button
                   type="button"
                   onClick={onClose}
@@ -150,7 +150,7 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
                   <FaIcon icon="fa-xmark" className="text-sm" />
                 </button>
 
-                {/* Header Information Ring & Title */}
+                
                 <div className="absolute bottom-3.5 left-4 right-4 z-10 flex items-end gap-3.5">
                   <div className="shrink-0 ring-2 ring-white/90 shadow-xl rounded-2xl overflow-hidden bg-white w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
                     {logoUrl ? (
@@ -180,7 +180,7 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
                 </div>
               </div>
 
-              {/* Status & Quick Attributes Sub-header */}
+              
               <div className="shrink-0 px-4 md:px-6 py-2.5 border-b border-slate-100 bg-slate-50/80 flex flex-wrap items-center justify-between gap-2.5">
                 <div className="flex flex-wrap items-center gap-2">
                   <ClinicStatusBadge hours={hours} />
@@ -205,14 +205,14 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
-                  {/* Left Column (Main Stats, Availability, Doctors, Contact) */}
+
                   <div className="md:col-span-7 space-y-4">
-                    {/* Quick Stats Bar */}
+                    
                     <div className="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-xs">
                       <ClinicMiniStats clinic={c} hideDoctorCount />
                     </div>
 
-                    {/* Today's Availability / Offline Alert */}
+                    
                     {isOfflineOrClosed ? (
                       <div className="rounded-2xl bg-rose-50 border border-rose-200/80 p-3.5 flex items-start gap-3 text-rose-800">
                         <FaIcon icon="fa-circle-exclamation" className="text-rose-600 mt-0.5 shrink-0 text-base" />
@@ -233,7 +233,7 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
                       </section>
                     )}
 
-                    {/* Address & Contact Information */}
+                    
                     <section>
                       <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
                         <FaIcon icon="fa-location-dot" className="text-teal-600" />
@@ -264,7 +264,7 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
                       </div>
                     </section>
 
-                    {/* Associated Physiotherapists */}
+                    
                     {doctors.length > 0 && (
                       <section>
                         <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
@@ -298,9 +298,9 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
                     )}
                   </div>
 
-                  {/* Right Column (Operating Hours, Services, About) */}
+
                   <div className="md:col-span-5 space-y-4">
-                    {/* Operating Hours */}
+                    
                     {hoursRows.length > 0 && (
                       <section>
                         <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
@@ -325,7 +325,7 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
                       </section>
                     )}
 
-                    {/* Services & Facilities */}
+                    
                     {combined.length > 0 && (
                       <section>
                         <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
@@ -345,7 +345,7 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
                       </section>
                     )}
 
-                    {/* About Clinic */}
+                    
                     {c.description?.trim() && (
                       <section>
                         <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">

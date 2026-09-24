@@ -4,10 +4,7 @@ import useClinicPortal from '../../hooks/useClinicPortal';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 
-/**
- * Availability Settings page.
- * Contains: Working Hours, Slot Capacity Management (Feature 8, 13).
- */
+/** Clinic availability — working hours + slot capacity. */
 export default function ClinicAvailabilitySettingsPage() {
   const { clinicId, can, isAdminMode, loading } = useClinicPortal();
   const navigate = useNavigate();
@@ -25,12 +22,12 @@ export default function ClinicAvailabilitySettingsPage() {
       subtitle="Configure working hours, slot duration, and appointment capacity"
     >
       <div className="max-w-2xl space-y-6">
-        {/* Slot Capacity Management */}
+        
         {clinicId && (
           <CapacitySettingsPanel clinicId={clinicId} />
         )}
 
-        {/* Link to calendar for schedule management */}
+        
         <div className="glass-card flex items-start gap-3">
           <span className="w-9 h-9 rounded-xl bg-sky-50 text-sky-700 flex items-center justify-center shrink-0 mt-0.5">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">

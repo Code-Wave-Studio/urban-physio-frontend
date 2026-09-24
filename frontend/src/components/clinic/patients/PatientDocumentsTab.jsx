@@ -255,7 +255,6 @@ export default function PatientDocumentsTab({ patientKey, patient = {}, clinicId
   };
 
   const filteredDocs = docs.filter((d) => {
-    // Search query
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       const match =
@@ -265,9 +264,7 @@ export default function PatientDocumentsTab({ patientKey, patient = {}, clinicId
         d.category?.toLowerCase().includes(q);
       if (!match) return false;
     }
-    // Category filter
     if (categoryFilter && d.category !== categoryFilter) return false;
-    // Sharing status filter
     if (shareFilter === 'shared' && !d.is_shared) return false;
     if (shareFilter === 'internal' && d.is_shared) return false;
     return true;
@@ -278,7 +275,7 @@ export default function PatientDocumentsTab({ patientKey, patient = {}, clinicId
 
   return (
     <div className="space-y-5">
-      {/* Top Banner & Control Bar */}
+      
       <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-10 h-10 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold text-lg">
@@ -307,10 +304,10 @@ export default function PatientDocumentsTab({ patientKey, patient = {}, clinicId
         </button>
       </div>
 
-      {/* Filter Toolbar */}
+      
       <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50/70 p-3 rounded-xl border border-slate-200/80 text-xs">
         <div className="flex items-center gap-2 flex-wrap flex-1">
-          {/* Search bar */}
+          
           <div className="relative min-w-[200px] flex-1">
             <FaIcon icon="fa-magnifying-glass" className="absolute left-3 top-2.5 text-xs text-slate-400" />
             <input
@@ -322,7 +319,7 @@ export default function PatientDocumentsTab({ patientKey, patient = {}, clinicId
             />
           </div>
 
-          {/* Category Selector */}
+          
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
@@ -336,7 +333,7 @@ export default function PatientDocumentsTab({ patientKey, patient = {}, clinicId
             ))}
           </select>
 
-          {/* Sharing Filter */}
+          
           <select
             value={shareFilter}
             onChange={(e) => setShareFilter(e.target.value)}
@@ -353,7 +350,7 @@ export default function PatientDocumentsTab({ patientKey, patient = {}, clinicId
         </div>
       </div>
 
-      {/* Documents Grid List */}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredDocs.map((doc) => {
           const group = doc.file_type || extGroup(doc.file_name);
@@ -371,7 +368,7 @@ export default function PatientDocumentsTab({ patientKey, patient = {}, clinicId
                 doc.is_shared ? 'border-teal-200 shadow-2xs hover:border-teal-400' : 'border-slate-200/80 hover:border-slate-300'
               }`}
             >
-              {/* Top Meta Header */}
+              
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 ${iconObj.color}`}>
@@ -390,7 +387,7 @@ export default function PatientDocumentsTab({ patientKey, patient = {}, clinicId
                   </div>
                 </div>
 
-                {/* Patient Shared Status Badge */}
+                
                 <button
                   type="button"
                   onClick={() => toggleShareStatus(doc.id)}
@@ -406,14 +403,14 @@ export default function PatientDocumentsTab({ patientKey, patient = {}, clinicId
                 </button>
               </div>
 
-              {/* Description */}
+              
               {doc.description && (
                 <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                   {doc.description}
                 </p>
               )}
 
-              {/* Upload Meta & File Name */}
+              
               <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-100">
                 <span className="truncate max-w-[180px]" title={doc.file_name}>
                   <FaIcon icon="fa-paperclip" className="mr-1" />
@@ -424,10 +421,10 @@ export default function PatientDocumentsTab({ patientKey, patient = {}, clinicId
                 </span>
               </div>
 
-              {/* Action Buttons */}
+
               <div className="flex items-center justify-between gap-2 pt-2">
                 <div className="flex items-center gap-1.5">
-                  {/* Share Toggle Button */}
+                  
                   <button
                     type="button"
                     onClick={() => toggleShareStatus(doc.id)}
@@ -441,7 +438,7 @@ export default function PatientDocumentsTab({ patientKey, patient = {}, clinicId
                 </div>
 
                 <div className="flex items-center gap-1.5">
-                  {/* Preview Button */}
+                  
                   <button
                     type="button"
                     onClick={() => setPreviewDoc(doc)}
@@ -451,7 +448,7 @@ export default function PatientDocumentsTab({ patientKey, patient = {}, clinicId
                     <span>View</span>
                   </button>
 
-                  {/* Download Button */}
+                  
                   {doc.file_url ? (
                     <a
                       href={doc.file_url}
@@ -474,7 +471,7 @@ export default function PatientDocumentsTab({ patientKey, patient = {}, clinicId
                     </button>
                   )}
 
-                  {/* Delete Button */}
+                  
                   <button
                     type="button"
                     onClick={() => handleDeleteDoc(doc.id, doc.title)}
@@ -498,7 +495,7 @@ export default function PatientDocumentsTab({ patientKey, patient = {}, clinicId
         )}
       </div>
 
-      {/* Upload & Share Modal */}
+      
       <GlassModal open={modalOpen} onClose={() => setModalOpen(false)} maxWidth="max-w-xl">
         <GlassModalHeader className="border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2.5">
@@ -536,7 +533,7 @@ export default function PatientDocumentsTab({ patientKey, patient = {}, clinicId
               </button>
             </div>
 
-            {/* Document Title */}
+            
             <div>
               <label className="font-bold text-slate-700 block mb-1">Document Title *</label>
               <input
@@ -549,7 +546,7 @@ export default function PatientDocumentsTab({ patientKey, patient = {}, clinicId
               />
             </div>
 
-            {/* Category Selector */}
+            
             <div>
               <label className="font-bold text-slate-700 block mb-1">Document Category</label>
               <select
@@ -565,7 +562,7 @@ export default function PatientDocumentsTab({ patientKey, patient = {}, clinicId
               </select>
             </div>
 
-            {/* File Upload OR Link URL */}
+            
             {uploadForm.source === 'upload' ? (
               <div>
                 <label className="font-bold text-slate-700 block mb-1">Select Medical File (PDF, Image, DOCX)</label>
@@ -608,7 +605,7 @@ export default function PatientDocumentsTab({ patientKey, patient = {}, clinicId
               </div>
             )}
 
-            {/* Description */}
+            
             <div>
               <label className="font-semibold text-slate-700 block mb-1">Description &amp; Clinical Notes</label>
               <textarea
@@ -620,7 +617,7 @@ export default function PatientDocumentsTab({ patientKey, patient = {}, clinicId
               />
             </div>
 
-            {/* Share with Patient Checkbox */}
+            
             <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-xl flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">
@@ -660,7 +657,7 @@ export default function PatientDocumentsTab({ patientKey, patient = {}, clinicId
         </GlassModalBody>
       </GlassModal>
 
-      {/* Document Preview Modal */}
+      
       <GlassModal open={!!previewDoc} onClose={() => setPreviewDoc(null)} maxWidth="max-w-3xl">
         <GlassModalHeader className="border-b border-slate-100 pb-3">
           <div className="flex items-center justify-between w-full pr-8">

@@ -90,7 +90,7 @@ function AddEventModal({ patientKey, onSave, onClose }) {
           </button>
         </div>
 
-        {/* Scrollable Body Container */}
+        
         <form onSubmit={submit} className="flex flex-col flex-1 overflow-hidden">
           <div className="p-6 overflow-y-auto flex-1 space-y-4 sm:space-y-5">
             <div>
@@ -198,11 +198,11 @@ function TimelineEvent({ event, patientKey, onRefresh }) {
 
   return (
     <div className="flex gap-3">
-      {/* Icon */}
+      
       <div className={`flex-shrink-0 w-9 h-9 rounded-full border-2 flex items-center justify-center ${c} ${l}`}>
         <FaIcon icon={`fa-solid ${event.icon || 'fa-circle-info'}`} className="text-xs" />
       </div>
-      {/* Content */}
+      
       <div className="flex-1 min-w-0">
         {editing ? (
           <div className="rounded-2xl border border-teal-200 p-3 space-y-2 bg-white shadow-sm">
@@ -297,7 +297,7 @@ export default function PatientTimelineTab({ patientKey }) {
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
+      
       <div className="flex flex-wrap gap-2 items-center">
         <select
           className="text-xs border rounded-full px-3 py-1.5 bg-white"
@@ -339,7 +339,7 @@ export default function PatientTimelineTab({ patientKey }) {
         </button>
       </div>
 
-      {/* Timeline */}
+      
       {loading && !data ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -351,7 +351,7 @@ export default function PatientTimelineTab({ patientKey }) {
         </div>
       ) : (
         <div className="space-y-3 relative">
-          {/* Vertical line */}
+          
           <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-slate-100 -z-10" />
           {(data?.events || []).map((event) => (
             <TimelineEvent key={event.id} event={event} patientKey={patientKey} onRefresh={refresh} />
@@ -359,7 +359,7 @@ export default function PatientTimelineTab({ patientKey }) {
           {!data?.events?.length && (
             <p className="py-10 text-center text-sm text-slate-400">No timeline events yet.</p>
           )}
-          {/* Infinite scroll sentinel */}
+          
           <div ref={loaderRef} className="h-4" />
           {loading && data && <p className="text-center text-xs text-slate-400 py-2">Loading more…</p>}
         </div>

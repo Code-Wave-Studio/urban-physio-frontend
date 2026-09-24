@@ -85,7 +85,7 @@ export default function LicensePage() {
         </div>
       ) : (
         <div className="max-w-3xl mx-auto">
-          {/* Certificate */}
+          
           <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-900/5">
             {/* decorative top band */}
             <div className="h-2 w-full bg-gradient-to-r from-primary-500 via-orange-500 to-primary-600" />

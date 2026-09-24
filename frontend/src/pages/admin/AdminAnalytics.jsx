@@ -256,7 +256,7 @@ export default function AdminAnalytics() {
           </div>
         </div>
 
-        {/* Core KPIs */}
+        
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <Kpi
             label="Monthly Revenue"
@@ -317,7 +317,7 @@ export default function AdminAnalytics() {
           />
         </div>
 
-        {/* Charts row */}
+        
         <div className="grid lg:grid-cols-2 gap-4">
           <div className="glass-card !p-4">
             <h2 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
@@ -391,7 +391,7 @@ export default function AdminAnalytics() {
           </div>
         </div>
 
-        {/* Best therapists + package sales */}
+        
         <div className="grid lg:grid-cols-2 gap-4">
           <div className="glass-card !p-4">
             <h2 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
@@ -469,7 +469,7 @@ export default function AdminAnalytics() {
           </div>
         </div>
 
-        {/* Download reports */}
+        
         <div className="glass-card !p-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
             <h2 className="font-bold text-slate-800 flex items-center gap-2">
@@ -497,7 +497,7 @@ export default function AdminAnalytics() {
           </div>
         </div>
 
-        {/* Secondary / legacy overview cards */}
+        
         {overview && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <Kpi label="Doctor reviews" value={overview.reviews?.doctor_reviews_total} icon="fa-star" tint="amber" sub={`Avg ★${overview.reviews?.doctor_avg_rating || 0}`} />

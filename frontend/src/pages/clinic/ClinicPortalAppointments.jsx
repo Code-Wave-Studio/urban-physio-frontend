@@ -30,24 +30,20 @@ function fmtApptTime(t) {
 export default function ClinicPortalAppointments() {
   const { clinicId, loading: bootLoading, can } = useClinicPortal();
 
-  // ── Date navigator state ─────────────────────────────────────────────
   const [navView,   setNavView]   = useState('day');
   const [navAnchor, setNavAnchor] = useState(() => new Date());
 
-  // Derive from / to from navigator
   const [dateRange, setDateRange] = useState(() => {
     const today = new Date().toISOString().slice(0, 10);
     return { from: today, to: today };
   });
 
-  // ── Filters ──────────────────────────────────────────────────────────
   const [rows,    setRows]    = useState([]);
   const [summary, setSummary] = useState({});
   const [loading, setLoading] = useState(true);
   const [status,  setStatus]  = useState('all');
   const [q,       setQ]       = useState('');
 
-  // ── Modals ────────────────────────────────────────────────────────────
   const [acting,              setActing]              = useState(null);
   const [bookingOpen,         setBookingOpen]         = useState(false);
   const [rolloverAppointment, setRolloverAppointment] = useState(null);
@@ -55,7 +51,6 @@ export default function ClinicPortalAppointments() {
   const [soap,            setSoap]            = useState({ subjective: '', objective: '', assessment: '', plan: '', visible_to_patient: false });
   const [soapSaving,      setSoapSaving]      = useState(false);
 
-  // ── Load appointments ─────────────────────────────────────────────────
   const load = useCallback(async () => {
     if (!clinicId) return;
     setLoading(true);
@@ -95,7 +90,6 @@ export default function ClinicPortalAppointments() {
     setDateRange({ from, to });
   };
 
-  // ── Derived summary stats (fallback to local count) ───────────────────
   const stats = useMemo(() => ([
     ['Total shown',  summary.total     ?? rows.length, 'fa-calendar'],
     ['Pending',      summary.pending   ?? rows.filter((r) => r.status === 'pending').length,   'fa-clock'],
@@ -107,7 +101,6 @@ export default function ClinicPortalAppointments() {
   const canBill         = can('billing.collect');
   const canUpdateStatus = can('billing.settings');
 
-  // ── Actions ───────────────────────────────────────────────────────────
   const checkIn = async (a) => {
     setActing(a.id);
     try {
@@ -276,7 +269,6 @@ export default function ClinicPortalAppointments() {
     }
   };
 
-  // ── Grouped view for Agenda / Day (group by date then time) ───────────
   const groupedRows = useMemo(() => {
     if (navView === 'day' || navView === 'agenda') {
       const map = {};
@@ -294,7 +286,6 @@ export default function ClinicPortalAppointments() {
     return null;
   }, [navView, rows]);
 
-  // ── Range label for filter toolbar ────────────────────────────────────
   const rangeHint = useMemo(() => {
     if (!dateRange.from) return '';
     if (dateRange.from === dateRange.to) return dateRange.from;
@@ -319,7 +310,7 @@ export default function ClinicPortalAppointments() {
     >
       <div className="space-y-4 sm:space-y-5">
 
-        {/* ── KPI Summary Cards ── */}
+
         <div className="portal-kpi-grid">
           {stats.map(([label, value, icon]) => (
             <div key={label} className="glass-card !p-3 flex items-center gap-2.5 sm:gap-3 min-w-0">
@@ -334,16 +325,16 @@ export default function ClinicPortalAppointments() {
           ))}
         </div>
 
-        {/* ── Date Navigator ── */}
+
         <AppointmentDateNavigator
           view={navView}
           anchor={navAnchor}
           onChange={handleNavChange}
         />
 
-        {/* ── Filters toolbar ── */}
+
         <div className="glass-card !p-3 sm:!p-4 space-y-3">
-          {/* Status tabs */}
+          
           <div className="portal-tabs">
             {STATUS_FILTERS.map((f) => (
               <button
@@ -359,7 +350,7 @@ export default function ClinicPortalAppointments() {
             ))}
           </div>
 
-          {/* Search + range hint + refresh */}
+          
           <div className="portal-toolbar">
             <input
               className="input-field text-sm w-full sm:max-w-xs"
@@ -380,7 +371,7 @@ export default function ClinicPortalAppointments() {
           </div>
         </div>
 
-        {/* ── Appointment list ── */}
+
         <div className="glass-card !p-0 overflow-hidden">
           {bootLoading || loading ? (
             <div className="space-y-2 p-4">
@@ -410,7 +401,7 @@ export default function ClinicPortalAppointments() {
             </div>
           ) : (
             <>
-              {/* ── Agenda / Day: grouped by date ── */}
+
               {(navView === 'agenda' || navView === 'day') && groupedRows ? (
                 <div className="divide-y divide-slate-100">
                   {Object.keys(groupedRows)
@@ -421,7 +412,7 @@ export default function ClinicPortalAppointments() {
                       const isToday = dateKey === new Date().toISOString().slice(0, 10);
                       return (
                         <section key={dateKey}>
-                          {/* Day header */}
+                          
                           <header className={`px-4 py-2.5 flex items-center justify-between sticky top-0 z-10 ${isToday ? 'bg-teal-50/80' : 'bg-slate-50/80'} border-b border-slate-100`}>
                             <div className="flex items-center gap-2">
                               <p className={`text-sm font-bold ${isToday ? 'text-teal-700' : 'text-slate-800'}`}>
@@ -434,7 +425,7 @@ export default function ClinicPortalAppointments() {
                             <span className="text-xs text-slate-500">{dayAppointments.length} appointment{dayAppointments.length !== 1 ? 's' : ''}</span>
                           </header>
 
-                          {/* Day appointments */}
+                          
                           <AppointmentRows
                             rows={dayAppointments}
                             acting={acting}
@@ -457,7 +448,7 @@ export default function ClinicPortalAppointments() {
                     })}
                 </div>
               ) : (
-                /* ── Week / Month: flat list ── */
+
                 <AppointmentRows
                   rows={rows}
                   acting={acting}
@@ -481,7 +472,7 @@ export default function ClinicPortalAppointments() {
         </div>
       </div>
 
-      {/* ── Booking Modal ── */}
+
       <ClinicBookingModal
         clinicId={clinicId}
         open={bookingOpen}
@@ -489,7 +480,7 @@ export default function ClinicPortalAppointments() {
         onBooked={load}
       />
 
-      {/* ── SOAP Note Modal ── */}
+
       {soapAppointment && (
         <div className="fixed inset-0 z-50 bg-slate-950/40 p-3 flex items-end sm:items-center justify-center">
           <form onSubmit={saveSoap} className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full max-w-2xl max-h-[92vh] overflow-y-auto">
@@ -545,9 +536,7 @@ export default function ClinicPortalAppointments() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Extracted AppointmentRows — renders both mobile cards and desktop table
-// ─────────────────────────────────────────────────────────────────────────────
 
 function AppointmentRows({
   rows,
@@ -568,7 +557,7 @@ function AppointmentRows({
 }) {
   return (
     <>
-      {/* Mobile cards */}
+      
       <div className="portal-mobile-list">
         {rows.map((a) => (
           <article key={a.id} className="rounded-2xl border border-slate-100 bg-white p-3.5 space-y-2.5 shadow-sm">
@@ -621,7 +610,7 @@ function AppointmentRows({
         ))}
       </div>
 
-      {/* Desktop table */}
+      
       <div className="portal-desktop-table portal-table-wrap">
         <table className="w-full text-sm">
           <thead className="text-[11px] uppercase tracking-wide text-slate-500 bg-slate-50/80 text-left">
@@ -707,9 +696,7 @@ function AppointmentRows({
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // AppointmentActions — action links for a single appointment row
-// ─────────────────────────────────────────────────────────────────────────────
 
 function AppointmentActions({
   a, acting, canManage, canBill, canUpdateStatus, canSoap,

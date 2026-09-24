@@ -329,7 +329,7 @@ export default function NotificationsPage() {
         </div>
       )}
 
-      {/* Filters */}
+
       <div className="flex flex-wrap items-center gap-2 mb-5">
         <select
           className="input-field !w-auto !py-1.5 text-sm"

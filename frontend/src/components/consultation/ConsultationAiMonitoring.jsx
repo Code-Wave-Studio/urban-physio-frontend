@@ -39,12 +39,9 @@ function latestByItem(sessions) {
 }
 
 /**
- * TeleRehab / Consultation Room KinesteX AI layer (Req #10 / Phase 8).
- *
- * Patient starts AI on their own device for eligible HEP items on their appointment.
- * Doctors/clinic/admin review the same kinestex_sessions rows (Workout Overview +
- * Movement Analysis) but never start the patient's camera session.
- * Does not change appointment, consultation, Zoom, or manual HEP status.
+ * TeleRehab / Consultation Room KinesteX AI layer.
+ * Patient starts AI on their device; clinicians review same kinestex_sessions rows
+ * but never start the patient's camera. Does not change appointment/consultation status.
  */
 export default function ConsultationAiMonitoring({
   room,

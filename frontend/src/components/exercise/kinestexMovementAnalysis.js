@@ -1,6 +1,4 @@
-/**
- * Pure helpers for Req #4 movement analysis (no invented clinical claims).
- */
+/** Movement analysis helpers — no invented clinical claims. */
 
 export function deriveMovementAnalysisFromEvents(collected = {}, providerSessionId = null) {
   const raw = collected && typeof collected === 'object' ? collected : {};

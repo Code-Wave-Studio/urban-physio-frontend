@@ -59,7 +59,7 @@ function StatusPill({ join, status }) {
   return <span className="rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[11px] font-semibold px-2.5 py-1 capitalize">{status}</span>;
 }
 
-/* ---------- Video panel (Zoom — opens in Zoom app / browser) ---------- */
+
 function VideoPanel({ room, canStart, onSessionStarted }) {
   const appt = room.appointment || {};
   const viewer = room.viewer;
@@ -193,7 +193,7 @@ function VideoPanel({ room, canStart, onSessionStarted }) {
   );
 }
 
-/* ---------- Exercise panel ---------- */
+
 function ExercisePanel({ room, onReload, onStartAi, aiSessionActive, aiTick }) {
   const isDoctor = room.permissions?.can_prescribe;
   const [library, setLibrary] = useState([]);
@@ -492,7 +492,7 @@ function Field({ label, children }) {
   );
 }
 
-/* ---------- Prescription / notes panel ---------- */
+
 function PrescriptionPanel({ room, onReload }) {
   const canWrite = room.permissions?.can_write_notes;
   const existing = room.session_note;

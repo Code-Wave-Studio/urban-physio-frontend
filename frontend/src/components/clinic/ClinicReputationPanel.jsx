@@ -166,7 +166,7 @@ export default function ClinicReputationPanel({ clinicId, clinicSlug }) {
         )}
       </div>
 
-      {/* Analytics */}
+      
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="glass-card !p-3">
           <p className="text-[11px] uppercase text-slate-400 font-semibold">Average</p>
@@ -215,7 +215,7 @@ export default function ClinicReputationPanel({ clinicId, clinicSlug }) {
         </div>
       )}
 
-      {/* Auto request settings */}
+      
       <div className="glass-card !p-4 space-y-3">
         <p className="font-semibold text-sm">Automatic review requests</p>
         <p className="text-xs text-slate-500">
@@ -264,7 +264,7 @@ export default function ClinicReputationPanel({ clinicId, clinicSlug }) {
         </p>
       </div>
 
-      {/* Inbox */}
+      
       <div className="grid lg:grid-cols-5 gap-4">
         <div className="lg:col-span-2 space-y-3">
           <div className="flex flex-wrap gap-2">

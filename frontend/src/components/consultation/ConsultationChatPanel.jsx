@@ -281,7 +281,7 @@ export default function ConsultationChatPanel({ room, active = true }) {
       onDragLeave={() => setDragOver(false)}
       onDrop={onDrop}
     >
-      {/* Header */}
+      
       <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200/80 bg-white/90 backdrop-blur">
         <div className="relative">
           <div className="w-10 h-10 rounded-full bg-teal-100 text-teal-800 flex items-center justify-center font-bold text-sm">
@@ -316,7 +316,7 @@ export default function ConsultationChatPanel({ room, active = true }) {
         </button>
       </div>
 
-      {/* Messages */}
+      
       <div ref={listRef} onScroll={onScroll} className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-1">
         {loading ? (
           <div className="h-full flex items-center justify-center text-slate-400 text-sm gap-2">
@@ -448,7 +448,7 @@ export default function ConsultationChatPanel({ room, active = true }) {
         <div ref={bottomRef} />
       </div>
 
-      {/* Composer */}
+      
       <div className="border-t border-slate-200 bg-white/95 backdrop-blur px-3 py-2.5 space-y-2">
         {replyTo && (
           <div className="flex items-start gap-2 rounded-xl bg-slate-50 border border-slate-200 px-3 py-2 text-xs">

@@ -14,7 +14,7 @@ import { SITE_LOGO_SRC } from '../constants/siteBrand';
 import { speedDialForRole } from '../components/nav/navDrawerLinks';
 import { groupPortalNav, isNavLinkActive } from '../constants/portalArchitecture';
 
-/* Section ordering per variant */
+
 import { PATIENT_SECTION_ORDER } from '../constants/patientNav';
 import { DOCTOR_SECTION_ORDER } from '../constants/doctorNav';
 import { CLINIC_SECTION_ORDER } from '../constants/clinicNav';
@@ -68,7 +68,7 @@ export default function DashboardLayout({
   brandLogoSrc = null,
   brandLogoAlt = 'The Urban Physio',
   fluid = false,
-  /* Portal sidebar props */
+
   links,
   variant = 'patient',
   sidebarFooter = null,
@@ -81,7 +81,7 @@ export default function DashboardLayout({
   const { pathname } = useLocation();
   const { user, hasRole } = useAuth() || {};
 
-  /* Context panel collapse state — persisted in localStorage (desktop only) */
+
   const [collapsed, setCollapsed] = useState(() => {
     try {
       return localStorage.getItem(STORAGE_KEY) === '1';
@@ -101,13 +101,13 @@ export default function DashboardLayout({
   const sectionOrder = SECTION_ORDER_MAP[variant] || [];
   const accent = ACCENT_MAP[variant] || 'primary';
 
-  /* Group nav into sections for 3-column layout */
+
   const sections = useMemo(
     () => groupPortalNav(links || [], sectionOrder),
     [links, sectionOrder],
   );
 
-  /* Determine active section from current route */
+
   const activeSectionId = useMemo(() => {
     for (const section of sections) {
       if (section.items.some((item) => item.to && isNavLinkActive(pathname, item))) {
@@ -117,17 +117,17 @@ export default function DashboardLayout({
     return sections[0]?.id;
   }, [sections, pathname]);
 
-  /* Manual section override — clicking a primary nav icon selects that section */
+
   const [selectedSection, setSelectedSection] = useState(null);
   const currentSectionId = selectedSection || activeSectionId;
   const currentSection = sections.find((s) => s.id === currentSectionId) || sections[0];
 
-  /* Reset manual selection when route changes (auto-detect takes over) */
+
   useEffect(() => {
     setSelectedSection(null);
   }, [pathname]);
 
-  /* Profile info for sidebar card */
+
   const profileName = clinicName || user?.clinic?.name || user?.name || user?.full_name || 'Account';
   const profileAvatar =
     clinicLogo ||
@@ -147,7 +147,7 @@ export default function DashboardLayout({
     return 'Patient';
   }, [variant]);
 
-  /* Speed dial items & action handler */
+  
   const speedDialItems = useMemo(() => {
     if (!hasRole) return [];
     return speedDialForRole(hasRole);
@@ -163,7 +163,7 @@ export default function DashboardLayout({
     }
   }, []);
 
-  /* Handle section click in primary nav */
+
   const handleSectionClick = useCallback((sectionId) => {
     setSelectedSection(sectionId);
     if (collapsed) {
@@ -172,7 +172,7 @@ export default function DashboardLayout({
     }
   }, [collapsed]);
 
-  /* Sidebar collapse toggle rendered before logo in Navbar (desktop only) */
+
   const sidebarToggle = hasPortalNav ? (
     <button
       type="button"
@@ -185,14 +185,14 @@ export default function DashboardLayout({
     </button>
   ) : null;
 
-  /* Workspace class names */
+
   const workspaceClass = [
     'app-shell__workspace',
     hasPortalNav && collapsed ? 'app-shell__workspace--ctx-collapsed' : '',
     !hasPortalNav ? 'app-shell__workspace--no-nav' : '',
   ].filter(Boolean).join(' ');
 
-  /* --- No portal nav: original simple layout --- */
+  
   if (!hasPortalNav) {
     return (
       <div className="min-h-screen relative admin-shell">
@@ -215,7 +215,7 @@ export default function DashboardLayout({
     );
   }
 
-  /* Shared profile card props for desktop context panel */
+
   const profileCardProps = {
     name: profileName,
     roleLabel: profileRole,
@@ -226,7 +226,7 @@ export default function DashboardLayout({
     clinicId,
   };
 
-  /* --- Portal layout with desktop 3-column shell --- */
+  
   return (
     <div className="app-shell">
       <Navbar
@@ -238,7 +238,7 @@ export default function DashboardLayout({
       />
 
       <div className="app-shell__body">
-        {/* ── Desktop ONLY: Primary navigation sidebar (Icon Only Rail) ── */}
+
         <aside
           className="app-shell__primary-nav"
           aria-label="Module navigation"
@@ -280,20 +280,20 @@ export default function DashboardLayout({
           </div>
         </aside>
 
-        {/* ── Desktop ONLY: Context panel ── */}
+
         <aside
           className={`app-shell__context-panel ${collapsed ? 'app-shell__context-panel--hidden' : ''}`}
           aria-label={currentSection?.label || 'Section navigation'}
         >
           <div className="app-shell__context-panel-scroll">
-            {/* Speed dial */}
+
             {speedDialItems.length > 0 && (
               <div className="mb-3">
                 <PortalSpeedDial items={speedDialItems} onAction={handleSpeedDialAction} onNavigate={() => {}} />
               </div>
             )}
 
-            {/* Section navigation */}
+
             <ContextPanel
               section={currentSection}
               accent={accent}
@@ -301,7 +301,7 @@ export default function DashboardLayout({
             />
           </div>
 
-          {/* Context panel footer — role switch, etc. */}
+
           {sidebarFooter && (
             <div className="app-shell__context-panel-footer">
               {sidebarFooter}
@@ -309,7 +309,7 @@ export default function DashboardLayout({
           )}
         </aside>
 
-        {/* ── Workspace (Full width on tablet/mobile, margin-left on desktop) ── */}
+
         <div className={workspaceClass}>
           <main className={`mx-auto pt-3 sm:pt-4 pb-6 animate-fade-in min-w-0 ${
             fluid
@@ -320,7 +320,7 @@ export default function DashboardLayout({
             <PortalCreditFooter />
           </main>
 
-          {/* Context-aware quick actions */}
+
           <ContextQuickActions variant={variant} clinicId={clinicId} />
         </div>
       </div>

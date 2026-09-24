@@ -1,5 +1,5 @@
 /**
- * Node checks for KinesteX Phase 4 envelope + Phase 5 persist hook.
+ * Node checks for KinesteX session envelope + persist hook.
  * Run: node frontend/src/services/kinestexSessionBoundary.node-test.mjs
  */
 import {

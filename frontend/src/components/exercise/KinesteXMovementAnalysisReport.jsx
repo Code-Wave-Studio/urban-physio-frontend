@@ -28,10 +28,8 @@ function movementMessage(analysis) {
 }
 
 /**
- * Post-exercise AI Movement Analysis report (Req #4).
- *
- * Uses persisted kinestex_sessions metrics + official KinesteX session/{id} replay.
- * Lazy-loads provider credentials only when the user opens the replay.
+ * Post-exercise AI Movement Analysis.
+ * Persisted metrics + official KinesteX session/{id} replay (lazy credentials).
  * Does not invent landmarks, scores, or clinical diagnoses.
  */
 export default function KinesteXMovementAnalysisReport({

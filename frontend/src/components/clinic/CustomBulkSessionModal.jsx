@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import FaIcon from '../FaIcon';
 import { clinicPortal } from '../../services/api';
@@ -31,18 +31,14 @@ function addDays(dateStr, days) {
 }
 
 const EMPTY = {
-  // Step 1
   clinic_patient_id: '',
   patient_name: '',
   patient_phone: '',
-  // Step 2
   service_type: '',
   service_mode: 'clinic',
-  // Step 3
   total_sessions: 10,
   never_expires: false,
   duration_days: 30,
-  // Step 4
   price: 0,
   discount_type: '',
   discount_value: 0,
@@ -55,19 +51,16 @@ export default function CustomBulkSessionModal({ clinicId, onClose, onCreated })
   const [form, setForm]     = useState(EMPTY);
   const [saving, setSaving] = useState(false);
 
-  // Step 1 patient search
   const [searchQ, setSearchQ]       = useState('');
   const [patients, setPatients]     = useState([]);
   const [searching, setSearching]   = useState(false);
 
-  // Step 2 service types
   const [serviceTypes, setServiceTypes] = useState([]);
 
   const debounce = useRef(null);
 
   const field = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
-  // ── Patient search ────────────────────────────────────────────────────
   useEffect(() => {
     if (debounce.current) clearTimeout(debounce.current);
     const q = searchQ.trim();
@@ -85,20 +78,17 @@ export default function CustomBulkSessionModal({ clinicId, onClose, onCreated })
     }, 300);
   }, [searchQ, clinicId]);
 
-  // ── Service types ─────────────────────────────────────────────────────
   useEffect(() => {
     clinicPortal.serviceTypes(clinicId)
       .then((r) => setServiceTypes(r.data || r || []))
       .catch(() => setServiceTypes([]));
   }, [clinicId]);
 
-  // ── Derived ──────────────────────────────────────────────────────────
   const finalPrice = calcFinal(form.price, form.discount_type, form.discount_value);
   const expiryDate = !form.never_expires && form.duration_days > 0
     ? addDays(new Date().toISOString().split('T')[0], Number(form.duration_days))
     : null;
 
-  // ── Submit ───────────────────────────────────────────────────────────
   const submit = async () => {
     setSaving(true);
     try {
@@ -134,7 +124,7 @@ export default function CustomBulkSessionModal({ clinicId, onClose, onCreated })
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-0 sm:p-4">
       <div className="w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col max-h-[92dvh] overflow-hidden">
-        {/* Header */}
+        
         <div className="flex items-center justify-between px-5 py-4 border-b">
           <div>
             <p className="font-bold text-slate-900 text-base">Create Custom Bulk Session</p>
@@ -145,7 +135,7 @@ export default function CustomBulkSessionModal({ clinicId, onClose, onCreated })
           </button>
         </div>
 
-        {/* Step progress */}
+        
         <div className="flex px-5 py-3 gap-1.5">
           {[1, 2, 3, 4].map((s) => (
             <div
@@ -157,10 +147,10 @@ export default function CustomBulkSessionModal({ clinicId, onClose, onCreated })
           ))}
         </div>
 
-        {/* Body */}
+        
         <div className="overflow-y-auto flex-1 px-5 pb-5 space-y-4">
 
-          {/* ── STEP 1: Select Patient ─────────────────────────────── */}
+          
           {step === 1 && (
             <>
               <p className="text-sm font-semibold text-slate-700">Select Patient</p>
@@ -232,7 +222,7 @@ export default function CustomBulkSessionModal({ clinicId, onClose, onCreated })
             </>
           )}
 
-          {/* ── STEP 2: Service Details ────────────────────────────── */}
+          
           {step === 2 && (
             <>
               <p className="text-sm font-semibold text-slate-700">Service Details</p>
@@ -301,7 +291,7 @@ export default function CustomBulkSessionModal({ clinicId, onClose, onCreated })
             </>
           )}
 
-          {/* ── STEP 3: Sessions & Validity ───────────────────────── */}
+          
           {step === 3 && (
             <>
               <p className="text-sm font-semibold text-slate-700">Sessions &amp; Validity</p>
@@ -351,7 +341,7 @@ export default function CustomBulkSessionModal({ clinicId, onClose, onCreated })
             </>
           )}
 
-          {/* ── STEP 4: Pricing ───────────────────────────────────── */}
+          
           {step === 4 && (
             <>
               <p className="text-sm font-semibold text-slate-700">Pricing</p>
@@ -394,7 +384,7 @@ export default function CustomBulkSessionModal({ clinicId, onClose, onCreated })
                 )}
               </div>
 
-              {/* Final price */}
+              
               <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 flex justify-between items-center">
                 <p className="text-sm font-semibold text-emerald-800">Amount Due</p>
                 <p className="text-lg font-bold text-emerald-700">{money(finalPrice)}</p>
@@ -431,7 +421,7 @@ export default function CustomBulkSessionModal({ clinicId, onClose, onCreated })
                 />
               </label>
 
-              {/* Summary */}
+              
               <div className="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-xs space-y-1">
                 <p className="font-semibold text-slate-700 mb-2">Package Summary</p>
                 <p><span className="text-slate-500">Patient:</span> <span className="font-medium">{form.patient_name}</span></p>
@@ -445,7 +435,7 @@ export default function CustomBulkSessionModal({ clinicId, onClose, onCreated })
           )}
         </div>
 
-        {/* Footer */}
+        
         <div className="flex items-center justify-between gap-2 px-5 py-4 border-t bg-white">
           {step > 1 ? (
             <button type="button" onClick={() => setStep(step - 1)} className="btn-outline text-sm gap-1.5 inline-flex items-center">

@@ -2,18 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import FaIcon from '../../FaIcon';
 import toast from 'react-hot-toast';
 
-/**
- * Generic editable list for {id,label,sort_order,is_active}
- * @param {{
- *   title: string,
- *   subtitle?: string,
- *   icon?: string,
- *   load: () => Promise<any>,
- *   create: (data:any) => Promise<any>,
- *   update: (id:number, data:any) => Promise<any>,
- *   remove: (id:number) => Promise<any>,
- * }} props
- */
+/** Editable list for {id, label, sort_order, is_active} via load/create/update/remove. */
 export default function EditableList({ title, subtitle = '', icon = 'fa-list', load, create, update, remove }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);

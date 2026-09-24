@@ -149,7 +149,7 @@ export const CLINIC_COVER_MAX_MB = 4;
 export const CLINIC_GALLERY_SIZE_HINT = '1600 × 1000 px (16:10 landscape)';
 export const CLINIC_GALLERY_MAX_MB = 3;
 
-/** Up to 10 banner images: cover first, then gallery (deduped). */
+/** Cover first, then gallery (deduped), max 10. */
 export function getBannerImages(clinic, max = 10) {
   if (!clinic) return [];
   const seen = new Set();
@@ -281,7 +281,7 @@ export function formatOpeningHoursRows(hours) {
   });
 }
 
-/** Convert a single slot like "08:00-21:00" to "8:00 AM - 9:00 PM". */
+/** Convert "08:00-21:00" → "8:00 AM - 9:00 PM". */
 export function formatSlot12h(slot) {
   const parts = String(slot).split('-').map((s) => s.trim());
   if (parts.length !== 2) return String(slot);
@@ -291,7 +291,7 @@ export function formatSlot12h(slot) {
   return `${formatMinutes(start)} - ${formatMinutes(end)}`;
 }
 
-/** Formatted hours label for today (e.g. "8:00 AM - 9:00 PM" or "Closed"). */
+/** Today's hours label (e.g. "8:00 AM - 9:00 PM" or "Closed"). */
 export function getTodayHoursText(hours, now = new Date()) {
   const rows = formatOpeningHoursRows(hours);
   const todayKey = getTodayDayKey(now);

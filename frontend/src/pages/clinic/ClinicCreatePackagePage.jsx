@@ -78,7 +78,6 @@ export default function ClinicCreatePackagePage() {
     clinicPortal.doctors?.(clinicId)
       .then((r) => setDoctors(r.data || r || []))
       .catch(() => setDoctors([]));
-    // Load service types
     clinicPortal.serviceTypes(clinicId)
       .then((r) => setServiceTypes(r.data || r || []))
       .catch(() => setServiceTypes([]));
@@ -243,7 +242,7 @@ export default function ClinicCreatePackagePage() {
       }
     >
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.75fr)] gap-4 sm:gap-5">
-        {/* ── Template list ── */}
+
         <section className="glass-card !p-0 overflow-hidden order-2 lg:order-1">
           <div className="px-4 sm:px-5 py-4 border-b space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -358,7 +357,7 @@ export default function ClinicCreatePackagePage() {
           )}
         </section>
 
-        {/* ── Create / Edit form ── */}
+
         <form
           onSubmit={save}
           className="glass-card !p-4 sm:!p-5 space-y-4 self-start lg:sticky lg:top-4 order-1 lg:order-2"
@@ -372,7 +371,7 @@ export default function ClinicCreatePackagePage() {
             )}
           </div>
 
-          {/* Name */}
+          
           <label className="block text-sm font-medium">
             Package Name
             <input
@@ -384,7 +383,7 @@ export default function ClinicCreatePackagePage() {
             />
           </label>
 
-          {/* Description */}
+          
           <label className="block text-sm font-medium">
             Description
             <textarea
@@ -396,7 +395,7 @@ export default function ClinicCreatePackagePage() {
             />
           </label>
 
-          {/* Service Type */}
+          
           <label className="block text-sm font-medium">
             Service Type
             <select
@@ -411,7 +410,7 @@ export default function ClinicCreatePackagePage() {
             </select>
           </label>
 
-          {/* Sessions / Validity / Price */}
+          
           <div className="grid grid-cols-2 gap-3">
             <label className="text-xs font-medium">
               Sessions
@@ -456,7 +455,7 @@ export default function ClinicCreatePackagePage() {
             </label>
           )}
 
-          {/* Included modes */}
+          
           <fieldset>
             <legend className="text-sm font-medium mb-2">Service Modes</legend>
             <div className="flex flex-wrap gap-2">
@@ -481,7 +480,7 @@ export default function ClinicCreatePackagePage() {
             </div>
           </fieldset>
 
-          {/* Eligible providers */}
+          
           {doctors.length > 0 && (
             <fieldset>
               <legend className="text-sm font-medium mb-1">
@@ -507,7 +506,7 @@ export default function ClinicCreatePackagePage() {
             </fieldset>
           )}
 
-          {/* Active flag */}
+          
           <label className="flex items-center gap-2 text-sm cursor-pointer">
             <input
               type="checkbox"

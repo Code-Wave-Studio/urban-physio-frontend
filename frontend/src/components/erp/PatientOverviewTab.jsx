@@ -104,7 +104,6 @@ export default function PatientOverviewTab({ patientKey, clinicId, initialData, 
       setStats(d.stats || {});
       setActivePkg(d.active_package || null);
     } catch {
-      // Keep initial / current data
     }
   }, [patientKey, clinicId]);
 
@@ -186,7 +185,7 @@ export default function PatientOverviewTab({ patientKey, clinicId, initialData, 
     <div className="space-y-5">
       <UnsavedChangesGuard isDirty={editing && state.isDirty} />
 
-      {/* Rule-based Exercise Feedback Alerts Banner */}
+      
       {exerciseAlerts.length > 0 && (
         <div className="rounded-2xl border border-rose-200 bg-rose-50/60 p-4 space-y-2">
           <div className="flex items-center gap-2 text-rose-900 font-bold text-sm">

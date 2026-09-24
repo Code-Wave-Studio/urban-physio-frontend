@@ -135,7 +135,7 @@ export default function CareersPage() {
       breadcrumb="Careers"
       heroExtra={heroExtra}
     >
-      {/* Join options */}
+      
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         <div className="glass-card flex flex-col">
           <div className="w-12 h-12 rounded-xl bg-primary-100 text-primary-700 flex items-center justify-center mb-4">
@@ -181,7 +181,7 @@ export default function CareersPage() {
         </div>
       </section>
 
-      {/* Why join */}
+      
       <section className="mt-12 md:mt-16">
         <SectionHeading
           eyebrow="Why Join"
@@ -201,7 +201,7 @@ export default function CareersPage() {
         </div>
       </section>
 
-      {/* Registration process */}
+      
       <section className="mt-12 md:mt-16">
         <SectionHeading eyebrow="Get Started" title="Registration process" subtitle="Four simple steps to start receiving patients." />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -218,7 +218,7 @@ export default function CareersPage() {
         </div>
       </section>
 
-      {/* Verification process */}
+      
       <section className="mt-12 md:mt-16">
         <SectionHeading eyebrow="Trust & Safety" title="Verification process" subtitle="Every professional is verified to keep patients safe and your brand trusted." />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -262,7 +262,7 @@ export default function CareersPage() {
         </div>
       </section>
 
-      {/* Future growth */}
+      
       <section className="mt-12 md:mt-16">
         <div className="glass-dark rounded-2xl p-6 md:p-10 text-white text-center">
           <div className="inline-flex items-center gap-2 bg-white/15 rounded-full px-4 py-1.5 text-sm mb-4">
@@ -279,7 +279,7 @@ export default function CareersPage() {
         </div>
       </section>
 
-      {/* FAQs */}
+      
       <section className="mt-12 md:mt-16">
         <SectionHeading eyebrow="FAQs" title="Frequently asked questions" />
         <div className="max-w-3xl mx-auto space-y-3">
@@ -299,7 +299,7 @@ export default function CareersPage() {
         </div>
       </section>
 
-      {/* Apply form */}
+      
       <section id="apply" className="mt-12 md:mt-16 scroll-mt-24">
         <SectionHeading eyebrow="Apply Now" title="Start your application" subtitle="Tell us about yourself and our team will reach out." />
         <form onSubmit={submit} className="glass-card max-w-3xl mx-auto">

@@ -1,29 +1,16 @@
-/**
- * SlotCapacityBadge
- * Displays slot occupancy indicator with color coding and progress bar.
- * Used inside Agenda cards, Event details modal, and Calendar slots.
- *
- * Props:
- *  - booked   {number}
- *  - capacity {number}
- *  - status   {'open'|'limited'|'full'|'blocked'|'holiday'|'leave'}
- *  - enabled  {boolean}  – false = capacity not enforced → show nothing
- *  - compact  {boolean}  – single-line badge mode
- */
+/** Slot occupancy badge; no-op when capacity is not enforced. */
 export default function SlotCapacityBadge({ booked, capacity, status, enabled, compact = false }) {
   if (!enabled || capacity == null) return null;
 
   const remaining = Math.max(0, capacity - booked);
   const pct       = capacity > 0 ? Math.min(100, Math.round((booked / capacity) * 100)) : 0;
 
-  // Color scheme by status
   const scheme = (() => {
     if (status === 'full' || remaining === 0) return { dot: '🔴', bar: 'bg-red-500',   text: 'text-red-700',   bg: 'bg-red-50',   border: 'border-red-200',   label: 'Fully Booked' };
     if (status === 'limited' || remaining === 1) return { dot: '🟡', bar: 'bg-amber-400', text: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200', label: `${remaining} slot available` };
     return { dot: '🟢', bar: 'bg-emerald-500', text: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200', label: `${remaining} available` };
   })();
 
-  // 5-block progress bar (Feature 9)
   const filledBlocks = Math.round((pct / 100) * 5);
   const progressBar  = Array.from({ length: 5 }, (_, i) =>
     i < filledBlocks ? '█' : '░'

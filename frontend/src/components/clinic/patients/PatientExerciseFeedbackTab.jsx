@@ -21,7 +21,6 @@ export default function PatientExerciseFeedbackTab({ clinicId, patientKey, onCon
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Filters
   const [q, setQ] = useState('');
   const [exerciseFilter, setExerciseFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -30,7 +29,6 @@ export default function PatientExerciseFeedbackTab({ clinicId, patientKey, onCon
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
-  // Action Modals
   const [replyModalLog, setReplyModalLog] = useState(null);
   const [replyText, setReplyText] = useState('');
   const [internalNoteText, setInternalNoteText] = useState('');
@@ -129,7 +127,7 @@ export default function PatientExerciseFeedbackTab({ clinicId, patientKey, onCon
 
   return (
     <div className="space-y-4">
-      {/* Rule-based Exercise Feedback Alerts */}
+      
       {alerts.length > 0 && (
         <div className="space-y-2">
           {alerts.map((alt) => {
@@ -161,7 +159,7 @@ export default function PatientExerciseFeedbackTab({ clinicId, patientKey, onCon
         </div>
       )}
 
-      {/* Summary KPI Cards */}
+      
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="rounded-xl border border-slate-200 bg-white p-3 text-center">
           <p className="text-xl font-bold text-slate-900">{summary.total}</p>
@@ -181,9 +179,9 @@ export default function PatientExerciseFeedbackTab({ clinicId, patientKey, onCon
         </div>
       </div>
 
-      {/* Compact & Collapsible Filter Bar */}
+      
       <div className="bg-slate-50 p-2.5 sm:p-3 rounded-2xl border border-slate-200/80 space-y-2.5 transition-all">
-        {/* Main Search Row */}
+        
         <div className="flex items-center gap-2">
           <div className="relative flex-1 min-w-0">
             <FaIcon icon="fa-magnifying-glass" className="absolute left-3 top-2.5 text-xs text-slate-400" />
@@ -226,10 +224,10 @@ export default function PatientExerciseFeedbackTab({ clinicId, patientKey, onCon
           )}
         </div>
 
-        {/* Collapsible Filter Panel (Hidden by default) */}
+        
         {showFilters && (
           <div className="pt-2 border-t border-slate-200/60 grid grid-cols-2 sm:grid-cols-4 gap-2 animate-in fade-in slide-in-from-top-1 duration-150">
-            {/* Pain filter */}
+            
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Pain Score</label>
               <select
@@ -244,7 +242,7 @@ export default function PatientExerciseFeedbackTab({ clinicId, patientKey, onCon
               </select>
             </div>
 
-            {/* Completion Status */}
+            
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Completion</label>
               <select
@@ -258,7 +256,7 @@ export default function PatientExerciseFeedbackTab({ clinicId, patientKey, onCon
               </select>
             </div>
 
-            {/* Review Status */}
+            
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Review</label>
               <select
@@ -272,7 +270,7 @@ export default function PatientExerciseFeedbackTab({ clinicId, patientKey, onCon
               </select>
             </div>
 
-            {/* Date Range */}
+            
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Date</label>
               <input
@@ -286,7 +284,7 @@ export default function PatientExerciseFeedbackTab({ clinicId, patientKey, onCon
         )}
       </div>
 
-      {/* Feedback List */}
+      
       {loading ? (
         <div className="glass-card h-48 animate-pulse" />
       ) : !feedbackList.length ? (
@@ -388,7 +386,7 @@ export default function PatientExerciseFeedbackTab({ clinicId, patientKey, onCon
                   </div>
                 </div>
 
-                {/* Comment & Feedback text */}
+                
                 {comment ? (
                   <div className="mt-3 rounded-xl bg-slate-50 p-3 text-xs text-slate-800 border border-slate-100">
                     <p className="font-semibold text-slate-500 uppercase tracking-wide text-[10px] mb-1">Patient Comment</p>
@@ -398,7 +396,7 @@ export default function PatientExerciseFeedbackTab({ clinicId, patientKey, onCon
                   <p className="mt-2 text-xs italic text-slate-400">No written comment provided by patient.</p>
                 )}
 
-                {/* Therapist Response */}
+                
                 {log.therapist_response && (
                   <div className="mt-2 rounded-xl bg-teal-50/60 p-3 text-xs text-teal-900 border border-teal-100">
                     <div className="flex items-center justify-between gap-2 mb-1">
@@ -413,7 +411,7 @@ export default function PatientExerciseFeedbackTab({ clinicId, patientKey, onCon
                   </div>
                 )}
 
-                {/* Internal Note */}
+                
                 {log.internal_note && (
                   <div className="mt-2 rounded-xl bg-purple-50/60 p-2.5 text-xs text-purple-900 border border-purple-100">
                     <p className="font-bold text-purple-800 uppercase tracking-wide text-[10px] mb-0.5">Internal Clinical Note (Staff Only)</p>
@@ -426,7 +424,7 @@ export default function PatientExerciseFeedbackTab({ clinicId, patientKey, onCon
         </div>
       )}
 
-      {/* Reply & Internal Note Modal */}
+      
       {replyModalLog && typeof document !== 'undefined' && createPortal(
         <ModalScrollLock>
           <div
@@ -455,7 +453,7 @@ export default function PatientExerciseFeedbackTab({ clinicId, patientKey, onCon
                 </button>
               </div>
 
-              {/* Scrollable Form Body Container */}
+              
               <form onSubmit={saveReplyAndNote} className="flex flex-col flex-1 overflow-hidden">
                 <div className="p-6 overflow-y-auto flex-1 space-y-4 sm:space-y-5">
                   <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl text-xs space-y-1.5 shadow-xs">

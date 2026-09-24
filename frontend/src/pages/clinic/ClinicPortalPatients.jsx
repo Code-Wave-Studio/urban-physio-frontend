@@ -798,7 +798,7 @@ export default function ClinicPortalPatients() {
       }
     >
       <div className="space-y-4 sm:space-y-5">
-        {/* KPI strip */}
+        
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
           {kpis.map((k) => (
             <div
@@ -811,7 +811,7 @@ export default function ClinicPortalPatients() {
           ))}
         </div>
 
-        {/* Command search + toolbar */}
+        
         <div className="rounded-2xl border border-white/60 bg-white/70 p-3 shadow-sm backdrop-blur-md sm:p-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <button
@@ -928,7 +928,7 @@ export default function ClinicPortalPatients() {
             </div>
           </div>
 
-          {/* Filter pills */}
+          
           <div className="mt-3 flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {FILTER_PILLS.map((p) => {
               const active = filter === p.id;
@@ -951,7 +951,7 @@ export default function ClinicPortalPatients() {
           </div>
         </div>
 
-        {/* Directory */}
+        
         <div className="min-h-[240px]">
           {bootLoading || loading ? (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -1022,7 +1022,7 @@ export default function ClinicPortalPatients() {
           )}
         </div>
 
-        {/* Pagination */}
+        
         {meta.pages > 1 && (
           <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-white/70 px-4 py-3 text-sm">
             <p className="text-slate-500">
@@ -1236,7 +1236,7 @@ export default function ClinicPortalPatients() {
                   key={patientKey(p)}
                   className="bg-white border-2 border-slate-900/80 rounded-2xl p-4 shadow-sm space-y-3 select-none font-sans relative hover:border-teal-600 transition-colors"
                 >
-                  {/* Header */}
+
                   <div className="flex justify-between items-start border-b border-slate-200 pb-2.5">
                     <div>
                       <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-900">
@@ -1251,7 +1251,7 @@ export default function ClinicPortalPatients() {
                     </span>
                   </div>
 
-                  {/* Name & ID */}
+                  
                   <div>
                     <div className="flex justify-between items-start gap-2">
                       <h3 className="font-extrabold text-slate-900 text-base leading-tight break-words">
@@ -1264,14 +1264,14 @@ export default function ClinicPortalPatients() {
                     <p className="text-xs font-semibold text-slate-600 mt-1">{info.ageSex}</p>
                   </div>
 
-                  {/* Contact details */}
+                  
                   <div className="text-xs text-slate-700 bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 space-y-1">
                     <p><strong>Phone:</strong> {info.phone}</p>
                     {info.email && <p className="break-all"><strong>Email:</strong> {info.email}</p>}
                     {info.address && <p className="truncate"><strong>Address:</strong> {info.address}</p>}
                   </div>
 
-                  {/* Barcode & Date */}
+                  
                   <div className="flex justify-between items-end border-t border-dashed border-slate-300 pt-2.5">
                     <div>
                       <div className="flex items-center gap-0.5 h-4 mb-1 opacity-85" aria-hidden="true">

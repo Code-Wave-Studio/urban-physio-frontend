@@ -89,7 +89,7 @@ export default function ClinicAssessmentBuilderPage() {
       }
     >
       <div className="grid lg:grid-cols-3 gap-5">
-        {/* Template List */}
+        
         <div className="lg:col-span-1 glass-card !p-4">
           <h2 className="font-bold text-sm mb-3 text-slate-700">Templates</h2>
           {loading ? (
@@ -111,7 +111,7 @@ export default function ClinicAssessmentBuilderPage() {
           )}
         </div>
 
-        {/* Builder */}
+        
         <div className="lg:col-span-2">
           {templateId === 'new' || templateId ? (
             <AssessmentBuilder

@@ -3350,7 +3350,7 @@
     @apply text-xs sm:text-sm !py-2;
   }
 
-  /* ── Premium clinic dashboard (light glass — matches site primary orange) ── */
+  
   /* Use 1 → 2 column grid (not 12-col). Missing col-span must never crush widgets to ~8% width. */
   .dash-board {
     display: grid;
@@ -5359,7 +5359,6 @@ html {
   }
 }
 
-/* ---------- Document Management System ---------- */
 @layer components {
   .doc-card {
     @apply bg-white/70 backdrop-blur-sm border border-slate-200/80 rounded-2xl p-4 shadow-sm
@@ -5419,10 +5418,6 @@ html {
     @apply border-slate-200 bg-white/70 text-slate-600 hover:border-primary-200;
   }
 
-  /* ================================================================
-     APPLICATION SHELL — Persistent sidebar + workspace layout
-     ================================================================ */
-
   :root {
     --shell-sidebar-w: 264px;
     --shell-sidebar-w-collapsed: 0px;
@@ -5435,7 +5430,7 @@ html {
     }
   }
 
-  /* Outer shell container — fills viewport, no overflow */
+  
   .app-shell {
     display: flex;
     flex-direction: column;
@@ -5493,7 +5488,7 @@ html {
     }
   }
 
-  /* ── Portal nav link (sidebar) ── */
+  
   .portal-nav-link {
     @apply flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-sm text-slate-600
            transition-all duration-200 ease-micro w-full text-left cursor-pointer select-none border-0 bg-transparent;
@@ -5584,14 +5579,10 @@ html {
            transition-all duration-200 active:scale-95 whitespace-nowrap shrink-0;
   }
 
-  /* Portal header — full width in shell mode */
+  
   .app-shell .glass-nav > div {
     max-width: none;
   }
-
-  /* ================================================================
-     3-COLUMN DESKTOP SHELL — Primary Rail (Icon Only) + Context Panel + Workspace
-     ================================================================ */
 
   :root {
     --shell-primary-nav-w: 68px;
@@ -5599,7 +5590,7 @@ html {
     --shell-sidebar-transition: 240ms cubic-bezier(0.2, 0, 0, 1);
   }
 
-  /* ── Primary nav rail (desktop only) ── */
+  
   .app-shell__primary-nav {
     display: none;
   }
@@ -5640,7 +5631,7 @@ html {
     margin-left: 0 !important;
   }
 
-  /* Primary nav profile avatar header */
+  
   .primary-nav__profile-wrap {
     display: flex;
     align-items: center;
@@ -5668,7 +5659,7 @@ html {
     border-color: rgba(249, 115, 22, 0.25);
   }
 
-  /* Primary nav section list */
+  
   .primary-nav__sections {
     flex: 1 1 0%;
     overflow-y: auto;
@@ -5685,7 +5676,7 @@ html {
     display: none;
   }
 
-  /* Primary nav item button (Icon Only) */
+  
   .primary-nav__item {
     display: flex;
     align-items: center;
@@ -5787,7 +5778,7 @@ html {
     transform: translateY(-50%) translateX(0);
   }
 
-  /* Primary nav footer (collapse toggle) */
+  
   .primary-nav__footer {
     flex-shrink: 0;
     display: flex;
@@ -5824,7 +5815,7 @@ html {
     color: #ea580c;
   }
 
-  /* ── Context panel (desktop only) ── */
+  
   .app-shell__context-panel {
     display: none;
   }
@@ -5880,7 +5871,7 @@ html {
     border-top: 1px solid rgba(226, 232, 240, 0.5);
   }
 
-  /* Context panel header */
+  
   .context-panel__header {
     display: flex;
     align-items: center;
@@ -5928,9 +5919,6 @@ html {
     gap: 0.125rem;
   }
 
-  /* =========================================================================
-     Enrollment Made Simple / How to Enrol
-     ========================================================================= */
   .enrol-section {
     --enrol-blue: #3b82f6;
     --enrol-blue-deep: #2563eb;

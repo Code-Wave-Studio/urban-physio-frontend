@@ -55,7 +55,7 @@ export default function AdminDeleteUserModal({ user, onClose, onConfirm, loading
       titleId="admin-delete-user-title"
       panelClassName="max-h-[90vh] sm:max-h-[min(90vh,760px)] overflow-hidden flex flex-col shadow-2xl"
     >
-      {/* Fixed Header */}
+      
       <GlassModalHeader
         icon={mode === "permanent" ? "trash-alt" : "user-slash"}
         accent={mode === "permanent" ? "red" : "amber"}
@@ -67,7 +67,7 @@ export default function AdminDeleteUserModal({ user, onClose, onConfirm, loading
 
       {/* Smooth Scrollable Content Area (max-height 90vh handled by flex) */}
       <GlassModalBody className="p-4 sm:p-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
-        {/* User Info Card */}
+        
         <div className="flex items-center gap-3.5 p-3.5 sm:p-4 rounded-2xl bg-slate-50/90 border border-slate-200/80 shadow-2xs">
           <div
             className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shrink-0 font-bold text-sm sm:text-base text-white shadow-sm ${
@@ -91,13 +91,13 @@ export default function AdminDeleteUserModal({ user, onClose, onConfirm, loading
           </span>
         </div>
 
-        {/* Delete Type Selection */}
+        
         <div className="space-y-2.5">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
             Select Delete Type
           </p>
           <div className="grid gap-3">
-            {/* Soft Delete Option */}
+            
             <button
               type="button"
               onClick={() => setMode("soft")}
@@ -140,7 +140,7 @@ export default function AdminDeleteUserModal({ user, onClose, onConfirm, loading
               </div>
             </button>
 
-            {/* Permanent Delete Option */}
+            
             <button
               type="button"
               onClick={() => setMode("permanent")}
@@ -186,7 +186,7 @@ export default function AdminDeleteUserModal({ user, onClose, onConfirm, loading
         </div>
 
 
-        {/* Permanent Delete Email Confirmation Field */}
+        
         {mode === "permanent" && (
           <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/90 space-y-2.5 animate-fade-in shadow-2xs">
             <label
@@ -239,7 +239,7 @@ export default function AdminDeleteUserModal({ user, onClose, onConfirm, loading
         )}
       </GlassModalBody>
 
-      {/* Fixed Action Buttons Footer */}
+      
       <GlassModalFooter className="p-4 sm:p-5 border-t border-slate-200/80 bg-slate-50/90 backdrop-blur-md flex items-center justify-end gap-3 shrink-0 rounded-b-2xl sm:rounded-b-3xl">
         <button
           type="button"

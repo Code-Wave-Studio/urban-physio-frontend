@@ -119,7 +119,7 @@ export default function ConditionDetail() {
       />
       <Navbar />
 
-      {/* Hero */}
+      
       <section className="bg-gradient-to-br from-violet-50 via-white to-primary-50 border-b border-white/60 py-8 md:py-12">
         <div className="max-w-4xl mx-auto px-4">
           <SeoBreadcrumbs tone="onLight" items={crumbs} />
@@ -147,7 +147,7 @@ export default function ConditionDetail() {
           </SectionCard>
         ))}
 
-        {/* Rehab phases timeline */}
+        
         {(phases.length > 0 || item.rehab_program) && (
           <div className="glass-card">
             <h2 className="font-semibold text-lg mb-4 flex items-center gap-2 text-violet-700">
@@ -173,7 +173,7 @@ export default function ConditionDetail() {
           </div>
         )}
 
-        {/* CTA */}
+        
         <div className="glass-strong rounded-2xl p-6 md:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h3 className="font-bold text-lg text-slate-800">Ready to start your recovery?</h3>
@@ -193,7 +193,7 @@ export default function ConditionDetail() {
           </div>
         </div>
 
-        {/* Related */}
+        
         {related.length > 0 && (
           <div>
             <h3 className="font-semibold text-slate-800 mb-4">Related in {item.category}</h3>

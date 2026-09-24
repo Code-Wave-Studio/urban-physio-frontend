@@ -84,7 +84,7 @@ export default function ClinicCalendarPage() {
           />
         )}
 
-        {/* Slot capacity summary injected by CalendarBoard */}
+        
       </div>
 
       <ClinicBookingModal

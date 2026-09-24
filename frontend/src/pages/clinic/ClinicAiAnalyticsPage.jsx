@@ -219,17 +219,14 @@ export default function ClinicAiAnalyticsPage() {
       // Create CSV with UTF-8 BOM byte order mark (\uFEFF) for Excel compatibility
       let csvContent = '\uFEFF';
 
-      // Metadata Header Rows
       csvContent += `"THE URBAN PHYSIO — ANALYTICS & REPORTING SYSTEM"\n`;
       csvContent += `"Report Title:","${reportTitle.replace(/"/g, '""')}"\n`;
       csvContent += `"Clinic / Branch:","${clinicName.replace(/"/g, '""')}"\n`;
       csvContent += `"Date Range:","${dateFrom} to ${dateTo}"\n`;
       csvContent += `"Generated On:","${timestamp}"\n\n`;
 
-      // Data Table Headers
       csvContent += headers.map((h) => `"${String(h).replace(/"/g, '""')}"`).join(',') + '\n';
 
-      // Data Table Rows
       rows.forEach((row) => {
         const line = headers
           .map((h) => {
@@ -359,7 +356,6 @@ export default function ClinicAiAnalyticsPage() {
       .catch((e) => toast.error(e.message || 'Branch analytics failed'));
   }, [cid, section, filterParams]);
 
-  // Sync server layout once per view
   useEffect(() => {
     if (!cid) return;
     clinicPortal
@@ -574,7 +570,7 @@ export default function ClinicAiAnalyticsPage() {
       subtitle="AI-driven business intelligence — reuses finance, billing, appointments, HEP & communication aggregations"
     >
       <div className="space-y-4">
-        {/* Global filters */}
+        
         <div className="glass-card !p-3 flex flex-col lg:flex-row lg:items-end gap-3">
           <div className="flex flex-wrap gap-1">
             {PRESETS.map((p) => (
@@ -971,7 +967,7 @@ export default function ClinicAiAnalyticsPage() {
         )}
       </div>
 
-      {/* Analytics Print Studio Modal */}
+      
       <AnalyticsPrintReportModal
         open={printModalOpen}
         onClose={() => setPrintModalOpen(false)}

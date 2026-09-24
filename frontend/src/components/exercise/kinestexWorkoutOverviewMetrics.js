@@ -1,6 +1,5 @@
 /**
- * Shared Workout Overview metric helpers for KinesteX AI session reports.
- * Only surfaces values present on the persisted session metrics object.
+ * Workout Overview metric helpers. Only surfaces values present on persisted metrics.
  * Never coerces null → 0.
  */
 
@@ -20,11 +19,7 @@ export function formatAccuracy(value) {
 }
 
 /**
- * Build ordered overview rows from normalized session metrics.
- * Sets are omitted when the provider did not return a sets count.
- *
- * @param {object|null|undefined} metrics
- * @returns {{ label: string, value: string|number }[]}
+ * Build ordered overview rows. Sets omitted when provider did not return a sets count.
  */
 export function buildWorkoutOverviewRows(metrics) {
   const m = metrics || {};

@@ -95,7 +95,7 @@ export default function PatientPaymentsTab({ clinicId, patientKey, data, onRefre
 
   return (
     <div className="space-y-4">
-      {/* Billing Summary Metrics */}
+      
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-xs">
           <p className="text-xs text-slate-500 font-medium">Total Billed</p>
@@ -123,7 +123,7 @@ export default function PatientPaymentsTab({ clinicId, patientKey, data, onRefre
         </div>
       </div>
 
-      {/* Payment Action Bar */}
+      
       <div className="flex items-center justify-between gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
         <div>
           <h3 className="font-bold text-slate-900 text-sm">Payment Records & History</h3>
@@ -148,7 +148,7 @@ export default function PatientPaymentsTab({ clinicId, patientKey, data, onRefre
         </button>
       </div>
 
-      {/* Payments History Table */}
+      
       {!payments.length ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
           <FaIcon icon="fa-receipt" className="text-3xl text-slate-300 mb-2 block mx-auto" />
@@ -215,7 +215,7 @@ export default function PatientPaymentsTab({ clinicId, patientKey, data, onRefre
         </div>
       )}
 
-      {/* Record Manual Payment Modal */}
+      
       {showRecordModal && typeof document !== 'undefined' && createPortal(
         <ModalScrollLock>
           <div
@@ -244,7 +244,7 @@ export default function PatientPaymentsTab({ clinicId, patientKey, data, onRefre
                 </button>
               </div>
 
-              {/* Scrollable Form Body Container */}
+              
               <form onSubmit={submitRecordPayment} className="flex flex-col flex-1 overflow-hidden">
                 <div className="p-6 overflow-y-auto flex-1 space-y-4 sm:space-y-5">
                   <div>

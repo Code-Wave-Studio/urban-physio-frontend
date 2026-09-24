@@ -4,11 +4,6 @@
  */
 export const PAIN_SELECTION_DEFAULT_ID = 'neck';
 
-/** @typedef {{ left: string; top: string }} BodyHighlightSpot */
-
-/** @typedef {{ id: string; chipLabel: string; label: string; headline: string; accordionDescription?: string; icon: string; highlight: BodyHighlightSpot; treatment_id?: number|null; treatment_slug?: string|null; treatment_title?: string|null }} PainPointConfig */
-
-/** @type {PainPointConfig[]} */
 export const PAIN_POINTS = [
   {
     id: 'neck',
@@ -102,7 +97,7 @@ export const PAIN_POINTS = [
   },
 ];
 
-/** @param {object} row API or DB row */
+/** Map API/DB pain-selection row → UI shape. */
 export function mapApiPainPoint(row) {
   if (!row) return null;
   const id = row.id ?? row.slug;
@@ -123,18 +118,15 @@ export function mapApiPainPoint(row) {
   };
 }
 
-/** @param {PainPointConfig[]} points */
 export function getPainPointById(id, points = PAIN_POINTS) {
   return points.find((p) => p.id === id) || points[0] || PAIN_POINTS[0];
 }
 
-/** @param {PainPointConfig} pain */
 export function getBodyHighlightSpots(pain) {
   if (!pain?.highlight) return [];
   return Array.isArray(pain.highlight) ? pain.highlight : [pain.highlight];
 }
 
-/** @param {PainPointConfig} pain */
 export function resolveTreatmentLink(pain) {
   if (pain?.treatment_slug) {
     return `/treatments/${pain.treatment_slug}`;

@@ -310,7 +310,7 @@ export default function AdminDashboard() {
   return (
     <AdminDashboardLayout>
       <PasswordSetupAlert profilePath="/admin/profile" />
-      {/* Hero */}
+      
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 via-slate-900 to-primary-900 text-white p-5 sm:p-8 mb-6 md:mb-8 shadow-lg">
         <div className="absolute top-0 right-0 w-72 h-72 bg-primary-500/10 rounded-full -translate-y-1/2 translate-x-1/4" />
         <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -341,7 +341,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Top Shortcuts (if pinned to top) */}
+      
       {shortcutsAtTop && (
         <div className="mb-6 md:mb-8">
           <CustomizableShortcuts
@@ -355,7 +355,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Stats */}
+      
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 mb-6 md:mb-8">
         {statCards.map(({ label, value, color, sub }) => (
           <div key={label} className="glass-card !p-3 md:!p-4 hover:shadow-md transition-shadow border border-white/80">
@@ -366,7 +366,7 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* Default Shortcuts (if not pinned to top) */}
+      
       {!shortcutsAtTop && (
         <div className="mb-6 md:mb-8">
           <CustomizableShortcuts
@@ -380,7 +380,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Alerts */}
+      
       <div className="grid sm:grid-cols-2 gap-4 mb-8">
         {(s.pending_doctors ?? 0) > 0 && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -406,7 +406,7 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      {/* Quick actions */}
+      
       <h2 className="text-lg font-semibold text-slate-800 mb-3">Quick actions</h2>
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
         {QUICK_ACTIONS.map((a) => (
@@ -433,7 +433,7 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* Charts row 1 */}
+      
       <div className="grid lg:grid-cols-3 gap-6 mb-6">
         <div className="glass-card lg:col-span-2 !p-4 md:!p-5">
           <h3 className="font-semibold text-slate-800">Bookings — last 14 days</h3>
@@ -449,7 +449,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Charts row 2 */}
+      
       <div className="grid lg:grid-cols-2 gap-6 mb-6">
         <div className="glass-card !p-4 md:!p-5">
           <h3 className="font-semibold text-slate-800">Revenue — last 14 days</h3>
@@ -495,7 +495,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Widgets */}
+      
       <div className="grid lg:grid-cols-3 gap-6 mb-8">
         <div className="glass-card !p-4 md:!p-5">
           <div className="flex items-center justify-between mb-4">

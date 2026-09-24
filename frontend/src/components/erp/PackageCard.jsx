@@ -33,7 +33,7 @@ export default function PackageCard({ pkg, onTerminate, onRefresh }) {
 
   return (
     <div className="rounded-2xl border border-slate-100 bg-white shadow-sm overflow-hidden">
-      {/* Header */}
+      
       <div className="p-4 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
@@ -60,7 +60,7 @@ export default function PackageCard({ pkg, onTerminate, onRefresh }) {
         </div>
       </div>
 
-      {/* Progress */}
+      
       <div className="px-4 pb-3">
         <div className="flex justify-between text-xs text-slate-500 mb-1">
           <span>{completed} completed</span>
@@ -75,7 +75,7 @@ export default function PackageCard({ pkg, onTerminate, onRefresh }) {
         </div>
       </div>
 
-      {/* Actions */}
+      
       <div className="px-4 pb-3 flex gap-2 flex-wrap">
         <button
           type="button"
@@ -96,7 +96,7 @@ export default function PackageCard({ pkg, onTerminate, onRefresh }) {
         )}
       </div>
 
-      {/* Sessions */}
+      
       {expanded && (
         <div className="border-t border-slate-100 divide-y divide-slate-50">
           {(pkg.sessions || []).length === 0 ? (

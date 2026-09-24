@@ -70,7 +70,7 @@ export default function FaqIllustration() {
           <FaqIllustrationSvg />
         )}
 
-        {/* Floating badges */}
+        
         <span className="absolute top-4 left-4 inline-flex items-center gap-1.5 bg-white/90 backdrop-blur border border-primary-100 text-primary-700 text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
           24/7 Help

@@ -24,7 +24,7 @@ export function PrescriptionA4Sheet({ rx, patientName = '', patientKey = '' }) {
       className="bg-white text-slate-800 p-6 sm:p-10 shadow-2xl rounded-sm border border-slate-200 w-full max-w-[210mm] mx-auto space-y-6 text-left"
       style={{ minHeight: '297mm', boxSizing: 'border-box' }}
     >
-      {/* Official Clinic & Doctor Letterhead */}
+      
       <div className="border-b-2 border-teal-600 pb-5 flex flex-wrap justify-between items-start gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5 text-teal-800 font-extrabold text-xl tracking-tight">
@@ -42,7 +42,7 @@ export function PrescriptionA4Sheet({ rx, patientName = '', patientKey = '' }) {
         </div>
       </div>
 
-      {/* Patient & Prescription Meta Bar */}
+      
       <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
         {patientName && (
           <div>
@@ -64,7 +64,7 @@ export function PrescriptionA4Sheet({ rx, patientName = '', patientKey = '' }) {
         </div>
       </div>
 
-      {/* Vitals Strip */}
+      
       {rx.vitals && Object.values(rx.vitals).some(Boolean) && (
         <div className="flex flex-wrap items-center gap-4 text-xs bg-teal-50/60 border border-teal-200/70 px-4 py-2.5 rounded-lg">
           <span className="font-bold text-teal-800 uppercase text-[10px]">Vitals:</span>
@@ -75,7 +75,7 @@ export function PrescriptionA4Sheet({ rx, patientName = '', patientKey = '' }) {
         </div>
       )}
 
-      {/* Clinical Diagnosis & Complaints */}
+      
       <div className="space-y-2 text-xs">
         {rx.chief_complaint && (
           <p><strong className="text-slate-700 uppercase text-[10px]">Chief Complaints:</strong> {rx.chief_complaint}</p>
@@ -87,7 +87,7 @@ export function PrescriptionA4Sheet({ rx, patientName = '', patientKey = '' }) {
         )}
       </div>
 
-      {/* Rx Medication Table */}
+      
       <div className="space-y-3">
         <div className="flex items-center gap-2 text-teal-800 font-extrabold text-xl">
           <span className="font-serif italic font-extrabold text-2xl">Rx</span>
@@ -125,7 +125,7 @@ export function PrescriptionA4Sheet({ rx, patientName = '', patientKey = '' }) {
         </table>
       </div>
 
-      {/* Special Advice & Follow-up */}
+      
       <div className="grid sm:grid-cols-2 gap-4 text-xs">
         {rx.special_advice && (
           <div className="p-3 rounded-xl border border-amber-200 bg-amber-50/50">
@@ -141,7 +141,7 @@ export function PrescriptionA4Sheet({ rx, patientName = '', patientKey = '' }) {
         )}
       </div>
 
-      {/* Doctor Sign-off & Physical Stamp Area */}
+      
       <div className="pt-8 flex justify-between items-end text-xs border-t border-slate-200 mt-8">
         <div className="text-[10px] text-slate-500 space-y-1 max-w-[280px]">
           <p className="font-bold text-slate-700 uppercase tracking-wide">Notice:</p>
@@ -201,9 +201,7 @@ export default function PrescriptionDocViewer({ doc, rx: rxProp, rxNumber: rxNum
     if (!targetRxNum) targetRxNum = 'RX-2026-0041';
     setPatientKey(targetPatientKey);
 
-    // Try finding in localStorage
     try {
-      // 1. Direct patient key lookup
       const storageKey = `tup_prescriptions_${targetPatientKey}`;
       const raw = localStorage.getItem(storageKey);
       if (raw) {
@@ -216,7 +214,6 @@ export default function PrescriptionDocViewer({ doc, rx: rxProp, rxNumber: rxNum
         }
       }
 
-      // 2. Global search across all localStorage keys
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
         if (k && k.startsWith('tup_prescriptions_')) {
@@ -274,7 +271,7 @@ export default function PrescriptionDocViewer({ doc, rx: rxProp, rxNumber: rxNum
         <PrescriptionA4Sheet rx={rx} patientName={patientName} patientKey={patientKey} />
       </div>
 
-      {/* Print Stylesheet */}
+      
       <style>{`
         @media print {
           .no-print {

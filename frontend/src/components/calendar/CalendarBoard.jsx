@@ -115,16 +115,8 @@ const inputCls =
   'w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm text-slate-800 focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none';
 
 /**
- * Shared Doctor Calendar board — week / month planners with all event types.
- *
- * props:
- *  - canManage: can create leave/holiday/room bookings
- *  - canManageRooms: can create clinic rooms (clinic admin / main admin)
- *  - showDoctorFilter: admin / clinic
- *  - roleLabel: subtitle hint
- *  - lockedClinicId: lock feed + forms to one clinic (clinic portal)
- *  - hideClinicFilter: hide the All clinics dropdown
- *  - canBook / onBookAppointment: open clinic booking modal from calendar
+ * Doctor calendar — week / month planners with leave, holiday, room, and appointment events.
+ * lockedClinicId locks feed + forms to one clinic (clinic portal).
  */
 export default function CalendarBoard({
   canManage = true,
@@ -438,7 +430,7 @@ export default function CalendarBoard({
 
   return (
     <div className="space-y-4">
-      {/* Toolbar */}
+      
       <div className={`glass-card !p-3 sm:!p-4 !bg-white relative ${addOpen ? 'z-50' : 'z-10'}`}>
         <div className="flex flex-col lg:flex-row lg:items-center gap-3 justify-between">
           <div className="flex items-center gap-2 flex-wrap">
@@ -559,7 +551,7 @@ export default function CalendarBoard({
           </div>
         </div>
 
-        {/* Type filters */}
+        
         <div className="mt-3 flex flex-wrap gap-1.5">
           {ALL_TYPES.map((t) => {
             const on = types.includes(t);
@@ -589,7 +581,7 @@ export default function CalendarBoard({
         </div>
       </div>
 
-      {/* Day view */}
+      
       {view === 'day' && (
         <CalendarDayView
           date={range.fromDate}
@@ -604,7 +596,7 @@ export default function CalendarBoard({
         />
       )}
 
-      {/* Agenda view */}
+      
       {view === 'agenda' && (
         <CalendarAgendaView
           days={agendaDays}
@@ -619,7 +611,7 @@ export default function CalendarBoard({
         />
       )}
 
-      {/* Week view */}
+      
       {view === 'week' && (
         <div className={`glass-card !p-0 overflow-hidden relative ${addOpen ? 'z-0' : 'z-[1]'}`}>
           <div className="portal-calendar-scroll">
@@ -683,7 +675,7 @@ export default function CalendarBoard({
         </div>
       )}
 
-      {/* Month view */}
+      
       {view === 'month' && (
         <div className={`glass-card !p-0 overflow-hidden relative ${addOpen ? 'z-0' : 'z-[1]'}`}>
           <div className="portal-calendar-scroll">
@@ -746,7 +738,7 @@ export default function CalendarBoard({
         </div>
       )}
 
-      {/* Legend */}
+      
       <div className="flex flex-wrap gap-3 text-xs text-slate-500">
         {ALL_TYPES.map((t) => (
           <span key={t} className="inline-flex items-center gap-1.5">
@@ -756,7 +748,7 @@ export default function CalendarBoard({
         ))}
       </div>
 
-      {/* Event detail */}
+      
       <Modal open={!!selected} title={selected?.title || 'Event'} onClose={() => setSelected(null)}>
         {selected && (
           <div className="space-y-3 text-sm">
@@ -859,7 +851,7 @@ export default function CalendarBoard({
         )}
       </Modal>
 
-      {/* Leave form */}
+      
       <Modal open={form === 'leave'} title="Add leave" onClose={() => setForm(null)}>
         <form onSubmit={submitLeave} className="space-y-3">
           {showDoctorFilter && (
@@ -914,7 +906,7 @@ export default function CalendarBoard({
         </form>
       </Modal>
 
-      {/* Holiday form */}
+      
       <Modal open={form === 'holiday'} title="Add holiday" onClose={() => setForm(null)}>
         <form onSubmit={submitHoliday} className="space-y-3">
           <label className="block text-xs font-semibold text-slate-500">
@@ -965,7 +957,7 @@ export default function CalendarBoard({
         </form>
       </Modal>
 
-      {/* New room */}
+      
       <Modal open={form === 'room'} title="Add clinic room" onClose={() => setForm(null)}>
         <form onSubmit={submitRoom} className="space-y-3">
           {lockedClinicId ? (
@@ -1005,7 +997,7 @@ export default function CalendarBoard({
         </form>
       </Modal>
 
-      {/* Room booking */}
+      
       <Modal open={form === 'roomBooking'} title="Book a room" onClose={() => setForm(null)}>
         <form onSubmit={submitRoomBooking} className="space-y-3">
           {!lockedClinicId && clinics.length > 1 && (

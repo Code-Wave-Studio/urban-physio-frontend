@@ -115,7 +115,7 @@ export default function ClinicSuggestionChipsPage() {
         </button>
       }
     >
-      {/* Filters */}
+      
       <div className="flex flex-wrap gap-3 mb-4">
         <input
           type="search"

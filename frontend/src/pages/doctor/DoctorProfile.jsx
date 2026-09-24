@@ -307,7 +307,7 @@ export default function DoctorProfile() {
         </p>
       </div>
 
-      {/* Status strip */}
+      
       <div className="glass-card mb-5 md:mb-6 flex flex-wrap items-center gap-4 !p-4">
         <div className="flex items-center gap-3 min-w-0">
           <DoctorAvatar
@@ -340,7 +340,7 @@ export default function DoctorProfile() {
         </div>
       </div>
 
-      {/* Tabs */}
+      
       <div className="flex gap-2 mb-5 md:mb-6 overflow-x-auto pb-1 scrollbar-thin -mx-1 px-1">
         {TABS.map((t) => (
           <button
@@ -359,7 +359,7 @@ export default function DoctorProfile() {
         ))}
       </div>
 
-      {/* Personal */}
+      
       {tab === 'personal' && (
         <div className="glass-card max-w-2xl space-y-4 !p-4 md:!p-6">
           <h2 className="font-semibold text-slate-800">Personal information</h2>
@@ -462,7 +462,7 @@ export default function DoctorProfile() {
         </div>
       )}
 
-      {/* Professional */}
+      
       {tab === 'professional' && (
         <div className="glass-card max-w-2xl space-y-4 !p-4 md:!p-6">
           <h2 className="font-semibold text-slate-800">Professional details</h2>
@@ -537,7 +537,7 @@ export default function DoctorProfile() {
         </div>
       )}
 
-      {/* Fees */}
+      
       {tab === 'fees' && (
         <div className="glass-card max-w-2xl space-y-4 !p-4 md:!p-6">
           <h2 className="font-semibold text-slate-800">Consultation fees</h2>
@@ -627,7 +627,7 @@ export default function DoctorProfile() {
         </div>
       )}
 
-      {/* Location */}
+      
       {tab === 'location' && (
         <div className="glass-card max-w-2xl space-y-4 !p-4 md:!p-6">
           <h2 className="font-semibold text-slate-800">Practice location</h2>

@@ -1366,7 +1366,7 @@ export default function ClinicBackOfficePage() {
         )}
       </div>
 
-      {/* Inventory modal */}
+      
       <GlassModal open={itemModal} onClose={() => setItemModal(false)} size="lg">
         <GlassModalHeader title={editingItem ? 'Edit inventory' : 'Add inventory'} onClose={() => setItemModal(false)} />
         <GlassModalBody className="flex flex-col flex-1 min-h-0">
@@ -1493,7 +1493,7 @@ export default function ClinicBackOfficePage() {
         </GlassModalFooter>
       </GlassModal>
 
-      {/* Expense modal */}
+      
       <GlassModal open={expModal} onClose={() => setExpModal(false)}>
         <GlassModalHeader title="Record expense" onClose={() => setExpModal(false)} />
         <GlassModalBody className="flex flex-col flex-1 min-h-0 space-y-3 overflow-y-auto">
@@ -1551,7 +1551,7 @@ export default function ClinicBackOfficePage() {
         </GlassModalFooter>
       </GlassModal>
 
-      {/* Task modal */}
+      
       <GlassModal open={taskModal} onClose={() => setTaskModal(false)}>
         <GlassModalHeader title="New task" onClose={() => setTaskModal(false)} />
         <GlassModalBody className="space-y-3">
@@ -1591,7 +1591,7 @@ export default function ClinicBackOfficePage() {
         </GlassModalFooter>
       </GlassModal>
 
-      {/* Equipment modal */}
+      
       <GlassModal open={eqModal} onClose={() => setEqModal(false)}>
         <GlassModalHeader title="Add equipment" onClose={() => setEqModal(false)} />
         <GlassModalBody className="grid sm:grid-cols-2 gap-3 overflow-y-auto">
@@ -1646,7 +1646,7 @@ export default function ClinicBackOfficePage() {
         </GlassModalFooter>
       </GlassModal>
 
-      {/* PO modal */}
+      
       <GlassModal open={poModal} onClose={() => !saving && setPoModal(false)} size="lg">
         <GlassModalHeader
           title="New purchase order"

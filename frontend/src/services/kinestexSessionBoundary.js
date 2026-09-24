@@ -1,27 +1,15 @@
 /**
- * Phase 4 → Phase 5 boundary for official KinesteX session results.
- *
- * Do NOT invent fields. Official event names/structures come from:
- * https://www.kinestex.com/docs/data-points
- * https://www.kinestex.com/docs/integration/custom-workout
- *
- * Phase 5 persists the same envelope via POST /kinestex/session/result.
+ * Boundary for official KinesteX session results.
+ * Do NOT invent fields. Docs: https://www.kinestex.com/docs/data-points
+ * Persists via POST /kinestex/session/result.
  */
 
 /** @typedef {'idle'|'preparing'|'starting'|'active'|'paused'|'completed'|'cancelled'|'failed'} KinesteXSessionLifecycle */
 
 /**
- * Normalize an official SDK handleMessage(type, data) pair into a Phase-5-ready envelope.
- *
- * @param {object} params
- * @param {string} params.eventType Official KinesteX message type
- * @param {object} [params.eventData] Official event payload (may be the whole message object)
- * @param {object} [params.context] Our prepare-session context (prescription/item/exercise)
- * @param {object} [params.collected] Accumulated events during the session
+ * Normalize official SDK handleMessage(type, data) into a persist envelope.
  * @param {string} [params.clientSessionId] Local UUID for this iframe mount (not a KinesteX id)
- * @param {string} [params.startedAt] ISO timestamp when this local session started
  * @param {string} [params.statusOverride] Terminal status when exit follows workout stats
- * @returns {object}
  */
 export function buildKinesteXSessionResult({
   eventType,
@@ -33,7 +21,7 @@ export function buildKinesteXSessionResult({
   statusOverride = null,
 }) {
   const data = eventData && typeof eventData === 'object' ? eventData : {};
-  // SDK sometimes nests fields under data / value; keep raw for Phase 5.
+  // SDK sometimes nests fields under data / value.
   const sessionId =
     data.session_id ??
     data?.data?.session_id ??
@@ -48,16 +36,14 @@ export function buildKinesteXSessionResult({
     started_at: startedAt || new Date().toISOString(),
     completed_at: new Date().toISOString(),
     status: statusOverride || mapCompletionStatus(eventType),
-    // Local HEP refs (not KinesteX fields)
     prescription_id: context.prescription_id ?? null,
     item_id: context.item_id ?? null,
     exercise_id: context.exercise_id ?? null,
     kinestex_exercise_id: context.kinestex_exercise_id ?? null,
     client_session_id: clientSessionId || null,
-    // Official provider references when present — never invent a KinesteX session id
+    // Never invent a KinesteX session id
     provider_session_id: sessionId || null,
     cancellation_reason: typeof data.reason === 'string' ? data.reason : null,
-    // Documented performance-related payloads when emitted
     exercise_completed: collected.exercise_completed || null,
     exercise_overview: collected.exercise_overview || null,
     workout_overview: collected.workout_overview || null,
@@ -67,7 +53,6 @@ export function buildKinesteXSessionResult({
     session_save_complete: collected.session_save_complete || null,
     motion_upload_error: collected.motion_upload_error || null,
     motion_upload_progress: collected.motion_upload_progress || null,
-    // Full last event for Phase 5 inspection
     last_event: { type: eventType, data },
     raw_events: collected,
   };
@@ -104,14 +89,7 @@ export function validateKinesteXSessionResult(result) {
   return result;
 }
 
-/**
- * Persist the Phase 4 envelope through the authenticated backend.
- * Does not log API keys. Success is only returned after the API accepts the save.
- *
- * @param {object} result from buildKinesteXSessionResult
- * @param {(payload: object) => Promise<object>} [persistFn]
- * @returns {Promise<object>} API data `{ session, duplicate, created }`
- */
+/** Persist via authenticated backend. Does not log API keys; success only after API accepts. */
 export async function onKinesteXSessionCompleted(result, persistFn) {
   validateKinesteXSessionResult(result);
   if (typeof persistFn !== 'function') {

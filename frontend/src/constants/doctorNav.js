@@ -10,7 +10,6 @@ export const DOCTOR_SPEED_DIAL = [
 ];
 
 export const DOCTOR_NAV = [
-  // Workspace
   { to: '/doctor', label: 'Overview', icon: 'fa-chart-line', section: 'workspace', match: 'exact' },
   { to: '/doctor/calendar', label: 'Calendar', icon: 'fa-calendar-days', section: 'workspace' },
   { to: '/doctor/appointments', label: 'Appointments', icon: 'fa-calendar-check', section: 'workspace' },
@@ -20,12 +19,10 @@ export const DOCTOR_NAV = [
   { to: '/doctor/search', label: 'Advanced Search', icon: 'fa-magnifying-glass-plus', section: 'workspace' },
   { to: '/doctor/emergency', label: 'Emergency', icon: 'fa-truck-medical', section: 'workspace' },
 
-  // Clinical Tools
   { to: '/doctor/treatment-journey', label: 'Treatment Journey', icon: 'fa-notes-medical', section: 'clinical' },
   { to: '/doctor/prescriptions', label: 'Rehab Plans', icon: 'fa-dumbbell', section: 'clinical' },
   { to: '/doctor/documents', label: 'Documents', icon: 'fa-folder-tree', section: 'clinical' },
 
-  // Practice & Growth
   { to: '/doctor/clinics', label: 'My Clinics', icon: 'fa-hospital', section: 'practice', match: 'exact' },
   { to: '/doctor/clinics/new', label: 'Add Clinic', icon: 'fa-plus', section: 'practice' },
   { to: '/doctor/treatment-services', label: 'Services & Treatments', icon: 'fa-hand-holding-medical', section: 'practice' },
@@ -33,11 +30,9 @@ export const DOCTOR_NAV = [
   { to: '/doctor/packages', label: 'Enrollments', icon: 'fa-user-plus', section: 'practice' },
   { to: '/clinic-manage', label: 'Clinic Analytics', icon: 'fa-hospital-user', section: 'practice' },
 
-  // Finance
   { to: '/doctor/admin-package-prices', label: 'Platform Prices', icon: 'fa-tags', section: 'finance' },
   { to: '/doctor/earnings', label: 'Earnings', icon: 'fa-indian-rupee-sign', section: 'finance' },
 
-  // Settings
   { to: '/doctor/clinic-availability', label: 'Availability', icon: 'fa-clock', section: 'settings' },
   { to: '/doctor/booking-filters', label: 'Booking Filters', icon: 'fa-filter', section: 'settings' },
   { to: '/doctor/custom-slots', label: 'Custom Slots', icon: 'fa-calendar-plus', section: 'settings' },

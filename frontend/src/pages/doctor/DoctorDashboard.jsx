@@ -278,7 +278,7 @@ export default function DoctorDashboard() {
   return (
     <DashboardLayout links={DOCTOR_NAV} variant="doctor">
       <PasswordSetupAlert profilePath="/doctor/profile" />
-      {/* Welcome hero */}
+      
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-teal-600 via-primary-600 to-slate-900 text-white p-5 sm:p-8 mb-6 md:mb-8 shadow-lg">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3" />
         <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -323,14 +323,14 @@ export default function DoctorDashboard() {
         </div>
       </div>
 
-      {/* Top Shortcuts (if pinned to top) */}
+      
       {shortcutsAtTop && (
         <div className="mb-6 md:mb-8">
           <DoctorQuickWork onPlaceAtTopChange={setShortcutsAtTop} />
         </div>
       )}
 
-      {/* Stats grid */}
+      
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6 md:mb-8">
         {statCards.map(({ label, value, color, sub }) => (
           <div key={label} className="glass-card !p-3 md:!p-4 hover:shadow-md transition-shadow border border-white/80">
@@ -341,7 +341,7 @@ export default function DoctorDashboard() {
         ))}
       </div>
 
-      {/* Pending alert */}
+      
       {pendingCount > 0 && (
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
           <div>
@@ -356,7 +356,7 @@ export default function DoctorDashboard() {
         </div>
       )}
 
-      {/* Quick actions */}
+      
       <h2 className="text-lg font-semibold text-slate-800 mb-3">Quick actions</h2>
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
         {QUICK_ACTIONS.map((a) => (
@@ -383,7 +383,7 @@ export default function DoctorDashboard() {
         ))}
       </div>
 
-      {/* Charts */}
+      
       <div className="grid lg:grid-cols-3 gap-6 mb-8">
         <div className="glass-card lg:col-span-2 !p-4 md:!p-5">
           <h3 className="font-semibold text-slate-800 mb-1">Bookings — last 14 days</h3>
@@ -425,7 +425,7 @@ export default function DoctorDashboard() {
         />
       </div>
 
-      {/* Schedule widgets */}
+      
       <div className="grid lg:grid-cols-3 gap-6 mb-8">
         <div className="glass-card !p-4 md:!p-5">
           <div className="flex items-center justify-between mb-4">
@@ -470,7 +470,7 @@ export default function DoctorDashboard() {
         </div>
       </div>
 
-      {/* Recent + fees summary */}
+      
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="glass-card !p-4 md:!p-5">
           <h3 className="font-semibold text-slate-800 mb-4">Recent bookings</h3>

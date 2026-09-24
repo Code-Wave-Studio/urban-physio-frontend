@@ -1,5 +1,5 @@
 /**
- * Workout Overview metric display helpers (Req #2).
+ * Workout Overview metric display helpers.
  * Run: node frontend/src/components/exercise/KinesteXWorkoutOverview.node-test.mjs
  */
 import assert from 'node:assert/strict';

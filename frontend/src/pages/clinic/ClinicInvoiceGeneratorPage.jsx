@@ -608,7 +608,7 @@ export default function ClinicInvoiceGeneratorPage() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="space-y-4">
-            {/* Patient search */}
+            
             <div className="glass-card !p-4 space-y-2 relative">
               <p className="font-semibold text-sm">Patient</p>
               {patientLabel ? (
@@ -735,7 +735,7 @@ export default function ClinicInvoiceGeneratorPage() {
               )}
             </div>
 
-            {/* Mediclaim */}
+            
             <div className="glass-card !p-4 space-y-3">
               <div className="flex items-center justify-between gap-3">
                 <div>
@@ -786,7 +786,7 @@ export default function ClinicInvoiceGeneratorPage() {
                 value={opts.notes} onChange={(e) => setOpts({ ...opts, notes: e.target.value })} />
             </div>
 
-            {/* Dual routing settings */}
+            
             {can('billing.settings') && (
               <div className="glass-card !p-4 space-y-3">
                 <p className="font-semibold text-sm">Billing & Payments</p>

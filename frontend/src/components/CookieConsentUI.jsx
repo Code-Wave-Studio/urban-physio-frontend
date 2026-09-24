@@ -72,7 +72,7 @@ export default function CookieConsentUI({
         </div>
       )}
 
-      {/* Preferences modal */}
+      
       <GlassModal
         open={showPreferences}
         onClose={onClosePreferences}

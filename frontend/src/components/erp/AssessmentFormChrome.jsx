@@ -126,10 +126,9 @@ export default function AssessmentFormChrome({
     <div className={`af-chrome ${mode === 'print' ? 'af-chrome--print' : ''}`} style={{ ['--af-primary']: primary }}>
       <style>{AF_PRINT_CSS}</style>
 
-      {/* ── HEADER (sticky) ── */}
+      
       <header className="af-header">
         <div className="af-header-zones">
-          {/* Zone 1 — Clinic */}
           <div className="af-zone af-zone-clinic">
             <div className="af-logo-row">
               {lh.logo_url ? (
@@ -158,7 +157,6 @@ export default function AssessmentFormChrome({
             </p>
           </div>
 
-          {/* Zone 2 — Form */}
           <div className="af-zone af-zone-form">
             <p className="af-form-title">{lh.form_title}</p>
             <p className="af-subtitle">{lh.subtitle}</p>
@@ -169,7 +167,6 @@ export default function AssessmentFormChrome({
             <p className="af-tiny">Language: {lh.language} · Rev: {lh.revision_date}</p>
           </div>
 
-          {/* Zone 3 — Patient */}
           <div className="af-zone af-zone-patient">
             <div className="af-patient-top">
               {patient.photo_url ? (
@@ -202,7 +199,7 @@ export default function AssessmentFormChrome({
           </div>
         </div>
 
-        {/* Quick reference strip */}
+        
         <div className="af-quick-strip">
           Patient: <strong>{patientName}</strong>
           {' | '}ID: <strong>{patientId}</strong>
@@ -214,7 +211,7 @@ export default function AssessmentFormChrome({
           {visit.type || 'New'} · {visit.mode || 'Clinic'}
         </div>
 
-        {/* Checklist */}
+        
         <div className="af-checklist">
           {CHECK_ITEMS.map(([key, label]) => (
             <label key={key} className="af-check-item">
@@ -232,7 +229,7 @@ export default function AssessmentFormChrome({
 
       <main className="af-body">{children}</main>
 
-      {/* ── FOOTER ── */}
+      
       <footer className="af-footer">
         <div className="af-footer-zones">
           <div className="af-zone">

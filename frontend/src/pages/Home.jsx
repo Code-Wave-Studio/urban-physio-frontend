@@ -205,7 +205,7 @@ export default function Home() {
       <div className="mesh-blob w-96 h-96 bg-orange-400 -top-48 -right-48 animate-pulse-soft hidden md:block opacity-20" />
       <div className="mesh-blob w-80 h-80 bg-primary-500 bottom-1/3 -left-40 animate-float hidden md:block opacity-15" />
 
-      {/* HERO — same premium orange as Treatments page */}
+      
       <section className="relative bg-gradient-to-br from-orange-600 via-primary-700 to-primary-950 text-white py-10 pb-16 md:py-20 md:pb-24 overflow-hidden">
         <div className="absolute inset-0 opacity-30 pointer-events-none" style={{ backgroundImage: HERO_PATTERN }} />
 
@@ -331,7 +331,7 @@ export default function Home() {
 
       <StatsCounter />
 
-      {/* SERVICES — anchor for Pain Selection “Book appointment” */}
+      
       <section id="book-care" className="max-w-7xl mx-auto px-4 section-pad">
         <div className="text-center mb-6 md:mb-12">
           <h2 className="section-title">Choose How You Want to Receive Care</h2>
@@ -358,7 +358,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
+      
       <section className="section-pad relative px-4">
         <div className="absolute inset-0 glass opacity-50 rounded-2xl md:rounded-3xl max-w-6xl mx-auto left-3 right-3 md:left-auto md:right-auto" />
         <div className="max-w-7xl mx-auto relative">
@@ -383,7 +383,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* DOCTORS */}
+      
       <section id="doctors" className="max-w-7xl mx-auto px-4 section-pad">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5 md:mb-10">
           <div>
@@ -454,7 +454,7 @@ export default function Home() {
         )}
       </section>
 
-      {/* CLINICS */}
+      
       <section id="clinics" className="max-w-7xl mx-auto px-4 section-pad pt-0">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5 md:mb-10">
           <div>
@@ -535,7 +535,7 @@ export default function Home() {
         )}
       </section>
 
-      {/* TREATMENTS */}
+      
       <section className="max-w-7xl mx-auto px-4 section-pad">
         <div className="glass-strong rounded-2xl md:rounded-3xl p-4 md:p-12">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 mb-5 md:mb-10">
@@ -562,7 +562,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CONDITIONS */}
+      
       <section className="max-w-7xl mx-auto px-4 section-pad">
         <div className="glass-strong rounded-2xl md:rounded-3xl p-4 md:p-12">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 mb-5 md:mb-10">
@@ -596,7 +596,7 @@ export default function Home() {
 
       <PhysioFeedSection />
 
-      {/* WHY US */}
+      
       <section className="max-w-7xl mx-auto px-4 section-pad">
         <div className="text-center mb-5 md:mb-12">
           <h2 className="section-title">Why Urban Physio?</h2>
@@ -614,7 +614,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* TESTIMONIALS — horizontal scroll on mobile */}
+      
       {showTestimonials && testimonials.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 section-pad">
           <div className="text-center mb-5 md:mb-12">
@@ -683,7 +683,7 @@ export default function Home() {
 
       <FaqSection items={HOME_FAQS} />
 
-      {/* CTA */}
+      
       <section className="max-w-7xl mx-auto px-4 pb-6 md:pb-8 pt-2">
         <div className="relative rounded-2xl md:rounded-3xl overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-orange-600 via-orange-700 to-orange-800" />

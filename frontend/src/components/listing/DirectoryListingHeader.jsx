@@ -78,7 +78,7 @@ export default function DirectoryListingHeader({
         </div>
 
         <div className="mt-3 flex flex-row gap-2 items-stretch">
-          {/* Search */}
+          
           <div className="relative flex-1 min-w-0">
             <FaIcon
               icon="fa-magnifying-glass"
@@ -93,7 +93,7 @@ export default function DirectoryListingHeader({
             />
           </div>
 
-          {/* Location */}
+          
           <button
             type="button"
             onClick={onLocationClick}
@@ -107,7 +107,7 @@ export default function DirectoryListingHeader({
             <FaIcon icon="fa-chevron-down" className="text-[10px] opacity-60" />
           </button>
 
-          {/* Filters */}
+
           <div className="relative shrink-0">
             <button
               type="button"

@@ -128,10 +128,6 @@ export default function TelePhysioPage() {
         jsonLd={jsonLd}
       />
       <Navbar />
-
-      {/* =========================================================================
-          SECTION 1: HERO
-          ========================================================================= */}
       <section className="relative overflow-hidden bg-gradient-to-br from-teal-700 via-primary-800 to-slate-950 text-white lg:max-h-[95vh] flex flex-col justify-center">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-teal-500/20 via-transparent to-transparent pointer-events-none" aria-hidden />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16 relative w-full">
@@ -148,7 +144,6 @@ export default function TelePhysioPage() {
                 {data.hero_subtitle || TELEPHYSIO_DEFAULTS.hero_subtitle}
               </p>
 
-              {/* CTAs */}
               <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5">
                 <Link
                   to={s.hero_cta_link || bookTelePhysioUrl()}
@@ -168,7 +163,6 @@ export default function TelePhysioPage() {
                 </a>
               </div>
 
-              {/* Trust indicators */}
               <ul className="mt-8 grid sm:grid-cols-2 gap-3 pt-6 border-t border-white/15 lg:pl-14">
                 {(s.trust_signals || []).map((item) => (
                   <li key={item} className="flex items-center gap-2.5 text-sm text-white/95">
@@ -181,7 +175,7 @@ export default function TelePhysioPage() {
               </ul>
             </div>
 
-            {/* Hero Image */}
+            
             <div className="relative">
               <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/25 aspect-[4/3] max-h-[440px] bg-slate-900">
                 <img
@@ -210,10 +204,6 @@ export default function TelePhysioPage() {
           </div>
         </div>
       </section>
-
-      {/* =========================================================================
-          SECTION 2: TRUST BAR
-          ========================================================================= */}
       <section className="bg-white border-b border-slate-200 shadow-xs relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
@@ -256,10 +246,6 @@ export default function TelePhysioPage() {
       <PhysioTeamSection />
 
       {isEnrolEnabled(s) && <EnrollmentSection theme="tele" sections={s} />}
-
-      {/* =========================================================================
-          SECTION 3: WHAT IS TELEPHYSIO?
-          ========================================================================= */}
       <section className="py-12 sm:py-16 bg-white border-b border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
@@ -330,10 +316,6 @@ export default function TelePhysioPage() {
           </div>
         </div>
       </section>
-
-      {/* =========================================================================
-          SECTION 4: WHO IS TELEPHYSIO FOR?
-          ========================================================================= */}
       <section className="py-12 sm:py-16 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-10">
@@ -367,7 +349,7 @@ export default function TelePhysioPage() {
             ))}
           </div>
 
-          {/* Clinical advisory note */}
+          
           <div className="mt-8 p-4 sm:p-5 rounded-2xl bg-amber-50/90 border border-amber-200/80 flex items-start gap-3.5 text-amber-900">
             <FaIcon icon="fa-triangle-exclamation" className="text-amber-600 text-lg mt-0.5 shrink-0" />
             <p className="text-xs sm:text-sm font-medium leading-relaxed">
@@ -376,10 +358,6 @@ export default function TelePhysioPage() {
           </div>
         </div>
       </section>
-
-      {/* =========================================================================
-          SECTION 5: HOW TELEPHYSIO WORKS
-          ========================================================================= */}
       <section className="py-12 sm:py-16 bg-white border-y border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-10">
@@ -427,10 +405,6 @@ export default function TelePhysioPage() {
           </div>
         </div>
       </section>
-
-      {/* =========================================================================
-          SECTION 6: WHAT HAPPENS DURING A SESSION
-          ========================================================================= */}
       <section className="py-12 sm:py-16 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-10">
@@ -473,10 +447,6 @@ export default function TelePhysioPage() {
           )}
         </div>
       </section>
-
-      {/* =========================================================================
-          SECTION 7: TELEPHYSIO BENEFITS
-          ========================================================================= */}
       <section className="py-12 sm:py-16 bg-white border-y border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-10">
@@ -509,10 +479,6 @@ export default function TelePhysioPage() {
           </div>
         </div>
       </section>
-
-      {/* =========================================================================
-          SECTION 8: CONDITIONS / USE CASES
-          ========================================================================= */}
       <section className="py-12 sm:py-16 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-10">
@@ -555,10 +521,6 @@ export default function TelePhysioPage() {
           </div>
         </div>
       </section>
-
-      {/* =========================================================================
-          SECTION 9: TELEPHYSIO EXPERIENCE
-          ========================================================================= */}
       <section className="py-12 sm:py-16 bg-white border-y border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-10">
@@ -601,10 +563,6 @@ export default function TelePhysioPage() {
           </div>
         </div>
       </section>
-
-      {/* =========================================================================
-          SECTION 10: PRICING
-          ========================================================================= */}
       <section className="py-12 sm:py-16 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-10">
@@ -673,10 +631,6 @@ export default function TelePhysioPage() {
           )}
         </div>
       </section>
-
-      {/* =========================================================================
-          SECTION 11: TESTIMONIALS
-          ========================================================================= */}
       {testimonials.length > 0 && (
         <section className="py-12 sm:py-16 bg-white border-y border-slate-200/80">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -721,10 +675,6 @@ export default function TelePhysioPage() {
           </div>
         </section>
       )}
-
-      {/* =========================================================================
-          SECTION 12: FAQ
-          ========================================================================= */}
       <section className="py-12 sm:py-16 bg-slate-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-10">
@@ -772,10 +722,6 @@ export default function TelePhysioPage() {
           </div>
         </div>
       </section>
-
-      {/* =========================================================================
-          SECTION 13: FINAL CTA
-          ========================================================================= */}
       <section className="py-14 sm:py-20 bg-gradient-to-br from-teal-800 via-primary-900 to-slate-950 text-white relative overflow-hidden">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight">

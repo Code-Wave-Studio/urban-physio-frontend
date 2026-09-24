@@ -78,7 +78,7 @@ export default function CapacitySettingsPanel({ clinicId }) {
         </div>
       </div>
 
-      {/* Enable Capacity */}
+      
       <label className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 cursor-pointer">
         <div>
           <p className="text-sm font-semibold text-slate-800">Enable Capacity Limit</p>
@@ -100,7 +100,7 @@ export default function CapacitySettingsPanel({ clinicId }) {
       </label>
 
       <div className={`space-y-4 transition-opacity ${form.capacity_enabled ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
-        {/* Default Capacity */}
+        
         <div>
           <label className="block text-xs font-semibold text-slate-600 mb-1">
             Maximum Appointments Per Slot
@@ -132,7 +132,7 @@ export default function CapacitySettingsPanel({ clinicId }) {
           </div>
         </div>
 
-        {/* Max Daily Capacity */}
+        
         <div>
           <label className="block text-xs font-semibold text-slate-600 mb-1">
             Maximum Daily Capacity <span className="font-normal text-slate-400">(optional, leave blank for unlimited)</span>
@@ -147,7 +147,7 @@ export default function CapacitySettingsPanel({ clinicId }) {
           />
         </div>
 
-        {/* Auto Close */}
+        
         <label className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 cursor-pointer">
           <div>
             <p className="text-sm font-semibold text-slate-800">Auto Close Slot When Full</p>
@@ -168,7 +168,7 @@ export default function CapacitySettingsPanel({ clinicId }) {
           </button>
         </label>
 
-        {/* Allow Waitlist */}
+        
         <label className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 cursor-pointer">
           <div>
             <p className="text-sm font-semibold text-slate-800">Allow Waiting List</p>
@@ -193,7 +193,7 @@ export default function CapacitySettingsPanel({ clinicId }) {
         </label>
       </div>
 
-      {/* Save */}
+      
       <div className="flex items-center justify-between pt-2 border-t border-slate-100">
         <p className="text-xs text-slate-400">
           {settings ? 'Last updated · ' + (settings.updated_at ? new Date(settings.updated_at).toLocaleDateString() : 'N/A') : ''}

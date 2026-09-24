@@ -3,9 +3,6 @@ import { resolveMediaUrl } from './mediaUrl';
 const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogg', '.mov', '.m4v'];
 const IMAGE_EXTENSIONS = ['.gif', '.jpg', '.jpeg', '.png', '.webp', '.svg', '.bmp', '.avif'];
 
-/**
- * Extracts YouTube video ID from common URL formats.
- */
 export function extractYoutubeId(url) {
   if (!url || typeof url !== 'string') return null;
   const trimmed = url.trim();
@@ -35,7 +32,6 @@ export function buildYoutubeEmbedUrl(videoId) {
   return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
 }
 
-/** Static YouTube thumbnail (for card grid / non-player slots). */
 export function youtubeThumbnailUrl(videoId) {
   if (!videoId) return null;
   return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
@@ -81,19 +77,6 @@ function pathLooksLike(url, extensions) {
   return extensions.some((ext) => lower.endsWith(ext));
 }
 
-/**
- * Universal media source parser for exercise library media.
- * Normalizes uploaded MP4/WebM, GIFs, images, and YouTube links.
- *
- * @returns {{
- *   type: 'youtube' | 'video' | 'image' | null,
- *   url: string | null,
- *   embedUrl: string | null,
- *   thumbnailUrl: string | null,
- *   videoId: string | null,
- *   rawUrl: string | null
- * }}
- */
 export function parseMediaSource(exerciseOrUrl) {
   const empty = {
     type: null,
@@ -112,7 +95,6 @@ export function parseMediaSource(exerciseOrUrl) {
     ? (exerciseOrUrl.video_source || exerciseOrUrl.video_type || exerciseOrUrl.source_type || 'auto')
     : 'auto';
 
-  // Force uploaded video mode if video_source === 'upload'
   if (sourceMode === 'upload' && rawUrl) {
     const resolved = resolveMediaUrl(rawUrl) || rawUrl;
     return {
@@ -126,7 +108,6 @@ export function parseMediaSource(exerciseOrUrl) {
     };
   }
 
-  // Force YouTube mode if video_source === 'youtube'
   if (sourceMode === 'youtube' && rawUrl) {
     const videoId = extractYoutubeId(rawUrl);
     if (videoId) {
@@ -142,7 +123,6 @@ export function parseMediaSource(exerciseOrUrl) {
     }
   }
 
-  // Auto-detection mode
   if (rawUrl) {
     const videoId = extractYoutubeId(rawUrl);
     if (videoId) {
@@ -168,7 +148,6 @@ export function parseMediaSource(exerciseOrUrl) {
   const isVideoFile =
     pathLooksLike(targetUrl, VIDEO_EXTENSIONS) || lower.includes('data:video/');
 
-  // GIFs + static images → <img> (GIFs animate natively in <img>)
   if (isGifOrImage || (!rawUrl && fallbackImageUrl)) {
     return {
       type: 'image',
@@ -180,7 +159,6 @@ export function parseMediaSource(exerciseOrUrl) {
     };
   }
 
-  // Native video files, or video_url without a clear image extension
   if (isVideoFile || rawUrl) {
     return {
       type: 'video',
@@ -202,7 +180,6 @@ export function parseMediaSource(exerciseOrUrl) {
   };
 }
 
-/** True when an exercise (or URL) has playable / displayable media. */
 export function hasExerciseMedia(exerciseOrUrl) {
   return Boolean(parseMediaSource(exerciseOrUrl).type);
 }

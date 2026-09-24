@@ -121,9 +121,8 @@ function groupSessionsByExercise(sessions) {
 }
 
 /**
- * Patient My Progress — KinesteX AI session history & performance (Req #6).
- * Reads persisted kinestex_sessions via GET /kinestex/sessions (JWT identity only).
- * Null metrics stay hidden — never coerced to 0. Replay loads only on demand.
+ * Patient KinesteX AI session history.
+ * GET /kinestex/sessions (JWT only). Null metrics stay hidden — never coerced to 0.
  */
 export default function KinesteXPatientAiHistory({
   refreshTick = 0,
@@ -288,7 +287,6 @@ export default function KinesteXPatientAiHistory({
         </button>
       </div>
 
-      {/* Filters */}
       <div className="grid grid-cols-1 min-[375px]:grid-cols-2 lg:grid-cols-5 gap-2 mb-3 min-w-0">
         <div className="min-w-0">
           <label className="text-[10px] uppercase text-slate-400 font-semibold">Exercise</label>
@@ -359,7 +357,6 @@ export default function KinesteXPatientAiHistory({
         <div className="rounded-xl border border-rose-100 bg-rose-50/70 px-3 py-4 text-sm text-rose-700">{error}</div>
       ) : (
         <>
-          {/* Summary — only real values */}
           <div
             className={`grid gap-2 mb-3 min-w-0 ${
               summaryTiles.length <= 2
@@ -379,7 +376,6 @@ export default function KinesteXPatientAiHistory({
             </p>
           )}
 
-          {/* Exercise-wise quick filters */}
           {exerciseOptions.length > 0 && (
             <div className="mb-4 min-w-0">
               <p className="text-[10px] uppercase tracking-wide font-semibold text-slate-400 mb-2">

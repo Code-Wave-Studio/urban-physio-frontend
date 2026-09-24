@@ -4,27 +4,23 @@
  */
 
 export const SECTION_META = {
-  // Patient
   explore: { label: 'Explore', icon: 'fa-compass', tone: 'sky', defaultOpen: true },
   visits: { label: 'Visits & Consults', icon: 'fa-calendar-check', tone: 'orange', defaultOpen: true },
   health: { label: 'Health Records', icon: 'fa-heart-pulse', tone: 'rose', defaultOpen: false },
   billing: { label: 'Billing & Plans', icon: 'fa-wallet', tone: 'emerald', defaultOpen: false },
   settings: { label: 'Settings', icon: 'fa-gear', tone: 'slate', defaultOpen: false },
 
-  // Doctor
   workspace: { label: 'Workspace', icon: 'fa-briefcase-medical', tone: 'teal', defaultOpen: true },
   clinical: { label: 'Clinical Tools', icon: 'fa-stethoscope', tone: 'violet', defaultOpen: false },
   practice: { label: 'Practice & Growth', icon: 'fa-chart-line', tone: 'sky', defaultOpen: false },
   finance: { label: 'Finance', icon: 'fa-indian-rupee-sign', tone: 'emerald', defaultOpen: false },
 
-  // Clinic
   operations: { label: 'Operations', icon: 'fa-gauge-high', tone: 'emerald', defaultOpen: true },
   clinical_hub: { label: 'Clinical Hub', icon: 'fa-notes-medical', tone: 'violet', defaultOpen: false },
   settings_team: { label: 'Settings · Team', icon: 'fa-user-group', tone: 'sky', defaultOpen: false },
   settings_clinical: { label: 'Settings · Clinical', icon: 'fa-clipboard-list', tone: 'indigo', defaultOpen: false },
   settings_admin: { label: 'Settings · Admin', icon: 'fa-sliders', tone: 'slate', defaultOpen: false },
 
-  // Admin
   core: { label: 'Core Operations', icon: 'fa-bolt', tone: 'orange', defaultOpen: true },
   network: { label: 'Network Hub', icon: 'fa-network-wired', tone: 'sky', defaultOpen: false },
   content: { label: 'Clinical & Content', icon: 'fa-book-medical', tone: 'violet', defaultOpen: false },
@@ -32,7 +28,6 @@ export const SECTION_META = {
   settings_marketing: { label: 'Settings · Marketing', icon: 'fa-bullhorn', tone: 'rose', defaultOpen: false },
   settings_system: { label: 'Settings · System', icon: 'fa-server', tone: 'slate', defaultOpen: false },
 
-  // Legacy clinic ops/settings aliases
   ops: { label: 'Operations', icon: 'fa-gauge-high', tone: 'emerald', defaultOpen: true },
 };
 
@@ -61,7 +56,6 @@ export function groupPortalNav(links = [], sectionOrder = []) {
     ? sectionOrder.filter((k) => map.has(k))
     : [...map.keys()];
 
-  // Append any unexpected sections
   for (const k of map.keys()) {
     if (!keys.includes(k)) keys.push(k);
   }

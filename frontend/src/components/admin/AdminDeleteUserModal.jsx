@@ -3,7 +3,7 @@ import GlassModal, { GlassModalHeader } from "../GlassModal";
 import FaIcon from "../FaIcon";
 
 const SOFT_CONSEQUENCES = [
-  "Account is immediately locked — user cannot log in.",
+  "Account is immediately locked ï¿½ user cannot log in.",
   "All profile data, appointments, and medical records are preserved.",
   "User will be hidden from the active users list.",
   "Account can be restored by an admin at any time.",
@@ -13,7 +13,7 @@ const PERM_CONSEQUENCES = [
   "Account and user profile are permanently erased from the database.",
   "Doctor profile and all associated clinic/slot records are deleted.",
   "Appointment and payment history records are preserved (user reference set to NULL).",
-  "This action is completely IRREVERSIBLE — there is no undo.",
+  "This action is completely IRREVERSIBLE ï¿½ there is no undo.",
 ];
 
 export default function AdminDeleteUserModal({ user, onClose, onConfirm, loading }) {
@@ -63,7 +63,7 @@ export default function AdminDeleteUserModal({ user, onClose, onConfirm, loading
       />
 
       <div className="p-5 md:p-6 space-y-5">
-        {/* User Identity Card */}
+        
         <div className="flex items-center gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
           <div
             className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 font-bold text-sm ${
@@ -87,11 +87,11 @@ export default function AdminDeleteUserModal({ user, onClose, onConfirm, loading
           </span>
         </div>
 
-        {/* Mode Selector */}
+        
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Select delete type</p>
           <div className="grid gap-2">
-            {/* Soft Delete */}
+            
             <button
               type="button"
               onClick={() => setMode("soft")}
@@ -116,7 +116,7 @@ export default function AdminDeleteUserModal({ user, onClose, onConfirm, loading
                       RECOMMENDED
                     </span>
                   </p>
-                  <p className="text-xs text-slate-500 mt-0.5">Lock account, preserve all data — reversible</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Lock account, preserve all data ï¿½ reversible</p>
                 </div>
                 <div
                   className={`ml-auto w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center ${
@@ -128,7 +128,7 @@ export default function AdminDeleteUserModal({ user, onClose, onConfirm, loading
               </div>
             </button>
 
-            {/* Permanent Delete */}
+            
             <button
               type="button"
               onClick={() => setMode("permanent")}
@@ -153,7 +153,7 @@ export default function AdminDeleteUserModal({ user, onClose, onConfirm, loading
                       IRREVERSIBLE
                     </span>
                   </p>
-                  <p className="text-xs text-slate-500 mt-0.5">Erase user from database — cannot be undone</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Erase user from database ï¿½ cannot be undone</p>
                 </div>
                 <div
                   className={`ml-auto w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center ${
@@ -167,7 +167,7 @@ export default function AdminDeleteUserModal({ user, onClose, onConfirm, loading
           </div>
         </div>
 
-        {/* Consequences */}
+        
         <div
           className={`rounded-xl border p-3.5 space-y-1.5 ${
             mode === "soft" ? "bg-amber-50/60 border-amber-200" : "bg-red-50/70 border-red-200"
@@ -193,7 +193,7 @@ export default function AdminDeleteUserModal({ user, onClose, onConfirm, loading
           ))}
         </div>
 
-        {/* Permanent delete email confirmation */}
+        
         {mode === "permanent" && (
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700">
@@ -219,13 +219,13 @@ export default function AdminDeleteUserModal({ user, onClose, onConfirm, loading
             {permEmailMatch && (
               <p className="text-xs text-emerald-700 flex items-center gap-1">
                 <FaIcon icon="fa-circle-check" />
-                Email confirmed — ready to permanently delete.
+                Email confirmed ï¿½ ready to permanently delete.
               </p>
             )}
           </div>
         )}
 
-        {/* Action Buttons */}
+
         <div className="flex gap-2 pt-1">
           <button type="button" className="btn-outline flex-1" onClick={onClose} disabled={loading}>
             Cancel

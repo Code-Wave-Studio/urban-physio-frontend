@@ -27,7 +27,7 @@ export function resolveMediaUrl(url) {
   let original = String(url).trim();
   if (!original) return null;
 
-  // Rewrite any legacy Hostinger domain (e.g. *.hostingersite.com) to https://api.theurbanphysio.com
+  // Rewrite legacy Hostinger absolute URLs to the current API subdomain
   let resolved = original.replace(
     /https?:\/\/([a-z0-9-]+\.)?hostingersite\.com/gi,
     LIVE_API_ORIGIN
@@ -37,12 +37,10 @@ export function resolveMediaUrl(url) {
     return resolved;
   }
 
-  // Ensure leading slash
   if (!resolved.startsWith('/')) {
     resolved = '/' + resolved;
   }
 
-  // Handle local XAMPP environment or production API base
   const apiBase = resolveApiBase();
   let rootOrigin = '';
   try {
@@ -52,7 +50,7 @@ export function resolveMediaUrl(url) {
     rootOrigin = typeof window !== 'undefined' ? window.location.origin : '';
   }
 
-  // On local XAMPP dev (e.g. localhost)
+  // Local XAMPP: prefix /theurbanphysio (+ /backend for /uploads)
   if (rootOrigin.includes('localhost') && !resolved.startsWith('/theurbanphysio')) {
     if (resolved.startsWith('/backend/')) {
       return `${rootOrigin}/theurbanphysio${resolved}`;

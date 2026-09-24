@@ -124,7 +124,7 @@ export default function ConditionFormModal({
                 ))}
               </nav>
 
-              {/* Mobile tabs */}
+              
               <div className="md:hidden flex gap-1 p-2 overflow-x-auto border-b border-white/70 bg-white/40 backdrop-blur-md">
                 {TABS.map((t) => (
                   <button
@@ -141,7 +141,7 @@ export default function ConditionFormModal({
                 ))}
               </div>
 
-              {/* Content */}
+              
               <div className="flex-1 min-h-0 overflow-y-auto p-4 md:p-6">
                 {tab === 'basic' && (
                   <div className="space-y-5 max-w-xl">
@@ -368,7 +368,7 @@ export default function ConditionFormModal({
               </div>
             </div>
 
-            {/* Footer */}
+            
             <GlassModalFooter>
               <div className="flex items-center justify-between gap-3 w-full">
               <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500">

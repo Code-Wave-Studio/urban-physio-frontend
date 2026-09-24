@@ -475,7 +475,6 @@ export default function PainSelectionSection({
       <div className={`pointer-events-none absolute -left-16 bottom-0 h-40 w-40 rounded-full ${theme.blob2} blur-3xl`} />
 
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col lg:h-full lg:min-h-0">
-        {/* Header — compact on mobile */}
         <div className="shrink-0 text-center lg:hidden">
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500 sm:text-xs">
             {copy.eyebrow}

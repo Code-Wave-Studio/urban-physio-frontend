@@ -17,19 +17,10 @@ import { kinestex } from '../../services/api';
 const MOTION_SAVE_GRACE_MS = 45000;
 
 /**
- * Official KinesteX Custom Workout session (Phase 4 + Phase 5 persistence).
- * Patient-facing framing: AI Personal Trainer / AI-Guided Exercise (Req #5).
- *
- * Sources:
- * - npm: kinestex-sdk-react-ts (docs: https://www.kinestex.com/docs/installation)
- * - IntegrationOption.CUSTOM_WORKOUT → /custom-workout
- * - postData: key, company, userId, customWorkoutExercises, videoFit
- * - On all_resources_loaded → sendAction("workout_activity_action", "start")
- * - Optional coach speech: mute_speech / unmute_speech (workout player actions)
- * - Host overlay/stage sizing is responsive; iframe internals stay provider-controlled
- *
- * Persistence: onKinesteXSessionCompleted → POST /kinestex/session/result
- * Success UI is shown only after the backend confirms the save.
+ * Official KinesteX Custom Workout session.
+ * Sources: kinestex-sdk-react-ts; CUSTOM_WORKOUT; postData key/company/userId/customWorkoutExercises/videoFit.
+ * On all_resources_loaded → sendAction("workout_activity_action", "start").
+ * Persist via onKinesteXSessionCompleted; success UI only after backend confirms.
  */
 export default function KinesteXExerciseSession({
   sessionPayload,
@@ -69,13 +60,9 @@ export default function KinesteXExerciseSession({
       company: sdk.company,
       userId: sdk.userId,
       customWorkoutExercises: sdk.customWorkoutExercises || [],
-      // Persist session + motion recording for post-exercise replay (Req #4).
       shouldSendStats: sdk.shouldSendStats !== false,
       style: sdk.style || { style: 'light' },
-      // Documented Camera & Pose Detection param (Workout player incl. Custom Workout).
-      // Default provider "cover" crops the feed; "contain" keeps the full camera frame
-      // visible (letterboxed) so the subject stays in view farther from the camera.
-      // Host layout still cannot rewrite KinesteX's internal UI chrome.
+      // videoFit "contain" keeps full camera frame (default "cover" crops). Host cannot rewrite KinesteX chrome.
       videoFit: 'contain',
       // motionDataEnabled defaults true; never set false or session replay is empty.
       customParameters: {
@@ -114,9 +101,8 @@ export default function KinesteXExerciseSession({
 
   const persistResult = useCallback(
     async (result, kind) => {
-      // Allow a later completed event (e.g. workout_session_saved) to merge into the same row.
-      // Do not re-save cancelled/failed after a successful completed save.
-      // Read saveState via ref: the SDK message listener does not refresh handleMessage.
+      // Allow later completed events to merge; do not re-save cancelled/failed after completed.
+      // Read saveState via ref: SDK message listener does not refresh handleMessage.
       const currentSave = saveStateRef.current;
       if (currentSave === 'saved' && kind !== 'completed') {
         return;

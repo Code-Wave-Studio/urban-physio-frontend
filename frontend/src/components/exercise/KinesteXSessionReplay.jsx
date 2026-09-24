@@ -4,12 +4,9 @@ const DEFAULT_ORIGIN = 'https://ai.kinestex.com';
 
 /**
  * Official KinesteX post-session movement / skeleton replay.
- *
- * Docs: open custom component route `session/{id}` with company key + original userId.
- * https://www.kinestex.com/docs/guides/guide-completed-workouts
- *
- * The React TS SDK (0.0.3) has no createCustomComponentView; HTML/JS pattern is used:
- * iframe → https://ai.kinestex.com/session/{id} + postMessage credentials.
+ * Docs: route `session/{id}` with company key + original userId
+ * (https://www.kinestex.com/docs/guides/guide-completed-workouts).
+ * SDK 0.0.3 has no createCustomComponentView — HTML/JS iframe + postMessage used.
  * Does not fabricate landmarks or replay URLs.
  */
 export default function KinesteXSessionReplay({ sdk, onExit, onError, className = '' }) {

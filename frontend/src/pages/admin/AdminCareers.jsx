@@ -106,7 +106,7 @@ export default function AdminCareers() {
   return (
     <AdminDashboardLayout title="Career & Partnership Applications">
       <div className="space-y-6">
-        {/* Metrics Grid */}
+        
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
             <div className="flex items-center gap-3 text-slate-500 text-xs font-semibold uppercase">
@@ -134,7 +134,7 @@ export default function AdminCareers() {
           </div>
         </div>
 
-        {/* Filter Controls */}
+        
         <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
           <div className="relative flex-1">
             <FaIcon icon="fa-magnifying-glass" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
@@ -178,7 +178,7 @@ export default function AdminCareers() {
           </div>
         </div>
 
-        {/* List Table */}
+        
         {loading ? (
           <div className="bg-white rounded-2xl p-12 text-center text-slate-500 animate-pulse border">
             Loading applications...
@@ -272,11 +272,11 @@ export default function AdminCareers() {
           </div>
         )}
 
-        {/* Application Details Modal */}
+        
         {selectedApp && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
             <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-slate-100 overflow-hidden max-h-[90vh] flex flex-col">
-              {/* Modal Header */}
+              
               <div className="p-6 bg-gradient-to-r from-indigo-700 to-violet-800 text-white flex justify-between items-start shrink-0">
                 <div>
                   <span className="text-xs font-bold uppercase tracking-wider text-indigo-200">
@@ -294,9 +294,9 @@ export default function AdminCareers() {
                 </button>
               </div>
 
-              {/* Modal Content */}
+              
               <div className="p-6 overflow-y-auto space-y-5 text-slate-700 text-sm flex-1">
-                {/* Contact Info */}
+                
                 <div className="grid sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
                   <div>
                     <span className="text-xs text-slate-400 font-semibold uppercase block">Email Address</span>
@@ -316,7 +316,7 @@ export default function AdminCareers() {
                   </div>
                 </div>
 
-                {/* Specialization & Extra Metadata */}
+                
                 {selectedApp.specialization && (
                   <div>
                     <span className="text-xs text-slate-400 font-semibold uppercase block mb-1">Specialization</span>
@@ -340,7 +340,7 @@ export default function AdminCareers() {
                   </div>
                 )}
 
-                {/* Message */}
+                
                 {selectedApp.message && (
                   <div>
                     <span className="text-xs text-slate-400 font-semibold uppercase block mb-1">Applicant Message</span>
@@ -350,7 +350,7 @@ export default function AdminCareers() {
                   </div>
                 )}
 
-                {/* Status Selector */}
+                
                 <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
                   <span className="text-xs font-bold uppercase text-slate-500">Update Application Status</span>
                   <select
@@ -365,7 +365,7 @@ export default function AdminCareers() {
                 </div>
               </div>
 
-              {/* Modal Footer */}
+              
               <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end shrink-0">
                 <button
                   type="button"

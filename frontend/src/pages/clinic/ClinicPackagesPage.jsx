@@ -176,7 +176,7 @@ export default function ClinicPackagesPage() {
       }
     >
       <div className="space-y-4">
-        {/* KPI cards */}
+        
         <div className="portal-kpi-grid">
           <div className="glass-card !p-3 sm:!p-4 min-w-0">
             <p className="text-xs text-slate-500">Assigned</p>
@@ -196,9 +196,9 @@ export default function ClinicPackagesPage() {
           </div>
         </div>
 
-        {/* Filters */}
+
         <div className="glass-card !p-3 sm:!p-4 space-y-3">
-          {/* Status tabs */}
+          
           <div className="portal-tabs flex-wrap gap-1">
             {STATUS_FILTERS.map((f) => (
               <button
@@ -213,7 +213,7 @@ export default function ClinicPackagesPage() {
               </button>
             ))}
           </div>
-          {/* Type filter */}
+          
           <div className="flex flex-wrap gap-1.5">
             {TYPE_FILTERS.map((f) => (
               <button
@@ -230,7 +230,7 @@ export default function ClinicPackagesPage() {
               </button>
             ))}
           </div>
-          {/* Search + refresh */}
+          
           <div className="portal-toolbar">
             <div className="relative w-full sm:max-w-xs">
               <FaIcon icon="fa-magnifying-glass" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
@@ -254,7 +254,7 @@ export default function ClinicPackagesPage() {
           </p>
         </div>
 
-        {/* Package list */}
+        
         {boot || loading ? (
           <div className="glass-card h-40 animate-pulse" />
         ) : !filtered.length ? (
@@ -304,7 +304,7 @@ export default function ClinicPackagesPage() {
         }}
       />
 
-      {/* Custom Bulk Session wizard modal */}
+      
       {showBulkModal && (
         <CustomBulkSessionModal
           clinicId={clinicId}

@@ -4,7 +4,6 @@ import FaIcon from '../FaIcon';
 import { clinicPortal, erpAssessments } from '../../services/api';
 import AssessmentFormChrome, { defaultLetterhead } from './AssessmentFormChrome';
 
-// ─── Default Clinical Sections ─────────────────────────────────────────────
 const DEFAULT_SECTIONS = [
   { id: 'presentation', title: 'Patient Presentation', fields: [
     { id: 'chief_complaint', label: 'Chief Complaint', type: 'textarea', required: true },
@@ -77,7 +76,6 @@ const DEPT_OPTIONS = [
   'Geriatric Physiotherapy',
 ];
 
-// ─── FieldEditor ───────────────────────────────────────────────────────────
 function FieldEditor({ field, onChange, onDelete }) {
   return (
     <div className="border border-slate-100 rounded-xl p-3 space-y-2 bg-white">
@@ -119,7 +117,6 @@ function FieldEditor({ field, onChange, onDelete }) {
   );
 }
 
-// ─── SectionEditor ─────────────────────────────────────────────────────────
 function SectionEditor({ section, onChange, onDelete, onMoveUp, onMoveDown, isFirst, isLast }) {
   const addField = () => {
     const newField = { id: `field_${Date.now()}`, label: 'New Field', type: 'text', required: false };
@@ -324,7 +321,6 @@ function PreviewBody({ schema }) {
   );
 }
 
-// ─── Main AssessmentBuilder ─────────────────────────────────────────────────
 export default function AssessmentBuilder({ clinicId, templateId, onSaved }) {
   const [schema, setSchema]     = useState(DEFAULT_SECTIONS);
   const [name, setName]         = useState('New Assessment');
@@ -433,7 +429,7 @@ export default function AssessmentBuilder({ clinicId, templateId, onSaved }) {
 
   return (
     <div className="space-y-4">
-      {/* Header bar */}
+      
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <input
@@ -463,7 +459,7 @@ export default function AssessmentBuilder({ clinicId, templateId, onSaved }) {
         </div>
       </div>
 
-      {/* Tabs */}
+      
       <div className="flex flex-wrap gap-2 border-b border-slate-100 pb-1">
         {TABS.map((t) => (
           <button

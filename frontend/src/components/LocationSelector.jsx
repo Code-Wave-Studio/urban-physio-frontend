@@ -190,7 +190,7 @@ export default function LocationSelector() {
         paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))',
       }}
     >
-      {/* Mobile drag handle */}
+      
       <div
         className="sm:hidden flex justify-center pt-2.5 pb-1 cursor-grab active:cursor-grabbing touch-none shrink-0"
         onTouchStart={onTouchStart}

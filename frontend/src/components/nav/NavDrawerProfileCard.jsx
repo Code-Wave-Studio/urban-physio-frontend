@@ -224,7 +224,7 @@ function DoctorProfileCard({ user, summary, loading, onNavigate }) {
         </div>
       </div>
 
-      {/* Master Online/Offline Toggle */}
+      
       <MasterAvailabilityToggle
         isOnline={isOnline}
         onToggle={toggleDoctorStatus}
@@ -385,7 +385,7 @@ function ClinicProfileCard({ user, summary, loading, onNavigate }) {
         )}
       </div>
 
-      {/* Master Online/Offline Toggle */}
+      
       <MasterAvailabilityToggle
         isOnline={isOnline}
         onToggle={toggleClinicStatus}

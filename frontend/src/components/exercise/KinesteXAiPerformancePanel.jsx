@@ -40,9 +40,8 @@ function Metric({ label, value }) {
 }
 
 /**
- * Doctor/clinic KinesteX AI Performance (Phase 6).
- * Reads persisted kinestex_sessions via GET /kinestex/analysis.
- * Null metrics stay N/A — never coerced to 0.
+ * Doctor/clinic KinesteX AI Performance.
+ * Reads kinestex_sessions via GET /kinestex/analysis. Null metrics stay N/A — never coerced to 0.
  */
 export default function KinesteXAiPerformancePanel({
   patientId,

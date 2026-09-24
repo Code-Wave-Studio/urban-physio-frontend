@@ -236,7 +236,7 @@ export default function MobileNavDrawer({
         aria-modal="true"
         aria-label="Navigation menu"
       >
-        {/* Fixed top header bar with close button at top-right */}
+        
         <div className="shrink-0 sticky top-0 z-30 flex items-center justify-between gap-3 px-4 sm:px-6 pt-[max(0.875rem,env(safe-area-inset-top))] pb-3 border-b border-slate-200/80 bg-white/95 backdrop-blur-md shadow-xs">
           <PortalLink to="/" onClick={handleNavigate} className="flex items-center gap-2.5 shrink-0">
             <Logo linkToHome={false} className="h-8 md:h-9 w-auto max-w-[120px] object-contain" showText={false} />

@@ -102,16 +102,7 @@ export function JourneyCompareSummary({ summary }) {
   );
 }
 
-/**
- * Card/timeline UI for treatment sessions (chronological).
- * @param {{
- *   sessions: object[],
- *   canEdit?: boolean,
- *   editableDoctorId?: number | null,
- *   onEdit?: (session: object) => void,
- *   onDelete?: (session: object) => void,
- * }} props
- */
+/** Chronological treatment-session timeline. */
 export default function TreatmentJourneyTimeline({
   sessions,
   canEdit = false,

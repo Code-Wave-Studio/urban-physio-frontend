@@ -108,7 +108,6 @@ export const OFFERS_DEFAULTS = {
       },
     ],
 
-    // Campaign Benefits
     benefits_heading: 'Why Join the Campaign?',
     benefits_subheading: 'Combining fitness motivation with evidence-based physiotherapy recovery.',
     benefits: [
@@ -161,7 +160,6 @@ export const OFFERS_DEFAULTS = {
     terms_text:
       'The Urban Physio reserves the right to verify activity logs and disqualify tampered or duplicate entries. Free sessions are non-transferable and cannot be exchanged for cash or credit.',
 
-    // Participation Form Copy
     form_badge: 'Participation Desk',
     form_heading: 'Submit Your 10 KM Run Proof',
     form_subheading:
@@ -171,12 +169,10 @@ export const OFFERS_DEFAULTS = {
     form_success_message:
       'Your 10 KM campaign submission has been received and is currently under review by our clinical team.',
 
-    // Live Status Tracker Copy
     status_heading: 'Check Live Submission Status',
     status_subheading: 'Already submitted? Check your verification and reward status in real time.',
     status_search_placeholder: 'Enter Submission ID, Email, or Phone number',
 
-    // FAQs
     faqs_badge: 'Got Questions?',
     faqs_heading: 'Frequently Asked Questions',
     faqs_subheading:
@@ -224,14 +220,12 @@ export const OFFERS_DEFAULTS = {
       },
     ],
 
-    // Final CTA
     final_heading: 'Ready to Run 10 KM?',
     final_subheading:
       'Complete your run, submit your proof, and take the next step toward better recovery with The Urban Physio.',
     final_primary_cta_label: 'Join the Campaign',
     final_primary_cta_action: 'scroll_form',
 
-    // Section Visibility
     sections_visibility: {
       highlights: true,
       how_it_works: true,

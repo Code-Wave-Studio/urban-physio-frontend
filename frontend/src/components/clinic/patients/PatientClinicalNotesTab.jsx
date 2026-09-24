@@ -61,7 +61,6 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
   const [therapistFilter, setTherapistFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   
-  // Editor state
   const [showEditor, setShowEditor] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({
@@ -258,11 +257,11 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
 
   return (
     <div className="space-y-4">
-      {/* Compact & Collapsible Header Controls */}
+      
       <div className="bg-slate-50 p-2.5 sm:p-3 rounded-2xl border border-slate-200/80 space-y-2.5 transition-all">
-        {/* Top Search & Actions Row */}
+        
         <div className="flex items-center gap-2">
-          {/* Search */}
+          
           <div className="relative flex-1 min-w-0">
             <FaIcon icon="fa-magnifying-glass" className="absolute left-3 top-2.5 text-xs text-slate-400" />
             <input
@@ -313,10 +312,10 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
           </button>
         </div>
 
-        {/* Collapsible Filter Panel (Hidden by default) */}
+        
         {showFilters && (
           <div className="pt-2 border-t border-slate-200/60 grid grid-cols-2 sm:grid-cols-3 gap-2 animate-in fade-in slide-in-from-top-1 duration-150">
-            {/* Note Type Filter */}
+            
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Note Type</label>
               <select
@@ -331,7 +330,7 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
               </select>
             </div>
 
-            {/* Therapist Filter */}
+            
             {uniqueTherapists.length > 0 && (
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Therapist</label>
@@ -348,7 +347,7 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
               </div>
             )}
 
-            {/* Date Filter */}
+            
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Date</label>
               <input
@@ -362,7 +361,7 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
         )}
       </div>
 
-      {/* Editor Modal */}
+      
       {showEditor && typeof document !== 'undefined' && createPortal(
         <ModalScrollLock>
           <div
@@ -393,7 +392,7 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
                 </button>
               </div>
 
-              {/* Scrollable Form Body Container */}
+              
               <form onSubmit={saveNote} className="flex flex-col flex-1 overflow-hidden">
                 <div className="p-6 overflow-y-auto flex-1 space-y-4 sm:space-y-5">
                   <div className="grid sm:grid-cols-2 gap-4 sm:gap-5">
@@ -456,7 +455,7 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
                     </div>
                   </div>
 
-                  {/* Rich Editor Toolbar */}
+                  
                   <div>
                     <label className="text-xs font-semibold text-slate-700 block mb-1.5">
                       Note Content <span className="text-rose-500">*</span>
@@ -497,7 +496,7 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
                     </div>
                   </div>
 
-                  {/* Tags & Attachments */}
+                  
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                       <label className="text-xs font-semibold text-slate-700 block mb-1.5">Tags</label>
@@ -588,7 +587,7 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
         document.body
       )}
 
-      {/* Notes List */}
+      
       {loading ? (
         <div className="glass-card h-40 animate-pulse" />
       ) : !notes.length ? (
@@ -673,7 +672,7 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
                   </div>
                 </div>
 
-                {/* Tags */}
+                
                 {tags.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mt-2.5">
                     {tags.map((t, idx) => (
@@ -684,7 +683,7 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
                   </div>
                 )}
 
-                {/* Content snippet / full view */}
+                
                 <div className="mt-3 text-sm text-slate-700 prose prose-slate max-w-none">
                   {isExpanded ? (
                     <div dangerouslySetInnerHTML={{ __html: n.body_html || n.body_text }} />
@@ -693,7 +692,7 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
                   )}
                 </div>
 
-                {/* Footer Controls & Attachment */}
+                
                 <div className="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-slate-100 text-xs">
                   {n.attachment_url ? (
                     <a
@@ -731,7 +730,7 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
         </div>
       )}
 
-      {/* Note Detail Modal */}
+      
       {detailModalNote && typeof document !== 'undefined' && createPortal(
         <ModalScrollLock>
           <div
@@ -762,7 +761,7 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
                 </button>
               </div>
 
-              {/* Scrollable Body Container */}
+              
               <div className="p-6 sm:p-7 overflow-y-auto flex-1 space-y-5">
                 <div
                   className="prose prose-slate max-w-none text-xs sm:text-sm leading-relaxed text-slate-800"

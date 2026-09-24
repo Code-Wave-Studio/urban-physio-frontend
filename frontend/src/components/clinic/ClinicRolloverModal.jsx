@@ -56,7 +56,6 @@ export default function ClinicRolloverModal({ appointment, clinicId, onClose, on
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Month navigation helpers
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
   const monthName = viewDate.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
@@ -75,13 +74,11 @@ export default function ClinicRolloverModal({ appointment, clinicId, onClose, on
     setViewDate(new Date(year, month + 1, 1));
   };
 
-  // Calendar grid data
   const calendarDays = useMemo(() => {
     const firstDayIndex = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const days = [];
 
-    // Empty lead cells
     for (let i = 0; i < firstDayIndex; i += 1) {
       days.push(null);
     }
@@ -183,7 +180,7 @@ export default function ClinicRolloverModal({ appointment, clinicId, onClose, on
       />
 
       <GlassModalBody className="p-4 sm:p-6 space-y-6">
-        {/* Appointment Overview Header */}
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 rounded-xl bg-slate-50 border border-slate-200/80 text-sm">
           <div className="space-y-1">
             <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Patient & Doctor</div>
@@ -212,11 +209,11 @@ export default function ClinicRolloverModal({ appointment, clinicId, onClose, on
           </div>
         </div>
 
-        {/* Calendar and Slot Picker Section */}
+        
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Column 1: Monthly Calendar (7 cols on lg) */}
           <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-            {/* Calendar Controls */}
+            
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-slate-800 text-base">{monthName}</h3>
               <div className="flex items-center gap-1">
@@ -240,7 +237,7 @@ export default function ClinicRolloverModal({ appointment, clinicId, onClose, on
               </div>
             </div>
 
-            {/* Day of Week Headers */}
+            
             <div className="grid grid-cols-7 gap-1 text-center mb-2">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
                 <div key={day} className="text-[11px] font-bold text-slate-400 uppercase py-1">
@@ -249,7 +246,7 @@ export default function ClinicRolloverModal({ appointment, clinicId, onClose, on
               ))}
             </div>
 
-            {/* Day Tiles */}
+            
             <div className="grid grid-cols-7 gap-1">
               {calendarDays.map((item, idx) => {
                 if (!item) {
@@ -333,7 +330,7 @@ export default function ClinicRolloverModal({ appointment, clinicId, onClose, on
               )}
             </div>
 
-            {/* Summary Preview Box */}
+            
             <div className="mt-4 pt-3 border-t border-slate-200">
               <div className="text-[11px] text-slate-500 uppercase font-bold mb-1">New Target Slot</div>
               <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
@@ -350,7 +347,7 @@ export default function ClinicRolloverModal({ appointment, clinicId, onClose, on
           </div>
         </div>
 
-        {/* Footer Actions */}
+        
         <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
           <button
             type="button"

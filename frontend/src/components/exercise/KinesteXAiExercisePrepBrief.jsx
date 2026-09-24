@@ -5,9 +5,7 @@ import { hasExerciseMedia } from '../../utils/mediaParser';
 import { normalizeInstructionSteps } from '../../utils/exerciseInstructions';
 
 /**
- * Pre-Exercise Setup & guidance (Req #8).
- *
- * Surfaces existing HEP + library fields only — never invents clinical copy.
+ * Pre-Exercise Setup. Surfaces HEP + library fields only — never invents clinical copy.
  * KinesteX / camera must not start until the patient explicitly continues
  * (prepare is called by the parent footer action, not from this component).
  */
@@ -136,7 +134,6 @@ export default function KinesteXAiExercisePrepBrief({
 
   return (
     <div className="text-sm text-slate-700 min-w-0 max-w-full">
-      {/* Desktop: visual | information */}
       <div className="hidden md:grid md:grid-cols-2 md:gap-6 md:items-start min-w-0">
         <div className="min-w-0 sticky top-0">{mediaBlock}</div>
         <div className="min-w-0 space-y-4">
@@ -161,7 +158,6 @@ export default function KinesteXAiExercisePrepBrief({
         </div>
       </div>
 
-      {/* Mobile: single column — precautions early, before start CTA in sheet footer */}
       <div className="md:hidden space-y-4 min-w-0">
         {statusBlock}
         {precautionsBlock}

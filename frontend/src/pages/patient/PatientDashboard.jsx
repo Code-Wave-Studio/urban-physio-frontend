@@ -160,7 +160,7 @@ export default function PatientDashboard() {
         </div>
       </div>
 
-      {/* Top Shortcuts (if pinned to top) */}
+      
       {shortcutsAtTop && (
         <div className="mb-5 sm:mb-6">
           <CustomizableShortcuts
@@ -195,7 +195,7 @@ export default function PatientDashboard() {
         ))}
       </div>
 
-      {/* Default Shortcuts (if not pinned to top) */}
+      
       {!shortcutsAtTop && (
         <div className="mb-5 sm:mb-6">
           <CustomizableShortcuts

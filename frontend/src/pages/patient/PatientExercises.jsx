@@ -44,7 +44,6 @@ export default function PatientExercises() {
   const [streak, setStreak] = useState(0);
   const [aiHistoryTick, setAiHistoryTick] = useState(0);
 
-  // Phase 4 — KinesteX AI session (prep → SDK → result boundary)
   const [aiPrepEx, setAiPrepEx] = useState(null);
   const [aiSessionPayload, setAiSessionPayload] = useState(null);
   const [aiPreparing, setAiPreparing] = useState(false);
@@ -278,7 +277,7 @@ export default function PatientExercises() {
         </div>
       ) : (
         <>
-          {/* Plan picker */}
+          
           {plans.length > 1 && tab !== 'ai-history' && (
             <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
               {plans.map((p) => (
@@ -304,7 +303,7 @@ export default function PatientExercises() {
             <div className="space-y-5">
               {tab !== 'ai-history' && (
               <>
-              {/* Summary card */}
+              
               <div className="glass-card !p-4 md:!p-5">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4">
                   <div>
@@ -373,7 +372,7 @@ export default function PatientExercises() {
               </>
               )}
 
-              {/* Tabs */}
+              
               <div className="flex gap-1 overflow-x-auto pb-1 min-w-0 -mx-1 px-1">
                 {[
                   { key: 'today', label: 'Today', icon: 'fa-calendar-day' },
@@ -734,7 +733,7 @@ export default function PatientExercises() {
         )}
       </ExerciseBottomSheet>
 
-      {/* Log feedback bottom sheet */}
+      
       <ExerciseBottomSheet
         open={!!logItem}
         onClose={() => setLogItem(null)}

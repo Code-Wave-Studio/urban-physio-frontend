@@ -62,7 +62,7 @@ export default function PolicyPageLayout({ policy }) {
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 via-white to-primary-50/30">
       <Navbar />
 
-      {/* Hero */}
+      
       <section className={`relative overflow-hidden bg-gradient-to-br ${policy.accent} text-white`}>
         <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.06\'%3E%3Cpath d=\'M0 0h60v60H0z\'/%3E%3C/g%3E%3C/svg%3E')] pointer-events-none" />
         <div className="max-w-6xl mx-auto px-4 py-10 md:py-14 relative">
@@ -136,7 +136,7 @@ export default function PolicyPageLayout({ policy }) {
             </div>
           </aside>
 
-          {/* Mobile TOC chips */}
+          
           <div className="lg:hidden mb-6 -mx-1 overflow-x-auto pb-2">
             <div className="flex gap-2 px-1 min-w-max">
               {policy.sections.map((s) => (
@@ -156,7 +156,7 @@ export default function PolicyPageLayout({ policy }) {
             </div>
           </div>
 
-          {/* Main content */}
+          
           <main className="space-y-6 min-w-0">
             <div className="rounded-2xl border border-amber-200/80 bg-amber-50/90 px-4 py-3 flex gap-3 text-sm text-amber-950">
               <FaIcon icon="fa-circle-info" className="text-amber-600 mt-0.5 shrink-0" />
@@ -170,7 +170,7 @@ export default function PolicyPageLayout({ policy }) {
               <PolicySection key={section.id} section={section} />
             ))}
 
-            {/* Related policies grid */}
+            
             <div className="glass-card !p-6 md:!p-8">
               <h3 className="font-bold text-slate-900 mb-4">Explore other policies</h3>
               <div className="grid sm:grid-cols-2 gap-3">

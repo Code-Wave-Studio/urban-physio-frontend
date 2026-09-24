@@ -31,7 +31,6 @@ export default function CustomExercisePlayer({
   const isPortrait = layout === 'portrait';
   const frameClass = ASPECT_FRAME[isPortrait ? 'portrait' : 'landscape'];
 
-  // Custom HTML5 Player Controls State for Uploaded Videos
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -53,7 +52,7 @@ export default function CustomExercisePlayer({
     setDuration(0);
   }, [media.url, media.videoId, media.type]);
 
-  // Standard YouTube Embed — start muted only after explicit play in portrait (gallery) mode
+  // YouTube — start muted only after explicit play in portrait (gallery) mode
   const youtubeEmbedUrl = useMemo(() => {
     if (media.type !== 'youtube' || !media.videoId) return null;
     if (isPortrait && !ytStarted) return null;
@@ -67,7 +66,6 @@ export default function CustomExercisePlayer({
     return `https://www.youtube.com/embed/${media.videoId}?${params.toString()}`;
   }, [media, isPortrait, ytStarted]);
 
-  // Track HTML5 video progress & state
   useEffect(() => {
     if (media.type !== 'video' || !videoRef.current) return;
     const v = videoRef.current;
@@ -93,7 +91,6 @@ export default function CustomExercisePlayer({
     };
   }, [media]);
 
-  // Fullscreen change listener
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(Boolean(document.fullscreenElement));
@@ -179,7 +176,6 @@ export default function CustomExercisePlayer({
 
   if (!media.type) return null;
 
-  // Fallback for static image or GIF
   if (media.type === 'image') {
     return (
       <div className={`w-full ${frameClass} rounded-2xl overflow-hidden bg-slate-950 border border-slate-200/80 shadow-md relative ${className}`}>
@@ -192,7 +188,7 @@ export default function CustomExercisePlayer({
     );
   }
 
-  // SOURCE 1: YouTube Embed — portrait uses letterboxed 16:9 inside a vertical frame (no aggressive crop)
+  // YouTube — portrait letterboxes 16:9 in a vertical frame (no aggressive crop)
   if (media.type === 'youtube') {
     return (
       <div className={`w-full ${frameClass} rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-xl relative flex items-center justify-center ${className}`}>
@@ -238,15 +234,15 @@ export default function CustomExercisePlayer({
     );
   }
 
-  // SOURCE 2: Uploaded HTML5 Video with Custom Controls & Premium UI
+  // Uploaded HTML5 video + custom controls
   return (
     <div
       ref={containerRef}
       className={`w-full flex flex-col rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 shadow-2xl relative ${className}`}
     >
-      {/* Video Box — portrait uses object-contain so movement stays visible */}
+      {/* Portrait uses object-contain so movement stays visible */}
       <div className={`relative w-full ${frameClass} bg-black flex items-center justify-center overflow-hidden group`}>
-        {/* Top Floating Badge */}
+        
         <div className="absolute top-3 left-3 z-20 bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-full text-[11px] font-semibold text-teal-300 flex items-center gap-1.5 border border-slate-700/60 shadow-md pointer-events-none">
           <FaIcon icon="fa-file-video" className="text-teal-400" />
           <span>Exercise video</span>
@@ -267,7 +263,7 @@ export default function CustomExercisePlayer({
           onClick={togglePlay}
         />
 
-        {/* Center Play Button Overlay on Click */}
+        
         {!isPlaying && (
           <button
             type="button"
@@ -280,9 +276,8 @@ export default function CustomExercisePlayer({
         )}
       </div>
 
-      {/* Premium Custom Control Bar for Uploaded Videos */}
+      
       <div className="w-full bg-slate-900 text-white p-3 flex flex-wrap items-center justify-between gap-2.5 sm:gap-4 shrink-0 border-t border-slate-800/80">
-        {/* Left: Play/Pause Button */}
         <button
           type="button"
           onClick={togglePlay}
@@ -292,7 +287,6 @@ export default function CustomExercisePlayer({
           <FaIcon icon={isPlaying ? 'fa-pause' : 'fa-play'} className="text-xs ml-0.5" />
         </button>
 
-        {/* Middle: Seek Slider & Timestamps */}
         <div className="flex-1 flex items-center gap-2 sm:gap-3 min-w-[130px]">
           <span className="text-[11px] font-mono text-slate-300 shrink-0 font-medium">
             {formatTime(currentTime)}
@@ -312,9 +306,8 @@ export default function CustomExercisePlayer({
           </span>
         </div>
 
-        {/* Right Controls: Speed, Volume, PiP & Fullscreen */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-          {/* Playback Speed Selector */}
+          
           <div className="relative">
             <button
               type="button"
@@ -344,7 +337,7 @@ export default function CustomExercisePlayer({
             )}
           </div>
 
-          {/* Volume Control */}
+          
           <div className="flex items-center gap-1.5 bg-slate-800/90 px-2.5 py-1 rounded-full border border-slate-700/60">
             <button
               type="button"
@@ -368,7 +361,7 @@ export default function CustomExercisePlayer({
             />
           </div>
 
-          {/* Picture in Picture */}
+          
           {typeof document !== 'undefined' && document.pictureInPictureEnabled && (
             <button
               type="button"
@@ -380,7 +373,7 @@ export default function CustomExercisePlayer({
             </button>
           )}
 
-          {/* Fullscreen */}
+          
           <button
             type="button"
             onClick={toggleFullscreen}

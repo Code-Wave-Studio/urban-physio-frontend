@@ -26,7 +26,6 @@ export default function SearchablePatientSelect({
   const [selectedPatient, setSelectedPatient] = useState(null);
   const containerRef = useRef(null);
 
-  // Search logic
   const searchPatients = useCallback(async (q) => {
     setLoading(true);
     try {
@@ -52,7 +51,6 @@ export default function SearchablePatientSelect({
     if (selectedPatient && (selectedPatient.patient_id === Number(value) || selectedPatient.id === Number(value))) {
       return;
     }
-    // Fetch details
     patientSearch
       .run({ q: String(value), limit: 5 })
       .then((res) => {
@@ -79,7 +77,6 @@ export default function SearchablePatientSelect({
       });
   }, [value]);
 
-  // Click outside listener
   useEffect(() => {
     function handleClickOutside(e) {
       if (containerRef.current && !containerRef.current.contains(e.target)) {
@@ -173,7 +170,7 @@ export default function SearchablePatientSelect({
         </div>
       )}
 
-      {/* Dropdown list */}
+      
       {open && !selectedPatient && (
         <div className="absolute left-0 right-0 z-50 mt-1.5 max-h-64 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl py-1 divide-y divide-slate-100 animate-in fade-in zoom-in-95 duration-100">
           {results.length > 0 ? (

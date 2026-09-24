@@ -152,7 +152,7 @@ export default function MediaUrlOrUpload({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      {/* Header section */}
+      
       <div className="flex flex-wrap items-center justify-between gap-2.5 pb-1 border-b border-slate-200/60">
         <div className="flex items-center gap-2">
           <span className={`w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-xs border border-slate-200/60 ${currentAccent.icon}`}>
@@ -189,7 +189,7 @@ export default function MediaUrlOrUpload({
         </div>
       </div>
 
-      {/* Input controls (URL + File Upload) */}
+      
       <div className="grid md:grid-cols-[1fr_auto_auto] gap-3 items-center">
         <div>
           <label className="block text-xs font-semibold text-slate-600 mb-1">
@@ -238,7 +238,7 @@ export default function MediaUrlOrUpload({
         </div>
       </div>
 
-      {/* File specifications helper text */}
+      
       <div className="flex flex-wrap items-center justify-between text-[11px] text-slate-500 pt-0.5">
         <span className="inline-flex items-center gap-1.5">
           <FaIcon icon="fa-file-image" className="text-slate-400" />
@@ -247,7 +247,7 @@ export default function MediaUrlOrUpload({
         <span>Max size: {maxMb} MB</span>
       </div>
 
-      {/* Preview Section */}
+      
       {preview === 'image' && (
         <div className="pt-2">
           <div className="flex items-center justify-between mb-1.5">

@@ -342,7 +342,7 @@ export default function ExerciseDetail() {
             </a>
           )}
 
-          {/* Compact secondary CTA */}
+          
           <aside className="mt-8 md:mt-10 rounded-xl border border-teal-100 bg-teal-50/50 px-4 py-4 md:px-5 md:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="min-w-0">
               <p className="font-semibold text-slate-900 text-sm md:text-base">Need personalised guidance?</p>

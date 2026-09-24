@@ -445,7 +445,7 @@ export default function AdvancedBookingWizard({
       </GlassModalHeader>
 
       <GlassModalBody className="!px-4 !py-4 sm:!px-6 sm:!py-5">
-        {/* Splash */}
+        
         {step === 0 && (
           <div className="flex flex-col items-center justify-center py-14 sm:py-16 gap-4">
             <div className="relative">
@@ -472,7 +472,7 @@ export default function AdvancedBookingWizard({
           </div>
         )}
 
-        {/* Step 1 — Services */}
+
         {step === 1 && (
           <div className="space-y-6">
             <section>
@@ -569,7 +569,7 @@ export default function AdvancedBookingWizard({
           </div>
         )}
 
-        {/* Step 2 — Package */}
+
         {step === 2 && (
           <div className="space-y-4">
             {existingPackageId ? (
@@ -649,7 +649,7 @@ export default function AdvancedBookingWizard({
           </div>
         )}
 
-        {/* Step 3 — Physio */}
+
         {step === 3 && (
           <div className="space-y-2.5">
             <SectionLabel>Choose physiotherapist</SectionLabel>
@@ -713,7 +713,7 @@ export default function AdvancedBookingWizard({
           </div>
         )}
 
-        {/* Step 4 — Schedule */}
+
         {step === 4 && (
           <div className="space-y-5">
             <label className="block">
@@ -783,7 +783,7 @@ export default function AdvancedBookingWizard({
           </div>
         )}
 
-        {/* Step 5 — Patient */}
+
         {step === 5 && (
           <div className="space-y-4">
             <SectionLabel>Select patient</SectionLabel>
@@ -856,7 +856,7 @@ export default function AdvancedBookingWizard({
           </div>
         )}
 
-        {/* Step 6 — Checkout */}
+
         {step === 6 && (
           <div className="space-y-5">
             <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 sm:p-5 space-y-3 text-sm">

@@ -1,5 +1,5 @@
 /**
- * Req #4 — KinesteX movement analysis helpers (no invented landmarks).
+ * KinesteX movement analysis helpers (no invented landmarks).
  * Run: node frontend/src/components/exercise/kinestexMovementAnalysis.node-test.mjs
  */
 import {

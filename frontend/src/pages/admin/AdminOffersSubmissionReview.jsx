@@ -15,18 +15,15 @@ export default function AdminOffersSubmissionReview() {
   const [actionLoading, setActionLoading] = useState(false);
   const [rewardActionLoading, setRewardActionLoading] = useState(false);
 
-  // Form states for review actions
   const [selectedAction, setSelectedAction] = useState('approved'); // 'approved' | 'under_review' | 'rejected'
   const [adminNote, setAdminNote] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [rewardStatus, setRewardStatus] = useState('pending');
   const [rewardNote, setRewardNote] = useState('');
 
-  // Proof Image Preview Modal / Zoom
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
 
-  // Copy helper
   const [copiedField, setCopiedField] = useState(null);
 
   const fetchDetail = async () => {
@@ -238,9 +235,9 @@ export default function AdminOffersSubmissionReview() {
   return (
     <AdminDashboardLayout>
       <div className="space-y-6 max-w-7xl mx-auto pb-12">
-        {/* ━━━ TOP BREADCRUMB & HEADER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+        
         <div className="flex flex-col gap-4">
-          {/* Breadcrumb Navigation */}
+          
           <div className="flex items-center justify-between flex-wrap gap-2 text-xs text-slate-500">
             <div className="flex items-center gap-2 flex-wrap">
               <Link
@@ -279,7 +276,7 @@ export default function AdminOffersSubmissionReview() {
             </Link>
           </div>
 
-          {/* Hero Profile Bar */}
+          
           <div className="rounded-3xl border border-slate-200/80 bg-gradient-to-r from-white via-slate-50 to-primary-50/30 p-5 sm:p-7 shadow-sm">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
               <div className="flex items-start sm:items-center gap-4">
@@ -325,7 +322,7 @@ export default function AdminOffersSubmissionReview() {
                 </div>
               </div>
 
-              {/* Status Pills & Reload Action Button */}
+              
               <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 flex-wrap">
                 <div
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-bold border shadow-xs ${currentStatusBadge.bg}`}
@@ -356,7 +353,7 @@ export default function AdminOffersSubmissionReview() {
           </div>
         </div>
 
-        {/* ━━━ QUICK METRIC STRIP ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+        
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
           <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50/70 via-white to-emerald-50/30 p-4 shadow-xs">
             <div className="flex items-center justify-between text-emerald-700 mb-1">
@@ -418,13 +415,12 @@ export default function AdminOffersSubmissionReview() {
           </div>
         </div>
 
-        {/* ━━━ MAIN CONTENT GRID (2 COLUMNS) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+        
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* ────────────────────────────────────────────────────────────── */}
-          {/* LEFT COLUMN: Participant Details & Proof Viewer (7 cols)       */}
-          {/* ────────────────────────────────────────────────────────────── */}
+
+
           <div className="lg:col-span-7 space-y-6">
-            {/* 1. Participant & Contact Information */}
+
             <div className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-6 shadow-xs">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3.5 mb-4">
                 <div className="flex items-center gap-2">
@@ -441,7 +437,7 @@ export default function AdminOffersSubmissionReview() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Full Name */}
+
                 <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
                     Full Name
@@ -449,7 +445,7 @@ export default function AdminOffersSubmissionReview() {
                   <p className="text-sm font-extrabold text-slate-900">{submission.full_name}</p>
                 </div>
 
-                {/* City */}
+
                 <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
                     City / Location
@@ -460,7 +456,7 @@ export default function AdminOffersSubmissionReview() {
                   </p>
                 </div>
 
-                {/* Email */}
+
                 <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 sm:col-span-2 flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
@@ -483,7 +479,7 @@ export default function AdminOffersSubmissionReview() {
                   </button>
                 </div>
 
-                {/* Phone */}
+                
                 <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 sm:col-span-2 flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
@@ -507,7 +503,7 @@ export default function AdminOffersSubmissionReview() {
                 </div>
               </div>
 
-              {/* Linked User Account Info */}
+              
               {submission.user_id && (
                 <div className="mt-4 p-3.5 rounded-2xl bg-indigo-50/80 border border-indigo-100 flex items-center justify-between gap-3 text-xs">
                   <div className="flex items-center gap-2.5">
@@ -532,7 +528,7 @@ export default function AdminOffersSubmissionReview() {
                 </div>
               )}
 
-              {/* Participant's Note */}
+              
               {submission.notes ? (
                 <div className="mt-4 p-4 rounded-2xl bg-amber-50/70 border border-amber-200/60 text-xs">
                   <div className="flex items-center gap-2 text-amber-800 font-bold mb-1.5">
@@ -551,7 +547,7 @@ export default function AdminOffersSubmissionReview() {
               )}
             </div>
 
-            {/* 2. Uploaded Proof & Documents Viewer */}
+
             <div className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-6 shadow-xs overflow-hidden">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3.5 mb-4 flex-wrap gap-2">
                 <div className="flex items-center gap-2">
@@ -602,7 +598,7 @@ export default function AdminOffersSubmissionReview() {
                 )}
               </div>
 
-              {/* Document Meta Badges */}
+              
               <div className="flex items-center gap-2.5 mb-4 flex-wrap text-xs">
                 <div className="bg-slate-100 text-slate-700 px-3 py-1 rounded-xl font-bold flex items-center gap-1.5">
                   <FaIcon icon="fa-paperclip" className="text-slate-400" />
@@ -620,7 +616,7 @@ export default function AdminOffersSubmissionReview() {
                 )}
               </div>
 
-              {/* Main Proof Display Area */}
+              
               <div className="rounded-2xl border border-slate-200 bg-slate-950 overflow-hidden relative min-h-[380px] flex items-center justify-center">
                 {isPdf ? (
                   /* PDF Document View */
@@ -679,11 +675,9 @@ export default function AdminOffersSubmissionReview() {
             </div>
           </div>
 
-          {/* ────────────────────────────────────────────────────────────── */}
-          {/* RIGHT COLUMN: Review Decision & Verification Actions (5 cols)  */}
-          {/* ────────────────────────────────────────────────────────────── */}
+
           <div className="lg:col-span-5 space-y-6">
-            {/* 1. Decision Control Center */}
+
             <div className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-6 shadow-xs sticky top-4">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3.5 mb-5">
                 <div className="flex items-center gap-2">
@@ -697,7 +691,7 @@ export default function AdminOffersSubmissionReview() {
                 </div>
               </div>
 
-              {/* Action Mode Radio Tabs */}
+              
               <div className="grid grid-cols-3 gap-2 p-1.5 bg-slate-100 rounded-2xl mb-5">
                 <button
                   type="button"
@@ -739,7 +733,7 @@ export default function AdminOffersSubmissionReview() {
                 </button>
               </div>
 
-              {/* Action Description Banner */}
+              
               {selectedAction === 'approved' && (
                 <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 mb-4 flex items-start gap-2.5">
                   <FaIcon icon="fa-circle-check" className="text-emerald-600 mt-0.5 shrink-0 text-sm" />
@@ -776,7 +770,7 @@ export default function AdminOffersSubmissionReview() {
                 </div>
               )}
 
-              {/* Rejection Reason Textarea (Mandatory if Reject selected) */}
+              
               {selectedAction === 'rejected' && (
                 <div className="space-y-1.5 mb-4">
                   <label className="text-xs font-bold text-rose-800 flex items-center justify-between">
@@ -793,7 +787,7 @@ export default function AdminOffersSubmissionReview() {
                 </div>
               )}
 
-              {/* Internal Admin Note Textarea */}
+              
               <div className="space-y-1.5 mb-5">
                 <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
                   <span>Internal Admin Notes (Team Only)</span>
@@ -808,7 +802,7 @@ export default function AdminOffersSubmissionReview() {
                 />
               </div>
 
-              {/* Confirm Action Button */}
+              
               <button
                 type="button"
                 disabled={actionLoading}
@@ -847,7 +841,7 @@ export default function AdminOffersSubmissionReview() {
               </button>
             </div>
 
-            {/* 2. Reward & Voucher Management Box */}
+
             <div className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-6 shadow-xs">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3.5 mb-4">
                 <div className="flex items-center gap-2">
@@ -905,7 +899,7 @@ export default function AdminOffersSubmissionReview() {
               </form>
             </div>
 
-            {/* 3. Reviewer Audit Trail & Metadata Card */}
+
             <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-5 shadow-xs text-xs space-y-2.5 text-slate-600">
               <h3 className="font-extrabold text-slate-900 uppercase tracking-wider text-[11px] mb-2 flex items-center gap-1.5">
                 <FaIcon icon="fa-clock-rotate-left" className="text-slate-400" />
@@ -936,7 +930,7 @@ export default function AdminOffersSubmissionReview() {
         </div>
       </div>
 
-      {/* ━━━ HIGH-RESOLUTION ZOOM MODAL FOR PROOF ━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      
       {imageModalOpen && resolvedProofUrl && !isPdf && (
         <div
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4"
@@ -946,7 +940,7 @@ export default function AdminOffersSubmissionReview() {
             className="relative max-w-5xl max-h-[90vh] w-full flex flex-col items-center"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Controls */}
+            
             <div className="w-full flex items-center justify-between pb-3 text-white">
               <div className="flex items-center gap-3">
                 <span className="text-sm font-bold">Proof Document Inspection</span>
@@ -999,7 +993,7 @@ export default function AdminOffersSubmissionReview() {
               </div>
             </div>
 
-            {/* Scrollable / Zoomable Image Canvas */}
+            
             <div className="w-full max-h-[80vh] overflow-auto rounded-2xl bg-black/60 border border-slate-800 p-4 flex items-center justify-center">
               <img
                 src={resolvedProofUrl}

@@ -23,7 +23,6 @@ export default function OffersPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(null);
 
-  // Form State
   const [form, setForm] = useState({
     full_name: '',
     email: '',
@@ -39,7 +38,6 @@ export default function OffersPage() {
   const [formErrors, setFormErrors] = useState({});
   const [isDragging, setIsDragging] = useState(false);
 
-  // Status Lookup State
   const [statusQuery, setStatusQuery] = useState('');
   const [statusResult, setStatusResult] = useState(null);
   const [statusLoading, setStatusLoading] = useState(false);
@@ -50,7 +48,6 @@ export default function OffersPage() {
   const statusRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // Pre-fill user profile if logged in
   useEffect(() => {
     if (user) {
       setForm((prev) => ({
@@ -63,7 +60,6 @@ export default function OffersPage() {
     }
   }, [user]);
 
-  // Fetch campaign settings from API
   useEffect(() => {
     offers
       .settings()
@@ -264,17 +260,17 @@ export default function OffersPage() {
       <Navbar />
 
       <main className="flex-1">
-        {/* ─── SECTION 1: MODERN HERO ───────────────────────────────────────── */}
+
         <section className="relative overflow-hidden pt-6 sm:pt-10 pb-10 sm:pb-16 lg:max-h-[95vh] flex flex-col justify-center">
-          {/* Subtle Ambient Radial Glows */}
+
           <div className="absolute -top-24 right-1/4 -z-10 w-[32rem] h-[32rem] bg-gradient-to-br from-[#376299]/15 to-[#FF6F61]/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute top-1/2 -left-20 -z-10 w-96 h-96 bg-[#FF6F61]/10 rounded-full blur-3xl pointer-events-none" />
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-              {/* Left Column: Headline & Action Buttons */}
+
               <div className="lg:col-span-7 space-y-5 sm:space-y-6 text-center lg:text-left">
-                {/* Status Pill */}
+
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/90 border border-slate-200/80 shadow-xs backdrop-blur-md">
                   <span className="relative flex h-2.5 w-2.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF6F61] opacity-75" />
@@ -285,7 +281,7 @@ export default function OffersPage() {
                   </span>
                 </div>
 
-                {/* Main Headline */}
+
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.12]">
                   Run 10 KM.{' '}
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#376299] via-primary-700 to-[#FF6F61]">
@@ -293,13 +289,13 @@ export default function OffersPage() {
                   </span>
                 </h1>
 
-                {/* Subtitle */}
+
                 <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-normal">
                   {data.hero_subtitle ||
                     'Complete your 10 KM run and take a step toward better recovery with free physiotherapy sessions from The Urban Physio.'}
                 </p>
 
-                {/* Quick Metric Pills */}
+
                 <div className="grid grid-cols-3 gap-2.5 sm:gap-4 pt-1">
                   {(s.hero_highlights || OFFERS_DEFAULTS.sections.hero_highlights).map((item, idx) => (
                     <div
@@ -319,7 +315,7 @@ export default function OffersPage() {
                   ))}
                 </div>
 
-                {/* Action CTAs */}
+
                 <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 pt-2">
                   <button
                     type="button"
@@ -339,7 +335,7 @@ export default function OffersPage() {
                   </button>
                 </div>
 
-                {/* Supported Apps Ribbon */}
+
                 <div className="pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-2 text-xs text-slate-500">
                   <span className="font-semibold text-slate-400">Compatible Trackers:</span>
                   {['Strava', 'Nike Run Club', 'Garmin', 'Apple Health', 'Samsung Health', 'GPS Watches'].map((app, i) => (
@@ -351,10 +347,10 @@ export default function OffersPage() {
                 </div>
               </div>
 
-              {/* Right Column: Hero Visual Card */}
+
               <div className="lg:col-span-5 relative mt-4 lg:mt-0">
                 <div className="relative mx-auto max-w-md lg:max-w-none">
-                  {/* Subtle Glow Frame */}
+
                   <div className="absolute -inset-2.5 bg-gradient-to-tr from-[#376299]/30 to-[#FF6F61]/30 rounded-3xl opacity-50 blur-xl -z-10" />
 
                   <div className="relative rounded-3xl overflow-hidden border border-slate-200/90 bg-white shadow-2xl">
@@ -365,7 +361,7 @@ export default function OffersPage() {
                       loading="lazy"
                     />
 
-                    {/* Gradient Overlay for Copy */}
+
                     <div className="p-6 bg-gradient-to-t from-slate-950 via-slate-900/70 to-transparent absolute inset-0 flex flex-col justify-end text-white">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="inline-block px-3 py-1 rounded-md bg-[#FF6F61] text-white text-[11px] font-extrabold uppercase tracking-widest shadow-xs">
@@ -389,7 +385,7 @@ export default function OffersPage() {
           </div>
         </section>
 
-        {/* ─── SECTION 2: CAMPAIGN HIGHLIGHTS (4 Cards) ───────────────────────── */}
+
         {vis.highlights && (
           <section className="py-16 bg-white border-y border-slate-200/70">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -440,7 +436,7 @@ export default function OffersPage() {
           </section>
         )}
 
-        {/* ─── SECTION 3: HOW IT WORKS (5 Steps Detailed) ────────────────────── */}
+
         {vis.how_it_works && (
           <section ref={stepsRef} id="how-it-works" className="py-20 bg-slate-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -457,14 +453,14 @@ export default function OffersPage() {
                 </p>
               </div>
 
-              {/* Steps Progression Grid */}
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                 {(s.how_steps || OFFERS_DEFAULTS.sections.how_steps).map((step, idx) => (
                   <div
                     key={idx}
                     className="relative flex flex-col h-full rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm hover:shadow-lg hover:border-[#376299]/40 hover:-translate-y-1 transition-all duration-300"
                   >
-                    {/* Step Number & Icon */}
+
                     <div className="flex items-center justify-between mb-4">
                       <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#376299] to-primary-800 text-white font-black text-sm shadow-sm">
                         {step.step || `0${idx + 1}`}
@@ -474,11 +470,11 @@ export default function OffersPage() {
                       </div>
                     </div>
 
-                    {/* Step Title & Summary */}
+
                     <h4 className="text-base sm:text-lg font-bold text-slate-900 mb-1.5">{step.title}</h4>
                     <p className="text-xs font-bold text-[#376299] mb-3 leading-snug">{step.summary}</p>
 
-                    {/* Step Details */}
+
                     <p className="text-xs text-slate-500 leading-relaxed mt-auto pt-3 border-t border-slate-100">
                       {step.details}
                     </p>
@@ -489,12 +485,12 @@ export default function OffersPage() {
           </section>
         )}
 
-        {/* ─── SECTION 4: BENEFITS ─────────────────────────────────────────── */}
+
         {vis.benefits && (
           <section className="py-20 bg-white border-y border-slate-200/70">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-                {/* Left Column: Heading & Value Prop */}
+
                 <div className="lg:col-span-5 space-y-5 text-center lg:text-left">
                   <span className="inline-block text-xs font-extrabold uppercase tracking-widest text-[#FF6F61] bg-[#FF6F61]/10 px-3.5 py-1 rounded-full border border-[#FF6F61]/20">
                     Clinical Motivation
@@ -519,7 +515,7 @@ export default function OffersPage() {
                   </div>
                 </div>
 
-                {/* Right Column: Benefits Grid */}
+
                 <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                   {(s.benefits || OFFERS_DEFAULTS.sections.benefits).map((b, idx) => (
                     <div
@@ -541,10 +537,10 @@ export default function OffersPage() {
           </section>
         )}
 
-        {/* ─── SECTION 5: ELIGIBILITY & RULES (High-Contrast Tech Card) ──────── */}
+
         {vis.eligibility && (
           <section className="py-16 sm:py-20 bg-gradient-to-br from-slate-950 via-[#1e293b] to-slate-950 text-white relative overflow-hidden">
-            {/* Ambient Background Glows */}
+
             <div className="absolute top-0 right-0 w-96 h-96 bg-[#376299]/20 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#FF6F61]/15 rounded-full blur-3xl pointer-events-none" />
 
@@ -562,7 +558,7 @@ export default function OffersPage() {
                 </p>
               </div>
 
-              {/* 3 Metric Cards */}
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="rounded-3xl bg-white/10 backdrop-blur-md border border-white/15 p-6 hover:bg-white/15 transition">
                   <div className="flex items-center gap-3 mb-2.5">
@@ -604,7 +600,7 @@ export default function OffersPage() {
                 </div>
               </div>
 
-              {/* Rules Checklist */}
+
               <div className="rounded-3xl bg-white/5 border border-white/10 p-6 sm:p-8 backdrop-blur-md">
                 <h4 className="text-sm font-bold uppercase tracking-wider text-slate-300 mb-5 flex items-center gap-2.5">
                   <FaIcon icon="fa-list-check" className="text-[#FF6F61]" />
@@ -628,10 +624,10 @@ export default function OffersPage() {
           </section>
         )}
 
-        {/* ─── SECTION 6: PARTICIPATION FORM & STATUS TRACKER ───────────────── */}
+
         <section ref={formRef} id="submit-run" className="py-20 bg-[#F1F5F9]/80">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Header */}
+
             <div className="text-center mb-10">
               <span className="inline-block text-xs font-extrabold uppercase tracking-widest text-[#376299] bg-[#376299]/10 px-3.5 py-1 rounded-full border border-[#376299]/20">
                 {s.form_badge || 'Participation Desk'}
@@ -645,7 +641,7 @@ export default function OffersPage() {
               </p>
             </div>
 
-            {/* Success State View */}
+
             {submissionSuccess ? (
               <div className="rounded-3xl border border-emerald-200 bg-white p-6 sm:p-10 shadow-2xl text-center animate-fade-in mb-8">
                 <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-3xl mb-5 shadow-inner">
@@ -665,7 +661,7 @@ export default function OffersPage() {
                     'Your 10 KM run submission has been received and is currently under clinical review. Keep your Reference Code safe.'}
                 </p>
 
-                {/* Reference Code Box */}
+
                 <div className="max-w-md mx-auto p-4 rounded-2xl bg-white border border-emerald-200/80 shadow-xs mb-6 flex items-center justify-between gap-3">
                   <div className="text-left">
                     <span className="text-[10px] uppercase font-extrabold text-slate-400 block tracking-wider">
@@ -728,9 +724,9 @@ export default function OffersPage() {
                 </div>
               </div>
             ) : (
-              /* Main Submission Form Card */
+
               <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-10 shadow-xl mb-12">
-                {/* Campaign Inactive / Paused / Expired Notice if applicable */}
+
                 {s.campaign_status && s.campaign_status !== 'active' ? (
                   <div className="p-6 rounded-2xl bg-amber-50 border border-amber-200 text-center space-y-2">
                     <div className="flex h-12 w-12 mx-auto items-center justify-center rounded-2xl bg-amber-100 text-amber-700 text-xl">
@@ -751,7 +747,7 @@ export default function OffersPage() {
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
-                      {/* Full Name */}
+
                       <div>
                         <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                           Full Name <span className="text-rose-500">*</span>
@@ -775,7 +771,7 @@ export default function OffersPage() {
                         )}
                       </div>
 
-                      {/* Email */}
+
                       <div>
                         <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                           Email Address <span className="text-rose-500">*</span>
@@ -797,7 +793,7 @@ export default function OffersPage() {
                         )}
                       </div>
 
-                      {/* Phone Number */}
+
                       <div>
                         <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                           Phone Number <span className="text-rose-500">*</span>
@@ -819,7 +815,7 @@ export default function OffersPage() {
                         )}
                       </div>
 
-                      {/* City (Optional) */}
+
                       <div>
                         <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                           City / Locality <span className="text-slate-400 font-normal">(Optional)</span>
@@ -833,7 +829,7 @@ export default function OffersPage() {
                         />
                       </div>
 
-                      {/* Run Date */}
+
                       <div>
                         <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                           Date of Run <span className="text-rose-500">*</span>
@@ -855,7 +851,7 @@ export default function OffersPage() {
                         )}
                       </div>
 
-                      {/* Distance Completed */}
+
                       <div>
                         <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                           Distance Completed (KM) <span className="text-rose-500">*</span>
@@ -885,7 +881,7 @@ export default function OffersPage() {
                       </div>
                     </div>
 
-                    {/* Drag & Drop File Upload Box */}
+
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                         Proof of Run <span className="text-rose-500">*</span>{' '}
@@ -963,7 +959,7 @@ export default function OffersPage() {
                       )}
                     </div>
 
-                    {/* Additional Notes */}
+
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                         Additional Notes / Running App Used{' '}
@@ -978,7 +974,7 @@ export default function OffersPage() {
                       />
                     </div>
 
-                    {/* Consent Checkbox */}
+
                     <div className="pt-1">
                       <label className="flex items-start gap-3.5 cursor-pointer select-none">
                         <input
@@ -999,7 +995,7 @@ export default function OffersPage() {
                       )}
                     </div>
 
-                    {/* Submit Button */}
+
                     <div className="pt-3">
                       <button
                         type="submit"
@@ -1024,7 +1020,7 @@ export default function OffersPage() {
               </div>
             )}
 
-            {/* ─── LIVE STATUS TRACKER ─────────────────────────────────────── */}
+
             {vis.status_tracker && (
               <div ref={statusRef} className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-md">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
@@ -1059,7 +1055,7 @@ export default function OffersPage() {
 
                 {statusResult && (
                   <div className="mt-6 p-5 sm:p-7 rounded-3xl bg-slate-50 border border-slate-200 animate-fade-in space-y-6">
-                    {/* Header info */}
+
                     <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-200">
                       <div>
                         <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
@@ -1087,7 +1083,7 @@ export default function OffersPage() {
                       </div>
                     </div>
 
-                    {/* Participant summary stats */}
+
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                       <div className="p-3 rounded-xl bg-white border border-slate-200/80">
                         <span className="text-slate-400 block font-semibold">Participant</span>
@@ -1109,7 +1105,7 @@ export default function OffersPage() {
                       </div>
                     </div>
 
-                    {/* Visual Progress Timeline Stepper */}
+
                     {statusResult.timeline && statusResult.timeline.length > 0 && (
                       <div className="pt-2">
                         <span className="text-xs font-bold uppercase tracking-wider text-slate-700 block mb-4">
@@ -1165,7 +1161,7 @@ export default function OffersPage() {
                       </div>
                     )}
 
-                    {/* Rejection Note if rejected */}
+
                     {statusResult.status === 'rejected' && statusResult.rejection_reason && (
                       <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-800 space-y-1">
                         <span className="font-bold uppercase tracking-wide flex items-center gap-1.5 text-rose-900">
@@ -1175,7 +1171,7 @@ export default function OffersPage() {
                       </div>
                     )}
 
-                    {/* Action banner if approved */}
+
                     {(statusResult.reward_status === 'approved' || statusResult.reward_status === 'eligible') && (
                       <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div>
@@ -1198,7 +1194,7 @@ export default function OffersPage() {
           </div>
         </section>
 
-        {/* ─── SECTION 7: FAQS ACCORDION ─────────────────────────────────────── */}
+
         {vis.faqs && faqs.length > 0 && (
           <section className="py-20 bg-white border-t border-slate-200/70">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1249,10 +1245,10 @@ export default function OffersPage() {
           </section>
         )}
 
-        {/* ─── SECTION 8: FINAL HIGH-IMPACT CTA ──────────────────────────────── */}
+
         {vis.final_cta && (
           <section className="py-20 bg-gradient-to-br from-[#376299] via-primary-800 to-slate-950 text-white text-center relative overflow-hidden">
-            {/* Ambient Background Accents */}
+
             <div className="absolute -top-10 -right-10 w-80 h-80 bg-[#FF6F61]/20 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-10 -left-10 w-80 h-80 bg-primary-400/20 rounded-full blur-3xl pointer-events-none" />
 

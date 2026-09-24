@@ -13,14 +13,8 @@ const empty = () => ({
 });
 
 /**
- * Walk-in / offline patient registration form.
- * Only collects basic patient details — no package assignment.
- * Packages and appointments can be added from the Patient Profile after creation.
- *
- * Props:
- *   clinicId  {string|number}
- *   onCreated {function} – called with response data after successful creation
- *   onClose   {function} – optional; if provided renders a modal-style close button in header
+ * Walk-in / offline patient registration — basic details only, no package assignment.
+ * Packages/appointments are added from Patient Profile after creation.
  */
 export default function ClinicOfflinePatientForm({ clinicId, onCreated, onClose }) {
   const [form, setForm]   = useState(empty);
@@ -71,7 +65,6 @@ export default function ClinicOfflinePatientForm({ clinicId, onCreated, onClose 
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      {/* Header — only shown when used inside a modal (onClose provided) */}
       {onClose && (
         <div className="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
@@ -100,7 +93,7 @@ export default function ClinicOfflinePatientForm({ clinicId, onCreated, onClose 
         from their profile.
       </p>
 
-      {/* Basic details */}
+      
       <div className="grid sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -158,7 +151,7 @@ export default function ClinicOfflinePatientForm({ clinicId, onCreated, onClose 
         </div>
       </div>
 
-      {/* Invite toggle */}
+      
       <label className="flex items-center gap-2.5 text-sm text-slate-700 cursor-pointer select-none">
         <input
           type="checkbox"
@@ -169,7 +162,7 @@ export default function ClinicOfflinePatientForm({ clinicId, onCreated, onClose 
         Send &ldquo;Create your The Urban Physio Account&rdquo; via SMS, WhatsApp &amp; Email
       </label>
 
-      {/* Actions */}
+
       <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-1">
         {onClose && (
           <button type="button" className="btn-outline w-full sm:w-auto" onClick={onClose}>

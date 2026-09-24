@@ -258,7 +258,7 @@ export default function HelpFeedbackFab() {
 
   return (
     <>
-      {/* Speed-dial menu */}
+      
       {menuOpen && (
         <button
           type="button"

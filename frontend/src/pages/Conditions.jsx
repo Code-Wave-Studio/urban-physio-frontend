@@ -100,7 +100,7 @@ export default function Conditions() {
       />
       <Navbar />
 
-      {/* Hero */}
+      
       <section className="relative bg-gradient-to-br from-orange-600 via-primary-700 to-orange-900 text-white py-12 md:py-16">
         <div className="absolute inset-0 opacity-30 bg-[url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.08\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4z\'/%3E%3C/g%3E%3C/svg%3E')]" />
         <div className="max-w-7xl mx-auto px-4 relative">
@@ -134,7 +134,7 @@ export default function Conditions() {
       </section>
 
       <div className="max-w-7xl mx-auto px-4 py-8 md:py-12 flex-1 w-full">
-        {/* Search */}
+        
         <div className="glass-card mb-6 p-4">
           <div className="relative">
             <FaIcon
@@ -151,7 +151,7 @@ export default function Conditions() {
           </div>
         </div>
 
-        {/* Category filters */}
+        
         <div className="scroll-x-hide flex flex-nowrap gap-2 mb-8 -mx-1 px-1 pb-1">
           {CONDITION_CATEGORIES.map((c) => (
             <button
@@ -241,7 +241,7 @@ export default function Conditions() {
           </div>
         )}
 
-        {/* CTA */}
+        
         <section className="mt-12 md:mt-16 glass-strong rounded-2xl md:rounded-3xl p-6 md:p-10 text-center">
           <h2 className="text-xl md:text-2xl font-bold text-slate-800">Not sure which program fits you?</h2>
           <p className="text-slate-600 mt-2 max-w-lg mx-auto text-sm md:text-base">

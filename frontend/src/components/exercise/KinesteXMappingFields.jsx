@@ -1,6 +1,6 @@
 /**
- * Shared KinesteX mapping fields for Admin / Clinic exercise editors (Phase 2).
- * Informational configuration only — does not start AI sessions.
+ * Shared KinesteX mapping fields for Admin / Clinic exercise editors.
+ * Configuration only — does not start AI sessions.
  */
 export const EMPTY_KINESTEX = {
   ai_supported: false,

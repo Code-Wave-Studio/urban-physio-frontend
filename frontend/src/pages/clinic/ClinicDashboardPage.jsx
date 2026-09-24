@@ -98,7 +98,7 @@ export default function ClinicDashboardPage() {
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 via-white to-primary-50/30">
       <Navbar />
       <main className="flex-1 max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-6 md:py-8 w-full">
-        {/* Header + clinic switcher */}
+        
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-11 h-11 rounded-xl bg-primary-100 text-primary-700 flex items-center justify-center shrink-0">
@@ -139,7 +139,7 @@ export default function ClinicDashboardPage() {
           </div>
         ) : (
           <>
-            {/* Metrics */}
+            
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <MetricCard icon="fa-calendar-day" label="Today's appointments" value={loading ? '—' : m.today_appointments ?? 0} tint="primary" hint={`${m.today_completed ?? 0} completed`} />
               <MetricCard icon="fa-clock" label="Upcoming" value={loading ? '—' : m.upcoming_appointments ?? 0} tint="teal" />
@@ -151,7 +151,7 @@ export default function ClinicDashboardPage() {
               <MetricCard icon="fa-circle-check" label="Completion rate" value={loading ? '—' : `${m.completion_rate ?? 0}%`} tint="emerald" hint={`${m.missed_month ?? 0} missed this month`} />
             </div>
 
-            {/* Quick links */}
+            
             <div className="mt-6">
               <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Manage</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -165,7 +165,7 @@ export default function ClinicDashboardPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
-              {/* Recent appointments */}
+              
               <div className="glass-card lg:col-span-2">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="font-bold text-slate-900">Recent appointments</h2>
@@ -199,7 +199,7 @@ export default function ClinicDashboardPage() {
                 ))}
               </div>
 
-              {/* Therapist workload */}
+              
               <div className="glass-card">
                 <h2 className="font-bold text-slate-900 mb-3">Therapist workload</h2>
                 <p className="text-[11px] text-slate-400 -mt-2 mb-3">This month</p>

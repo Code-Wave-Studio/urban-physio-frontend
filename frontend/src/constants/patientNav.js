@@ -10,14 +10,12 @@ export const PATIENT_SPEED_DIAL = [
 ];
 
 export const PATIENT_NAV = [
-  // Visits & Consults
   { to: '/patient', label: 'Overview', icon: 'fa-house', section: 'visits', match: 'exact' },
   { to: '/book', label: 'Book Appointment', icon: 'fa-calendar-plus', section: 'visits' },
   { to: '/patient/appointments', label: 'Appointments', icon: 'fa-calendar-check', section: 'visits' },
   { to: '/patient/video-consultations', label: 'Video Consultation', icon: 'fa-video', section: 'visits' },
   { to: '/emergency/book', label: 'Emergency Care', icon: 'fa-truck-medical', section: 'visits' },
 
-  // Health Records
   { to: '/patient/exercises', label: 'My Rehab Plan', icon: 'fa-person-walking', section: 'health' },
   { to: '/patient/treatment-journey', label: 'Treatment Journey', icon: 'fa-notes-medical', section: 'health' },
   { to: '/patient/prescriptions', label: 'Prescription & Notes', icon: 'fa-file-prescription', section: 'health' },
@@ -25,12 +23,10 @@ export const PATIENT_NAV = [
   { to: '/patient/reports', label: 'My Reports', icon: 'fa-file-medical', section: 'health' },
   { to: '/patient/documents', label: 'Documents', icon: 'fa-folder-tree', section: 'health' },
 
-  // Billing & Plans
   { to: '/patient/bills', label: 'Bills & Payments', icon: 'fa-file-invoice-dollar', section: 'billing' },
   { to: '/patient/packages', label: 'My Packages', icon: 'fa-box-open', section: 'billing' },
   { to: '/patient/wallet', label: 'Wallet', icon: 'fa-wallet', section: 'billing' },
 
-  // Settings
   { to: '/patient/profile', label: 'Profile', icon: 'fa-user-gear', section: 'settings' },
   { to: '/patient/saved', label: 'Saved', icon: 'fa-heart', section: 'settings' },
   { to: '/patient/notifications', label: 'Notifications', icon: 'fa-bell', section: 'settings', notifyKey: true },

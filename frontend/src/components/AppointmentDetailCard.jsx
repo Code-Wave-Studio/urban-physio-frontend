@@ -358,7 +358,7 @@ export default function AppointmentDetailCard({
         <Detail label="Paid at" value={appt.payment_paid_at} />
       </Section>
 
-      {/* Consultation Room Banner */}
+      
       <div className="p-3.5 bg-primary-50/60 border border-primary-200/80 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-sm">
         <div>
           <p className="font-bold text-sm text-slate-900 flex items-center gap-2">

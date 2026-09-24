@@ -421,7 +421,7 @@ export default function DoctorPrescriptions() {
         </div>
       )}
 
-      {/* Progress detail modal */}
+      
       <GlassModal open={!!detail} onClose={() => setDetail(null)} size="lg">
         <GlassModalHeader
           title={detail?.title || 'Plan progress'}
@@ -546,7 +546,7 @@ export default function DoctorPrescriptions() {
         </GlassModalFooter>
       </GlassModal>
 
-      {/* Create / Edit modal */}
+
       <GlassModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}

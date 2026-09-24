@@ -4,20 +4,8 @@ import PageMeta from './PageMeta';
 import { seo as seoApi } from '../../services/api';
 
 /**
- * Applies CMS-managed SEO meta for the current path when a seo_pages row exists.
- * Safe no-op if API fails or page is not configured — falls back to provided defaults.
- *
- * @param {{
- *   fallbackTitle?: string,
- *   fallbackDescription?: string,
- *   fallbackKeywords?: string,
- *   jsonLd?: object | object[] | null,
- *   pathOverride?: string,
- *   noindex?: boolean,
- *   nofollow?: boolean,
- *   canonical?: string,
- *   image?: string,
- * }} props
+ * Applies CMS seo_pages meta for the current path.
+ * No-op on API failure / missing row — uses fallback props.
  */
 export default function ManagedPageSeo({
   fallbackTitle,

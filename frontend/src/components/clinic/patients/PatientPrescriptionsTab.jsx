@@ -48,14 +48,11 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
   const [printing, setPrinting] = useState(false);
   const [uploadingDocId, setUploadingDocId] = useState(null);
 
-  // Initial Form state for 14 Formal Clinical Sections
   const [formState, setFormState] = useState({
-    // 1. Prescription Title
     rx_title: 'Physiotherapy Assessment & Rehabilitation Treatment Plan',
     date: new Date().toISOString().slice(0, 10),
     expiry_date: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
 
-    // 2. Clinic & Physiotherapist Details
     clinic_name: 'The Urban Physio Clinic & Rehabilitation Center',
     clinic_address: 'Suite 402, Medical Enclave, Sector 18, City Center',
     clinic_contact: 'Ph: +91 98765 43210 | Email: care@theurbanphysio.com',
@@ -64,7 +61,6 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
     doctor_reg_no: 'MH-54912',
     doctor_specialization: 'Orthopedic & Spine Rehabilitation Specialist',
 
-    // 3. Patient Demographic Details
     age_dob: '32 Yrs / 14 Oct 1993',
     gender: 'Male',
     height: '175 cm',
@@ -75,53 +71,41 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
     temp: '98.6 °F',
     pain_score: '5/10 (VAS)',
 
-    // 4. Clinical Diagnosis / Condition
     diagnosis: 'L4-L5 Lumbar Disc Radiculopathy with Sciatic Nerve Involvement',
     chief_complaint: 'Lower back pain radiating down right leg (2 weeks duration)',
     affected_part: 'Lumbar Spine / Right Lower Extremity',
     clinical_notes: 'Mild tenderness around L4-L5 spinous process. SLR positive at 45 degrees. Flexion ROM restricted.',
 
-    // 5. Treatment Plan
     treatment_objectives: 'Pain reduction, L4-L5 root decompression, core muscle activation & restoration of lumbar ROM.',
     treatment_frequency: '3 Sessions / Week',
     total_sessions: '12 Sessions (4 Weeks Protocol)',
 
-    // 6. Modalities
     modalities: 'IFT (100 Hz vector, 15 mins, Lumbar region), Ultrasound Therapy (1.5 W/cm² pulsed, 5 mins), Moist Heat Pack (15 mins)',
 
-    // 7. Manual Treatments
     manual_treatments: 'Maitland Grade II Lumbar Mobilization, Myofascial Release (Gluteus & Piriformis), Dry Needling, Trigger Point Therapy',
 
-    // 8. Exercise Prescription
     exercises: DEFAULT_EXERCISES,
 
-    // 9. Goals
     short_term_goals: 'Reduce VAS pain score from 7/10 to 3/10; achieve 70% pain-free lumbar flexion within 2 weeks.',
     long_term_goals: 'Achieve complete pain-free sitting > 2 hours; return to daily office work & light jogging in 6 weeks.',
 
-    // 10. Patient Instructions & Home Care
     home_instructions: 'Perform prescribed exercises twice daily in a comfortable non-antalgic position. Apply hot pack 15 mins before exercise.',
     activity_modification: 'Avoid lifting heavy weights (> 5 kg), refrain from sudden forward bending at the waist.',
     ergonomic_advice: 'Maintain lumbar support roll during office sitting. Take 5-minute walking breaks every 45 minutes.',
     safety_precautions: 'Discontinue exercises immediately if sharp leg pain, numbness, or tingling increases.',
 
-    // 11. Follow-up & Reassessment
     follow_up_date: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
     reassessment_plan: 'Re-assess Straight Leg Raise (SLR) angle, VAS pain score, and lumbar extension ROM after 6 sessions.',
 
-    // 12. Prescription Validity
     validity_period: 'Valid 30 days from issue date',
 
-    // 13. Terms & Conditions
     terms_conditions: 'This treatment plan is formulated based on physical assessment at The Urban Physio Clinic. Exercises must be performed as instructed. Contact clinic in case of acute flare-ups.',
 
-    // 14. Physiotherapist Signature
     digital_signature: 'Dr. Priya Sharma, PT (Digital Signature Verified)',
     physio_reg_stamp: 'Reg. No. MH-54912',
     status: 'active',
   });
 
-  // Load prescriptions from localStorage (or fallback mock)
   useEffect(() => {
     try {
       const raw = localStorage.getItem(storageKey);
@@ -310,7 +294,6 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
     if (!formState.diagnosis) return toast.error('Diagnosis is required');
 
     if (editingRx) {
-      // Update existing prescription & track version history
       const nextVersion = (editingRx.version || 1) + 1;
       const updatedRx = {
         ...editingRx,
@@ -334,7 +317,6 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
       saveToStorage(newList);
       toast.success(`Physiotherapy Prescription updated (Version ${nextVersion})`);
     } else {
-      // Create new prescription
       const newRx = {
         id: `rx_${Date.now()}`,
         rx_number: `RX-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -442,7 +424,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
 
   const printableRxMarkup = printRx && (
     <div id="urban-physio-print-root" className="bg-white p-6 sm:p-8 text-slate-800 space-y-4">
-      {/* 1 & 2. Prescription Title & Clinic / Physiotherapist Details */}
+      
       <div className="border-b-2 border-teal-700 pb-4 flex flex-wrap justify-between items-start gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5 text-teal-900 font-extrabold text-lg tracking-tight">
@@ -465,7 +447,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
         </div>
       </div>
 
-      {/* 3. Patient Demographic Details */}
+
       <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2 text-xs">
         <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5">
           <span className="font-bold text-teal-800 uppercase text-[10px] tracking-wider">3. Patient Demographic Details</span>
@@ -483,7 +465,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
         </div>
       </div>
 
-      {/* 4. Clinical Diagnosis / Condition */}
+
       <div className="border border-slate-200 rounded-xl p-3.5 space-y-1.5 text-xs bg-white">
         <h4 className="font-bold text-teal-800 uppercase text-[10px] tracking-wider">4. Clinical Diagnosis &amp; Condition</h4>
         <div className="grid sm:grid-cols-2 gap-2">
@@ -494,7 +476,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
         </div>
       </div>
 
-      {/* 5. Treatment Plan */}
+
       <div className="border border-teal-200 bg-teal-50/40 rounded-xl p-3.5 space-y-1.5 text-xs">
         <h4 className="font-bold text-teal-900 uppercase text-[10px] tracking-wider">5. Physiotherapy Treatment Plan</h4>
         <div className="grid sm:grid-cols-3 gap-2">
@@ -504,7 +486,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
         </div>
       </div>
 
-      {/* 6 & 7. Modalities & Manual Treatments */}
+      
       <div className="grid sm:grid-cols-2 gap-3 text-xs">
         <div className="border border-slate-200 rounded-xl p-3 bg-slate-50/60 space-y-1">
           <h4 className="font-bold text-slate-800 uppercase text-[10px]">6. Electro-Physical Modalities</h4>
@@ -516,7 +498,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
         </div>
       </div>
 
-      {/* 8. Exercise Prescription Table */}
+
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <h4 className="font-bold text-teal-900 uppercase text-[11px] tracking-wider">8. Home Exercise Prescription &amp; Rehabilitation Program</h4>
@@ -552,7 +534,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
         </table>
       </div>
 
-      {/* 9. Goals */}
+
       <div className="grid sm:grid-cols-2 gap-3 text-xs bg-slate-50/70 border border-slate-200 rounded-xl p-3">
         <div>
           <h4 className="font-bold text-slate-800 uppercase text-[10px] mb-0.5">9A. Short-Term Clinical Goals</h4>
@@ -564,7 +546,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
         </div>
       </div>
 
-      {/* 10. Patient Instructions & Home Care */}
+
       <div className="border border-amber-200 bg-amber-50/40 rounded-xl p-3.5 space-y-1.5 text-xs">
         <h4 className="font-bold text-amber-900 uppercase text-[10px]">10. Patient Instructions, Ergonomics &amp; Safety Precautions</h4>
         <div className="grid sm:grid-cols-2 gap-2 text-slate-700">
@@ -575,7 +557,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
         </div>
       </div>
 
-      {/* 11 & 12. Follow-Up, Reassessment & Validity */}
+      
       <div className="grid sm:grid-cols-3 gap-3 text-xs">
         <div className="border border-teal-200 bg-teal-50/50 rounded-xl p-3">
           <span className="font-bold text-teal-900 uppercase text-[10px] block">11. Follow-Up &amp; Reassessment</span>
@@ -589,7 +571,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
         </div>
       </div>
 
-      {/* 13 & 14. Terms & Conditions & Physiotherapist Signature */}
+      
       <div className="pt-4 flex justify-between items-end text-xs border-t border-slate-200 mt-6">
         <div className="text-[10px] text-slate-500 space-y-1 max-w-[340px]">
           <p className="font-bold text-slate-700 uppercase tracking-wide">13. Clinical Terms &amp; Disclaimer:</p>
@@ -597,7 +579,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
           <p className="text-slate-400 font-mono text-[9px]">Document ID: {printRx.rx_number} &bull; The Urban Physio Verified Care Plan</p>
         </div>
 
-        {/* 14. Physiotherapist Signature */}
+
         <div className="text-right space-y-1">
           <div className="w-48 h-12 border-b-2 border-slate-400 flex items-center justify-center bg-slate-50/50 rounded-t-md px-2">
             <span className="font-serif italic text-teal-800 font-bold text-xs">{printRx.digital_signature || `${printRx.doctor_name} (Verified)`}</span>
@@ -612,7 +594,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
 
   return (
     <div className="space-y-5">
-      {/* Top Header & Search Bar */}
+
       <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-10 h-10 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold text-lg">
@@ -645,7 +627,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
         </div>
       </div>
 
-      {/* Prescription History Cards */}
+
       <div className="space-y-3">
         {filtered.map((rx) => {
           const exerciseList = rx.exercises || rx.medications || [];
@@ -683,7 +665,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
                   )}
                 </div>
 
-                {/* Action Buttons */}
+
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <button
                     type="button"
@@ -731,7 +713,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
                 </div>
               </div>
 
-              {/* Exercises Preview Table */}
+
               {exerciseList.length > 0 && (
                 <div className="overflow-x-auto rounded-xl border border-slate-100 bg-slate-50/50 p-2">
                   <table className="w-full text-left text-xs">
@@ -761,7 +743,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
                 </div>
               )}
 
-              {/* Special advice */}
+
               {rx.special_advice && (
                 <p className="text-xs text-slate-600 italic bg-amber-50/60 border border-amber-200/50 px-3 py-1.5 rounded-lg">
                   <strong>Ergonomic Advice:</strong> {rx.special_advice}
@@ -780,7 +762,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
         )}
       </div>
 
-      {/* Prescription Print Studio Modal */}
+
       <GlassModal open={printStudioOpen} onClose={() => setPrintStudioOpen(false)} maxWidth="max-w-5xl">
         <GlassModalHeader className="no-print border-b border-slate-100 pb-3">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full pr-6 sm:pr-8">
@@ -825,7 +807,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
         </GlassModalBody>
       </GlassModal>
 
-      {/* Create / Edit Modal */}
+
       <GlassModal open={modalOpen} onClose={() => setModalOpen(false)} maxWidth="max-w-5xl">
         <GlassModalHeader className="border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2.5">
@@ -843,8 +825,8 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
 
         <GlassModalBody className="p-4 sm:p-6 overflow-y-auto max-h-[80vh]">
           <form onSubmit={handleSubmitForm} className="space-y-5 text-xs">
-            
-            {/* SECTION 1 & 2: Title & Clinic/Physiotherapist Details */}
+
+
             <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
               <span className="font-bold text-teal-800 uppercase text-[10px] tracking-wider block">1 &amp; 2. Prescription Title &amp; Clinician Details</span>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -899,7 +881,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
               </div>
             </div>
 
-            {/* SECTION 3: Patient Demographic Details & Vitals */}
+
             <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2">
               <span className="font-bold text-teal-800 uppercase text-[10px] tracking-wider block">3. Patient Demographic Details &amp; Vitals</span>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -988,7 +970,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
               </div>
             </div>
 
-            {/* SECTION 4: Clinical Diagnosis / Condition */}
+
             <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
               <span className="font-bold text-teal-800 uppercase text-[10px] tracking-wider block">4. Clinical Diagnosis &amp; Condition</span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1036,7 +1018,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
               </div>
             </div>
 
-            {/* SECTION 5: Treatment Plan */}
+
             <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
               <span className="font-bold text-teal-800 uppercase text-[10px] tracking-wider block">5. Physiotherapy Treatment Plan</span>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -1073,7 +1055,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
               </div>
             </div>
 
-            {/* SECTION 6 & 7: Modalities & Manual Treatments */}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2">
                 <span className="font-bold text-teal-800 uppercase text-[10px] tracking-wider block">6. Electro-Physical Modalities</span>
@@ -1097,7 +1079,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
               </div>
             </div>
 
-            {/* SECTION 8: Exercise Prescription Table */}
+
             <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
               <div className="flex items-center justify-between">
                 <div>
@@ -1205,7 +1187,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
               </div>
             </div>
 
-            {/* SECTION 9: Goals */}
+
             <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2">
               <span className="font-bold text-teal-800 uppercase text-[10px] tracking-wider block">9. Rehabilitation Goals</span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1232,7 +1214,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
               </div>
             </div>
 
-            {/* SECTION 10: Patient Instructions & Home Care */}
+
             <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
               <span className="font-bold text-teal-800 uppercase text-[10px] tracking-wider block">10. Patient Instructions, Ergonomics &amp; Safety</span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1279,7 +1261,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
               </div>
             </div>
 
-            {/* SECTION 11, 12, 13 & 14: Follow-up, Validity, Terms & Signature */}
+
             <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
               <span className="font-bold text-teal-800 uppercase text-[10px] tracking-wider block">11-14. Follow-Up, Validity, Terms &amp; Digital Signature</span>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -1349,7 +1331,7 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
         </GlassModalBody>
       </GlassModal>
 
-      {/* Standalone React Portal for Dedicated A4 Print Engine */}
+
       {typeof document !== 'undefined' &&
         createPortal(
           <div className="tup-rx-print-portal">
@@ -1358,14 +1340,14 @@ export default function PatientPrescriptionsTab({ patientKey, patient = {}, clin
           document.body
         )}
 
-      {/* Global & Print CSS Engine */}
+
       <style>{`
         .tup-rx-print-portal {
           display: none;
         }
 
         @media print {
-          /* Completely hide website UI elements */
+
           body > *:not(.tup-rx-print-portal) {
             display: none !important;
           }

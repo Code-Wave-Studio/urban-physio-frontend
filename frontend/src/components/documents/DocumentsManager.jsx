@@ -199,7 +199,7 @@ export default function DocumentsManager({ initialFilters = {} }) {
 
   return (
     <div>
-      {/* Top Tab Bar for Doctor, Clinic & Admin */}
+      
       {isStaff && (
         <div className="flex items-center gap-2 mb-5 border-b border-slate-200">
           <button
@@ -227,7 +227,7 @@ export default function DocumentsManager({ initialFilters = {} }) {
         </div>
       )}
 
-      {/* Tab Content */}
+      
       {tab === 'shared' ? (
         <SharedDocumentsView
           filters={filters}
@@ -240,7 +240,7 @@ export default function DocumentsManager({ initialFilters = {} }) {
         />
       ) : (
         <>
-          {/* Toolbar */}
+          
           <div className="flex flex-col lg:flex-row lg:items-center gap-3 mb-4">
             <div className="relative flex-1">
               <FaIcon icon="fa-magnifying-glass" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
@@ -282,7 +282,7 @@ export default function DocumentsManager({ initialFilters = {} }) {
             </div>
           </div>
 
-          {/* Filters */}
+
           <div className="flex flex-wrap items-center gap-2 mb-4">
             <select className="doc-input !w-auto !py-1.5 text-sm" value={filters.type} onChange={(e) => setF('type', e.target.value)}>
               {TYPE_FILTERS.map((t) => (
@@ -311,7 +311,7 @@ export default function DocumentsManager({ initialFilters = {} }) {
             )}
           </div>
 
-          {/* Category chips (folder view) */}
+          
           <div className="flex gap-2 overflow-x-auto pb-2 mb-4 -mx-1 px-1 scroll-x-hide">
             <button
               type="button"
@@ -332,7 +332,7 @@ export default function DocumentsManager({ initialFilters = {} }) {
             ))}
           </div>
 
-          {/* Content */}
+          
           {loading ? (
             <div className={view === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3' : 'space-y-2'}>
               {Array.from({ length: 8 }).map((_, i) => (

@@ -19,7 +19,6 @@ export const ADMIN_SPEED_DIAL = [
 ];
 
 export const ADMIN_NAV = [
-  // Core Operations
   { to: '/admin', label: 'Dashboard', icon: 'fa-chart-line', section: 'core', match: 'exact' },
   { to: '/admin/appointments', label: 'Appointments', icon: 'fa-calendar-check', section: 'core' },
   { to: '/admin/booking-settings', label: 'Booking', icon: 'fa-puzzle-piece', section: 'core' },
@@ -29,7 +28,6 @@ export const ADMIN_NAV = [
   { to: '/admin/analytics', label: 'Analytics', icon: 'fa-chart-pie', section: 'core' },
   { to: '/admin/logs', label: 'Audit Logs', icon: 'fa-clipboard-list', section: 'core' },
 
-  // Network Hub
   { to: '/admin/users', label: 'Users', icon: 'fa-users', section: 'network' },
   { to: '/admin/clinics', label: 'Clinics', icon: 'fa-hospital', section: 'network' },
   { to: '/admin/calendar', label: 'Doctor Calendar', icon: 'fa-calendar-days', section: 'network' },
@@ -37,7 +35,6 @@ export const ADMIN_NAV = [
   { to: '/admin/search', label: 'Advanced Search', icon: 'fa-magnifying-glass-plus', section: 'network' },
   { to: '/admin/locations', label: 'States & Cities', icon: 'fa-map-location-dot', section: 'network' },
 
-  // Clinical & Content
   { to: '/admin/conditions', label: 'Conditions', icon: 'fa-notes-medical', section: 'content' },
   { to: '/admin/treatments', label: 'Treatments', icon: 'fa-hand-holding-medical', section: 'content' },
   { to: '/admin/exercises', label: 'Exercises', icon: 'fa-dumbbell', section: 'content' },
@@ -50,7 +47,6 @@ export const ADMIN_NAV = [
   { to: '/admin/physiotherapists', label: 'Our Physiotherapists', icon: 'fa-user-doctor', section: 'content' },
   { to: '/admin/org-logos', label: 'Organisation logos', icon: 'fa-building', section: 'content' },
 
-  // Finance & Promos
   { to: '/admin/offers', label: 'Offers & Campaigns', icon: 'fa-bullhorn', section: 'finance_promos' },
   { to: '/admin/treatment-packages', label: 'Platform Packages', icon: 'fa-box-open', section: 'finance_promos' },
   { to: '/admin/doctor-packages', label: 'Doctor Packages', icon: 'fa-boxes-stacked', section: 'finance_promos' },
@@ -59,7 +55,6 @@ export const ADMIN_NAV = [
   { to: '/admin/coupons', label: 'Coupons', icon: 'fa-tag', section: 'finance_promos' },
   { to: '/admin/invoice-settings', label: 'Invoice / GST', icon: 'fa-file-invoice', section: 'finance_promos' },
 
-  // Settings · Marketing
   { to: '/admin/seo', label: 'SEO', icon: 'fa-magnifying-glass-chart', section: 'settings_marketing' },
   { to: '/admin/badges', label: 'Badges', icon: 'fa-award', section: 'settings_marketing' },
   { to: '/admin/home-hero', label: 'Homepage Hero', icon: 'fa-house-medical-circle-check', section: 'settings_marketing' },
@@ -68,7 +63,6 @@ export const ADMIN_NAV = [
   { to: '/admin/testimonials', label: 'Homepage Reviews', icon: 'fa-comment-dots', section: 'settings_marketing' },
   { to: '/admin/contact', label: 'Contact & Footer', icon: 'fa-envelope', section: 'settings_marketing' },
 
-  // Settings · System
   { to: '/admin/kinestex', label: 'KinesteX AI', icon: 'fa-person-walking', section: 'settings_system' },
   { to: '/admin/notifications', label: 'Notifications', icon: 'fa-bell', section: 'settings_system', notifyKey: true },
   { to: '/admin/notification-settings', label: 'Notification Rules', icon: 'fa-bell-concierge', section: 'settings_system' },

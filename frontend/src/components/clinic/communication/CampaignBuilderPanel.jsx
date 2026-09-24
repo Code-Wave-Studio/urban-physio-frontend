@@ -343,7 +343,7 @@ export default function CampaignBuilderPanel({
 
   return (
     <div className="space-y-5">
-      {/* Stepper */}
+      
       <div className="glass-card !p-3 sm:!p-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <div>
@@ -721,7 +721,7 @@ export default function CampaignBuilderPanel({
           )}
         </div>
 
-        {/* Preview */}
+        
         <div className="glass-card !p-4 sm:!p-5 self-start lg:sticky lg:top-24">
           <div className="flex gap-1 mb-4 overflow-x-auto">
             {['whatsapp', 'sms', 'email'].map((ch) => (
@@ -747,7 +747,7 @@ export default function CampaignBuilderPanel({
         </div>
       </div>
 
-      {/* Recent campaigns */}
+      
       <div className="glass-card !p-0 overflow-hidden">
         <div className="px-4 sm:px-5 py-3.5 border-b border-slate-100 flex items-center justify-between gap-3">
           <div>

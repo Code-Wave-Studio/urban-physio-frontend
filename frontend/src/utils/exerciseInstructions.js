@@ -16,8 +16,6 @@ function stepText(step) {
 /**
  * Prefer structured `steps` from the API; otherwise split plain text
  * on newlines / numbered lines without rewriting clinical wording.
- *
- * @returns {string[]}
  */
 export function normalizeInstructionSteps({
   steps,
@@ -48,7 +46,6 @@ export function normalizeInstructionSteps({
         if (acc.length) acc[acc.length - 1] += part;
         return acc;
       }
-      // Skip empty fragments from the capturing split
       if (i > 0 && /^[.!?]$/.test(arr[i - 1])) {
         acc.push(part.trim());
       } else {
@@ -64,9 +61,7 @@ export function normalizeInstructionSteps({
   return [raw];
 }
 
-/**
- * Short preview for cards — first step or truncated plain text.
- */
+/** Card preview — first step or truncated plain text. */
 export function instructionPreview(source, maxLen = 100) {
   const steps = normalizeInstructionSteps(source);
   if (!steps.length) return '';

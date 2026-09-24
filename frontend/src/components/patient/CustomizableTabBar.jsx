@@ -3,16 +3,7 @@ import FaIcon from '../FaIcon';
 
 const STORAGE_KEY_PREFIX = 'tup_custom_tab_order_';
 
-/**
- * Customizable, single-line horizontally scrollable tab bar with reordering and status dots.
- *
- * @param {Object} props
- * @param {string[]} props.defaultTabs - Default ordered list of tab names.
- * @param {string} props.activeTab - Currently active tab.
- * @param {(tab: string) => void} props.onSelectTab - Callback when tab is selected.
- * @param {Record<string, { hasDot?: boolean, color?: string, title?: string }>} [props.dotStatus] - Status dot metadata map per tab.
- * @param {string} [props.storageKey] - Key name for persistence in localStorage.
- */
+/** Horizontally scrollable tab bar with optional reorder + status dots. */
 export default function CustomizableTabBar({
   defaultTabs = [],
   activeTab,
@@ -26,14 +17,13 @@ export default function CustomizableTabBar({
   const [isEditing, setIsEditing] = useState(false);
   const [draggedItem, setDraggedItem] = useState(null);
 
-  /* Load initial order from localStorage or fallback to default */
   const [tabsOrder, setTabsOrder] = useState(() => {
     try {
       const saved = localStorage.getItem(fullStorageKey);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Merge with defaultTabs to handle new/removed tabs gracefully
+          // Merge with defaultTabs so new/removed tabs stay in sync
           const validSaved = parsed.filter((t) => defaultTabs.includes(t));
           const missing = defaultTabs.filter((t) => !validSaved.includes(t));
           return [...validSaved, ...missing];
@@ -45,7 +35,6 @@ export default function CustomizableTabBar({
     return defaultTabs;
   });
 
-  /* Sync tabsOrder if defaultTabs change dynamically */
   useEffect(() => {
     setTabsOrder((prevOrder) => {
       const validPrev = prevOrder.filter((t) => defaultTabs.includes(t));
@@ -54,7 +43,6 @@ export default function CustomizableTabBar({
     });
   }, [defaultTabs]);
 
-  /* Save custom order to localStorage */
   const saveOrder = useCallback(
     (newOrder) => {
       setTabsOrder(newOrder);
@@ -67,12 +55,10 @@ export default function CustomizableTabBar({
     [fullStorageKey]
   );
 
-  /* Reset to default tab order */
   const handleResetOrder = () => {
     saveOrder(defaultTabs);
   };
 
-  /* Move item left/right */
   const moveTab = (index, direction) => {
     const targetIndex = index + direction;
     if (targetIndex < 0 || targetIndex >= tabsOrder.length) return;
@@ -82,7 +68,7 @@ export default function CustomizableTabBar({
     saveOrder(updated);
   };
 
-  /* Drag & Drop handlers */
+
   const handleDragStart = (e, index) => {
     setDraggedItem(index);
     e.dataTransfer.effectAllowed = 'move';
@@ -103,7 +89,6 @@ export default function CustomizableTabBar({
     saveOrder(tabsOrder);
   };
 
-  /* Auto-scroll active tab into view smoothly */
   useEffect(() => {
     if (activeTabRef.current) {
       activeTabRef.current.scrollIntoView({
@@ -114,7 +99,6 @@ export default function CustomizableTabBar({
     }
   }, [activeTab]);
 
-  /* Manual scroll buttons */
   const scrollContainer = (direction) => {
     if (containerRef.current) {
       const scrollAmount = direction === 'left' ? -220 : 220;
@@ -125,7 +109,7 @@ export default function CustomizableTabBar({
   return (
     <div className="relative group/tabbar select-none">
       <div className="flex items-center gap-1.5 bg-slate-100/70 border border-slate-200/80 rounded-2xl p-1.5 backdrop-blur-md shadow-xs">
-        {/* Scroll Left Button (desktop) */}
+        
         <button
           type="button"
           onClick={() => scrollContainer('left')}
@@ -135,7 +119,7 @@ export default function CustomizableTabBar({
           <FaIcon icon="fa-chevron-left" className="text-[10px]" />
         </button>
 
-        {/* Scrollable Single-Line Tab Track */}
+        
         <div
           ref={containerRef}
           className="flex-1 flex items-center gap-1.5 overflow-x-auto whitespace-nowrap py-0.5 px-0.5 scrollbar-none transition-all"
@@ -199,7 +183,7 @@ export default function CustomizableTabBar({
                 >
                   <span>{tabName}</span>
 
-                  {/* Status / Notification Dot */}
+                  
                   {!isEditing && hasDot && (
                     <span
                       className={`relative flex h-2 w-2 shrink-0 rounded-full ${
@@ -220,7 +204,7 @@ export default function CustomizableTabBar({
           })}
         </div>
 
-        {/* Scroll Right Button (desktop) */}
+        
         <button
           type="button"
           onClick={() => scrollContainer('right')}
@@ -230,7 +214,7 @@ export default function CustomizableTabBar({
           <FaIcon icon="fa-chevron-right" className="text-[10px]" />
         </button>
 
-        {/* Reorder / Customize Toggle & Reset Controls */}
+        
         <div className="flex items-center gap-1 pl-1 border-l border-slate-200/80 shrink-0">
           {isEditing ? (
             <>

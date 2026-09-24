@@ -378,7 +378,7 @@ export default function AdminSeoEntityPanel({ entityType, title, defaultOg = '' 
                       </button>
                     </div>
 
-                    {/* URL Status Feedback */}
+                    
                     {urlStatus && (
                       <div className={`p-2.5 rounded-lg text-xs border flex items-center justify-between gap-2 ${
                         urlStatus.available
@@ -409,7 +409,7 @@ export default function AdminSeoEntityPanel({ entityType, title, defaultOg = '' 
                       </div>
                     )}
 
-                    {/* URL Path Changed Warning */}
+                    
                     {form.page_path && form._origPath && form.page_path !== form._origPath && (
                       <p className="text-[11px] text-amber-700 bg-amber-50/80 p-2 rounded-lg border border-amber-200">
                         <FaIcon icon="fa-triangle-exclamation" className="mr-1" />

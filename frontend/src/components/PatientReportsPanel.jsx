@@ -26,18 +26,7 @@ function fileIcon(mime) {
   return 'fa-file';
 }
 
-/**
- * @param {{
- *   reports: array,
- *   loading?: boolean,
- *   canUpload?: boolean,
- *   canDelete?: boolean,
- *   onUpload?: (formData: FormData) => Promise<void>,
- *   onDelete?: (id: number) => Promise<void>,
- *   onRefresh?: () => void,
- *   emptyHint?: string,
- * }} props
- */
+/** Patient medical reports list with optional upload / delete. */
 export default function PatientReportsPanel({
   reports = [],
   loading = false,

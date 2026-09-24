@@ -48,10 +48,7 @@ export function isInvoiceAvailable(appt) {
   return !hasOfflinePaymentPending(appt);
 }
 
-/**
- * Open Razorpay checkout for a pending appointment payment.
- * Resolves when payment is verified; rejects on cancel/failure.
- */
+/** Open Razorpay checkout; resolves after verify, rejects on cancel/failure. */
 export function openRazorpayCheckout(orderRes) {
   const payload = orderRes?.data ?? orderRes ?? {};
   const { order_id, amount, key_id } = payload;

@@ -48,15 +48,8 @@ function ProgressBar({ pct }) {
 }
 
 /**
- * PackageCard
- *
- * Props:
- *   pkg           – package row from /packages/list or /detail
- *   canManage     – bool (show manage actions)
- *   onTerminate   – (pkg) callback
- *   onReturnCredit – (pkg) callback
- *   onSchedule    – (pkg) callback — opens booking for next session
- *   defaultExpanded – bool
+ * Package progress card from /packages/list or /detail.
+ * canManage shows terminate / return-credit; onSchedule opens next-session booking.
  */
 export default function PackageCard({
   pkg,
@@ -87,7 +80,6 @@ export default function PackageCard({
 
   return (
     <article className={`rounded-2xl border bg-white shadow-sm overflow-hidden transition-all ${STATUS_STYLES[status] || 'border-slate-100'}`}>
-      {/* Header — always visible */}
       <div
         role="button"
         tabIndex={0}
@@ -96,12 +88,12 @@ export default function PackageCard({
         onKeyDown={(e) => e.key === 'Enter' && setOpen((v) => !v)}
         aria-expanded={open}
       >
-        {/* Icon */}
+        
         <div className={`mt-0.5 flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-sm ${pkgType === 'custom_bulk' ? 'bg-violet-100 text-violet-600' : 'bg-teal-100 text-teal-600'}`}>
           <FaIcon icon={pkgType === 'custom_bulk' ? 'fa-layer-group' : 'fa-box'} />
         </div>
 
-        {/* Details */}
+        
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
             <p className="font-semibold text-slate-900 truncate">{pkg.package_name || 'Package'}</p>
@@ -109,17 +101,17 @@ export default function PackageCard({
               {TYPE_LABELS[pkgType] || pkgType}
             </span>
           </div>
-          {/* Patient name if shown in global list */}
+          
           {pkg.patient_name && (
             <p className="text-xs text-slate-500 truncate">{pkg.patient_name}{pkg.patient_phone ? ` · ${pkg.patient_phone}` : ''}</p>
           )}
-          {/* Service info */}
+          
           <div className="flex flex-wrap gap-2 mt-1 text-[11px] text-slate-500">
             {pkg.service_type && <span>{pkg.service_type}</span>}
             {pkg.service_mode && <span>· {MODE_LABELS[pkg.service_mode] || pkg.service_mode}</span>}
           </div>
 
-          {/* Progress bar */}
+          
           <div className="mt-2 space-y-1">
             <div className="flex justify-between text-xs">
               <span className="text-slate-600">{completed}/{total || '?'} sessions</span>
@@ -129,7 +121,7 @@ export default function PackageCard({
           </div>
         </div>
 
-        {/* Status + chevron */}
+        
         <div className="flex flex-col items-end gap-1.5 shrink-0 ml-1">
           <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold capitalize border ${STATUS_STYLES[status] || 'bg-slate-100 text-slate-700 border-slate-200'}`}>
             {pkg.effective_status || pkg.status || '—'}
@@ -138,10 +130,10 @@ export default function PackageCard({
         </div>
       </div>
 
-      {/* Expanded body */}
+      
       {open && (
         <div className="border-t border-slate-100 px-4 pb-4 pt-3 space-y-4 bg-slate-50/40">
-          {/* Key details grid */}
+          
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
             {pkg.start_date && (
               <div>
@@ -177,7 +169,7 @@ export default function PackageCard({
             )}
           </div>
 
-          {/* Completed sessions */}
+          
           {completedAppts.length > 0 && (
             <div>
               <p className="text-xs font-semibold text-slate-600 mb-2">Completed Sessions ({completedAppts.length})</p>
@@ -192,7 +184,7 @@ export default function PackageCard({
             </div>
           )}
 
-          {/* Pending sessions */}
+          
           {pendingAppts.length > 0 && (
             <div>
               <p className="text-xs font-semibold text-slate-600 mb-2">Upcoming ({pendingAppts.length})</p>
@@ -207,12 +199,12 @@ export default function PackageCard({
             </div>
           )}
 
-          {/* Notes */}
+          
           {pkg.notes && (
             <p className="text-xs text-slate-500 italic border-l-2 border-teal-300 pl-3">{pkg.notes}</p>
           )}
 
-          {/* Actions */}
+          
           <div className="flex flex-wrap gap-2 pt-1">
             {canSchedule && (
               <button

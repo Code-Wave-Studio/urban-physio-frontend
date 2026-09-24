@@ -207,7 +207,6 @@ export default function AdminUsers() {
       await admin.deleteUser(userId, { type, confirm_email });
       toast.success(type === 'permanent' ? 'Account permanently deleted.' : 'Account soft deleted — user is locked out.');
       setDeleteTarget(null);
-      // Remove from expanded view if open
       if (expandedId === userId) setExpandedId(null);
       setDetailsCache((c) => {
         const next = { ...c };
@@ -231,7 +230,7 @@ export default function AdminUsers() {
         </p>
       </div>
 
-      {/* Stats */}
+      
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
         {[
           ['Total', stats.total, 'fa-users', 'text-slate-800'],
@@ -250,7 +249,7 @@ export default function AdminUsers() {
         ))}
       </div>
 
-      {/* Toolbar */}
+      
       <div className="card mb-6 space-y-4 !p-4">
         <div className="relative">
           <FaIcon icon="fa-magnifying-glass" className="absolute left-3 top-1/2 -translate-y-1/2 text-orange-500 text-sm" />

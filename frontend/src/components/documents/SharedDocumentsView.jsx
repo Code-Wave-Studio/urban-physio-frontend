@@ -80,7 +80,7 @@ export default function SharedDocumentsView({
 
   return (
     <div className="space-y-4">
-      {/* Filters bar */}
+      
       <div className="bg-white/80 backdrop-blur border border-slate-200/80 rounded-2xl p-3.5 shadow-sm space-y-3">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div className="relative flex-1">
@@ -107,7 +107,7 @@ export default function SharedDocumentsView({
           </div>
         </div>
 
-        {/* Filters strip */}
+        
         <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
           <select
             className="doc-input !w-auto !py-1.5 text-xs font-medium"
@@ -163,7 +163,7 @@ export default function SharedDocumentsView({
         </div>
       </div>
 
-      {/* Loading state */}
+      
       {loading ? (
         <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-400">
           <FaIcon icon="fa-spinner" className="fa-spin text-2xl text-teal-600 mb-2" />
@@ -197,7 +197,7 @@ export default function SharedDocumentsView({
                 key={group.patient_id}
                 className="bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-sm transition hover:shadow-md"
               >
-                {/* Patient Header */}
+                
                 <div
                   onClick={() => togglePatientCollapse(group.patient_id)}
                   className="p-3.5 sm:p-4 bg-gradient-to-r from-slate-50/90 via-teal-50/30 to-slate-50/90 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 cursor-pointer select-none"
@@ -244,7 +244,7 @@ export default function SharedDocumentsView({
                   </div>
                 </div>
 
-                {/* Patient Shared Documents Accordion Body */}
+                
                 {!isCollapsed && (
                   <div className="divide-y divide-slate-100 p-2 sm:p-3 bg-white">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-1">
@@ -292,7 +292,7 @@ export default function SharedDocumentsView({
                               </div>
                             </div>
 
-                            {/* Actions bar */}
+                            
                             <div className="flex items-center justify-end gap-1 mt-3 pt-2 border-t border-slate-100/80">
                               <button
                                 type="button"

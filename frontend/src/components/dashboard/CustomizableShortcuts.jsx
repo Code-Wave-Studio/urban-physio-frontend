@@ -35,7 +35,6 @@ export default function CustomizableShortcuts({
 }) {
   const { user, updatePreferences } = useAuth() || {};
 
-  // Flatten items if passed in groups
   const allItems = items.length > 0
     ? items
     : (groups ? groups.flatMap((g) => g.items.map((it) => ({ ...it, category: g.title }))) : []);
@@ -129,7 +128,6 @@ export default function CustomizableShortcuts({
     }
   };
 
-  // Reordering handlers
   const moveItem = (fromIdx, toIdx) => {
     if (toIdx < 0 || toIdx >= order.length) return;
     const newOrder = [...order];
@@ -173,13 +171,11 @@ export default function CustomizableShortcuts({
     saveConfig(defaultOrder, {}, false);
   };
 
-  // Map item details by key
   const itemMap = new Map();
   allItems.forEach((it) => {
     itemMap.set(it.to || it.label, it);
   });
 
-  // Ordered items list
   const orderedList = order
     .map((key) => itemMap.get(key))
     .filter(Boolean);
@@ -190,7 +186,7 @@ export default function CustomizableShortcuts({
 
   return (
     <div className="rounded-3xl border border-emerald-200/80 bg-gradient-to-b from-emerald-50/50 via-slate-50/30 to-white p-4 sm:p-6 shadow-sm transition-all duration-300">
-      {/* Header & Controls */}
+      
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5 pb-4 border-b border-slate-200/70">
         <div>
           {badge && (
@@ -210,7 +206,7 @@ export default function CustomizableShortcuts({
         </div>
 
         <div className="flex items-center flex-wrap gap-2">
-          {/* Place at top shortcut toggle */}
+          
           <button
             type="button"
             onClick={togglePlaceAtTop}
@@ -225,7 +221,7 @@ export default function CustomizableShortcuts({
             <span>{placeAtTop ? 'Pinned to Top' : 'Pin to Top'}</span>
           </button>
 
-          {/* Edit Layout Mode Toggle */}
+          
           <button
             type="button"
             onClick={() => setIsEditing(!isEditing)}
@@ -252,7 +248,7 @@ export default function CustomizableShortcuts({
         </div>
       </div>
 
-      {/* Customize Mode Instruction Notice */}
+      
       {isEditing && (
         <div className="mb-4 p-3 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs flex items-center justify-between gap-2 animate-fadeIn">
           <div className="flex items-center gap-2">
@@ -264,7 +260,7 @@ export default function CustomizableShortcuts({
         </div>
       )}
 
-      {/* Grid of Shortcuts */}
+      
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
         {visibleList.map((item, idx) => {
           const key = item.to || item.label;
@@ -283,10 +279,10 @@ export default function CustomizableShortcuts({
                 isHidden ? 'opacity-40 grayscale' : ''
               } ${isEditing ? 'cursor-grab active:cursor-grabbing border-dashed border-slate-300 ring-2 ring-emerald-500/20' : ''}`}
             >
-              {/* Customize Mode Overlay Controls */}
+              
               {isEditing && (
                 <div className="absolute top-2 right-2 z-10 flex items-center gap-1 bg-white/95 backdrop-blur-md rounded-lg p-1 border border-slate-200 shadow-sm">
-                  {/* Reorder Left / Up */}
+                  
                   <button
                     type="button"
                     onClick={(e) => {
@@ -300,7 +296,7 @@ export default function CustomizableShortcuts({
                     <FaIcon icon="fa-arrow-left" className="text-[10px]" />
                   </button>
 
-                  {/* Reorder Right / Down */}
+                  
                   <button
                     type="button"
                     onClick={(e) => {
@@ -314,7 +310,7 @@ export default function CustomizableShortcuts({
                     <FaIcon icon="fa-arrow-right" className="text-[10px]" />
                   </button>
 
-                  {/* Toggle Hide */}
+                  
                   <button
                     type="button"
                     onClick={(e) => {
@@ -329,14 +325,14 @@ export default function CustomizableShortcuts({
                     <FaIcon icon={isHidden ? 'fa-eye-slash' : 'fa-eye'} className="text-[10px]" />
                   </button>
 
-                  {/* Drag Handle */}
+                  
                   <span className="h-6 w-5 flex items-center justify-center text-slate-400 cursor-grab">
                     <FaIcon icon="fa-grip-vertical" className="text-[10px]" />
                   </span>
                 </div>
               )}
 
-              {/* Card Content */}
+              
               <Link
                 to={isEditing ? '#' : item.to}
                 onClick={(e) => {

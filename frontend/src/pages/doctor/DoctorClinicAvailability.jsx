@@ -268,7 +268,7 @@ export default function DoctorClinicAvailability() {
         </p>
       </div>
 
-      {/* Services */}
+      
       <section className="card !p-5 md:!p-6 max-w-4xl mb-6 space-y-4">
         <h2 className="font-bold text-slate-900 flex items-center gap-2">
           <FaIcon icon="fa-briefcase-medical" className="text-primary-600" />
@@ -339,7 +339,7 @@ export default function DoctorClinicAvailability() {
         </button>
       </section>
 
-      {/* Schedule tabs */}
+      
       <section className="card !p-5 md:!p-6 max-w-4xl space-y-4">
         <h2 className="font-bold text-slate-900 flex items-center gap-2">
           <FaIcon icon="fa-calendar-week" className="text-primary-600" />

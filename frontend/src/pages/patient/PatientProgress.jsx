@@ -100,7 +100,7 @@ export default function PatientProgress() {
           </div>
         ) : (
           <>
-          {/* Pain trend */}
+          
           <section className="glass-card !p-4 md:!p-5 min-w-0">
             <div className="flex items-center justify-between gap-2 mb-3 min-w-0">
               <h2 className="font-bold text-slate-800 flex items-center gap-2 min-w-0">
@@ -125,7 +125,7 @@ export default function PatientProgress() {
             )}
           </section>
 
-          {/* Session courses */}
+          
           <section>
             <h2 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
               <FaIcon icon="fa-list-check" className="text-primary-600" /> Treatment courses
@@ -156,7 +156,7 @@ export default function PatientProgress() {
             )}
           </section>
 
-          {/* Packages */}
+          
           {packages.length > 0 && (
             <section>
               <h2 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
@@ -185,7 +185,7 @@ export default function PatientProgress() {
             </section>
           )}
 
-          {/* Exercise adherence */}
+          
           <section>
             <h2 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
               <FaIcon icon="fa-dumbbell" className="text-emerald-600" /> Exercise adherence

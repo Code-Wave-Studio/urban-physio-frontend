@@ -15,9 +15,7 @@ export function MetricTile({ label, value }) {
   );
 }
 
-/**
- * Workout Overview grid — only renders metrics that are actually available.
- */
+/** Workout Overview grid — only renders metrics that are actually available. */
 export default function KinesteXWorkoutOverview({
   metrics,
   title = 'Workout Overview',

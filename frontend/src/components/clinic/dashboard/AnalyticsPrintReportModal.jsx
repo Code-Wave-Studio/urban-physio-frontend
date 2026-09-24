@@ -59,7 +59,7 @@ export default function AnalyticsPrintReportModal({ open, onClose, reportData, l
       id="urban-physio-print-root"
       className="bg-white p-6 sm:p-8 text-slate-800 space-y-6"
     >
-      {/* Official Clinic Report Header */}
+      
       <div className="border-b-2 border-teal-600 pb-5 flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-1.5 min-w-0 flex-1">
           <div className="flex items-center gap-3">
@@ -92,7 +92,7 @@ export default function AnalyticsPrintReportModal({ open, onClose, reportData, l
         </div>
       </div>
 
-      {/* Executive Summary KPIs */}
+      
       {kpis.length > 0 && (
         <div className="space-y-2">
           <h4 className="text-[11px] uppercase font-bold text-slate-400 tracking-wider">Executive Summary</h4>
@@ -107,7 +107,7 @@ export default function AnalyticsPrintReportModal({ open, onClose, reportData, l
         </div>
       )}
 
-      {/* Detailed Data Table */}
+      
       <div className="space-y-2">
         <h4 className="text-[11px] uppercase font-bold text-slate-400 tracking-wider">Detailed Analytics Breakdown</h4>
         {rows.length > 0 ? (
@@ -142,7 +142,7 @@ export default function AnalyticsPrintReportModal({ open, onClose, reportData, l
         )}
       </div>
 
-      {/* Printable Footer */}
+      
       <div className="pt-5 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 text-[10px] text-slate-500">
         <p className="font-semibold text-slate-600">
           &copy; {new Date().getFullYear()} The Urban Physio Healthcare Platform. Confidential &mdash; For Internal Management Use Only.
@@ -203,7 +203,7 @@ export default function AnalyticsPrintReportModal({ open, onClose, reportData, l
           document.body
         )}
 
-      {/* Global & Print CSS */}
+
       <style>{`
         .tup-print-only-portal {
           display: none;

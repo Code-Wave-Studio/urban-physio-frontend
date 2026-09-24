@@ -32,7 +32,6 @@ export default function AdminOffers() {
   const [mainTab, setMainTab] = useState('submissions');
   const [settingsSubtab, setSettingsSubtab] = useState('hero');
 
-  // Submissions State
   const [submissionsLoading, setSubmissionsLoading] = useState(true);
   const [submissionsData, setSubmissionsData] = useState({
     items: [],
@@ -56,7 +55,6 @@ export default function AdminOffers() {
     page: 1,
   });
 
-  // Settings State
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsForm, setSettingsForm] = useState({
@@ -68,7 +66,6 @@ export default function AdminOffers() {
     sections: { ...OFFERS_DEFAULTS.sections },
   });
 
-  // Load Submissions
   const fetchSubmissions = () => {
     setSubmissionsLoading(true);
     admin
@@ -95,7 +92,6 @@ export default function AdminOffers() {
       .finally(() => setSubmissionsLoading(false));
   };
 
-  // Load Settings
   const fetchSettings = () => {
     setSettingsLoading(true);
     admin
@@ -202,7 +198,7 @@ export default function AdminOffers() {
 
   return (
     <AdminDashboardLayout>
-      {/* Top Banner */}
+      
       <div className="rounded-3xl border border-primary-200/80 bg-gradient-to-br from-primary-50 via-white to-orange-50/50 p-5 sm:p-7 mb-6 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
@@ -235,7 +231,7 @@ export default function AdminOffers() {
         </div>
       </div>
 
-      {/* Main Mode Tabs */}
+      
       <div className="flex border-b border-slate-200 mb-6 gap-3">
         {MAIN_TABS.map((t) => {
           const active = mainTab === t.id;
@@ -262,10 +258,10 @@ export default function AdminOffers() {
         })}
       </div>
 
-      {/* ─── TAB 1: SUBMISSIONS & VERIFICATION ───────────────────────────────── */}
+
       {mainTab === 'submissions' && (
         <div className="space-y-6">
-          {/* KPI Dashboard Cards */}
+          
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
               <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Entries</p>
@@ -293,7 +289,7 @@ export default function AdminOffers() {
             </div>
           </div>
 
-          {/* Search & Filter Toolbar */}
+          
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
             <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 flex-1 max-w-md">
               <div className="relative flex-1">
@@ -315,7 +311,7 @@ export default function AdminOffers() {
             </form>
 
             <div className="flex flex-wrap items-center gap-2.5">
-              {/* Status Filter */}
+              
               <div className="flex items-center gap-1.5 text-xs">
                 <span className="font-bold text-slate-500">Status:</span>
                 <select
@@ -331,7 +327,7 @@ export default function AdminOffers() {
                 </select>
               </div>
 
-              {/* Reward Status Filter */}
+              
               <div className="flex items-center gap-1.5 text-xs">
                 <span className="font-bold text-slate-500">Reward:</span>
                 <select
@@ -358,7 +354,7 @@ export default function AdminOffers() {
             </div>
           </div>
 
-          {/* Submissions Table */}
+          
           <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs">
             {submissionsLoading ? (
               <div className="p-12 text-center text-slate-500">
@@ -440,7 +436,7 @@ export default function AdminOffers() {
               </div>
             )}
 
-            {/* Pagination Bar */}
+            
             {submissionsData.total_pages > 1 && (
               <div className="p-4 border-t border-slate-200 flex items-center justify-between text-xs text-slate-600">
                 <span>
@@ -470,7 +466,7 @@ export default function AdminOffers() {
         </div>
       )}
 
-      {/* ─── TAB 2: CAMPAIGN CMS SETTINGS ────────────────────────────────────── */}
+
       {mainTab === 'settings' && (
         <div>
           {settingsLoading ? (
@@ -480,7 +476,7 @@ export default function AdminOffers() {
             </div>
           ) : (
             <form onSubmit={handleSaveSettings} className="space-y-6">
-              {/* Settings Sub-navigation Tabs */}
+              
               <div className="flex gap-2 overflow-x-auto pb-2 border-b border-slate-200">
                 {SETTINGS_SUBTABS.map((sub) => {
                   const active = settingsSubtab === sub.id;
@@ -502,7 +498,6 @@ export default function AdminOffers() {
                 })}
               </div>
 
-              {/* Subtab 1: Hero & Highlights */}
               {settingsSubtab === 'hero' && (
                 <div className="space-y-6">
                   <CmsPanel title="Hero Section Header &amp; Copy" icon="fa-flag">
@@ -590,7 +585,6 @@ export default function AdminOffers() {
                 </div>
               )}
 
-              {/* Subtab 2: 4-Step Overview Cards */}
               {settingsSubtab === 'highlights' && (
                 <CmsPanel title="4-Card Campaign Overview Section" icon="fa-cubes">
                   <CmsField label="Section Header Title">
@@ -625,7 +619,6 @@ export default function AdminOffers() {
                 </CmsPanel>
               )}
 
-              {/* Subtab 3: How It Works & Steps */}
               {settingsSubtab === 'how' && (
                 <CmsPanel title="How It Works Timeline (5 Detailed Progression Steps)" icon="fa-list-ol">
                   <CmsField label="Section Header Title">
@@ -661,7 +654,6 @@ export default function AdminOffers() {
                 </CmsPanel>
               )}
 
-              {/* Subtab 4: Benefits */}
               {settingsSubtab === 'benefits' && (
                 <CmsPanel title="Campaign Benefits &amp; Clinical Motivation" icon="fa-award">
                   <CmsField label="Benefits Section Heading">
@@ -695,7 +687,6 @@ export default function AdminOffers() {
                 </CmsPanel>
               )}
 
-              {/* Subtab 5: Rules & Rewards */}
               {settingsSubtab === 'rules' && (
                 <CmsPanel title="Eligibility, Rules &amp; Reward Configuration" icon="fa-scale-balanced">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -812,7 +803,6 @@ export default function AdminOffers() {
                 </CmsPanel>
               )}
 
-              {/* Subtab 6: Form & Tracker Copy */}
               {settingsSubtab === 'form' && (
                 <div className="space-y-6">
                   <CmsPanel title="Submission Form Copy &amp; Instructions" icon="fa-pen-to-square">
@@ -895,7 +885,6 @@ export default function AdminOffers() {
                 </div>
               )}
 
-              {/* Subtab 7: FAQs */}
               {settingsSubtab === 'faqs' && (
                 <CmsPanel title="Frequently Asked Questions (Accordion)" icon="fa-circle-question">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -939,7 +928,6 @@ export default function AdminOffers() {
                 </CmsPanel>
               )}
 
-              {/* Subtab 8: Bottom Final CTA */}
               {settingsSubtab === 'final_cta' && (
                 <CmsPanel title="Bottom Call to Action Banner" icon="fa-bullhorn">
                   <CmsField label="CTA Headline">
@@ -972,7 +960,6 @@ export default function AdminOffers() {
                 </CmsPanel>
               )}
 
-              {/* Subtab 9: Section Visibility */}
               {settingsSubtab === 'visibility' && (
                 <CmsPanel title="Section Visibility Toggles" icon="fa-eye">
                   <p className="text-xs text-slate-500 mb-2">
@@ -1004,7 +991,6 @@ export default function AdminOffers() {
                 </CmsPanel>
               )}
 
-              {/* Subtab 10: SEO */}
               {settingsSubtab === 'seo' && (
                 <CmsPanel title="SEO &amp; Social Metadata" icon="fa-magnifying-glass-chart">
                   <CmsField label="Page Meta Title">
@@ -1028,7 +1014,7 @@ export default function AdminOffers() {
                 </CmsPanel>
               )}
 
-              {/* Save & Reset Floating Bar */}
+              
               <div className="sticky bottom-4 z-20 flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200 shadow-xl">
                 <button
                   type="button"

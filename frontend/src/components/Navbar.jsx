@@ -293,7 +293,7 @@ export default function Navbar({
                     onMouseLeave={scheduleCloseMore}
                   >
                     <div className="site-nav-mega-menu__container">
-                      {/* Mega Menu Top Header */}
+                      
                       <div className="site-nav-mega-menu__header">
                         <div className="flex items-center gap-2">
                           <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-orange-700 bg-orange-100/90 border border-orange-200/80 px-2.5 py-0.5 rounded-full">
@@ -309,7 +309,7 @@ export default function Navbar({
                         </span>
                       </div>
 
-                      {/* Mega Menu Grid Body */}
+                      
                       <div className="site-nav-mega-menu__body">
                         {EXPLORE_SECTIONS.map((section) => (
                           <div key={section.title} className="site-nav-mega-menu__col">
@@ -361,7 +361,7 @@ export default function Navbar({
                         ))}
                       </div>
 
-                      {/* Mega Menu Bottom Footer Strip */}
+                      
                       <div className="site-nav-mega-menu__footer">
                         <div className="flex items-center gap-1.5 text-[11px] text-slate-600 font-medium">
                           <FaIcon icon="fa-shield-heart" className="text-emerald-500 text-xs" />
@@ -410,7 +410,7 @@ export default function Navbar({
                 </Link>
               )}
 
-              {/* Universal right-side menu toggle (hamburger) button */}
+              
               <button
                 type="button"
                 className="site-header-menu-btn"

@@ -1,18 +1,7 @@
 import { useRef, useState } from 'react';
 import FaIcon from '../FaIcon';
 
-/**
- * AppointmentDateNavigator
- *
- * Calendar-style date navigator for the Appointments page.
- * Replaces the old Today / All toggle with Day, Week, Month, Agenda tabs
- * plus Prev / Today / Next navigation.
- *
- * Props:
- *   view      : 'day' | 'week' | 'month' | 'agenda'
- *   anchor    : Date  – the active navigation anchor
- *   onChange  : ({ view, anchor, from, to }) => void
- */
+/** Day / Week / Month / Agenda date range navigator for the Appointments page. */
 
 const VIEWS = [
   { id: 'day',    label: 'Day' },
@@ -117,9 +106,7 @@ export default function AppointmentDateNavigator({ view, anchor, onChange }) {
   return (
     <div className="glass-card !p-3 sm:!p-4 !bg-white">
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
-        {/* Left: view tabs + prev/today/next */}
         <div className="flex items-center gap-2 flex-wrap">
-          {/* View tabs */}
           <div className="inline-flex rounded-lg border border-slate-200 overflow-hidden">
             {VIEWS.map((v) => (
               <button
@@ -137,7 +124,6 @@ export default function AppointmentDateNavigator({ view, anchor, onChange }) {
             ))}
           </div>
 
-          {/* Navigation buttons */}
           <button
             type="button"
             onClick={handlePrev}
@@ -165,7 +151,6 @@ export default function AppointmentDateNavigator({ view, anchor, onChange }) {
           </button>
         </div>
 
-        {/* Right: date range label + date picker */}
         <div className="flex items-center gap-2">
           <button
             type="button"

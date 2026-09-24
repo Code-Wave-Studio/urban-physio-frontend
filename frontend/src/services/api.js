@@ -230,7 +230,6 @@ export const patientReports = {
   remove: (id) => api.delete(`/patient-reports/${id}`),
 };
 
-/** Document Management System */
 function authHeaders(extra = {}) {
   const token = localStorage.getItem('token');
   return { ...extra, ...(token ? { Authorization: `Bearer ${token}` } : {}) };
@@ -771,7 +770,6 @@ export const clinicPortal = {
   resendOfflinePatientInvite: (clinicId, clinicPatientId) =>
     api.post(`/clinic-portal/${clinicId}/offline-patients/${clinicPatientId}/resend-invite`),
 
-  // —— Feature Request ops ——
   qrInfo: (clinicId) => api.get(`/clinic-portal/${clinicId}/qr`),
   qrRegenerate: (clinicId) => api.post(`/clinic-portal/${clinicId}/qr/regenerate`),
   registrationFields: (clinicId) => api.get(`/clinic-portal/${clinicId}/registration-fields`),
@@ -823,7 +821,6 @@ export const clinicPortal = {
     api.post(`/clinic-portal/${clinicId}/packages/${packageId}/terminate`, data),
   assignPackageTemplate: (clinicId, data) =>
     api.post(`/clinic-portal/${clinicId}/packages/assign`, data),
-  // Advanced Package Management
   packagesList: (clinicId, params) =>
     api.get(`/clinic-portal/${clinicId}/packages/list`, { params }),
   packageDetail: (clinicId, pkgId) =>
@@ -840,14 +837,12 @@ export const clinicPortal = {
     api.post(`/clinic-portal/${clinicId}/packages/${pkgId}/complete-session`, data),
   serviceTypes: (clinicId) =>
     api.get(`/clinic-portal/${clinicId}/service-types`),
-  // Booking Engine
   bookingBootstrap: (clinicId) =>
     api.get(`/clinic-portal/${clinicId}/booking-engine/bootstrap`),
   bookingCapacitySlots: (clinicId, params) =>
     api.get(`/clinic-portal/${clinicId}/booking-engine/slots`, { params }),
   bookingServices: (clinicId) =>
     api.get(`/clinic-portal/${clinicId}/booking-engine/services`),
-  // Notes
   notesList: (clinicId, params) =>
     api.get(`/clinic-portal/${clinicId}/notes`, { params }),
   notesGet: (clinicId, id) =>
@@ -866,7 +861,6 @@ export const clinicPortal = {
     api.put(`/clinic-portal/${clinicId}/notes/folders/${folderId}`, data),
   notesDeleteFolder: (clinicId, folderId) =>
     api.delete(`/clinic-portal/${clinicId}/notes/folders/${folderId}`),
-  // Advanced Invoices
   invoicesList: (clinicId, params) =>
     api.get(`/clinic-portal/${clinicId}/invoices`, { params }),
   invoicesGet: (clinicId, id) =>
@@ -908,7 +902,6 @@ export const clinicPortal = {
     api.post(`/clinic-portal/${clinicId}/notification-campaigns`, data, config),
   sendCampaign: (clinicId, id, config = {}) =>
     api.post(`/clinic-portal/${clinicId}/notification-campaigns/${id}/send`, {}, config),
-  // Smart Communication Engine
   commDashboard: (clinicId) =>
     api.get(`/clinic-portal/${clinicId}/communication/dashboard`),
   commAnalytics: (clinicId, params) =>
@@ -950,7 +943,6 @@ export const clinicPortal = {
   createProgressReport: (clinicId, data) =>
     api.post(`/clinic-portal/${clinicId}/progress-reports`, data),
   liveEvents: (clinicId, params) => api.get(`/clinic-portal/${clinicId}/live/events`, { params }),
-  // Exercise & Rehab (HEP)
   hepDashboard: (clinicId) => api.get(`/clinic-portal/${clinicId}/hep/dashboard`),
   hepAnalytics: (clinicId, params) =>
     api.get(`/clinic-portal/${clinicId}/hep/analytics`, { params }),
@@ -966,7 +958,6 @@ export const clinicPortal = {
     api.get(`/clinic-portal/${clinicId}/hep/media`, { params }),
   hepRegisterMedia: (clinicId, data) =>
     api.post(`/clinic-portal/${clinicId}/hep/media`, data),
-  // Back Office Management
   boDashboard: (clinicId) => api.get(`/clinic-portal/${clinicId}/back-office/dashboard`),
   boAnalytics: (clinicId, params) =>
     api.get(`/clinic-portal/${clinicId}/back-office/analytics`, { params }),
@@ -1022,7 +1013,6 @@ export const clinicPortal = {
     api.delete(`/clinic-portal/${clinicId}/back-office/tasks/${id}`),
   boExport: (clinicId, params) =>
     api.get(`/clinic-portal/${clinicId}/back-office/export`, { params }),
-  // Reputation & Reviews
   reputationOverview: (clinicId) =>
     api.get(`/clinic-portal/${clinicId}/reputation/overview`),
   reputationReviews: (clinicId, params) =>
@@ -1039,7 +1029,6 @@ export const clinicPortal = {
     api.get(`/clinic-portal/${clinicId}/reputation/settings`),
   reputationSaveSettings: (clinicId, data) =>
     api.put(`/clinic-portal/${clinicId}/reputation/settings`, data),
-  // AI-Driven Analytics & Reports Center
   aiDash: (clinicId, params) =>
     api.get(`/clinic-portal/${clinicId}/ai-analytics/dashboard`, { params }),
   aiInsights: (clinicId, params) =>
@@ -1157,7 +1146,6 @@ export const patientSearch = {
   removeTag: (data) => api.delete('/search/tags', { data }),
 };
 
-/** Live Online Consultation Room */
 export const consultation = {
   room: (appointmentId) => api.get(`/consultation/${appointmentId}`),
   exerciseDetail: (appointmentId, prescriptionId) =>
@@ -1211,7 +1199,6 @@ export const calendar = {
   createRoom: (data) => api.post('/calendar/rooms', data),
   bookRoom: (data) => api.post('/calendar/room-bookings', data),
   cancelRoomBooking: (id) => api.delete(`/calendar/room-bookings/${id}`),
-  // Slot Capacity APIs (Feature 4-14)
   capacityCheck: (params) => api.get('/calendar/capacity/check', { params }),
   capacityAvailability: (params) => api.get('/calendar/capacity/availability', { params }),
   capacitySettings: (params) => api.get('/calendar/capacity/settings', { params }),
@@ -1275,7 +1262,6 @@ export const exercises = {
   get: (slugOrId) => api.get(`/exercises/${encodeURIComponent(String(slugOrId))}`),
 };
 
-// ─── ERP APIs ────────────────────────────────────────────────────────────────
 
 export const erpPatient = {
   getOverview: (patientKey, params) => api.get(`/erp/patients/${patientKey}/overview`, { params }),
@@ -1324,7 +1310,6 @@ export const erpProtocols = {
   shareProtocol: (id, data) => api.post(`/erp/protocols/patient/${id}/share`, data),
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
 
 export const exercisePrescriptions = {
   list: (params) => api.get('/exercise-prescriptions', { params }),
