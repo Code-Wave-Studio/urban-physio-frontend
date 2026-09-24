@@ -17,8 +17,9 @@ import { kinestex } from '../../services/api';
  * Sources:
  * - npm: kinestex-sdk-react-ts (docs: https://www.kinestex.com/docs/installation)
  * - IntegrationOption.CUSTOM_WORKOUT → /custom-workout
- * - postData: key, company, userId, customWorkoutExercises
+ * - postData: key, company, userId, customWorkoutExercises, videoFit
  * - On all_resources_loaded → sendAction("workout_activity_action", "start")
+ * - Host overlay/stage sizing is responsive; iframe internals stay provider-controlled
  *
  * Persistence: onKinesteXSessionCompleted → POST /kinestex/session/result
  * Success UI is shown only after the backend confirms the save.
@@ -60,6 +61,11 @@ export default function KinesteXExerciseSession({
       customWorkoutExercises: sdk.customWorkoutExercises || [],
       shouldSendStats: sdk.shouldSendStats !== false,
       style: sdk.style || { style: 'light' },
+      // Documented Camera & Pose Detection param (Workout player incl. Custom Workout).
+      // Default provider "cover" crops the feed; "contain" keeps the full camera frame
+      // visible (letterboxed) so the subject stays in view farther from the camera.
+      // Host layout still cannot rewrite KinesteX's internal UI chrome.
+      videoFit: 'contain',
     };
   }, [sdk]);
 
@@ -285,12 +291,12 @@ export default function KinesteXExerciseSession({
       aria-label={context.exercise_name ? `AI exercise: ${context.exercise_name}` : 'AI exercise session'}
     >
       {!showResultCard && (
-        <div className="shrink-0 flex items-center justify-between gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-slate-900 text-white border-b border-slate-800">
+        <div className="kinestex-session-chrome">
           <div className="min-w-0 flex-1">
             <p className="text-sm sm:text-base font-semibold truncate leading-tight">
               {context.exercise_name || 'AI Exercise'}
             </p>
-            <p className="text-[11px] sm:text-xs text-slate-400 truncate">
+            <p className="text-[11px] sm:text-xs text-slate-300/90 truncate">
               Target: {context.sets || 1} sets × {context.reps || 10} reps
               {lifecycle === 'paused'
                 ? ' · Stay in camera view'
@@ -301,7 +307,7 @@ export default function KinesteXExerciseSession({
           </div>
           <button
             type="button"
-            className="shrink-0 min-h-10 px-3 sm:px-4 text-sm font-semibold rounded-lg bg-white/10 hover:bg-white/20"
+            className="shrink-0 min-h-10 px-3 sm:px-4 text-sm font-semibold rounded-lg bg-white/15 hover:bg-white/25"
             aria-label="Exit AI session"
             onClick={() => {
               if (bestStatusRef.current !== 'completed' && saveStateRef.current !== 'saved') {
@@ -317,7 +323,10 @@ export default function KinesteXExerciseSession({
       )}
 
       {keepSdkMounted && (
-        <div className={`kinestex-session-stage ${showResultCard ? 'hidden' : ''}`} key={mountKey.current}>
+        <div
+          className={`kinestex-session-stage${showResultCard ? ' is-hidden' : ''}`}
+          key={mountKey.current}
+        >
           <KinesteXSDK
             ref={sdkRef}
             data={postData}
@@ -325,13 +334,14 @@ export default function KinesteXExerciseSession({
             baseUrl={sdk.base_url || 'https://ai.kinestex.com'}
             handleMessage={handleMessage}
             iframeTitle={`KinesteX — ${context.exercise_name || 'Exercise'}`}
+            className="kinestex-sdk-root"
             style={{ width: '100%', height: '100%', position: 'relative' }}
           />
         </div>
       )}
 
       {showResultCard && (
-        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain flex items-center justify-center p-3 sm:p-4">
+        <div className="kinestex-session-result">
           <div className="bg-white rounded-2xl p-5 sm:p-6 max-w-md w-full text-center shadow-xl max-h-full overflow-y-auto">
             {saveState === 'saving' && (
               <>
