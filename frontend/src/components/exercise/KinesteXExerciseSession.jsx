@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { KinesteXSDK, IntegrationOption } from 'kinestex-sdk-react-ts';
 import FaIcon from '../FaIcon';
 import KinesteXWorkoutOverview from './KinesteXWorkoutOverview';
+import KinesteXMovementAnalysisReport from './KinesteXMovementAnalysisReport';
 import {
   buildKinesteXSessionResult,
   newClientSessionId,
@@ -11,6 +12,9 @@ import {
   patientFriendlySaveError,
 } from '../../services/kinestexSessionBoundary';
 import { kinestex } from '../../services/api';
+
+/** Keep iframe alive briefly so late workout_session_saved / motion upload events can merge. */
+const MOTION_SAVE_GRACE_MS = 45000;
 
 /**
  * Official KinesteX Custom Workout session (Phase 4 + Phase 5 persistence).
@@ -50,6 +54,8 @@ export default function KinesteXExerciseSession({
   const [saveError, setSaveError] = useState('');
   const [lastResult, setLastResult] = useState(null);
   const [persisted, setPersisted] = useState(null);
+  const [motionSaveState, setMotionSaveState] = useState('idle'); // idle | uploading | complete | failed | timed_out
+  const motionGraceTimerRef = useRef(null);
 
   saveStateRef.current = saveState;
 
@@ -60,6 +66,7 @@ export default function KinesteXExerciseSession({
       company: sdk.company,
       userId: sdk.userId,
       customWorkoutExercises: sdk.customWorkoutExercises || [],
+      // Persist session + motion recording for post-exercise replay (Req #4).
       shouldSendStats: sdk.shouldSendStats !== false,
       style: sdk.style || { style: 'light' },
       // Documented Camera & Pose Detection param (Workout player incl. Custom Workout).
@@ -67,8 +74,27 @@ export default function KinesteXExerciseSession({
       // visible (letterboxed) so the subject stays in view farther from the camera.
       // Host layout still cannot rewrite KinesteX's internal UI chrome.
       videoFit: 'contain',
+      // motionDataEnabled defaults true; never set false or session replay is empty.
+      customParameters: {
+        ...(sdk.customParameters && typeof sdk.customParameters === 'object' ? sdk.customParameters : {}),
+      },
     };
   }, [sdk]);
+
+  const clearMotionGrace = useCallback(() => {
+    if (motionGraceTimerRef.current) {
+      clearTimeout(motionGraceTimerRef.current);
+      motionGraceTimerRef.current = null;
+    }
+  }, []);
+
+  const beginMotionGrace = useCallback(() => {
+    clearMotionGrace();
+    setMotionSaveState((s) => (s === 'complete' || s === 'failed' ? s : 'uploading'));
+    motionGraceTimerRef.current = setTimeout(() => {
+      setMotionSaveState((s) => (s === 'complete' || s === 'failed' ? s : 'timed_out'));
+    }, MOTION_SAVE_GRACE_MS);
+  }, [clearMotionGrace]);
 
   const finish = useCallback(
     (kind, result) => {
@@ -211,7 +237,30 @@ export default function KinesteXExerciseSession({
         case 'workout_completed':
         case 'workout_session_saved':
           setLifecycle('completed');
+          beginMotionGrace();
           emitBoundary(type, payload, 'completed');
+          break;
+        case 'motion_upload_progress':
+          setMotionSaveState((s) => (s === 'complete' || s === 'failed' ? s : 'uploading'));
+          break;
+        case 'session_save_complete':
+          clearMotionGrace();
+          setMotionSaveState('complete');
+          // Merge motion-complete into the same row when a completed envelope exists.
+          if (bestStatusRef.current === 'completed' || saveStateRef.current === 'saved') {
+            emitBoundary(type, payload, 'completed');
+          }
+          break;
+        case 'motion_upload_error':
+          clearMotionGrace();
+          setMotionSaveState('failed');
+          if (bestStatusRef.current === 'completed' || saveStateRef.current === 'saved') {
+            emitBoundary(
+              eventsRef.current.workout_session_saved ? 'workout_session_saved' : 'workout_overview',
+              eventsRef.current.workout_session_saved || eventsRef.current.workout_overview || payload,
+              'completed'
+            );
+          }
           break;
         case 'exercise_completed':
         case 'exercise_overview':
@@ -236,7 +285,7 @@ export default function KinesteXExerciseSession({
           break;
       }
     },
-    [emitBoundary]
+    [emitBoundary, beginMotionGrace, clearMotionGrace]
   );
 
   const mountKey = useRef(`kx-${context.item_id || 0}-${clientSessionIdRef.current}`);
@@ -255,15 +304,20 @@ export default function KinesteXExerciseSession({
       body.style.overflow = prevBodyOverflow;
       body.style.overscrollBehavior = prevOverscroll;
       startedRef.current = false;
+      clearMotionGrace();
     };
-  }, []);
+  }, [clearMotionGrace]);
 
   const showResultCard =
     (lifecycle === 'completed' || lifecycle === 'failed' || lifecycle === 'cancelled') &&
     saveState !== 'idle';
-  // Stay mounted (CSS-hidden) while saving so a late workout_session_saved can merge.
-  // Unmount after saved / save_failed so the camera is released.
-  const keepSdkMounted = saveState !== 'saved' && saveState !== 'save_failed';
+  // Stay mounted (CSS-hidden) while saving / waiting for motion upload events so
+  // workout_session_saved + session_save_complete can merge into the same row.
+  const motionPending =
+    lifecycle === 'completed' &&
+    (motionSaveState === 'idle' || motionSaveState === 'uploading');
+  const keepSdkMounted =
+    saveState === 'idle' || saveState === 'saving' || (saveState === 'saved' && motionPending);
 
   if (!postData) {
     return createPortal(
@@ -366,11 +420,34 @@ export default function KinesteXExerciseSession({
                   Your AI-monitored exercise session was saved.
                 </p>
                 <div className="mt-4 text-left">
-                  <KinesteXWorkoutOverview
-                    metrics={persisted?.session?.metrics || persisted?.metrics}
-                    title="Workout Overview"
-                    emptyMessage="Performance metrics were not included in this session result."
-                  />
+                  {(persisted?.session?.movement_analysis?.available ||
+                    persisted?.session?.provider_session_id) &&
+                  persisted?.session ? (
+                    <KinesteXMovementAnalysisReport
+                      session={{
+                        ...persisted.session,
+                        exercise_name: context.exercise_name,
+                        session_at: persisted.session.completed_at || persisted.session.created_at,
+                        metrics: persisted.session.metrics || persisted.metrics,
+                      }}
+                    />
+                  ) : (
+                    <KinesteXWorkoutOverview
+                      metrics={persisted?.session?.metrics || persisted?.metrics}
+                      title="Workout Overview"
+                      emptyMessage="Performance metrics were not included in this session result."
+                    />
+                  )}
+                  {motionSaveState === 'uploading' && (
+                    <p className="text-[11px] text-slate-500 mt-2">
+                      Saving movement recording to KinesteX…
+                    </p>
+                  )}
+                  {motionSaveState === 'failed' && (
+                    <p className="text-[11px] text-amber-800 mt-2 rounded-lg bg-amber-50 px-3 py-2">
+                      Movement recording could not be saved for this session. Performance metrics were still stored.
+                    </p>
+                  )}
                 </div>
                 <p className="text-xs text-slate-400 mt-3">
                   You can still use Mark Complete on your rehab plan if needed.

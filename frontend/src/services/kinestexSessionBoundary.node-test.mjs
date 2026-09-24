@@ -43,9 +43,25 @@ check('status completed', result.status === 'completed');
 check('keeps provider_session_id', result.provider_session_id === 'ksx-1');
 check('keeps client_session_id', result.client_session_id === clientId);
 check('does not invent extra metric fields', !('repetitions' in result) && !('score' in result));
-check('preserves workout_overview', result.workout_overview?.calories === 4);
-check('map exit cancelled', mapCompletionStatus('exit_kinestex') === 'cancelled');
-check('map error failed', mapCompletionStatus('error_occurred') === 'failed');
+  check('preserves workout_overview', result.workout_overview?.calories === 4);
+  check('map exit cancelled', mapCompletionStatus('exit_kinestex') === 'cancelled');
+  check('map error failed', mapCompletionStatus('error_occurred') === 'failed');
+  check('map session_save_complete completed', mapCompletionStatus('session_save_complete') === 'completed');
+
+  const withMotion = buildKinesteXSessionResult({
+    eventType: 'session_save_complete',
+    eventData: {},
+    context: { prescription_id: 9, item_id: 3, exercise_id: 7 },
+    collected: {
+      workout_session_saved: { session_id: 55 },
+      session_save_complete: {},
+      motion_upload_progress: { completed: 1, total: 1 },
+    },
+    clientSessionId: clientId,
+  });
+  check('envelope keeps motion upload progress', !!withMotion.motion_upload_progress);
+  check('envelope keeps session_save_complete', !!withMotion.session_save_complete);
+  check('provider session from workout_session_saved', withMotion.provider_session_id === 55);
 
 const exitCompleted = buildKinesteXSessionResult({
   eventType: 'exit_kinestex',

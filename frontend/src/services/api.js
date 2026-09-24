@@ -1096,6 +1096,8 @@ export const kinestex = {
   /** Patient: paginated own AI history (JWT identity). Doctor/clinic: scoped list. Never send patient_id from the browser for patients. */
   listSessions: (params) => api.get('/kinestex/sessions', { params }),
   getSession: (id) => api.get(`/kinestex/sessions/${id}`),
+  /** Authorized patient/clinician: SDK credentials for official KinesteX session/{id} movement replay */
+  prepareSessionReplay: (id) => api.post(`/kinestex/sessions/${id}/replay`),
   /** Doctor/clinic/admin only — patient JWT is rejected */
   analysisSessions: (params) => api.get('/kinestex/analysis', { params }),
   analysisSession: (id) => api.get(`/kinestex/analysis/${id}`),

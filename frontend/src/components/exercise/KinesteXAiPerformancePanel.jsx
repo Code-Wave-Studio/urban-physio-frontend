@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import FaIcon from '../FaIcon';
 import GlassModal, { GlassModalBody, GlassModalFooter, GlassModalHeader } from '../GlassModal';
 import { kinestex } from '../../services/api';
-import KinesteXWorkoutOverview from './KinesteXWorkoutOverview';
+import KinesteXMovementAnalysisReport from './KinesteXMovementAnalysisReport';
 
 function na(value) {
   if (value === null || value === undefined || value === '') return 'N/A';
@@ -407,7 +407,7 @@ export default function KinesteXAiPerformancePanel({
                   <dd className="text-slate-800 break-all">{na(detail.provider_session_id)}</dd>
                 </div>
               </dl>
-              <KinesteXWorkoutOverview metrics={detail.metrics} />
+              <KinesteXMovementAnalysisReport session={detail} />
               {detail.kinestex_exercise_id ? (
                 <p className="text-xs text-slate-500">
                   KinesteX exercise: <span className="font-medium text-slate-700 break-all">{detail.kinestex_exercise_id}</span>

@@ -7,6 +7,7 @@ import KinesteXWorkoutOverview, {
   buildWorkoutOverviewRows,
   formatAccuracy,
 } from './KinesteXWorkoutOverview';
+import KinesteXMovementAnalysisReport from './KinesteXMovementAnalysisReport';
 
 function na(value) {
   if (value === null || value === undefined || value === '') return 'N/A';
@@ -315,6 +316,11 @@ export default function KinesteXPatientAiHistory({ refreshTick = 0, onGoToExerci
                               {c.label} {c.value}
                             </span>
                           ))}
+                          {s.movement_analysis?.available ? (
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-50 text-cyan-800">
+                              Movement replay
+                            </span>
+                          ) : null}
                         </div>
                       </div>
                       <button
@@ -404,7 +410,7 @@ export default function KinesteXPatientAiHistory({ refreshTick = 0, onGoToExerci
                   <dd className="text-slate-800">{na(detail.completion_event)}</dd>
                 </div>
               </dl>
-              <KinesteXWorkoutOverview metrics={detail.metrics} />
+              <KinesteXMovementAnalysisReport session={detail} />
               {detail.session_status === 'completed' &&
                 detail.metrics?.sets_completed == null &&
                 buildWorkoutOverviewRows(detail.metrics).length > 0 && (

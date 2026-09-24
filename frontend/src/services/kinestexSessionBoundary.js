@@ -64,6 +64,9 @@ export function buildKinesteXSessionResult({
     finished_workout: collected.finished_workout || null,
     workout_completed: collected.workout_completed || null,
     workout_session_saved: collected.workout_session_saved || null,
+    session_save_complete: collected.session_save_complete || null,
+    motion_upload_error: collected.motion_upload_error || null,
+    motion_upload_progress: collected.motion_upload_progress || null,
     // Full last event for Phase 5 inspection
     last_event: { type: eventType, data },
     raw_events: collected,
