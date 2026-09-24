@@ -32,16 +32,6 @@ export function kinestexPayload(formKinestex) {
   };
 }
 
-export function isKinestexAiReady(kinestex) {
-  return !!(
-    kinestex &&
-    kinestex.ai_supported &&
-    kinestex.mapped !== false &&
-    (kinestex.status === 'active' || kinestex.ai_supported) &&
-    (kinestex.mapped || kinestex.kinestex_exercise_id)
-  );
-}
-
 /** List/detail badge helper using public or manage payload shapes. */
 export function showAiReadyBadge(kinestex) {
   if (!kinestex) return false;

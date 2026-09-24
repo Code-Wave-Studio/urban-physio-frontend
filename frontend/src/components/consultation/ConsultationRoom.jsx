@@ -840,7 +840,7 @@ export default function ConsultationRoom({ appointmentId, backTo, layout: Layout
           }}
           onCancelled={(result) => {
             if (result?.persisted) {
-              toast('AI session cancelled');
+              toast('AI session cancelled. The consultation is unchanged.');
               setAiTick((n) => n + 1);
             }
           }}

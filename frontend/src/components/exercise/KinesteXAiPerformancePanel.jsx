@@ -32,9 +32,9 @@ function statusClass(status) {
 
 function Metric({ label, value }) {
   return (
-    <div className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5 text-center">
-      <p className="text-[10px] uppercase tracking-wide text-slate-400">{label}</p>
-      <p className="text-sm sm:text-base font-bold text-slate-800 mt-0.5">{value}</p>
+    <div className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5 text-center min-w-0">
+      <p className="text-[10px] uppercase tracking-wide text-slate-400 truncate">{label}</p>
+      <p className="text-sm sm:text-base font-bold text-slate-800 mt-0.5 break-words">{value}</p>
     </div>
   );
 }
@@ -215,7 +215,7 @@ export default function KinesteXAiPerformancePanel({
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4 min-w-0">
             <Metric label="AI sessions" value={summary.total_ai_sessions ?? 0} />
             <Metric label="Completed" value={summary.completed_ai_sessions ?? 0} />
             <Metric label="Total reps" value={na(summary.total_repetitions)} />
@@ -381,28 +381,28 @@ export default function KinesteXAiPerformancePanel({
                   {detail.session_status}
                 </span>
               </div>
-              <dl className="grid sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                <div>
+              <dl className="grid sm:grid-cols-2 gap-x-4 gap-y-2 text-sm min-w-0">
+                <div className="min-w-0">
                   <dt className="text-[10px] uppercase text-slate-400">Date / time</dt>
-                  <dd className="text-slate-800">{formatWhen(detail.session_at || detail.completed_at || detail.created_at)}</dd>
+                  <dd className="text-slate-800 break-words">{formatWhen(detail.session_at || detail.completed_at || detail.created_at)}</dd>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <dt className="text-[10px] uppercase text-slate-400">Exercise</dt>
-                  <dd className="text-slate-800">{detail.exercise_name || 'N/A'}</dd>
+                  <dd className="text-slate-800 break-words">{detail.exercise_name || 'N/A'}</dd>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <dt className="text-[10px] uppercase text-slate-400">Rehab plan</dt>
-                  <dd className="text-slate-800">{detail.prescription_title || `Plan #${detail.prescription_id}`}</dd>
+                  <dd className="text-slate-800 break-words">{detail.prescription_title || `Plan #${detail.prescription_id}`}</dd>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <dt className="text-[10px] uppercase text-slate-400">Prescription item</dt>
                   <dd className="text-slate-800">{detail.item_id ? `#${detail.item_id}` : 'N/A'}</dd>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <dt className="text-[10px] uppercase text-slate-400">Completion event</dt>
-                  <dd className="text-slate-800">{na(detail.completion_event)}</dd>
+                  <dd className="text-slate-800 break-words">{na(detail.completion_event)}</dd>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <dt className="text-[10px] uppercase text-slate-400">Provider session ID</dt>
                   <dd className="text-slate-800 break-all">{na(detail.provider_session_id)}</dd>
                 </div>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -13,6 +14,7 @@ import { Line } from 'react-chartjs-2';
 import toast from 'react-hot-toast';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../../components/FaIcon';
+import KinesteXPatientAiHistory from '../../components/exercise/KinesteXPatientAiHistory';
 import { PATIENT_NAV } from '../../constants/patientNav';
 import { patientPortal } from '../../services/api';
 
@@ -33,6 +35,7 @@ function ProgressBar({ value, tone = 'bg-primary-500' }) {
 }
 
 export default function PatientProgress() {
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -81,22 +84,27 @@ export default function PatientProgress() {
 
   return (
     <DashboardLayout links={PATIENT_NAV} variant="patient">
-      <div className="mb-5">
+      <div className="mb-5 min-w-0 max-w-full">
         <h1 className="text-2xl md:text-3xl font-bold text-slate-900">My Progress</h1>
-        <p className="text-sm text-slate-500 mt-1">Track your recovery — sessions completed, exercise adherence and pain trend.</p>
+        <p className="text-sm text-slate-500 mt-1">
+          AI session history and performance, plus treatment and exercise adherence.
+        </p>
       </div>
 
-      {loading ? (
-        <div className="glass-card p-10 text-center text-slate-400">
-          <FaIcon icon="fa-spinner" className="fa-spin text-2xl" />
-        </div>
-      ) : (
-        <div className="space-y-6">
+      <div className="space-y-6 min-w-0 max-w-full overflow-x-hidden">
+        <KinesteXPatientAiHistory onGoToExercises={() => navigate('/patient/exercises')} />
+
+        {loading ? (
+          <div className="glass-card p-10 text-center text-slate-400">
+            <FaIcon icon="fa-spinner" className="fa-spin text-2xl" />
+          </div>
+        ) : (
+          <>
           {/* Pain trend */}
-          <section className="glass-card !p-4 md:!p-5">
-            <div className="flex items-center justify-between gap-2 mb-3">
-              <h2 className="font-bold text-slate-800 flex items-center gap-2">
-                <FaIcon icon="fa-heart-pulse" className="text-rose-500" /> Pain trend
+          <section className="glass-card !p-4 md:!p-5 min-w-0">
+            <div className="flex items-center justify-between gap-2 mb-3 min-w-0">
+              <h2 className="font-bold text-slate-800 flex items-center gap-2 min-w-0">
+                <FaIcon icon="fa-heart-pulse" className="text-rose-500 shrink-0" /> Pain trend
               </h2>
               {painDelta != null && (
                 <span
@@ -210,8 +218,9 @@ export default function PatientProgress() {
               </div>
             )}
           </section>
-        </div>
-      )}
+          </>
+        )}
+      </div>
     </DashboardLayout>
   );
 }

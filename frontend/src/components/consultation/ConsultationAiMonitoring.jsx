@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import FaIcon from '../FaIcon';
 import ExerciseBottomSheet from '../exercise/ExerciseBottomSheet';
+import KinesteXAiExercisePrepBrief from '../exercise/KinesteXAiExercisePrepBrief';
 import KinesteXAiPerformancePanel from '../exercise/KinesteXAiPerformancePanel';
+import KinesteXMovementAnalysisReport from '../exercise/KinesteXMovementAnalysisReport';
 import KinesteXWorkoutOverview from '../exercise/KinesteXWorkoutOverview';
 import GlassModal, { GlassModalBody, GlassModalFooter, GlassModalHeader } from '../GlassModal';
 import { kinestex } from '../../services/api';
@@ -37,9 +39,12 @@ function latestByItem(sessions) {
 }
 
 /**
- * Consultation Room KinesteX layer (Phase 8).
- * Patient starts the existing SDK session; clinicians view the same kinestex_sessions rows.
- * Does not change appointment / consultation status.
+ * TeleRehab / Consultation Room KinesteX AI layer (Req #10 / Phase 8).
+ *
+ * Patient starts AI on their own device for eligible HEP items on their appointment.
+ * Doctors/clinic/admin review the same kinestex_sessions rows (Workout Overview +
+ * Movement Analysis) but never start the patient's camera session.
+ * Does not change appointment, consultation, Zoom, or manual HEP status.
  */
 export default function ConsultationAiMonitoring({
   room,
@@ -58,6 +63,8 @@ export default function ConsultationAiMonitoring({
   const [aiPrepEx, setAiPrepEx] = useState(null);
   const [preparing, setPreparing] = useState(false);
   const [peek, setPeek] = useState(null);
+  const [peekLoading, setPeekLoading] = useState(false);
+  const [peekError, setPeekError] = useState('');
   const startLock = useRef(false);
 
   const eligible = useMemo(
@@ -101,13 +108,31 @@ export default function ConsultationAiMonitoring({
     loadLatest();
   }, [loadLatest, refreshTick]);
 
+  useEffect(() => {
+    if (!aiSessionActive) {
+      startLock.current = false;
+    }
+  }, [aiSessionActive]);
+
   const openPrep = (ex) => {
     if (!isPatient || !ex?.ai_monitoring_effective || startLock.current || preparing || aiSessionActive) return;
+    if (!appointmentId) {
+      toast.error('This consultation appointment is required to start TeleRehab AI.');
+      return;
+    }
     setAiPrepEx(ex);
   };
 
   const continueAi = async () => {
     if (!isPatient || !aiPrepEx || startLock.current) return;
+    if (!aiPrepEx.ai_monitoring_effective) {
+      toast.error('AI monitoring is not available for this exercise.');
+      return;
+    }
+    if (!appointmentId || !prescriptionId) {
+      toast.error('Consultation appointment is required for TeleRehab AI.');
+      return;
+    }
     startLock.current = true;
     setPreparing(true);
     try {
@@ -122,38 +147,74 @@ export default function ConsultationAiMonitoring({
       }
       setAiPrepEx(null);
       onRequestStart?.(payload);
+      // Keep startLock until parent aiSessionActive / close clears the flow (PatientExercises pattern).
+      setPreparing(false);
     } catch (err) {
+      startLock.current = false;
       const msg = err.message || 'Could not start AI monitoring';
       if (/camera/i.test(msg)) {
         toast.error('Camera access is required for AI monitoring. Please allow camera access and try again.');
       } else {
         toast.error(msg);
       }
-    } finally {
-      startLock.current = false;
       setPreparing(false);
     }
   };
 
-  const peekMetrics = peek?.metrics || {};
+  const openPeek = async (session, exerciseName) => {
+    if (!session?.id) return;
+    setPeekLoading(true);
+    setPeekError('');
+    setPeek({ ...session, exercise_name: exerciseName || session.exercise_name });
+    try {
+      const res = isPatient
+        ? await kinestex.getSession(session.id)
+        : await kinestex.analysisSession(session.id);
+      const data = res?.data ?? res;
+      if (!data || typeof data !== 'object') {
+        throw new Error('Could not load this AI session.');
+      }
+      setPeek({
+        ...data,
+        exercise_name: exerciseName || data.exercise_name || session.exercise_name,
+      });
+    } catch (err) {
+      const status = err?.status;
+      const msg =
+        status === 403
+          ? 'You are not authorized to view this AI session.'
+          : status === 404
+            ? 'This AI session was not found.'
+            : err?.message || 'Could not load AI performance.';
+      setPeekError(msg);
+    } finally {
+      setPeekLoading(false);
+    }
+  };
 
   return (
-    <div className="rounded-2xl border border-teal-100 bg-teal-50/40 p-3 md:p-4 space-y-3 min-w-0">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0">
+    <div className="rounded-2xl border border-teal-100 bg-teal-50/40 p-3 md:p-4 space-y-3 min-w-0 max-w-full overflow-x-hidden">
+      <div className="flex flex-wrap items-start justify-between gap-2 min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-sm font-bold text-slate-800 flex flex-wrap items-center gap-2">
-            <FaIcon icon="fa-person-walking" className="text-teal-700" />
-            AI Exercise Monitoring
+            <FaIcon icon="fa-person-walking" className="text-teal-700 shrink-0" />
+            <span className="min-w-0">TeleRehab AI Monitoring</span>
             <span className="text-[10px] uppercase font-bold tracking-wide px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-100">
-              AI Monitored
+              Consultation
             </span>
           </p>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Optional KinesteX layer on the patient’s device. Zoom consultation stays open. Manual HEP Complete / Skip is
-            unchanged.
+          <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+            Optional KinesteX layer on the patient’s device during this visit. Zoom stays open.
+            AI cancel/fail does not change appointment status. Manual HEP Complete / Skip is unchanged.
           </p>
+          {isClinician ? (
+            <p className="text-[11px] text-teal-800 mt-1.5 rounded-lg bg-teal-50/80 border border-teal-100 px-2.5 py-1.5">
+              Clinicians review Workout Overview and Movement Analysis here. Only the patient can start the AI camera
+              session on their device.
+            </p>
+          ) : null}
         </div>
-        <button type="button" onClick={loadLatest} className="text-xs text-slate-500 hover:text-teal-700 font-medium min-h-10 px-2">
+        <button type="button" onClick={loadLatest} className="text-xs text-slate-500 hover:text-teal-700 font-medium min-h-10 px-2 shrink-0">
           <FaIcon icon="fa-arrows-rotate" className="mr-1" />
           Refresh
         </button>
@@ -162,13 +223,13 @@ export default function ConsultationAiMonitoring({
       {eligible.length === 0 ? (
         <p className="text-xs text-slate-500">No AI-enabled exercises on this rehab plan.</p>
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-2 min-w-0">
           {eligible.map((ex) => {
             const session = latest[String(ex.id)];
             const metrics = session?.metrics || {};
             return (
               <li key={ex.id} className="rounded-xl bg-white border border-teal-100 px-3 py-2.5 min-w-0">
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 min-w-0">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-slate-900 break-words">
                       {ex.exercise_name}
@@ -177,7 +238,7 @@ export default function ConsultationAiMonitoring({
                       </span>
                     </p>
                     {session ? (
-                      <p className="text-[11px] text-slate-500 mt-0.5">
+                      <p className="text-[11px] text-slate-500 mt-0.5 break-words">
                         Latest: {formatWhen(session.session_at || session.completed_at || session.created_at)} ·{' '}
                         <span className={`uppercase font-bold px-1.5 py-0.5 rounded-full ${statusClass(session.session_status)}`}>
                           {session.session_status}
@@ -185,31 +246,32 @@ export default function ConsultationAiMonitoring({
                         {metrics.repetitions != null ? ` · ${metrics.repetitions} reps` : ''}
                         {metrics.accuracy != null ? ` · ${metrics.accuracy}%` : ''}
                         {metrics.score != null ? ` · score ${metrics.score}` : ''}
+                        {session.movement_analysis?.available ? ' · Movement Analysis' : ''}
                       </p>
                     ) : (
                       <p className="text-[11px] text-slate-500 mt-0.5">No AI-monitored session saved yet for this exercise.</p>
                     )}
                   </div>
-                  <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2">
+                  <div className="flex flex-col min-[375px]:flex-row min-[375px]:flex-wrap min-[375px]:items-center gap-2">
                     {isPatient ? (
                       <button
                         type="button"
-                        className="btn-outline !py-1.5 !px-3 text-xs min-h-10 border-teal-300 text-teal-800 hover:bg-teal-50 w-full sm:w-auto"
-                        disabled={aiSessionActive || preparing}
+                        className="btn-outline !py-1.5 !px-3 text-xs min-h-10 border-teal-300 text-teal-800 hover:bg-teal-50 w-full min-[375px]:w-auto"
+                        disabled={aiSessionActive || preparing || !appointmentId}
                         onClick={() => openPrep(ex)}
                       >
-                        <FaIcon icon="fa-person-walking" className="mr-1" /> Start AI Monitoring
+                        <FaIcon icon="fa-person-walking" className="mr-1" /> Start AI-Guided Exercise
                       </button>
                     ) : (
-                      <p className="text-[11px] text-teal-800 font-medium bg-teal-50 border border-teal-100 rounded-lg px-2.5 py-2">
-                        Patient starts this on their device
+                      <p className="text-[11px] text-teal-800 font-medium bg-teal-50 border border-teal-100 rounded-lg px-2.5 py-2 w-full min-[375px]:w-auto">
+                        View only — patient starts AI on their device
                       </p>
                     )}
                     {session && (
                       <button
                         type="button"
-                        className="text-xs font-semibold text-teal-700 min-h-10 px-2 w-full sm:w-auto text-left sm:text-center"
-                        onClick={() => setPeek({ ...session, exercise_name: ex.exercise_name })}
+                        className="text-xs font-semibold text-teal-700 min-h-10 px-2 w-full min-[375px]:w-auto text-left min-[375px]:text-center"
+                        onClick={() => openPeek(session, ex.exercise_name)}
                       >
                         View AI Performance
                       </button>
@@ -223,13 +285,15 @@ export default function ConsultationAiMonitoring({
       )}
 
       {isClinician && patientId ? (
-        <KinesteXAiPerformancePanel
-          patientId={patientId}
-          prescriptionId={prescriptionId}
-          title="Consultation AI Performance"
-          compact
-          refreshTick={refreshTick}
-        />
+        <div className="min-w-0 max-w-full overflow-x-hidden">
+          <KinesteXAiPerformancePanel
+            patientId={patientId}
+            prescriptionId={prescriptionId}
+            title="Consultation AI Performance"
+            compact
+            refreshTick={refreshTick}
+          />
+        </div>
       ) : null}
 
       <ExerciseBottomSheet
@@ -237,45 +301,50 @@ export default function ConsultationAiMonitoring({
         onClose={() => {
           if (!preparing) setAiPrepEx(null);
         }}
-        title="Prepare for AI Exercise"
-        subtitle={aiPrepEx?.exercise_name}
-        icon="fa-person-walking"
+        title="Pre-Exercise Setup"
+        subtitle={aiPrepEx ? aiPrepEx.exercise_name : 'Review guidance before AI'}
+        icon="fa-clipboard-list"
+        className="md:!max-w-3xl lg:!max-w-4xl"
         footer={
           <>
             <button type="button" className="btn-outline text-xs sm:text-sm" disabled={preparing} onClick={() => setAiPrepEx(null)}>
               Cancel
             </button>
-            <button type="button" className="btn-primary text-xs sm:text-sm" disabled={preparing} onClick={continueAi}>
-              {preparing ? 'Starting…' : 'Continue'}
+            <button
+              type="button"
+              className="btn-primary text-xs sm:text-sm"
+              disabled={preparing || !aiPrepEx?.ai_monitoring_effective || !appointmentId}
+              onClick={continueAi}
+            >
+              {preparing ? 'Starting…' : 'Start AI Exercise'}
             </button>
           </>
         }
       >
-        {aiPrepEx && (
-          <div className="space-y-3 text-sm text-slate-700">
-            <p>
-              {aiPrepEx.sets || 1} sets × {aiPrepEx.reps || 10} reps
-              {aiPrepEx.hold_seconds ? ` · hold ${aiPrepEx.hold_seconds}s` : ''}
-            </p>
-            <p className="text-xs text-slate-500 bg-slate-50 rounded-lg px-3 py-2">
-              Camera is required on this device. The Zoom consultation stays open — cancelling or failing AI monitoring will
-              not end this visit.
-            </p>
-          </div>
-        )}
+        {aiPrepEx ? (
+          <KinesteXAiExercisePrepBrief
+            exercise={aiPrepEx}
+            cameraNote="Camera is required on this device. The Zoom consultation stays open — cancelling or failing AI monitoring will not end this visit."
+            footerNote="Position yourself so your full movement is visible. Your prescribed HEP sets and reps stay unchanged."
+          />
+        ) : null}
       </ExerciseBottomSheet>
 
-      <GlassModal open={!!peek} onClose={() => setPeek(null)} size="md" zIndex={10060}>
+      <GlassModal open={!!peek} onClose={() => setPeek(null)} size="lg" zIndex={10060}>
         <GlassModalHeader
           title="AI Performance"
-          subtitle={peek?.exercise_name || ''}
+          subtitle={peek?.exercise_name || 'TeleRehab AI session'}
           icon="fa-person-walking"
           accent="emerald"
           onClose={() => setPeek(null)}
         />
         <GlassModalBody>
-          {peek && (
-            <div className="space-y-3">
+          {peekLoading && !peek?.metrics ? (
+            <div className="h-28 rounded-xl bg-slate-100 animate-pulse" />
+          ) : peekError ? (
+            <p className="text-sm text-rose-700">{peekError}</p>
+          ) : peek ? (
+            <div className="space-y-4 min-w-0">
               <div className="flex flex-wrap gap-2">
                 <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-700">
                   AI Monitored
@@ -283,16 +352,30 @@ export default function ConsultationAiMonitoring({
                 <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${statusClass(peek.session_status)}`}>
                   {peek.session_status}
                 </span>
+                {peek.movement_analysis?.available ? (
+                  <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-cyan-50 text-cyan-800">
+                    Movement Analysis available
+                  </span>
+                ) : null}
               </div>
               <p className="text-xs text-slate-500">
                 {formatWhen(peek.session_at || peek.completed_at || peek.created_at)}
               </p>
-              <KinesteXWorkoutOverview metrics={peekMetrics} />
+              <KinesteXWorkoutOverview
+                metrics={peek.metrics}
+                title="Workout Overview"
+                emptyMessage="Performance metrics were not included in this session result."
+              />
+              <KinesteXMovementAnalysisReport
+                session={peek}
+                title="Movement Analysis"
+                showMetrics={false}
+              />
               <p className="text-[11px] text-slate-400">
-                Same KinesteX session record as AI History and AI Performance.
+                Same persisted KinesteX session as My Progress / clinician AI Performance. Replay loads only on demand.
               </p>
             </div>
-          )}
+          ) : null}
         </GlassModalBody>
         <GlassModalFooter className="[&>button]:w-full sm:[&>button]:w-auto">
           <button type="button" className="btn-outline min-h-10" onClick={() => setPeek(null)}>

@@ -18,12 +18,14 @@ const MOTION_SAVE_GRACE_MS = 45000;
 
 /**
  * Official KinesteX Custom Workout session (Phase 4 + Phase 5 persistence).
+ * Patient-facing framing: AI Personal Trainer / AI-Guided Exercise (Req #5).
  *
  * Sources:
  * - npm: kinestex-sdk-react-ts (docs: https://www.kinestex.com/docs/installation)
  * - IntegrationOption.CUSTOM_WORKOUT → /custom-workout
  * - postData: key, company, userId, customWorkoutExercises, videoFit
  * - On all_resources_loaded → sendAction("workout_activity_action", "start")
+ * - Optional coach speech: mute_speech / unmute_speech (workout player actions)
  * - Host overlay/stage sizing is responsive; iframe internals stay provider-controlled
  *
  * Persistence: onKinesteXSessionCompleted → POST /kinestex/session/result
@@ -55,6 +57,7 @@ export default function KinesteXExerciseSession({
   const [lastResult, setLastResult] = useState(null);
   const [persisted, setPersisted] = useState(null);
   const [motionSaveState, setMotionSaveState] = useState('idle'); // idle | uploading | complete | failed | timed_out
+  const [coachMuted, setCoachMuted] = useState(false);
   const motionGraceTimerRef = useRef(null);
 
   saveStateRef.current = saveState;
@@ -194,6 +197,20 @@ export default function KinesteXExerciseSession({
     persistResult(lastResult, lastResult.status === 'failed' ? 'failed' : lastResult.status === 'cancelled' ? 'cancelled' : 'completed');
   }, [lastResult, persistResult]);
 
+  const toggleCoachSpeech = useCallback(() => {
+    if (!sdkRef.current?.sendAction) return;
+    const nextMuted = !coachMuted;
+    try {
+      sdkRef.current.sendAction(
+        'workout_activity_action',
+        nextMuted ? 'mute_speech' : 'unmute_speech'
+      );
+      setCoachMuted(nextMuted);
+    } catch (e) {
+      // Provider may ignore if workout player is not active yet — keep UI state unchanged.
+    }
+  }, [coachMuted]);
+
   const handleMessage = useCallback(
     (type, data) => {
       if (!type) return;
@@ -262,6 +279,12 @@ export default function KinesteXExerciseSession({
             );
           }
           break;
+        case 'mute_speech':
+          setCoachMuted(true);
+          break;
+        case 'unmute_speech':
+          setCoachMuted(false);
+          break;
         case 'exercise_completed':
         case 'exercise_overview':
           break;
@@ -289,8 +312,12 @@ export default function KinesteXExerciseSession({
   );
 
   const mountKey = useRef(`kx-${context.item_id || 0}-${clientSessionIdRef.current}`);
+  const emitBoundaryRef = useRef(emitBoundary);
+  emitBoundaryRef.current = emitBoundary;
+  const mountedRef = useRef(true);
 
   useEffect(() => {
+    mountedRef.current = true;
     const html = document.documentElement;
     const { body } = document;
     const prevHtmlOverflow = html.style.overflow;
@@ -300,11 +327,26 @@ export default function KinesteXExerciseSession({
     body.style.overflow = 'hidden';
     body.style.overscrollBehavior = 'none';
     return () => {
+      mountedRef.current = false;
       html.style.overflow = prevHtmlOverflow;
       body.style.overflow = prevBodyOverflow;
       body.style.overscrollBehavior = prevOverscroll;
       startedRef.current = false;
       clearMotionGrace();
+      // Navigate-away / unmount: record cancel if the session never completed.
+      if (
+        bestStatusRef.current !== 'completed' &&
+        saveStateRef.current !== 'saved' &&
+        !notifiedRef.current.completed &&
+        !notifiedRef.current.cancelled &&
+        !notifiedRef.current.failed
+      ) {
+        try {
+          emitBoundaryRef.current('workout_exit_request', { reason: 'unmount' }, 'cancelled');
+        } catch (e) {
+          // ignore — component is tearing down
+        }
+      }
     };
   }, [clearMotionGrace]);
 
@@ -343,37 +385,54 @@ export default function KinesteXExerciseSession({
       className="kinestex-session-overlay"
       role="dialog"
       aria-modal="true"
-      aria-label={context.exercise_name ? `AI exercise: ${context.exercise_name}` : 'AI exercise session'}
+      aria-label={context.exercise_name ? `AI-Guided Exercise: ${context.exercise_name}` : 'AI-Guided Exercise session'}
     >
       {!showResultCard && (
         <div className="kinestex-session-chrome">
           <div className="min-w-0 flex-1">
             <p className="text-sm sm:text-base font-semibold truncate leading-tight">
-              {context.exercise_name || 'AI Exercise'}
+              {context.exercise_name || 'AI-Guided Exercise'}
             </p>
             <p className="text-[11px] sm:text-xs text-slate-300/90 truncate">
-              Target: {context.sets || 1} sets × {context.reps || 10} reps
+              AI Personal Trainer · {context.sets || 1}×{context.reps || 10}
               {lifecycle === 'paused'
                 ? ' · Stay in camera view'
                 : lifecycle === 'starting'
                   ? ' · Starting…'
-                  : ' · Active'}
+                  : coachMuted
+                    ? ' · Coach muted'
+                    : ' · Active'}
             </p>
           </div>
-          <button
-            type="button"
-            className="shrink-0 min-h-10 px-3 sm:px-4 text-sm font-semibold rounded-lg bg-white/15 hover:bg-white/25"
-            aria-label="Exit AI session"
-            onClick={() => {
-              if (bestStatusRef.current !== 'completed' && saveStateRef.current !== 'saved') {
-                emitBoundary('workout_exit_request', { reason: 'user_exit' }, 'cancelled');
-              } else {
-                onClose?.();
-              }
-            }}
-          >
-            Exit
-          </button>
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {(lifecycle === 'active' || lifecycle === 'paused') && (
+              <button
+                type="button"
+                className="min-h-10 px-2.5 sm:px-3 text-xs sm:text-sm font-semibold rounded-lg bg-white/15 hover:bg-white/25"
+                aria-label={coachMuted ? 'Unmute coach speech' : 'Mute coach speech'}
+                aria-pressed={coachMuted}
+                title={coachMuted ? 'Unmute coach' : 'Mute coach'}
+                onClick={toggleCoachSpeech}
+              >
+                <FaIcon icon={coachMuted ? 'fa-volume-xmark' : 'fa-volume-high'} className="sm:mr-1.5" />
+                <span className="hidden sm:inline">{coachMuted ? 'Unmute' : 'Mute'}</span>
+              </button>
+            )}
+            <button
+              type="button"
+              className="min-h-10 px-3 sm:px-4 text-sm font-semibold rounded-lg bg-white/15 hover:bg-white/25"
+              aria-label="Exit AI session"
+              onClick={() => {
+                if (bestStatusRef.current !== 'completed' && saveStateRef.current !== 'saved') {
+                  emitBoundary('workout_exit_request', { reason: 'user_exit' }, 'cancelled');
+                } else {
+                  onClose?.();
+                }
+              }}
+            >
+              Exit
+            </button>
+          </div>
         </div>
       )}
 
@@ -405,7 +464,7 @@ export default function KinesteXExerciseSession({
                 </div>
                 <h2 className="text-xl font-bold text-slate-900">Saving session…</h2>
                 <p className="text-sm text-slate-600 mt-2">
-                  Please wait while we store your AI exercise result.
+                  Please wait while we store your AI-Guided Exercise result.
                 </p>
               </>
             )}
@@ -415,14 +474,12 @@ export default function KinesteXExerciseSession({
                 <div className="w-14 h-14 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center mx-auto mb-3">
                   <FaIcon icon="fa-check" className="text-xl" />
                 </div>
-                <h2 className="text-xl font-bold text-slate-900">Exercise Complete</h2>
+                <h2 className="text-xl font-bold text-slate-900">AI Workout Complete</h2>
                 <p className="text-sm text-slate-600 mt-2">
-                  Your AI-monitored exercise session was saved.
+                  Your AI Personal Trainer session was saved. Review objective performance below — this is not a medical diagnosis.
                 </p>
                 <div className="mt-4 text-left">
-                  {(persisted?.session?.movement_analysis?.available ||
-                    persisted?.session?.provider_session_id) &&
-                  persisted?.session ? (
+                  {persisted?.session?.movement_analysis?.available && persisted?.session ? (
                     <KinesteXMovementAnalysisReport
                       session={{
                         ...persisted.session,
@@ -437,6 +494,13 @@ export default function KinesteXExerciseSession({
                       title="Workout Overview"
                       emptyMessage="Performance metrics were not included in this session result."
                     />
+                  )}
+                  {(persisted?.session?.metrics?.mistakes != null ||
+                    persisted?.metrics?.mistakes != null) && (
+                    <p className="text-[11px] text-slate-500 mt-2 rounded-lg bg-slate-50 px-3 py-2">
+                      AI Exercise Feedback: mistake count above is from KinesteX session metrics only.
+                      It is not a clinical assessment.
+                    </p>
                   )}
                   {motionSaveState === 'uploading' && (
                     <p className="text-[11px] text-slate-500 mt-2">

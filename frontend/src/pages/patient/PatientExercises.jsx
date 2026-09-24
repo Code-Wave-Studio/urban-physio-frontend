@@ -4,6 +4,7 @@ import FaIcon from '../../components/FaIcon';
 import ExerciseBottomSheet from '../../components/exercise/ExerciseBottomSheet';
 import ExerciseInstructions from '../../components/exercise/ExerciseInstructions';
 import ExerciseMediaDisplay from '../../components/exercise/ExerciseMediaDisplay';
+import KinesteXAiExercisePrepBrief from '../../components/exercise/KinesteXAiExercisePrepBrief';
 import KinesteXExerciseSession from '../../components/exercise/KinesteXExerciseSession';
 import KinesteXPatientAiHistory from '../../components/exercise/KinesteXPatientAiHistory';
 import { exercisePrescriptions, kinestex } from '../../services/api';
@@ -232,7 +233,7 @@ export default function PatientExercises() {
           <div className="flex gap-1 overflow-x-auto pb-1">
             {[
               { key: 'today', label: 'Today', icon: 'fa-calendar-day' },
-              { key: 'ai-history', label: 'AI History', icon: 'fa-person-walking' },
+              { key: 'ai-history', label: 'My Progress', icon: 'fa-chart-line' },
             ].map((t) => (
               <button
                 key={t.key}
@@ -258,7 +259,7 @@ export default function PatientExercises() {
           <div className="flex gap-1 overflow-x-auto pb-1">
             {[
               { key: 'today', label: 'Today', icon: 'fa-calendar-day' },
-              { key: 'ai-history', label: 'AI History', icon: 'fa-person-walking' },
+              { key: 'ai-history', label: 'My Progress', icon: 'fa-chart-line' },
             ].map((t) => (
               <button
                 key={t.key}
@@ -355,7 +356,7 @@ export default function PatientExercises() {
                         disabled={!!aiSessionPayload || aiPreparing}
                         onClick={() => openAiPrep(nextExercise)}
                       >
-                        <FaIcon icon="fa-person-walking" className="mr-1" /> Start AI Monitoring
+                        <FaIcon icon="fa-person-walking" className="mr-1" /> Start AI-Guided Exercise
                       </button>
                     )}
                     <div className="flex flex-wrap gap-2">
@@ -376,9 +377,9 @@ export default function PatientExercises() {
               <div className="flex gap-1 overflow-x-auto pb-1 min-w-0 -mx-1 px-1">
                 {[
                   { key: 'today', label: 'Today', icon: 'fa-calendar-day' },
-                  { key: 'progress', label: 'Progress', icon: 'fa-chart-line' },
+                  { key: 'progress', label: 'HEP Progress', icon: 'fa-chart-simple' },
                   { key: 'history', label: 'History', icon: 'fa-clock-rotate-left' },
-                  { key: 'ai-history', label: 'AI History', icon: 'fa-person-walking' },
+                  { key: 'ai-history', label: 'My Progress', icon: 'fa-chart-line' },
                 ].map((t) => (
                   <button
                     key={t.key}
@@ -464,7 +465,7 @@ export default function PatientExercises() {
 
                           {ex.ai_monitoring_effective && (
                             <p className="text-xs text-teal-700 bg-teal-50/80 rounded-lg px-2.5 py-2 border border-teal-100">
-                              AI-Guided — camera, motion tracking, and live feedback on this device.
+                              AI Personal Trainer — camera, motion tracking, and live coaching on this device.
                             </p>
                           )}
 
@@ -480,7 +481,7 @@ export default function PatientExercises() {
                                 disabled={!!aiSessionPayload || aiPreparing}
                                 onClick={() => openAiPrep(ex)}
                               >
-                                <FaIcon icon="fa-person-walking" className="mr-1" /> Start AI Monitoring
+                                <FaIcon icon="fa-person-walking" className="mr-1" /> Start AI-Guided Exercise
                               </button>
                             )}
                             <div className="flex flex-wrap items-center gap-2">
@@ -564,7 +565,7 @@ export default function PatientExercises() {
               {tab === 'history' && (
                 <div className="glass-card !p-4 md:!p-5">
                   <p className="text-[11px] text-slate-500 mb-3">
-                    Manual HEP completions and skips. AI-monitored sessions are listed under AI History.
+                    Manual HEP completions and skips. AI-monitored sessions are listed under My Progress.
                   </p>
                   {!progress?.history?.length ? (
                     <p className="text-sm text-slate-500 text-center py-8">No manual HEP completions yet — mark an exercise complete or skipped to start tracking.</p>
@@ -627,7 +628,7 @@ export default function PatientExercises() {
                   openAiPrep(ex);
                 }}
               >
-                <FaIcon icon="fa-person-walking" className="mr-1" /> Start AI Monitoring
+                <FaIcon icon="fa-person-walking" className="mr-1" /> Start AI-Guided Exercise
               </button>
             )}
             {previewEx && previewEx.today_log?.status !== 'completed' && (
@@ -716,10 +717,10 @@ export default function PatientExercises() {
               <div className="rounded-xl bg-teal-50 border border-teal-100 px-3 py-2.5 text-sm text-teal-900">
                 <p className="font-semibold flex items-center gap-1.5">
                   <FaIcon icon="fa-person-walking" aria-hidden="true" />
-                  AI monitoring available
+                  AI Personal Trainer available
                 </p>
                 <p className="text-xs mt-1 text-teal-800/90 leading-relaxed">
-                  Camera and motion tracking will run on this device. Complete and Skip remain available after you exit.
+                  Camera and live coaching will run on this device for this prescribed exercise. Complete and Skip remain available after you exit.
                 </p>
               </div>
             ) : null}
@@ -826,15 +827,16 @@ export default function PatientExercises() {
         </form>
       </ExerciseBottomSheet>
 
-      {/* Phase 4 — AI preparation (before KinesteX SDK / camera) */}
+      {/* Pre-Exercise Setup (Req #8) — KinesteX prepare/camera only after Start AI Exercise */}
       <ExerciseBottomSheet
         open={!!aiPrepEx && !aiSessionPayload}
         onClose={() => {
           if (!aiPreparing) setAiPrepEx(null);
         }}
-        title="Prepare for AI Exercise"
-        subtitle={aiPrepEx?.exercise_name}
-        icon="fa-person-walking"
+        title="Pre-Exercise Setup"
+        subtitle={aiPrepEx ? aiPrepEx.exercise_name : 'Review guidance before AI'}
+        icon="fa-clipboard-list"
+        className="md:!max-w-3xl lg:!max-w-4xl"
         footer={
           <>
             <button
@@ -848,44 +850,15 @@ export default function PatientExercises() {
             <button
               type="button"
               className="btn-primary text-xs sm:text-sm"
-              disabled={aiPreparing}
+              disabled={aiPreparing || !aiPrepEx?.ai_monitoring_effective}
               onClick={continueAiSession}
             >
-              {aiPreparing ? 'Starting…' : 'Continue'}
+              {aiPreparing ? 'Starting…' : 'Start AI Exercise'}
             </button>
           </>
         }
       >
-        {aiPrepEx && (
-          <div className="space-y-4 text-sm text-slate-700">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Exercise</p>
-              <p className="font-semibold text-slate-900 mt-0.5">{aiPrepEx.exercise_name}</p>
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Target</p>
-              <p className="mt-0.5">
-                {aiPrepEx.sets || 1} sets × {aiPrepEx.reps || 10} reps
-                {aiPrepEx.hold_seconds ? ` · hold ${aiPrepEx.hold_seconds}s` : ''}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Camera</p>
-              <p className="mt-0.5">Required — your browser will ask for permission when the session starts.</p>
-            </div>
-            {(aiPrepEx.instructions || aiPrepEx.special_instructions) && (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Instructions</p>
-                <p className="mt-0.5 whitespace-pre-wrap text-slate-600">
-                  {aiPrepEx.special_instructions || aiPrepEx.instructions}
-                </p>
-              </div>
-            )}
-            <p className="text-xs text-slate-500 bg-slate-50 rounded-lg px-3 py-2">
-              Please position yourself so your full movement is visible. Mark Complete and Skip remain available after you exit.
-            </p>
-          </div>
-        )}
+        {aiPrepEx ? <KinesteXAiExercisePrepBrief exercise={aiPrepEx} /> : null}
       </ExerciseBottomSheet>
 
       {aiSessionPayload && (

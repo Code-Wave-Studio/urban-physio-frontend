@@ -37,7 +37,9 @@ function movementMessage(analysis) {
 export default function KinesteXMovementAnalysisReport({
   session,
   title = 'AI Movement Analysis',
+  metricsTitle = 'Performance',
   showReplayButton = true,
+  showMetrics = true,
 }) {
   const [replaySdk, setReplaySdk] = useState(null);
   const [replayLoading, setReplayLoading] = useState(false);
@@ -94,8 +96,8 @@ export default function KinesteXMovementAnalysisReport({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
-        <div className="lg:col-span-3 min-w-0 space-y-2">
+      <div className={`grid gap-4 items-start ${showMetrics ? 'grid-cols-1 lg:grid-cols-5' : 'grid-cols-1'}`}>
+        <div className={`${showMetrics ? 'lg:col-span-3' : ''} min-w-0 space-y-2`}>
           <p className="text-[10px] uppercase tracking-wide font-semibold text-slate-400">
             Movement / skeleton
           </p>
@@ -131,22 +133,24 @@ export default function KinesteXMovementAnalysisReport({
           )}
         </div>
 
-        <div className="lg:col-span-2 min-w-0 space-y-2">
-          <p className="text-[10px] uppercase tracking-wide font-semibold text-slate-400">Performance</p>
-          <KinesteXWorkoutOverview
-            metrics={session.metrics}
-            title="Performance"
-            emptyMessage="Performance metrics were not included in this session result."
-          />
-          {analysis?.status === 'upload_failed' ? (
-            <p className="text-[11px] text-amber-800 rounded-lg bg-amber-50 px-3 py-2">
-              Metrics may still be available even when movement recording failed to upload.
+        {showMetrics ? (
+          <div className="lg:col-span-2 min-w-0 space-y-2">
+            <p className="text-[10px] uppercase tracking-wide font-semibold text-slate-400">Performance</p>
+            <KinesteXWorkoutOverview
+              metrics={session.metrics}
+              title={metricsTitle}
+              emptyMessage="Performance metrics were not included in this session result."
+            />
+            {analysis?.status === 'upload_failed' ? (
+              <p className="text-[11px] text-amber-800 rounded-lg bg-amber-50 px-3 py-2">
+                Metrics may still be available even when movement recording failed to upload.
+              </p>
+            ) : null}
+            <p className="text-[10px] text-slate-400">
+              Objective KinesteX metrics only — AI Exercise Feedback from recorded session data, not a medical diagnosis.
             </p>
-          ) : null}
-          <p className="text-[10px] text-slate-400">
-            Objective KinesteX metrics only. This is not a medical diagnosis.
-          </p>
-        </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

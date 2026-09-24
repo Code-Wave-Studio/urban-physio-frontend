@@ -21,7 +21,7 @@ export const PATIENT_NAV = [
   { to: '/patient/exercises', label: 'My Rehab Plan', icon: 'fa-person-walking', section: 'health' },
   { to: '/patient/treatment-journey', label: 'Treatment Journey', icon: 'fa-notes-medical', section: 'health' },
   { to: '/patient/prescriptions', label: 'Prescription & Notes', icon: 'fa-file-prescription', section: 'health' },
-  { to: '/patient/progress', label: 'Progress', icon: 'fa-chart-line', section: 'health' },
+  { to: '/patient/progress', label: 'My Progress', icon: 'fa-chart-line', section: 'health' },
   { to: '/patient/reports', label: 'My Reports', icon: 'fa-file-medical', section: 'health' },
   { to: '/patient/documents', label: 'Documents', icon: 'fa-folder-tree', section: 'health' },
 
