@@ -4,10 +4,8 @@ import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import FaIcon from '../components/FaIcon';
-import SaveExerciseButton from '../components/exercise/SaveExerciseButton';
 import ExerciseDetailModal from '../components/exercise/ExerciseDetailModal';
-import ExerciseMediaDisplay from '../components/exercise/ExerciseMediaDisplay';
-import { parseMediaSource } from '../utils/mediaParser';
+import ExerciseGalleryCard from '../components/exercise/ExerciseGalleryCard';
 import { exercises } from '../services/api';
 import ManagedPageSeo from '../components/seo/ManagedPageSeo';
 import SeoBreadcrumbs from '../components/seo/SeoBreadcrumbs';
@@ -21,28 +19,6 @@ const BODY_AREAS = [
   { id: 'general', label: 'General', icon: 'fa-dumbbell' },
 ];
 
-const DIFFICULTY_STYLES = {
-  beginner: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-  intermediate: 'bg-amber-100 text-amber-800 border-amber-200',
-  advanced: 'bg-red-100 text-red-800 border-red-200',
-};
-
-const AREA_GRADIENT = {
-  back: 'from-violet-500/20 to-purple-500/10',
-  neck: 'from-sky-500/20 to-blue-500/10',
-  knee: 'from-orange-500/20 to-amber-500/10',
-  shoulder: 'from-rose-500/20 to-pink-500/10',
-  general: 'from-teal-500/20 to-emerald-500/10',
-};
-
-const BAR_GRADIENT = {
-  back: 'from-violet-500 to-purple-500',
-  neck: 'from-sky-500 to-blue-500',
-  knee: 'from-orange-500 to-amber-500',
-  shoulder: 'from-rose-500 to-pink-500',
-  general: 'from-teal-500 to-emerald-500',
-};
-
 const FALLBACK = [
   { id: 1, name: 'Ankle Pumps', slug: 'ankle-pumps', body_area: 'general', difficulty: 'beginner', video_url: 'https://www.youtube.com/watch?v=1u-iXG6u_qA', instructions: 'Lie or sit with legs extended. Point your toes away from you, then flex them back toward your body in a rhythmic pumping motion to boost circulation.', default_sets: 3, default_reps: '15', default_hold_seconds: 2, equipment: 'Mat' },
   { id: 2, name: 'Cat-Cow Stretch', slug: 'cat-cow-stretch', body_area: 'back', difficulty: 'beginner', video_url: 'https://www.youtube.com/watch?v=inpok4MKVLM', instructions: 'Start on hands and knees. Arch your back up (cat), then drop belly down (cow). Move slowly with your breath.', default_sets: 2, default_reps: '10', equipment: 'Mat' },
@@ -52,7 +28,6 @@ const FALLBACK = [
   { id: 6, name: 'Glute Bridge', slug: 'glute-bridge', body_area: 'back', difficulty: 'intermediate', video_url: 'https://www.youtube.com/watch?v=4BOTvaRaDjI', instructions: 'Lie on back, knees bent. Lift hips until body forms straight line.', default_sets: 3, default_reps: '15', default_hold_seconds: 2, equipment: 'Mat' },
   { id: 7, name: 'Heel Raises', slug: 'heel-raises', body_area: 'general', difficulty: 'beginner', video_url: 'https://www.youtube.com/watch?v=3R-zOQ2q2eM', instructions: 'Stand holding support. Rise onto toes, hold, lower slowly.', default_sets: 3, default_reps: '15', default_hold_seconds: 2, equipment: 'Wall support' },
 ];
-
 
 export default function ExerciseLibrary() {
   const [list, setList] = useState([]);
@@ -87,7 +62,6 @@ export default function ExerciseLibrary() {
       />
       <Navbar />
 
-      {/* Hero */}
       <section className="relative pt-8 pb-10 md:pt-12 md:pb-14 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-teal-700 via-emerald-700 to-slate-900" />
         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.4),transparent_50%)]" />
@@ -122,7 +96,7 @@ export default function ExerciseLibrary() {
             transition={{ delay: 0.2 }}
             className="mt-3 text-sm sm:text-lg text-teal-100/95 max-w-2xl mx-auto leading-relaxed"
           >
-            Evidence-based physiotherapy exercises with sets, reps, and clear instructions — prescribed by experts, designed for home recovery.
+            Visual exercise gallery with demonstrations, clear instructions, and sets &amp; reps — designed for home recovery.
           </motion.p>
           {!loading && (
             <motion.p
@@ -138,7 +112,6 @@ export default function ExerciseLibrary() {
       </section>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 -mt-6 relative z-[2] pb-16">
-        {/* Filters */}
         <div className="glass-strong rounded-2xl p-4 md:p-5 shadow-lg border border-white/80 mb-8">
           <div className="relative mb-4">
             <FaIcon icon="fa-magnifying-glass" className="absolute left-4 top-1/2 -translate-y-1/2 text-teal-600" />
@@ -147,15 +120,18 @@ export default function ExerciseLibrary() {
               placeholder="Search by name, body area, or keyword…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              aria-label="Search exercises"
             />
           </div>
-          <div className="scroll-x-hide flex flex-nowrap gap-2 pb-1 -mx-1 px-1">
+          <div className="scroll-x-hide flex flex-nowrap gap-2 pb-1 -mx-1 px-1" role="tablist" aria-label="Filter by body area">
             {BODY_AREAS.map((a) => (
               <button
                 key={a.id}
                 type="button"
+                role="tab"
+                aria-selected={bodyArea === a.id}
                 onClick={() => setBodyArea(a.id)}
-                className={`shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                className={`shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all min-h-10 ${
                   bodyArea === a.id
                     ? 'bg-teal-600 text-white shadow-md shadow-teal-600/30'
                     : 'bg-white/80 text-slate-600 border border-slate-200 hover:border-teal-300 hover:text-teal-700'
@@ -169,9 +145,16 @@ export default function ExerciseLibrary() {
         </div>
 
         {loading ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="glass-card h-52 animate-pulse bg-white/50" />
+          <div className="exercise-gallery-grid">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <div key={i} className="glass-card !p-0 overflow-hidden animate-pulse">
+                <div className="exercise-gallery-media bg-slate-200/80" />
+                <div className="p-4 space-y-3">
+                  <div className="h-3 w-16 bg-slate-200 rounded" />
+                  <div className="h-5 w-3/4 bg-slate-200 rounded" />
+                  <div className="h-4 w-24 bg-slate-200 rounded" />
+                </div>
+              </div>
             ))}
           </div>
         ) : filtered.length === 0 ? (
@@ -183,65 +166,18 @@ export default function ExerciseLibrary() {
             </button>
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {filtered.map((ex, idx) => {
-              const parsedMedia = parseMediaSource(ex);
-              const hasMedia = Boolean(parsedMedia.type);
-              return (
-                <motion.article
-                  key={ex.id || ex.slug}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.04 }}
-                  className="group glass-card !p-0 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-white/70 flex flex-col"
-                  onClick={() => setSelected(ex)}
-                >
-                  {/* Media thumbnail (edge-to-edge) OR original teal/gradient accent bar fallback */}
-                  {hasMedia ? (
-                    <div className="relative h-[140px] w-full shrink-0 overflow-hidden rounded-t-xl md:rounded-t-2xl rounded-b-none bg-slate-950">
-                      <ExerciseMediaDisplay
-                        exercise={ex}
-                        title={ex.name}
-                        variant="thumbnail"
-                        className="absolute inset-0 w-full h-full object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <div className={`h-2 shrink-0 bg-gradient-to-r ${BAR_GRADIENT[ex.body_area] || BAR_GRADIENT.general}`} />
-                  )}
-                  <div className="p-5 flex-1 flex flex-col justify-between">
-                    <div className="flex justify-between items-start gap-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 capitalize">{ex.body_area}</span>
-                      <div className="flex items-center gap-2">
-                        <SaveExerciseButton exercise={ex} stopPropagation />
-                        <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full border capitalize min-h-[22px] ${DIFFICULTY_STYLES[ex.difficulty] || DIFFICULTY_STYLES.beginner}`}>
-                          {ex.difficulty || 'beginner'}
-                        </span>
-                      </div>
-                    </div>
-                    <h3 className="font-bold text-lg text-slate-800 mt-2 group-hover:text-teal-700 transition-colors">{ex.name}</h3>
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-teal-50 text-teal-800">
-                        {ex.default_sets} × {ex.default_reps}
-                      </span>
-                      {ex.equipment && (
-                        <span className="text-xs px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600">{ex.equipment}</span>
-                      )}
-                    </div>
-                    <p className="text-sm text-slate-600 mt-3 line-clamp-2 leading-relaxed">{ex.instructions}</p>
-                    <p className="text-sm font-semibold text-teal-600 mt-4 inline-flex items-center gap-1 group-hover:gap-2 transition-all">
-                      View instructions
-                      <FaIcon icon="fa-arrow-right" className="text-xs" />
-                    </p>
-                  </div>
-                </motion.article>
-            );
-          })}
-
+          <div className="exercise-gallery-grid">
+            {filtered.map((ex, idx) => (
+              <ExerciseGalleryCard
+                key={ex.id || ex.slug}
+                exercise={ex}
+                index={idx}
+                onOpen={setSelected}
+              />
+            ))}
           </div>
         )}
 
-        {/* CTA */}
         <section className="mt-12 md:mt-16 rounded-2xl md:rounded-3xl overflow-hidden relative">
           <div className="absolute inset-0 bg-gradient-to-r from-teal-600 to-emerald-600" />
           <div className="relative p-8 md:p-12 text-center text-white">
@@ -249,7 +185,7 @@ export default function ExerciseLibrary() {
             <p className="mt-2 text-teal-100 max-w-lg mx-auto text-sm md:text-base">
               Our physiotherapists create custom exercise prescriptions tailored to your condition.
             </p>
-            <Link to="/book" className="inline-flex items-center gap-2 mt-6 bg-white text-teal-700 font-bold px-6 py-3 rounded-xl hover:bg-teal-50 transition">
+            <Link to="/book" className="inline-flex items-center gap-2 mt-6 bg-white text-teal-700 font-bold px-6 py-3 rounded-xl hover:bg-teal-50 transition min-h-11">
               Book consultation
               <FaIcon icon="fa-calendar-check" />
             </Link>

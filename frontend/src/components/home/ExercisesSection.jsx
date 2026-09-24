@@ -3,30 +3,17 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import FaIcon from '../FaIcon';
 import ExerciseDetailModal from '../exercise/ExerciseDetailModal';
+import ExerciseGalleryCard from '../exercise/ExerciseGalleryCard';
 import { exercises } from '../../services/api';
 
 const FALLBACK = [
-  { id: 1, name: 'Cat-Cow Stretch', slug: 'cat-cow-stretch', body_area: 'back', difficulty: 'beginner', default_sets: 2, default_reps: '10', instructions: 'Arch and round your spine slowly with breath.' },
-  { id: 2, name: 'Knee Extension', slug: 'knee-extension', body_area: 'knee', difficulty: 'beginner', default_sets: 3, default_reps: '12', instructions: 'Straighten knee fully while seated.' },
-  { id: 3, name: 'Shoulder Pendulum', slug: 'shoulder-pendulum', body_area: 'shoulder', difficulty: 'beginner', default_sets: 2, default_reps: '10', instructions: 'Gentle circular swings with relaxed arm.' },
-  { id: 4, name: 'Neck Isometrics', slug: 'neck-isometrics', body_area: 'neck', difficulty: 'beginner', default_sets: 3, default_reps: '5', instructions: 'Push head into hand without moving.' },
-  { id: 5, name: 'Glute Bridge', slug: 'glute-bridge', body_area: 'back', difficulty: 'intermediate', default_sets: 3, default_reps: '15', instructions: 'Lift hips and squeeze glutes at top.' },
-  { id: 6, name: 'Heel Raises', slug: 'heel-raises', body_area: 'general', difficulty: 'beginner', default_sets: 3, default_reps: '15', instructions: 'Rise onto toes, hold, lower slowly.' },
+  { id: 1, name: 'Cat-Cow Stretch', slug: 'cat-cow-stretch', body_area: 'back', difficulty: 'beginner', default_sets: 2, default_reps: '10', instructions: 'Arch and round your spine slowly with breath.', video_url: 'https://www.youtube.com/watch?v=inpok4MKVLM' },
+  { id: 2, name: 'Knee Extension', slug: 'knee-extension', body_area: 'knee', difficulty: 'beginner', default_sets: 3, default_reps: '12', instructions: 'Straighten knee fully while seated.', video_url: 'https://www.youtube.com/watch?v=1xN5hL1S_-s' },
+  { id: 3, name: 'Shoulder Pendulum', slug: 'shoulder-pendulum', body_area: 'shoulder', difficulty: 'beginner', default_sets: 2, default_reps: '10', instructions: 'Gentle circular swings with relaxed arm.', video_url: 'https://www.youtube.com/watch?v=n-WzWwB6jns' },
+  { id: 4, name: 'Neck Isometrics', slug: 'neck-isometrics', body_area: 'neck', difficulty: 'beginner', default_sets: 3, default_reps: '5', instructions: 'Push head into hand without moving.', video_url: 'https://www.youtube.com/watch?v=UqQ1r623G6E' },
+  { id: 5, name: 'Glute Bridge', slug: 'glute-bridge', body_area: 'back', difficulty: 'intermediate', default_sets: 3, default_reps: '15', instructions: 'Lift hips and squeeze glutes at top.', video_url: 'https://www.youtube.com/watch?v=4BOTvaRaDjI' },
+  { id: 6, name: 'Heel Raises', slug: 'heel-raises', body_area: 'general', difficulty: 'beginner', default_sets: 3, default_reps: '15', instructions: 'Rise onto toes, hold, lower slowly.', video_url: 'https://www.youtube.com/watch?v=3R-zOQ2q2eM' },
 ];
-
-const DIFFICULTY = {
-  beginner: 'bg-emerald-100 text-emerald-800',
-  intermediate: 'bg-amber-100 text-amber-800',
-  advanced: 'bg-red-100 text-red-800',
-};
-
-const AREA_ICON = {
-  back: 'fa-bone',
-  knee: 'fa-person-walking',
-  shoulder: 'fa-hand',
-  neck: 'fa-head-side-virus',
-  general: 'fa-dumbbell',
-};
 
 export default function ExercisesSection() {
   const [list, setList] = useState([]);
@@ -65,51 +52,30 @@ export default function ExercisesSection() {
               Exercise Library
             </h2>
             <p className="text-slate-600 text-sm mt-2 max-w-xl">
-              Doctor-prescribed exercises with clear sets, reps, and step-by-step instructions for faster recovery.
+              Visual exercise gallery with demonstrations, clear sets &amp; reps, and step-by-step instructions.
             </p>
           </motion.div>
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="exercise-gallery-grid">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="glass-card h-36 animate-pulse bg-white/40" />
+              <div key={i} className="glass-card !p-0 overflow-hidden animate-pulse">
+                <div className="exercise-gallery-media bg-slate-200/80" />
+                <div className="p-4 h-24" />
+              </div>
             ))}
           </div>
         ) : (
-          <div className="mobile-scroll-x md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-5 stagger-children">
+          <div className="exercise-gallery-grid stagger-children">
             {display.map((ex, idx) => (
-              <motion.article
+              <ExerciseGalleryCard
                 key={ex.id || ex.slug}
-                role="button"
-                tabIndex={0}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.35, delay: idx * 0.05 }}
-                onClick={() => setSelected(ex)}
-                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setSelected(ex)}
-                className="mobile-scroll-item group glass-card p-4 md:p-5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 border border-white/60 cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-500"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-500/15 to-emerald-500/15 flex items-center justify-center text-teal-700 shrink-0">
-                    <FaIcon icon={AREA_ICON[ex.body_area] || 'fa-dumbbell'} className="text-lg" />
-                  </div>
-                  <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full capitalize ${DIFFICULTY[ex.difficulty] || DIFFICULTY.beginner}`}>
-                    {ex.difficulty}
-                  </span>
-                </div>
-                <h3 className="font-bold text-slate-800 mt-3 text-base md:text-lg group-hover:text-teal-700 transition-colors">
-                  {ex.name}
-                </h3>
-                <p className="text-xs text-slate-500 capitalize mt-0.5">{ex.body_area || 'general'} · rehab</p>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700">
-                    {ex.default_sets} sets × {ex.default_reps} reps
-                  </span>
-                </div>
-                <p className="text-xs text-slate-600 mt-3 line-clamp-2 leading-relaxed">{ex.instructions}</p>
-              </motion.article>
+                exercise={ex}
+                index={idx}
+                onOpen={setSelected}
+                showSave={false}
+              />
             ))}
           </div>
         )}
@@ -117,7 +83,7 @@ export default function ExercisesSection() {
         <div className="text-center mt-8 md:mt-10">
           <Link
             to="/exercises"
-            className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-teal-600 to-emerald-600 text-white font-bold px-6 py-3 md:px-8 md:py-3.5 rounded-xl text-sm md:text-base shadow-lg shadow-teal-600/25 hover:shadow-teal-600/40 hover:scale-[1.02] transition-all"
+            className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-teal-600 to-emerald-600 text-white font-bold px-6 py-3 md:px-8 md:py-3.5 rounded-xl text-sm md:text-base shadow-lg shadow-teal-600/25 hover:shadow-teal-600/40 hover:scale-[1.02] transition-all min-h-11"
           >
             View More Exercises
             <FaIcon icon="fa-arrow-right" />

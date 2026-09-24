@@ -7,8 +7,11 @@ import ManagedPageSeo from '../components/seo/ManagedPageSeo';
 import SeoBreadcrumbs from '../components/seo/SeoBreadcrumbs';
 import { breadcrumbSchema, medicalWebPageSchema } from '../components/seo/PageMeta';
 import SaveExerciseButton from '../components/exercise/SaveExerciseButton';
+import ExerciseMediaDisplay from '../components/exercise/ExerciseMediaDisplay';
+import ExerciseInstructions from '../components/exercise/ExerciseInstructions';
 import { exercises } from '../services/api';
 import { bookExerciseUrl } from '../utils/bookUrl';
+import { hasExerciseMedia } from '../utils/mediaParser';
 
 const DIFFICULTY_STYLES = {
   beginner: 'bg-emerald-100 text-emerald-800 border-emerald-200',
@@ -86,8 +89,11 @@ export default function ExerciseDetail() {
     breadcrumbSchema(crumbs),
   ].filter(Boolean);
 
+  const hasMedia = hasExerciseMedia(item);
+  const aiReady = Boolean(item.kinestex?.ai_supported && item.kinestex?.mapped);
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col overflow-x-hidden bg-gradient-to-b from-slate-50 via-white to-teal-50/20">
       <Navbar />
       <ManagedPageSeo
         pathOverride={canonical}
@@ -98,9 +104,9 @@ export default function ExerciseDetail() {
       />
 
       <section
-        className={`bg-gradient-to-br ${AREA_GRADIENT[item.body_area] || AREA_GRADIENT.general} border-b border-white/60 py-8 md:py-12`}
+        className={`bg-gradient-to-br ${AREA_GRADIENT[item.body_area] || AREA_GRADIENT.general} border-b border-white/60 py-6 md:py-10`}
       >
-        <div className="max-w-4xl mx-auto px-4">
+        <div className="max-w-6xl mx-auto px-4">
           <SeoBreadcrumbs tone="onLight" items={crumbs} />
           <div className="flex flex-wrap items-center gap-3 mb-3">
             <span className="text-xs font-bold uppercase tracking-wider text-teal-700 capitalize">
@@ -113,9 +119,9 @@ export default function ExerciseDetail() {
             >
               {item.difficulty || 'beginner'}
             </span>
-            {item.kinestex?.ai_supported && item.kinestex?.mapped && (
+            {aiReady && (
               <span className="text-xs font-bold px-2.5 py-1 rounded-full border border-teal-200 bg-teal-50 text-teal-800">
-                AI-ready exercise
+                AI-Guided when prescribed
               </span>
             )}
           </div>
@@ -123,80 +129,109 @@ export default function ExerciseDetail() {
         </div>
       </section>
 
-      <div className="max-w-4xl mx-auto px-4 py-8 md:py-12 flex-1 w-full space-y-6">
-        {item.image_url && (
-          <img
-            src={item.image_url}
-            alt={`${item.name} physiotherapy exercise`}
-            className="w-full max-h-96 object-cover rounded-2xl"
-          />
-        )}
-
-        <div className="grid grid-cols-3 gap-3">
-          <div className="text-center p-4 rounded-xl bg-slate-50 border border-slate-100">
-            <p className="text-xl font-bold text-slate-800">{item.default_sets ?? '—'}</p>
-            <p className="text-[10px] uppercase text-slate-500 font-semibold">Sets</p>
+      <div className="max-w-6xl mx-auto px-4 py-8 md:py-12 flex-1 w-full">
+        <div className="grid lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+          {/* LEFT — demonstration */}
+          <div className="lg:col-span-5 xl:col-span-4 space-y-4 lg:sticky lg:top-24">
+            {hasMedia ? (
+              <ExerciseMediaDisplay
+                exercise={item}
+                title={item.name}
+                variant="player"
+                layout="portrait"
+              />
+            ) : item.image_url ? (
+              <img
+                src={item.image_url}
+                alt={`${item.name} physiotherapy exercise`}
+                className="w-full aspect-[3/4] max-h-[min(72vh,640px)] object-contain rounded-2xl bg-slate-900"
+              />
+            ) : (
+              <div className="w-full aspect-[3/4] max-h-[min(72vh,640px)] rounded-2xl bg-gradient-to-br from-teal-600 to-emerald-700 flex items-center justify-center text-white">
+                <FaIcon icon="fa-dumbbell" className="text-5xl opacity-90" aria-hidden="true" />
+              </div>
+            )}
           </div>
-          <div className="text-center p-4 rounded-xl bg-slate-50 border border-slate-100">
-            <p className="text-xl font-bold text-slate-800">{item.default_reps ?? '—'}</p>
-            <p className="text-[10px] uppercase text-slate-500 font-semibold">Reps</p>
-          </div>
-          <div className="text-center p-4 rounded-xl bg-slate-50 border border-slate-100">
-            <p className="text-xl font-bold text-slate-800">{item.default_hold_seconds || '—'}</p>
-            <p className="text-[10px] uppercase text-slate-500 font-semibold">Hold (s)</p>
-          </div>
-        </div>
 
-        {item.equipment && (
-          <p className="text-sm text-slate-600 flex items-center gap-2">
-            <FaIcon icon="fa-toolbox" className="text-teal-600" />
-            Equipment: <span className="font-semibold text-slate-800">{item.equipment}</span>
-          </p>
-        )}
+          {/* RIGHT — instructions & actions */}
+          <div className="lg:col-span-7 xl:col-span-8 space-y-6 min-w-0">
+            {item.instructions && (
+              <p className="text-slate-600 text-sm md:text-base leading-relaxed line-clamp-4 md:line-clamp-none">
+                {String(item.instructions).split(/\r?\n/)[0]}
+              </p>
+            )}
 
-        <div className="glass-card">
-          <h2 className="font-semibold text-lg mb-3 flex items-center gap-2 text-teal-700">
-            <FaIcon icon="fa-list-ol" />
-            Instructions
-          </h2>
-          <p className="text-slate-600 text-sm md:text-base leading-relaxed whitespace-pre-line">
-            {item.instructions || 'Open the exercise library for full instructions.'}
-          </p>
-        </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="text-center p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <p className="text-xl font-bold text-slate-800">{item.default_sets ?? '—'}</p>
+                <p className="text-[10px] uppercase text-slate-500 font-semibold">Sets</p>
+              </div>
+              <div className="text-center p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <p className="text-xl font-bold text-slate-800">{item.default_reps ?? '—'}</p>
+                <p className="text-[10px] uppercase text-slate-500 font-semibold">Reps</p>
+              </div>
+              <div className="text-center p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <p className="text-xl font-bold text-slate-800">{item.default_hold_seconds || '—'}</p>
+                <p className="text-[10px] uppercase text-slate-500 font-semibold">Hold (s)</p>
+              </div>
+            </div>
 
-        {item.video_url && (
-          <div className="glass-card">
-            <h2 className="font-semibold text-lg mb-3 flex items-center gap-2 text-teal-700">
-              <FaIcon icon="fa-circle-play" />
-              Video
-            </h2>
-            <a
-              href={item.video_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary-600 hover:underline break-all"
-            >
-              Watch demonstration
-            </a>
-          </div>
-        )}
+            {item.equipment && (
+              <p className="text-sm text-slate-600 flex items-center gap-2">
+                <FaIcon icon="fa-toolbox" className="text-teal-600" aria-hidden="true" />
+                Equipment: <span className="font-semibold text-slate-800">{item.equipment}</span>
+              </p>
+            )}
 
-        <div className="glass-strong rounded-2xl p-6 md:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h3 className="font-bold text-lg text-slate-800">Need personalised guidance?</h3>
-            <p className="text-slate-600 text-sm mt-1">
-              Book a verified physiotherapist for a tailored exercise program.
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+            <div className="glass-card">
+              <ExerciseInstructions
+                steps={item.steps}
+                instructions={item.instructions}
+              />
+            </div>
+
+            {item.precautions && (
+              <div className="rounded-xl bg-amber-50 border border-amber-100 px-4 py-3 text-sm text-amber-900">
+                <FaIcon icon="fa-triangle-exclamation" className="mr-1.5" aria-hidden="true" />
+                {item.precautions}
+              </div>
+            )}
+
+            {aiReady && (
+              <div className="rounded-xl bg-teal-50 border border-teal-100 px-4 py-3 text-sm text-teal-900">
+                <p className="font-semibold">AI monitoring available when prescribed</p>
+                <p className="mt-1 text-teal-800/90 text-xs leading-relaxed">
+                  When your physiotherapist assigns this exercise with AI monitoring, you can start guided sessions from My Rehab Plan.
+                </p>
+              </div>
+            )}
+
+            <div className="glass-strong rounded-2xl p-6 md:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 className="font-bold text-lg text-slate-800">Need personalised guidance?</h3>
+                <p className="text-slate-600 text-sm mt-1">
+                  Book a verified physiotherapist for a tailored exercise program.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+                <Link
+                  to={bookExerciseUrl(item)}
+                  className="btn-primary text-center inline-flex items-center justify-center gap-2 min-h-11"
+                >
+                  <FaIcon icon="fa-calendar-check" />
+                  Book Appointment
+                </Link>
+                <SaveExerciseButton exercise={item} compact={false} />
+              </div>
+            </div>
+
             <Link
-              to={bookExerciseUrl(item)}
-              className="btn-primary text-center inline-flex items-center justify-center gap-2"
+              to="/exercises"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-teal-700 hover:text-teal-800"
             >
-              <FaIcon icon="fa-calendar-check" />
-              Book Appointment
+              <FaIcon icon="fa-arrow-left" aria-hidden="true" />
+              Back to Exercise Library
             </Link>
-            <SaveExerciseButton exercise={item} compact={false} />
           </div>
         </div>
       </div>

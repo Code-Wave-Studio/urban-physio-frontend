@@ -186,7 +186,7 @@ export function parseMediaSource(exerciseOrUrl) {
       type: 'video',
       url: resolved,
       embedUrl: null,
-      thumbnailUrl: null,
+      thumbnailUrl: fallbackImageUrl ? (resolveMediaUrl(fallbackImageUrl) || fallbackImageUrl) : null,
       videoId: null,
       rawUrl: targetUrl,
     };

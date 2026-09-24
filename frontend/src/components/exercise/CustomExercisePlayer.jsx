@@ -11,17 +11,25 @@ function formatTime(seconds) {
 
 const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
+const ASPECT_FRAME = {
+  landscape: 'aspect-video',
+  portrait: 'aspect-[3/4] max-h-[min(72vh,640px)] mx-auto',
+};
+
 export default function CustomExercisePlayer({
   exercise,
   mediaUrl,
   title = '',
   className = '',
+  layout = 'landscape',
 }) {
   const containerRef = useRef(null);
   const videoRef = useRef(null);
 
   const media = useMemo(() => parseMediaSource(exercise || mediaUrl), [exercise, mediaUrl]);
   const label = title || (exercise && (exercise.name || exercise.exercise_name)) || 'Exercise Video';
+  const isPortrait = layout === 'portrait';
+  const frameClass = ASPECT_FRAME[isPortrait ? 'portrait' : 'landscape'];
 
   // Custom HTML5 Player Controls State for Uploaded Videos
   const [isPlaying, setIsPlaying] = useState(false);
@@ -34,12 +42,30 @@ export default function CustomExercisePlayer({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPip, setIsPip] = useState(false);
   const [iframeError, setIframeError] = useState(false);
+  const [ytStarted, setYtStarted] = useState(false);
 
-  // Standard YouTube Embed URL with default controls
+  // Reset click-to-play when switching exercises
+  useEffect(() => {
+    setYtStarted(false);
+    setIframeError(false);
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+  }, [media.url, media.videoId, media.type]);
+
+  // Standard YouTube Embed — start muted only after explicit play in portrait (gallery) mode
   const youtubeEmbedUrl = useMemo(() => {
     if (media.type !== 'youtube' || !media.videoId) return null;
-    return `https://www.youtube.com/embed/${media.videoId}?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1`;
-  }, [media]);
+    if (isPortrait && !ytStarted) return null;
+    const params = new URLSearchParams({
+      autoplay: '1',
+      controls: '1',
+      rel: '0',
+      modestbranding: '1',
+      playsinline: '1',
+    });
+    return `https://www.youtube.com/embed/${media.videoId}?${params.toString()}`;
+  }, [media, isPortrait, ytStarted]);
 
   // Track HTML5 video progress & state
   useEffect(() => {
@@ -156,7 +182,7 @@ export default function CustomExercisePlayer({
   // Fallback for static image or GIF
   if (media.type === 'image') {
     return (
-      <div className={`w-full aspect-video rounded-2xl overflow-hidden bg-slate-950 border border-slate-200/80 shadow-md relative ${className}`}>
+      <div className={`w-full ${frameClass} rounded-2xl overflow-hidden bg-slate-950 border border-slate-200/80 shadow-md relative ${className}`}>
         <img src={media.url} alt={label} className="w-full h-full object-contain bg-slate-900" />
         <div className="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-full text-[11px] font-semibold text-teal-300 flex items-center gap-1.5 border border-slate-700/50">
           <FaIcon icon="fa-image" />
@@ -166,22 +192,47 @@ export default function CustomExercisePlayer({
     );
   }
 
-  // SOURCE 1: YouTube Embed with Standard Controls
+  // SOURCE 1: YouTube Embed — portrait uses letterboxed 16:9 inside a vertical frame (no aggressive crop)
   if (media.type === 'youtube') {
     return (
-      <div className={`w-full aspect-video rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-xl relative ${className}`}>
+      <div className={`w-full ${frameClass} rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-xl relative flex items-center justify-center ${className}`}>
+        {isPortrait && !ytStarted && !iframeError && (
+          <button
+            type="button"
+            className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-slate-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-400"
+            onClick={() => setYtStarted(true)}
+            aria-label={`Play demonstration for ${label}`}
+          >
+            {media.thumbnailUrl ? (
+              <img
+                src={media.thumbnailUrl}
+                alt=""
+                className="absolute inset-0 w-full h-full object-contain opacity-80"
+                loading="lazy"
+              />
+            ) : null}
+            <span className="relative z-[1] w-14 h-14 rounded-full bg-teal-600/95 text-white flex items-center justify-center shadow-lg">
+              <FaIcon icon="fa-play" className="text-xl ml-1" aria-hidden="true" />
+            </span>
+            <span className="relative z-[1] text-xs font-semibold text-white/90 bg-black/50 px-3 py-1 rounded-full">
+              Play demonstration
+            </span>
+          </button>
+        )}
         {youtubeEmbedUrl && !iframeError && (
-          <iframe
-            src={youtubeEmbedUrl}
-            title={label}
-            className="w-full h-full border-0"
-            allow="autoplay; encrypted-media; picture-in-picture; accelerometer; clipboard-write; gyroscope"
-            allowFullScreen
-            onError={() => setIframeError(true)}
-          />
+          <div className={isPortrait ? 'w-full aspect-video max-h-full' : 'w-full h-full'}>
+            <iframe
+              src={youtubeEmbedUrl}
+              title={label}
+              className="w-full h-full border-0"
+              allow="autoplay; encrypted-media; picture-in-picture; accelerometer; clipboard-write; gyroscope"
+              allowFullScreen
+              onError={() => setIframeError(true)}
+            />
+          </div>
         )}
         {iframeError && media.thumbnailUrl && (
-          <img src={media.thumbnailUrl} alt={label} className="w-full h-full object-cover" />
+          <img src={media.thumbnailUrl} alt={label} className="w-full h-full object-contain" />
         )}
       </div>
     );
@@ -193,20 +244,21 @@ export default function CustomExercisePlayer({
       ref={containerRef}
       className={`w-full flex flex-col rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 shadow-2xl relative ${className}`}
     >
-      {/* Video Box Container */}
-      <div className="relative w-full aspect-video bg-black flex items-center justify-center overflow-hidden group">
+      {/* Video Box — portrait uses object-contain so movement stays visible */}
+      <div className={`relative w-full ${frameClass} bg-black flex items-center justify-center overflow-hidden group`}>
         {/* Top Floating Badge */}
         <div className="absolute top-3 left-3 z-20 bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-full text-[11px] font-semibold text-teal-300 flex items-center gap-1.5 border border-slate-700/60 shadow-md pointer-events-none">
           <FaIcon icon="fa-file-video" className="text-teal-400" />
-          <span>Uploaded Video</span>
+          <span>Exercise video</span>
         </div>
 
         <video
           ref={videoRef}
           src={media.url}
-          autoPlay
+          poster={media.thumbnailUrl || undefined}
+          autoPlay={!isPortrait}
           loop
-          muted={isMuted}
+          muted={isMuted || isPortrait}
           playsInline
           controls={false}
           controlsList="nodownload noplaybackrate"
@@ -221,7 +273,7 @@ export default function CustomExercisePlayer({
             type="button"
             onClick={togglePlay}
             className="absolute inset-0 m-auto w-14 h-14 rounded-full bg-teal-600/90 hover:bg-teal-500 text-white flex items-center justify-center shadow-lg transition-transform transform hover:scale-110 active:scale-95"
-            aria-label="Play Video"
+            aria-label={`Play demonstration for ${label}`}
           >
             <FaIcon icon="fa-play" className="text-xl ml-1" />
           </button>

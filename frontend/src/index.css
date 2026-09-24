@@ -5286,6 +5286,25 @@ html {
       @apply text-primary-600;
     }
   }
+
+  /* Exercise Library gallery — portrait-first cards, responsive columns */
+  .exercise-gallery-grid {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4 md:gap-6;
+  }
+
+  .exercise-gallery-media {
+    @apply aspect-[3/4] w-full;
+  }
+
+  .exercise-detail-media {
+    @apply w-full max-w-md mx-auto;
+  }
+
+  @media (max-width: 374px) {
+    .exercise-gallery-media {
+      aspect-ratio: 4 / 5;
+    }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

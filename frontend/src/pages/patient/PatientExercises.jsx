@@ -2,10 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../../components/FaIcon';
 import ExerciseBottomSheet from '../../components/exercise/ExerciseBottomSheet';
+import ExerciseInstructions from '../../components/exercise/ExerciseInstructions';
+import ExerciseMediaDisplay from '../../components/exercise/ExerciseMediaDisplay';
 import KinesteXExerciseSession from '../../components/exercise/KinesteXExerciseSession';
 import KinesteXPatientAiHistory from '../../components/exercise/KinesteXPatientAiHistory';
 import { exercisePrescriptions, kinestex } from '../../services/api';
 import { PATIENT_NAV } from '../../constants/patientNav';
+import { hasExerciseMedia } from '../../utils/mediaParser';
 import toast from 'react-hot-toast';
 
 function ProgressBar({ percent = 0, className = '' }) {
@@ -15,12 +18,6 @@ function ProgressBar({ percent = 0, className = '' }) {
       <div className="h-full rounded-full bg-teal-500 transition-all duration-500" style={{ width: `${p}%` }} />
     </div>
   );
-}
-
-function youtubeEmbed(url) {
-  if (!url) return null;
-  const m = String(url).match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{6,})/);
-  return m ? `https://www.youtube.com/embed/${m[1]}` : null;
 }
 
 export default function PatientExercises() {
@@ -398,27 +395,56 @@ export default function PatientExercises() {
               </div>
 
               {tab === 'today' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 min-w-0">
                   {exercises.map((ex) => {
                     const done = ex.today_log?.status === 'completed';
                     const skipped = ex.today_log?.status === 'skipped';
+                    const mediaReady = hasExerciseMedia(ex);
                     return (
                       <div
                         key={ex.id}
                         onClick={() => onCardTap(ex)}
-                        className={`min-w-0 glass-card !p-3 sm:!p-4 flex flex-col gap-3 transition active:scale-[0.98] ${
+                        className={`min-w-0 glass-card !p-0 overflow-hidden flex flex-col transition active:scale-[0.99] ${
                           done ? 'ring-1 ring-emerald-200 bg-emerald-50/30' : skipped ? 'opacity-80' : ''
                         }`}
                       >
-                        <div className="flex gap-3">
-                          {ex.image_url ? (
-                            <img src={ex.image_url} alt="" className="w-16 h-16 rounded-xl object-cover shrink-0 bg-slate-100" />
+                        <button
+                          type="button"
+                          className="relative w-full aspect-[4/3] sm:aspect-[3/4] max-h-56 sm:max-h-64 bg-slate-950 overflow-hidden text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-500"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPreviewEx(ex);
+                          }}
+                          aria-label={`Open ${ex.exercise_name}`}
+                        >
+                          {mediaReady ? (
+                            <ExerciseMediaDisplay
+                              exercise={ex}
+                              title={ex.exercise_name}
+                              variant="thumbnail"
+                              layout="portrait"
+                              className="absolute inset-0 w-full h-full object-cover"
+                            />
+                          ) : ex.image_url ? (
+                            <img src={ex.image_url} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
                           ) : (
-                            <div className="w-16 h-16 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
-                              <FaIcon icon="fa-dumbbell" className="text-xl" />
+                            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-teal-600 to-emerald-700 text-white">
+                              <FaIcon icon="fa-dumbbell" className="text-3xl" aria-hidden="true" />
                             </div>
                           )}
-                          <div className="min-w-0 flex-1">
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent pointer-events-none" />
+                          <span className="absolute bottom-2.5 left-2.5 inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/95 text-teal-700 shadow" aria-hidden="true">
+                            <FaIcon icon="fa-play" className="text-xs ml-0.5" />
+                          </span>
+                          {ex.ai_monitoring_effective && (
+                            <span className="absolute top-2 left-2 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md bg-teal-600 text-white">
+                              AI-Guided
+                            </span>
+                          )}
+                        </button>
+
+                        <div className="p-3 sm:p-4 flex flex-col gap-3 flex-1">
+                          <div className="min-w-0">
                             <p className="font-semibold text-slate-900 leading-snug">
                               {ex.exercise_name}
                               {ex.is_mandatory && (
@@ -429,60 +455,55 @@ export default function PatientExercises() {
                               {ex.sets} sets · {ex.reps} reps · {ex.frequency}
                               {ex.hold_seconds ? ` · hold ${ex.hold_seconds}s` : ''}
                             </p>
-                            {ex.ai_monitoring_effective && (
-                              <span className="inline-block mt-1 text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-100 font-semibold">
-                                AI-Guided Exercise
-                              </span>
-                            )}
                             {ex.difficulty && (
-                              <span className="inline-block mt-1 ml-1 text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 capitalize">
+                              <span className="inline-block mt-1 text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 capitalize">
                                 {ex.difficulty}
                               </span>
                             )}
                           </div>
-                        </div>
 
-                        {ex.ai_monitoring_effective && (
-                          <p className="text-xs text-teal-700 bg-teal-50/80 rounded-lg px-2.5 py-2 border border-teal-100">
-                            AI-Guided Exercise — camera, motion tracking, and live feedback on this device.
-                          </p>
-                        )}
-
-                        {ex.special_instructions && (
-                          <p className="text-xs text-slate-600 bg-slate-50 rounded-lg px-2.5 py-2">{ex.special_instructions}</p>
-                        )}
-
-                        <div className="flex flex-col gap-2 mt-auto" onClick={(e) => e.stopPropagation()}>
                           {ex.ai_monitoring_effective && (
-                            <button
-                              type="button"
-                              className="btn-outline !py-1.5 !px-3 text-xs min-h-10 w-full border-teal-300 text-teal-800 hover:bg-teal-50"
-                              disabled={!!aiSessionPayload || aiPreparing}
-                              onClick={() => openAiPrep(ex)}
-                            >
-                              <FaIcon icon="fa-person-walking" className="mr-1" /> Start AI Monitoring
-                            </button>
+                            <p className="text-xs text-teal-700 bg-teal-50/80 rounded-lg px-2.5 py-2 border border-teal-100">
+                              AI-Guided — camera, motion tracking, and live feedback on this device.
+                            </p>
                           )}
-                          <div className="flex flex-wrap items-center gap-2">
-                            <button type="button" className="btn-outline !py-1.5 !px-3 text-xs min-h-10" onClick={() => setPreviewEx(ex)}>
-                              <FaIcon icon="fa-eye" className="mr-1" /> View
-                            </button>
-                            {!done && (
-                              <button type="button" className="btn-primary !py-1.5 !px-3 text-xs min-h-10" onClick={() => openLog(ex, 'completed')}>
-                                <FaIcon icon="fa-check" className="mr-1" /> Complete
+
+                          {ex.special_instructions && (
+                            <p className="text-xs text-slate-600 bg-slate-50 rounded-lg px-2.5 py-2">{ex.special_instructions}</p>
+                          )}
+
+                          <div className="flex flex-col gap-2 mt-auto" onClick={(e) => e.stopPropagation()}>
+                            {ex.ai_monitoring_effective && (
+                              <button
+                                type="button"
+                                className="btn-outline !py-1.5 !px-3 text-xs min-h-10 w-full border-teal-300 text-teal-800 hover:bg-teal-50"
+                                disabled={!!aiSessionPayload || aiPreparing}
+                                onClick={() => openAiPrep(ex)}
+                              >
+                                <FaIcon icon="fa-person-walking" className="mr-1" /> Start AI Monitoring
                               </button>
                             )}
-                            {!done && !skipped && (
-                              <button type="button" className="text-xs text-slate-500 font-medium min-h-10 px-3 rounded-lg hover:bg-slate-100" onClick={() => openLog(ex, 'skipped')}>
-                                Skip
+                            <div className="flex flex-wrap items-center gap-2">
+                              <button type="button" className="btn-outline !py-1.5 !px-3 text-xs min-h-10" onClick={() => setPreviewEx(ex)}>
+                                <FaIcon icon="fa-eye" className="mr-1" /> Open
                               </button>
-                            )}
-                            {(done || skipped) && (
-                              <span className={`text-xs font-semibold capitalize px-2 py-1 rounded-lg ${done ? 'text-emerald-700 bg-emerald-50' : 'text-slate-500 bg-slate-100'}`}>
-                                {ex.today_log.status}
-                                {ex.today_log.pain_level != null ? ` · pain ${ex.today_log.pain_level}` : ''}
-                              </span>
-                            )}
+                              {!done && (
+                                <button type="button" className="btn-primary !py-1.5 !px-3 text-xs min-h-10" onClick={() => openLog(ex, 'completed')}>
+                                  <FaIcon icon="fa-check" className="mr-1" /> Complete
+                                </button>
+                              )}
+                              {!done && !skipped && (
+                                <button type="button" className="text-xs text-slate-500 font-medium min-h-10 px-3 rounded-lg hover:bg-slate-100" onClick={() => openLog(ex, 'skipped')}>
+                                  Skip
+                                </button>
+                              )}
+                              {(done || skipped) && (
+                                <span className={`text-xs font-semibold capitalize px-2 py-1 rounded-lg ${done ? 'text-emerald-700 bg-emerald-50' : 'text-slate-500 bg-slate-100'}`}>
+                                  {ex.today_log.status}
+                                  {ex.today_log.pain_level != null ? ` · pain ${ex.today_log.pain_level}` : ''}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -584,17 +605,32 @@ export default function PatientExercises() {
         </>
       )}
 
-      {/* Exercise preview bottom sheet */}
+      {/* Prescribed exercise opening sheet — demo → instructions → params → AI → actions */}
       <ExerciseBottomSheet
         open={!!previewEx}
         onClose={() => setPreviewEx(null)}
         title={previewEx?.exercise_name || 'Exercise'}
         subtitle={[previewEx?.difficulty, previewEx?.body_area || previewEx?.category].filter(Boolean).join(' · ')}
         icon="fa-dumbbell"
+        className="md:!max-w-lg"
         footer={
           <>
             <button type="button" className="btn-outline text-xs sm:text-sm" onClick={() => setPreviewEx(null)}>Close</button>
-            {previewEx && !previewEx.today_log && (
+            {previewEx?.ai_monitoring_effective && (
+              <button
+                type="button"
+                className="btn-outline text-xs sm:text-sm border-teal-300 text-teal-800"
+                disabled={!!aiSessionPayload || aiPreparing}
+                onClick={() => {
+                  const ex = previewEx;
+                  setPreviewEx(null);
+                  openAiPrep(ex);
+                }}
+              >
+                <FaIcon icon="fa-person-walking" className="mr-1" /> Start AI Monitoring
+              </button>
+            )}
+            {previewEx && previewEx.today_log?.status !== 'completed' && (
               <button type="button" className="btn-primary text-xs sm:text-sm" onClick={() => { setPreviewEx(null); openLog(previewEx, 'completed'); }}>
                 Mark complete
               </button>
@@ -603,59 +639,94 @@ export default function PatientExercises() {
         }
       >
         {previewEx && (
-          <div className="space-y-4">
-            {(() => {
-              const yt = youtubeEmbed(previewEx.video_url);
-              if (yt) {
-                return <iframe title="video" src={yt} className="w-full aspect-video rounded-xl bg-black" allowFullScreen />;
-              }
-              if (previewEx.video_url) {
-                return (
-                  <video src={previewEx.video_url} controls className="w-full rounded-xl bg-black max-h-[min(360px,50dvh)] object-contain" />
-                );
-              }
-              if (previewEx.image_url) {
-                return <img src={previewEx.image_url} alt="" className="w-full max-h-[min(320px,45dvh)] object-contain rounded-xl bg-slate-50" />;
-              }
-              return null;
-            })()}
+          <div className="space-y-5">
+            {hasExerciseMedia(previewEx) || previewEx.image_url ? (
+              <div className="exercise-detail-media">
+                {hasExerciseMedia(previewEx) ? (
+                  <ExerciseMediaDisplay
+                    exercise={previewEx}
+                    title={previewEx.exercise_name}
+                    variant="player"
+                    layout="portrait"
+                  />
+                ) : (
+                  <img
+                    src={previewEx.image_url}
+                    alt={`${previewEx.exercise_name} demonstration`}
+                    className="w-full aspect-[3/4] max-h-[min(60vh,520px)] object-contain rounded-2xl bg-slate-900 mx-auto"
+                  />
+                )}
+              </div>
+            ) : null}
+
+            <div>
+              <h3 className="text-lg font-bold text-slate-900 leading-snug">{previewEx.exercise_name}</h3>
+              <p className="text-sm text-slate-500 mt-1 capitalize">
+                {[previewEx.body_area || previewEx.category, previewEx.difficulty].filter(Boolean).join(' · ')}
+              </p>
+            </div>
 
             {previewEx.gallery_images?.length > 0 && (
-              <div className="flex gap-2 overflow-x-auto">
+              <div className="flex gap-2 overflow-x-auto pb-1" aria-label="Exercise gallery images">
                 {previewEx.gallery_images.map((url) => (
-                  <img key={url} src={url} alt="" className="h-20 w-20 rounded-lg object-cover shrink-0" />
+                  <img key={url} src={url} alt="" className="h-20 w-20 rounded-lg object-cover shrink-0" loading="lazy" />
                 ))}
               </div>
             )}
 
-            <div className="flex flex-wrap gap-2 text-xs">
-              <span className="bg-slate-100 px-2 py-1 rounded-md">{previewEx.sets} sets</span>
-              <span className="bg-slate-100 px-2 py-1 rounded-md">{previewEx.reps} reps</span>
-              {previewEx.hold_seconds && <span className="bg-slate-100 px-2 py-1 rounded-md">Hold {previewEx.hold_seconds}s</span>}
-              <span className="bg-slate-100 px-2 py-1 rounded-md">{previewEx.frequency}</span>
-              {previewEx.equipment && <span className="bg-slate-100 px-2 py-1 rounded-md">{previewEx.equipment}</span>}
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">Prescribed parameters</p>
+              <div className="flex flex-wrap gap-2 text-xs">
+                <span className="bg-teal-50 text-teal-800 border border-teal-100 px-2.5 py-1.5 rounded-lg font-semibold">{previewEx.sets} sets</span>
+                <span className="bg-teal-50 text-teal-800 border border-teal-100 px-2.5 py-1.5 rounded-lg font-semibold">{previewEx.reps} reps</span>
+                {previewEx.hold_seconds ? (
+                  <span className="bg-slate-100 px-2.5 py-1.5 rounded-lg">Hold {previewEx.hold_seconds}s</span>
+                ) : null}
+                {previewEx.rest_seconds ? (
+                  <span className="bg-slate-100 px-2.5 py-1.5 rounded-lg">Rest {previewEx.rest_seconds}s</span>
+                ) : null}
+                <span className="bg-slate-100 px-2.5 py-1.5 rounded-lg">{previewEx.frequency}</span>
+                {previewEx.equipment ? (
+                  <span className="bg-slate-100 px-2.5 py-1.5 rounded-lg">{previewEx.equipment}</span>
+                ) : null}
+              </div>
             </div>
 
-            {previewEx.steps?.length > 0 ? (
-              <ol className="list-decimal pl-5 space-y-1.5 text-sm text-slate-700">
-                {previewEx.steps.map((s, i) => (
-                  <li key={i}>{typeof s === 'string' ? s : s.text || s.step || JSON.stringify(s)}</li>
-                ))}
-              </ol>
-            ) : (
-              <p className="text-sm text-slate-700 whitespace-pre-wrap">{previewEx.exercise_instructions}</p>
+            {(previewEx.special_instructions || previewEx.therapist_notes) && (
+              <div className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5 text-sm text-slate-700">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">Therapist notes</p>
+                <p className="whitespace-pre-wrap">{previewEx.special_instructions || previewEx.therapist_notes}</p>
+              </div>
             )}
+
+            <ExerciseInstructions
+              steps={previewEx.steps}
+              instructions={previewEx.exercise_instructions || previewEx.instructions}
+              compact
+            />
 
             {previewEx.precautions && (
               <div className="rounded-xl bg-amber-50 border border-amber-100 px-3 py-2.5 text-sm text-amber-900">
-                <FaIcon icon="fa-triangle-exclamation" className="mr-1.5" />
+                <FaIcon icon="fa-triangle-exclamation" className="mr-1.5" aria-hidden="true" />
                 {previewEx.precautions}
               </div>
             )}
 
+            {previewEx.ai_monitoring_effective ? (
+              <div className="rounded-xl bg-teal-50 border border-teal-100 px-3 py-2.5 text-sm text-teal-900">
+                <p className="font-semibold flex items-center gap-1.5">
+                  <FaIcon icon="fa-person-walking" aria-hidden="true" />
+                  AI monitoring available
+                </p>
+                <p className="text-xs mt-1 text-teal-800/90 leading-relaxed">
+                  Camera and motion tracking will run on this device. Complete and Skip remain available after you exit.
+                </p>
+              </div>
+            ) : null}
+
             {previewEx.pdf_url && (
-              <a href={previewEx.pdf_url} target="_blank" rel="noreferrer" className="btn-outline inline-flex text-sm">
-                <FaIcon icon="fa-file-pdf" className="mr-1.5" /> Download PDF instructions
+              <a href={previewEx.pdf_url} target="_blank" rel="noreferrer" className="btn-outline inline-flex text-sm min-h-10">
+                <FaIcon icon="fa-file-pdf" className="mr-1.5" aria-hidden="true" /> Download PDF instructions
               </a>
             )}
           </div>
