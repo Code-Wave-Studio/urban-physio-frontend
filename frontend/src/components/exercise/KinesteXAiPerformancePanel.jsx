@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import FaIcon from '../FaIcon';
 import GlassModal, { GlassModalBody, GlassModalFooter, GlassModalHeader } from '../GlassModal';
 import { kinestex } from '../../services/api';
+import KinesteXWorkoutOverview from './KinesteXWorkoutOverview';
 
 function na(value) {
   if (value === null || value === undefined || value === '') return 'N/A';
@@ -20,16 +21,6 @@ function formatWhen(value) {
     hour: '2-digit',
     minute: '2-digit',
   });
-}
-
-function formatDuration(seconds) {
-  if (seconds === null || seconds === undefined || seconds === '') return 'N/A';
-  const n = Number(seconds);
-  if (!Number.isFinite(n)) return 'N/A';
-  if (n < 60) return `${n}s`;
-  const m = Math.floor(n / 60);
-  const s = n % 60;
-  return s ? `${m}m ${s}s` : `${m}m`;
 }
 
 function statusClass(status) {
@@ -146,7 +137,7 @@ export default function KinesteXAiPerformancePanel({
         </button>
       </div>
       <p className="text-[11px] text-slate-500 mb-3">
-        KinesteX AI sessions recorded for this patient. Separate from manual HEP completion. Missing metrics show as N/A.
+        KinesteX AI sessions recorded for this patient. Separate from manual HEP completion. Available provider metrics are shown; omitted fields stay hidden.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 mb-3 min-w-0">
@@ -269,15 +260,21 @@ export default function KinesteXAiPerformancePanel({
                           <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${statusClass(s.session_status)}`}>
                             {s.session_status}
                           </span>
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-                            Reps {na(s.metrics?.repetitions)}
-                          </span>
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-                            Accuracy {na(s.metrics?.accuracy)}
-                          </span>
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-                            Score {na(s.metrics?.score)}
-                          </span>
+                          {s.metrics?.repetitions != null && (
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                              Reps {s.metrics.repetitions}
+                            </span>
+                          )}
+                          {s.metrics?.accuracy != null && (
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                              Accuracy {s.metrics.accuracy}%
+                            </span>
+                          )}
+                          {s.metrics?.score != null && (
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                              Score {s.metrics.score}
+                            </span>
+                          )}
                         </div>
                       </div>
                       <button
@@ -317,9 +314,9 @@ export default function KinesteXAiPerformancePanel({
                             {s.session_status}
                           </span>
                         </td>
-                        <td className="py-2 px-2">{na(s.metrics?.repetitions)}</td>
-                        <td className="py-2 px-2">{na(s.metrics?.accuracy)}</td>
-                        <td className="py-2 px-2">{na(s.metrics?.score)}</td>
+                        <td className="py-2 px-2">{s.metrics?.repetitions ?? '—'}</td>
+                        <td className="py-2 px-2">{s.metrics?.accuracy != null ? `${s.metrics.accuracy}%` : '—'}</td>
+                        <td className="py-2 px-2">{s.metrics?.score ?? '—'}</td>
                         <td className="py-2 px-2 text-right">
                           <button type="button" className="text-xs font-semibold text-teal-700" onClick={() => openDetail(s)}>
                             Details
@@ -410,16 +407,17 @@ export default function KinesteXAiPerformancePanel({
                   <dd className="text-slate-800 break-all">{na(detail.provider_session_id)}</dd>
                 </div>
               </dl>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <Metric label="Repetitions" value={na(detail.metrics?.repetitions)} />
-                <Metric label="Sets completed" value={na(detail.metrics?.sets_completed)} />
-                <Metric label="Accuracy" value={na(detail.metrics?.accuracy)} />
-                <Metric label="Mistakes" value={na(detail.metrics?.mistakes)} />
-                <Metric label="Calories" value={na(detail.metrics?.calories)} />
-                <Metric label="Score" value={na(detail.metrics?.score)} />
-                <Metric label="Duration" value={formatDuration(detail.metrics?.duration_seconds)} />
-                <Metric label="KinesteX exercise" value={na(detail.kinestex_exercise_id)} />
-              </div>
+              <KinesteXWorkoutOverview metrics={detail.metrics} />
+              {detail.kinestex_exercise_id ? (
+                <p className="text-xs text-slate-500">
+                  KinesteX exercise: <span className="font-medium text-slate-700 break-all">{detail.kinestex_exercise_id}</span>
+                </p>
+              ) : null}
+              {detail.session_status === 'completed' && detail.metrics?.sets_completed == null && (
+                <p className="text-[11px] text-slate-400">
+                  Sets count is not provided by KinesteX for this session type.
+                </p>
+              )}
               {detail.error_message && (
                 <p className="text-xs text-rose-700 rounded-lg bg-rose-50 px-3 py-2">{detail.error_message}</p>
               )}

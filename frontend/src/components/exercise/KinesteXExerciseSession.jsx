@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { KinesteXSDK, IntegrationOption } from 'kinestex-sdk-react-ts';
 import FaIcon from '../FaIcon';
+import KinesteXWorkoutOverview from './KinesteXWorkoutOverview';
 import {
   buildKinesteXSessionResult,
   newClientSessionId,
@@ -364,7 +365,14 @@ export default function KinesteXExerciseSession({
                 <p className="text-sm text-slate-600 mt-2">
                   Your AI-monitored exercise session was saved.
                 </p>
-                <p className="text-xs text-slate-400 mt-2">
+                <div className="mt-4 text-left">
+                  <KinesteXWorkoutOverview
+                    metrics={persisted?.session?.metrics || persisted?.metrics}
+                    title="Workout Overview"
+                    emptyMessage="Performance metrics were not included in this session result."
+                  />
+                </div>
+                <p className="text-xs text-slate-400 mt-3">
                   You can still use Mark Complete on your rehab plan if needed.
                 </p>
                 <button type="button" className="btn-primary mt-5 w-full min-h-10" onClick={onClose}>

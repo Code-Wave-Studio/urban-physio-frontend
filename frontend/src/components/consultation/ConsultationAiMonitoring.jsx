@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import FaIcon from '../FaIcon';
 import ExerciseBottomSheet from '../exercise/ExerciseBottomSheet';
 import KinesteXAiPerformancePanel from '../exercise/KinesteXAiPerformancePanel';
+import KinesteXWorkoutOverview from '../exercise/KinesteXWorkoutOverview';
 import GlassModal, { GlassModalBody, GlassModalFooter, GlassModalHeader } from '../GlassModal';
 import { kinestex } from '../../services/api';
 
@@ -33,20 +34,6 @@ function latestByItem(sessions) {
     map[key] = s;
   });
   return map;
-}
-
-function na(value) {
-  if (value === null || value === undefined || value === '') return 'N/A';
-  return value;
-}
-
-function PeekMetric({ label, value }) {
-  return (
-    <div className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5 text-center min-w-0">
-      <p className="text-[10px] uppercase tracking-wide text-slate-400">{label}</p>
-      <p className="text-sm font-bold text-slate-800 mt-0.5 break-words">{value}</p>
-    </div>
-  );
 }
 
 /**
@@ -300,14 +287,7 @@ export default function ConsultationAiMonitoring({
               <p className="text-xs text-slate-500">
                 {formatWhen(peek.session_at || peek.completed_at || peek.created_at)}
               </p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                <PeekMetric label="Repetitions" value={na(peekMetrics.repetitions)} />
-                <PeekMetric label="Accuracy" value={peekMetrics.accuracy == null ? 'N/A' : `${peekMetrics.accuracy}%`} />
-                <PeekMetric label="Score" value={na(peekMetrics.score)} />
-                <PeekMetric label="Sets" value={na(peekMetrics.sets_completed)} />
-                <PeekMetric label="Mistakes" value={na(peekMetrics.mistakes)} />
-                <PeekMetric label="Calories" value={na(peekMetrics.calories)} />
-              </div>
+              <KinesteXWorkoutOverview metrics={peekMetrics} />
               <p className="text-[11px] text-slate-400">
                 Same KinesteX session record as AI History and AI Performance.
               </p>

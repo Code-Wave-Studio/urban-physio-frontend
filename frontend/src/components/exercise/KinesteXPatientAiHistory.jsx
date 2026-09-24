@@ -3,6 +3,10 @@ import toast from 'react-hot-toast';
 import FaIcon from '../FaIcon';
 import GlassModal, { GlassModalBody, GlassModalFooter, GlassModalHeader } from '../GlassModal';
 import { kinestex } from '../../services/api';
+import KinesteXWorkoutOverview, {
+  buildWorkoutOverviewRows,
+  formatAccuracy,
+} from './KinesteXWorkoutOverview';
 
 function na(value) {
   if (value === null || value === undefined || value === '') return 'N/A';
@@ -34,21 +38,6 @@ function formatTime(value) {
   const d = new Date(String(value).replace(' ', 'T'));
   if (Number.isNaN(d.getTime())) return String(value);
   return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-}
-
-function formatDuration(seconds) {
-  if (seconds === null || seconds === undefined || seconds === '') return 'N/A';
-  const n = Number(seconds);
-  if (!Number.isFinite(n)) return 'N/A';
-  if (n < 60) return `${n}s`;
-  const m = Math.floor(n / 60);
-  const s = n % 60;
-  return s ? `${m}m ${s}s` : `${m}m`;
-}
-
-function formatAccuracy(value) {
-  if (value === null || value === undefined || value === '') return 'N/A';
-  return `${value}%`;
 }
 
 function statusClass(status) {
@@ -86,16 +75,10 @@ function Metric({ label, value }) {
 }
 
 function metricChips(metrics) {
-  const m = metrics || {};
-  const chips = [];
-  if (m.repetitions != null) chips.push({ label: 'Reps', value: m.repetitions });
-  if (m.sets_completed != null) chips.push({ label: 'Sets', value: m.sets_completed });
-  if (m.accuracy != null) chips.push({ label: 'Accuracy', value: `${m.accuracy}%` });
-  if (m.mistakes != null) chips.push({ label: 'Mistakes', value: m.mistakes });
-  if (m.calories != null) chips.push({ label: 'Calories', value: m.calories });
-  if (m.score != null) chips.push({ label: 'Score', value: m.score });
-  if (m.duration_seconds != null) chips.push({ label: 'Duration', value: formatDuration(m.duration_seconds) });
-  return chips;
+  return buildWorkoutOverviewRows(metrics).map((row) => ({
+    label: row.label === 'Repetitions' ? 'Reps' : row.label,
+    value: row.value,
+  }));
 }
 
 /**
@@ -205,7 +188,7 @@ export default function KinesteXPatientAiHistory({ refreshTick = 0, onGoToExerci
       </div>
       <p className="text-[11px] text-slate-500 mb-3">
         KinesteX AI-monitored sessions saved for you. These are separate from manual HEP Complete / Skip logs.
-        Missing metrics show as N/A.
+        Available metrics from KinesteX are shown; fields the provider omitted stay hidden.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 mb-3 min-w-0">
@@ -421,15 +404,14 @@ export default function KinesteXPatientAiHistory({ refreshTick = 0, onGoToExerci
                   <dd className="text-slate-800">{na(detail.completion_event)}</dd>
                 </div>
               </dl>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <Metric label="Repetitions" value={na(detail.metrics?.repetitions)} />
-                <Metric label="Sets completed" value={na(detail.metrics?.sets_completed)} />
-                <Metric label="Accuracy" value={formatAccuracy(detail.metrics?.accuracy)} />
-                <Metric label="Mistakes" value={na(detail.metrics?.mistakes)} />
-                <Metric label="Calories" value={na(detail.metrics?.calories)} />
-                <Metric label="Score" value={na(detail.metrics?.score)} />
-                <Metric label="Duration" value={formatDuration(detail.metrics?.duration_seconds)} />
-              </div>
+              <KinesteXWorkoutOverview metrics={detail.metrics} />
+              {detail.session_status === 'completed' &&
+                detail.metrics?.sets_completed == null &&
+                buildWorkoutOverviewRows(detail.metrics).length > 0 && (
+                  <p className="text-[11px] text-slate-400">
+                    Sets count is not provided by KinesteX for this session type.
+                  </p>
+                )}
               {detail.error_message && (
                 <p className="text-xs text-rose-700 rounded-lg bg-rose-50 px-3 py-2">{detail.error_message}</p>
               )}
