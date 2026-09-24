@@ -5,22 +5,23 @@ import ExerciseMediaDisplay from './ExerciseMediaDisplay';
 import { hasExerciseMedia } from '../../utils/mediaParser';
 
 const DIFFICULTY_STYLES = {
-  beginner: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-  intermediate: 'bg-amber-100 text-amber-800 border-amber-200',
-  advanced: 'bg-red-100 text-red-800 border-red-200',
+  beginner: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+  intermediate: 'bg-amber-50 text-amber-700 border-amber-100',
+  advanced: 'bg-rose-50 text-rose-700 border-rose-100',
 };
 
-const BAR_GRADIENT = {
-  back: 'from-violet-500 to-purple-500',
-  neck: 'from-sky-500 to-blue-500',
-  knee: 'from-orange-500 to-amber-500',
-  shoulder: 'from-rose-500 to-pink-500',
-  general: 'from-teal-500 to-emerald-500',
+const AREA_FALLBACK = {
+  back: 'from-teal-700 to-emerald-800',
+  neck: 'from-slate-600 to-teal-800',
+  knee: 'from-teal-600 to-slate-800',
+  shoulder: 'from-emerald-700 to-teal-900',
+  general: 'from-teal-700 to-emerald-900',
 };
 
 /**
  * Visual-first gallery card for the public Exercise Library.
- * Portrait media container; thumbnails lazy-load; no autoplay.
+ * Compact portrait media; thumbnails lazy-load; no autoplay.
+ * Used by Exercise Library + home teaser — not patient HEP cards.
  */
 export default function ExerciseGalleryCard({
   exercise,
@@ -32,6 +33,17 @@ export default function ExerciseGalleryCard({
   const aiReady = Boolean(exercise?.kinestex?.ai_supported && exercise?.kinestex?.mapped);
   const name = exercise?.name || 'Exercise';
   const difficulty = exercise?.difficulty || 'beginner';
+  const bodyArea = exercise?.body_area || 'general';
+
+  const metaParts = [bodyArea].filter(Boolean);
+  const dosing =
+    exercise?.default_sets != null && exercise?.default_reps
+      ? `${exercise.default_sets} × ${exercise.default_reps}`
+      : null;
+  const equipment =
+    exercise?.equipment && String(exercise.equipment).toLowerCase() !== 'none'
+      ? exercise.equipment
+      : null;
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -45,14 +57,14 @@ export default function ExerciseGalleryCard({
       role="button"
       tabIndex={0}
       aria-label={`View ${name}`}
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: Math.min(index * 0.04, 0.4) }}
-      className="exercise-gallery-card group glass-card !p-0 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-white/70 flex flex-col focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-500"
+      transition={{ delay: Math.min(index * 0.03, 0.3) }}
+      className="exercise-gallery-card group flex flex-col overflow-hidden cursor-pointer bg-white border border-slate-200/90 rounded-xl shadow-sm hover:shadow-md hover:border-teal-200/80 transition-[box-shadow,border-color,transform] duration-200 hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-500"
       onClick={() => onOpen?.(exercise)}
       onKeyDown={handleKeyDown}
     >
-      <div className="exercise-gallery-media relative w-full shrink-0 overflow-hidden bg-slate-950">
+      <div className="exercise-gallery-media relative w-full shrink-0 overflow-hidden bg-slate-900 rounded-t-xl">
         {hasMedia ? (
           <>
             <ExerciseMediaDisplay
@@ -60,40 +72,40 @@ export default function ExerciseGalleryCard({
               title={name}
               variant="thumbnail"
               layout="portrait"
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-contain"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/50 via-transparent to-transparent pointer-events-none" />
             <span
-              className="absolute bottom-3 left-3 inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/95 text-teal-700 shadow-md border border-white/80"
+              className="absolute bottom-2 left-2 inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/95 text-teal-700 shadow-sm border border-white/90"
               aria-hidden="true"
             >
-              <FaIcon icon="fa-play" className="text-sm ml-0.5" />
+              <FaIcon icon="fa-play" className="text-[10px] ml-0.5" />
             </span>
           </>
         ) : (
           <div
-            className={`absolute inset-0 flex items-center justify-center bg-gradient-to-br ${BAR_GRADIENT[exercise?.body_area] || BAR_GRADIENT.general} opacity-90`}
+            className={`absolute inset-0 flex items-center justify-center bg-gradient-to-br ${AREA_FALLBACK[bodyArea] || AREA_FALLBACK.general}`}
           >
-            <FaIcon icon="fa-dumbbell" className="text-4xl text-white/90" />
+            <FaIcon icon="fa-dumbbell" className="text-2xl text-white/85" aria-hidden="true" />
           </div>
         )}
 
         {aiReady && (
-          <span className="absolute top-2.5 left-2.5 z-[1] text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md bg-teal-600 text-white shadow-sm">
+          <span className="absolute top-2 left-2 z-[1] text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-teal-600/95 text-white leading-none">
             AI-Guided
           </span>
         )}
       </div>
 
-      <div className="p-4 sm:p-5 flex-1 flex flex-col min-w-0">
-        <div className="flex justify-between items-start gap-2">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 capitalize truncate">
-            {exercise?.body_area || 'general'}
-          </span>
-          <div className="flex items-center gap-2 shrink-0">
+      <div className="exercise-gallery-body px-3 pt-2.5 pb-2.5 flex flex-col flex-1 min-w-0">
+        <div className="flex items-start gap-2 min-w-0">
+          <h3 className="flex-1 min-w-0 font-semibold text-[0.9375rem] sm:text-base text-slate-900 group-hover:text-teal-800 transition-colors line-clamp-2 leading-snug tracking-tight">
+            {name}
+          </h3>
+          <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
             {showSave && <SaveExerciseButton exercise={exercise} stopPropagation />}
             <span
-              className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full border capitalize min-h-[22px] ${
+              className={`inline-flex items-center text-[9px] font-semibold px-1.5 py-0.5 rounded border capitalize leading-none ${
                 DIFFICULTY_STYLES[difficulty] || DIFFICULTY_STYLES.beginner
               }`}
             >
@@ -102,25 +114,14 @@ export default function ExerciseGalleryCard({
           </div>
         </div>
 
-        <h3 className="font-bold text-base sm:text-lg text-slate-800 mt-2 group-hover:text-teal-700 transition-colors line-clamp-2 leading-snug">
-          {name}
-        </h3>
-
-        <div className="flex flex-wrap gap-2 mt-3">
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-teal-50 text-teal-800">
-            {exercise?.default_sets ?? '—'} × {exercise?.default_reps ?? '—'}
-          </span>
-          {exercise?.equipment ? (
-            <span className="text-xs px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 line-clamp-1 max-w-full">
-              {exercise.equipment}
-            </span>
-          ) : null}
-        </div>
-
-        <p className="mt-auto pt-4 text-sm font-semibold text-teal-600 inline-flex items-center gap-1.5 group-hover:gap-2.5 transition-all">
-          Open exercise
-          <FaIcon icon="fa-arrow-right" className="text-xs" aria-hidden="true" />
+        <p className="mt-1 text-[11px] text-slate-500 capitalize leading-snug truncate">
+          {[...metaParts, dosing, equipment].filter(Boolean).join(' · ')}
         </p>
+
+        <span className="mt-auto pt-2 inline-flex items-center gap-1 text-xs font-semibold text-teal-700 group-hover:text-teal-800 min-h-8">
+          Open Exercise
+          <FaIcon icon="fa-arrow-right" className="text-[10px] transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+        </span>
       </div>
     </motion.article>
   );

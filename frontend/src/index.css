@@ -5287,22 +5287,38 @@ html {
     }
   }
 
-  /* Exercise Library gallery — portrait-first cards, responsive columns */
+  /* Exercise Library gallery — compact portrait cards, responsive columns */
   .exercise-gallery-grid {
-    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4 md:gap-6;
+    @apply grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 md:gap-5;
   }
 
   .exercise-gallery-media {
-    @apply aspect-[3/4] w-full;
+    /* Was 3/4 — compact portrait that still reads as vertical */
+    aspect-ratio: 5 / 6;
+    width: 100%;
+  }
+
+  .exercise-gallery-body {
+    min-height: 6.5rem;
   }
 
   .exercise-detail-media {
     @apply w-full max-w-md mx-auto;
   }
 
-  @media (max-width: 374px) {
+  @media (max-width: 639px) {
     .exercise-gallery-media {
       aspect-ratio: 4 / 5;
+    }
+  }
+
+  @media (max-width: 374px) {
+    .exercise-gallery-media {
+      aspect-ratio: 1 / 1.15;
+    }
+
+    .exercise-gallery-body {
+      min-height: 6.25rem;
     }
   }
 }
