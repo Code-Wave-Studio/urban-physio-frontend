@@ -4,6 +4,7 @@ import ExerciseInstructions from './ExerciseInstructions';
 import ExerciseMediaDisplay from './ExerciseMediaDisplay';
 import FaIcon from '../FaIcon';
 import { bookExerciseUrl } from '../../utils/bookUrl';
+import { exerciseDetailPath } from '../../utils/exerciseDetail';
 import { hasExerciseMedia } from '../../utils/mediaParser';
 
 const AREA_GRADIENT = {
@@ -33,9 +34,9 @@ export default function ExerciseDetailModal({ exercise, onClose }) {
       footer={
         exercise ? (
           <>
-            {exercise.slug ? (
+            {(exercise.slug || exercise.id) ? (
               <Link
-                to={`/exercises/${exercise.slug}`}
+                to={exerciseDetailPath(exercise)}
                 className="btn-outline text-xs sm:text-sm min-h-10"
                 onClick={onClose}
               >

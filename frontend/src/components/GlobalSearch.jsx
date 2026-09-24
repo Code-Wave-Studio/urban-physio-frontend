@@ -10,6 +10,7 @@ import { search } from '../services/api';
 import { useLocation } from '../contexts/LocationContext';
 import { localSearchMatches, mergeSearchResults, QUICK_SEARCH_TAGS } from '../utils/searchCatalog';
 import { doctorProfileUrl, clinicProfileUrl } from '../utils/profileUrls';
+import { exerciseDetailPath } from '../utils/exerciseDetail';
 import { addRecentSearch } from '../utils/searchHistory';
 import { useTypingSearchPlaceholder } from '../hooks/useTypingSearchPlaceholder';
 
@@ -185,7 +186,7 @@ export default function GlobalSearch({
         key: `ex-${e.id}`,
         label: e.name,
         sub: e.body_area || e.difficulty || 'Exercise',
-        to: e.slug ? `/exercises/${e.slug}` : '/exercises',
+        to: exerciseDetailPath(e),
         icon: 'fa-dumbbell',
         iconColor: 'text-teal-600 bg-teal-50',
       });

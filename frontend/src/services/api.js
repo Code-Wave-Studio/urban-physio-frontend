@@ -1270,7 +1270,7 @@ export const patientPackages = {
 
 export const exercises = {
   list: (params) => api.get('/exercises', { params }),
-  get: (slug) => api.get(`/exercises/${slug}`),
+  get: (slugOrId) => api.get(`/exercises/${encodeURIComponent(String(slugOrId))}`),
 };
 
 // ─── ERP APIs ────────────────────────────────────────────────────────────────

@@ -20,6 +20,7 @@ import {
 } from '../utils/searchHistory';
 import { useTypingSearchPlaceholder } from '../hooks/useTypingSearchPlaceholder';
 import ManagedPageSeo from '../components/seo/ManagedPageSeo';
+import { exerciseDetailPath } from '../utils/exerciseDetail';
 
 const TYPE_MAP = {
   doctors: 'doctors',
@@ -479,7 +480,7 @@ export default function SearchResultsPage() {
 
             <EntityGrid title="Exercises" icon="fa-person-running" items={data?.exercises} type="exercises">
               {(e) => (
-                <Link key={e.id} to={`/exercises/${e.slug}`} className="glass-card p-4 hover:shadow-md block">
+                <Link key={e.id} to={exerciseDetailPath(e)} className="glass-card p-4 hover:shadow-md block">
                   <p className="font-semibold text-slate-900">
                     <HighlightText text={e.name} query={q} />
                   </p>
