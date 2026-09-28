@@ -90,6 +90,50 @@ export function bookPainAreaUrl(painLabel, extra = {}) {
   return q ? `/book?${q}` : '/book';
 }
 
+/** Existing `type` values. `type` wins over `mode` when both are present. */
+export const BOOKING_CONSULTATION_TYPES = ['online', 'clinic', 'home_visit'];
+
+/**
+ * Existing `mode` aliases.
+ * home-visit → home_visit, telephysio → online.
+ */
+export const BOOKING_MODE_ALIAS = {
+  'home-visit': 'home_visit',
+  home_visit: 'home_visit',
+  homevisit: 'home_visit',
+  online: 'online',
+  telephysio: 'online',
+  'tele-physio': 'online',
+  clinic: 'clinic',
+};
+
+/** Resolve the booking service from the current `type` / `mode` query params. */
+export function resolveBookingConsultationType(type, mode) {
+  const explicitType = typeof type === 'string' ? type.trim() : '';
+  const modeKey = typeof mode === 'string' ? mode.trim() : '';
+  const resolved = explicitType || BOOKING_MODE_ALIAS[modeKey] || '';
+  return BOOKING_CONSULTATION_TYPES.includes(resolved) ? resolved : '';
+}
+
+/**
+ * A locked preferred clinic may preselect a normal clinic booking.
+ * It must not replace an explicit Home Visit or Online / TelePhysio request.
+ */
+export function preferredClinicMayOverride(type, mode) {
+  const resolved = resolveBookingConsultationType(type, mode);
+  return resolved !== 'home_visit' && resolved !== 'online';
+}
+
+/**
+ * Existing Home Physiotherapy `tier` identifier (certified, senior, specialist, or a CMS key).
+ * This is not a price. Empty or unsafe values are ignored.
+ */
+export function readHomePhysioTier(value) {
+  const raw = typeof value === 'string' ? value.trim() : '';
+  if (!/^[a-z0-9_-]{1,40}$/i.test(raw)) return '';
+  return raw.toLowerCase();
+}
+
 /** Home-visit booking URL. Uses existing `type=home_visit` plus CRF `mode` alias. */
 export function bookHomeVisitUrl(extra = {}) {
   const params = new URLSearchParams();

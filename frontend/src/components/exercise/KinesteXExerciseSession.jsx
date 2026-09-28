@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { KinesteXSDK, IntegrationOption } from 'kinestex-sdk-react-ts';
 import FaIcon from '../FaIcon';
 import KinesteXWorkoutOverview from './KinesteXWorkoutOverview';
 import KinesteXMovementAnalysisReport from './KinesteXMovementAnalysisReport';
 import {
+  buildKinesteXLaunchPostData,
   buildKinesteXSessionResult,
   newClientSessionId,
   onKinesteXSessionCompleted,
@@ -18,7 +18,7 @@ const MOTION_SAVE_GRACE_MS = 45000;
 
 /**
  * Official KinesteX Custom Workout session.
- * Sources: kinestex-sdk-react-ts; CUSTOM_WORKOUT; postData key/company/userId/customWorkoutExercises/videoFit.
+ * Iframe at /custom-workout. postData uses the server-minted session, never the company API key.
  * On all_resources_loaded → sendAction("workout_activity_action", "start").
  * Persist via onKinesteXSessionCompleted; success UI only after backend confirms.
  */
@@ -32,6 +32,7 @@ export default function KinesteXExerciseSession({
   const sdk = sessionPayload?.sdk;
   const context = sessionPayload?.context || {};
   const sdkRef = useRef(null);
+  const iframeRef = useRef(null);
   const startedRef = useRef(false);
   const persistInFlightRef = useRef(false);
   const bestStatusRef = useRef(null);
@@ -54,22 +55,42 @@ export default function KinesteXExerciseSession({
   saveStateRef.current = saveState;
 
   const postData = useMemo(() => {
-    if (!sdk) return null;
-    return {
-      key: sdk.key,
-      company: sdk.company,
-      userId: sdk.userId,
-      customWorkoutExercises: sdk.customWorkoutExercises || [],
-      shouldSendStats: sdk.shouldSendStats !== false,
-      style: sdk.style || { style: 'light' },
-      // videoFit "contain" keeps full camera frame (default "cover" crops). Host cannot rewrite KinesteX chrome.
-      videoFit: 'contain',
-      // motionDataEnabled defaults true; never set false or session replay is empty.
-      customParameters: {
-        ...(sdk.customParameters && typeof sdk.customParameters === 'object' ? sdk.customParameters : {}),
-      },
-    };
+    const launch = buildKinesteXLaunchPostData(sdk, { videoFit: 'contain' });
+    if (!launch?.customWorkoutExercises?.length) return null;
+    return launch;
   }, [sdk]);
+
+  const frameOrigin = useMemo(() => {
+    const base = String(sdk?.base_url || 'https://ai.kinestex.com').replace(/\/$/, '');
+    try {
+      return new URL(base).origin;
+    } catch {
+      return 'https://ai.kinestex.com';
+    }
+  }, [sdk?.base_url]);
+
+  const frameSrc = useMemo(() => {
+    const style = postData?.style?.style ? String(postData.style.style) : 'light';
+    return `${frameOrigin}/custom-workout?style=${encodeURIComponent(style)}`;
+  }, [frameOrigin, postData?.style]);
+
+  const postToFrame = useCallback((payload) => {
+    const win = iframeRef.current?.contentWindow;
+    if (!win || !payload) return;
+    try {
+      win.postMessage(payload, frameOrigin);
+    } catch {
+      /* ignore cross-origin post failures */
+    }
+  }, [frameOrigin]);
+
+  const sendAction = useCallback((action, value) => {
+    postToFrame({ [action]: String(value) });
+  }, [postToFrame]);
+
+  useEffect(() => {
+    sdkRef.current = { sendAction };
+  }, [sendAction]);
 
   const clearMotionGrace = useCallback(() => {
     if (motionGraceTimerRef.current) {
@@ -297,6 +318,39 @@ export default function KinesteXExerciseSession({
     [emitBoundary, beginMotionGrace, clearMotionGrace]
   );
 
+  const postDataRef = useRef(postData);
+  postDataRef.current = postData;
+  const handleMessageRef = useRef(handleMessage);
+  handleMessageRef.current = handleMessage;
+
+  useEffect(() => {
+    const onMessage = (event) => {
+      if (event.origin !== frameOrigin) return;
+      let data = event.data;
+      try {
+        if (typeof data === 'string') data = JSON.parse(data);
+      } catch {
+        return;
+      }
+      const type = data?.type;
+      if (!type) return;
+      if (type === 'kinestex_loaded' || type === 'kinestex_launched') {
+        postToFrame(postDataRef.current);
+      }
+      handleMessageRef.current(type, data);
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [frameOrigin, postToFrame]);
+
+  useEffect(() => {
+    if (!postData) return undefined;
+    const retry = setTimeout(() => {
+      if (!startedRef.current) postToFrame(postData);
+    }, 3500);
+    return () => clearTimeout(retry);
+  }, [postData, postToFrame]);
+
   const mountKey = useRef(`kx-${context.item_id || 0}-${clientSessionIdRef.current}`);
   const emitBoundaryRef = useRef(emitBoundary);
   emitBoundaryRef.current = emitBoundary;
@@ -427,15 +481,15 @@ export default function KinesteXExerciseSession({
           className={`kinestex-session-stage${showResultCard ? ' is-hidden' : ''}`}
           key={mountKey.current}
         >
-          <KinesteXSDK
-            ref={sdkRef}
-            data={postData}
-            integrationOption={IntegrationOption.CUSTOM_WORKOUT}
-            baseUrl={sdk.base_url || 'https://ai.kinestex.com'}
-            handleMessage={handleMessage}
-            iframeTitle={`KinesteX — ${context.exercise_name || 'Exercise'}`}
+          <iframe
+            ref={iframeRef}
+            title={`KinesteX — ${context.exercise_name || 'Exercise'}`}
+            src={frameSrc}
             className="kinestex-sdk-root"
-            style={{ width: '100%', height: '100%', position: 'relative' }}
+            style={{ border: 0, position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+            allow="camera; microphone; autoplay; clipboard-read; clipboard-write; fullscreen"
+            allowFullScreen
+            onLoad={() => postToFrame(postData)}
           />
         </div>
       )}

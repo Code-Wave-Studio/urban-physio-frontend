@@ -7,7 +7,7 @@ import SeoBreadcrumbs from '../components/seo/SeoBreadcrumbs';
 import ManagedPageSeo from '../components/seo/ManagedPageSeo';
 import { breadcrumbSchema, faqPageSchema, medicalWebPageSchema } from '../components/seo/PageMeta';
 import Expandable, { AccordionItem } from '../components/homePhysio/Expandable';
-import { CheckRow, CtaLink, QuoteCard, SectionHead, bookHref } from '../components/homePhysio/HomePhysioUi';
+import { CheckRow, CtaLink, QuoteCard, SectionHead } from '../components/homePhysio/HomePhysioUi';
 import CommunityPreviewSection from '../components/community/CommunityPreviewSection';
 import PainSelectionSection from '../components/home/PainSelectionSection';
 import RecoveryRoadmapSection from '../components/roadmap/RecoveryRoadmapSection';
@@ -19,6 +19,7 @@ import { homePhysio } from '../services/api';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import { HEALTHCARE_IMAGES } from '../utils/healthcareImages';
 import { bookHomeVisitUrl, withPainAreaParams } from '../utils/bookUrl';
+import { homePhysioTierBookLink } from '../constants/homePhysioTiers';
 import {
   HOME_PHYSIO_DEFAULTS,
   HOME_PHYSIO_SEO,
@@ -40,9 +41,11 @@ function categoryItems(cat) {
 export default function HomePhysiotherapyPage() {
   const [data, setData] = useState(HOME_PHYSIO_DEFAULTS);
   const [loading, setLoading] = useState(true);
-  const [fitOpen, setFitOpen] = useState(false);
+  const [fitHomeOpen, setFitHomeOpen] = useState(false);
+  const [fitClinicOpen, setFitClinicOpen] = useState(false);
   const [whyOpen, setWhyOpen] = useState(false);
   const [diffOpen, setDiffOpen] = useState(false);
+  const [diffItemOpen, setDiffItemOpen] = useState({});
   const [tierOpen, setTierOpen] = useState({});
   const [howOpen, setHowOpen] = useState(null);
   const [condOpen, setCondOpen] = useState(false);
@@ -234,8 +237,8 @@ export default function HomePhysiotherapyPage() {
             </ul>
             <Expandable
               id="fit-home"
-              open={fitOpen}
-              onToggle={() => setFitOpen((v) => !v)}
+              open={fitHomeOpen}
+              onToggle={() => setFitHomeOpen((v) => !v)}
               label={`${s.fit_toggle} ↓`}
               className="mt-4"
             >
@@ -257,8 +260,8 @@ export default function HomePhysiotherapyPage() {
             </ul>
             <Expandable
               id="fit-clinic"
-              open={fitOpen}
-              onToggle={() => setFitOpen((v) => !v)}
+              open={fitClinicOpen}
+              onToggle={() => setFitClinicOpen((v) => !v)}
               label={`${s.fit_toggle} ↓`}
               className="mt-4"
             >
@@ -312,40 +315,52 @@ export default function HomePhysiotherapyPage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-pad">
         <SectionHead eyebrow="The TUP difference" heading={s.difference_heading} intro={s.difference_intro} />
         <div className="space-y-3 max-w-4xl mx-auto">
-          {(s.difference_items || []).slice(0, 2).map((item, i) => (
-            <AccordionItem
-              key={item.title}
-              id={`diff-${i}`}
-              open={!!faqOpen[`d${i}`]}
-              onToggle={() => setFaqOpen((prev) => ({ ...prev, [`d${i}`]: !prev[`d${i}`] }))}
-              title={item.title}
-              indexLabel={i + 1}
+          {(s.difference_items || []).slice(0, 2).map((item, i) => {
+            const id = `diff-${i}`;
+            return (
+              <AccordionItem
+                key={item.title}
+                id={id}
+                open={!!diffItemOpen[id]}
+                onToggle={() => setDiffItemOpen((prev) => ({ ...prev, [id]: !prev[id] }))}
+                title={item.title}
+                indexLabel={i + 1}
+              >
+                {item.body}
+              </AccordionItem>
+            );
+          })}
+          {(s.difference_items || []).length > 2 && (
+            <Expandable
+              id="diff-more"
+              open={diffOpen}
+              onToggle={() => setDiffOpen((v) => !v)}
+              label={`${s.difference_toggle} ↓`}
+              className="pt-1 text-center"
             >
-              {item.body}
-            </AccordionItem>
-          ))}
-          <Expandable
-            id="diff-more"
-            open={diffOpen}
-            onToggle={() => setDiffOpen((v) => !v)}
-            label={`${s.difference_toggle} ↓`}
-            className="pt-1 text-center"
-          >
-            <div className="space-y-3 pt-3 text-left">
-              {(s.difference_items || []).slice(2).map((item, i) => (
-                <AccordionItem
-                  key={item.title}
-                  id={`diff-more-${i}`}
-                  open
-                  onToggle={() => {}}
-                  title={item.title}
-                  indexLabel={i + 3}
-                >
-                  {item.body}
-                </AccordionItem>
-              ))}
-            </div>
-          </Expandable>
+              {diffOpen && (
+                <div className="space-y-3 pt-3 text-left">
+                  {(s.difference_items || []).slice(2).map((item, i) => {
+                    const id = `diff-more-${i}`;
+                    return (
+                      <AccordionItem
+                        key={item.title}
+                        id={id}
+                        open={diffItemOpen[id] !== false}
+                        onToggle={() =>
+                          setDiffItemOpen((prev) => ({ ...prev, [id]: prev[id] === false }))
+                        }
+                        title={item.title}
+                        indexLabel={i + 3}
+                      >
+                        {item.body}
+                      </AccordionItem>
+                    );
+                  })}
+                </div>
+              )}
+            </Expandable>
+          )}
         </div>
       </section>
 
@@ -401,7 +416,7 @@ export default function HomePhysiotherapyPage() {
                     </dl>
                   </Expandable>
                   <Link
-                    to={bookHref(tier.cta_link || bookHomeVisitUrl({ tier: tier.key }))}
+                    to={homePhysioTierBookLink(tier.key, tier.cta_link)}
                     className="btn-primary mt-5 w-full justify-center text-sm min-h-11"
                   >
                     {tier.cta_label}

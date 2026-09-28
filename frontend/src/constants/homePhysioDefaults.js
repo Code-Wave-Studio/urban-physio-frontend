@@ -3,6 +3,11 @@ import { HOME_PAIN_MAP_DEFAULTS } from './painMapDefaults';
 import { HOME_ROADMAP_DEFAULTS } from './recoveryRoadmapDefaults';
 import { HOME_ECOSYSTEM_DEFAULTS } from './careEcosystemDefaults';
 import { HOME_ENROL_DEFAULTS } from './enrollmentDefaults';
+import {
+  HOME_PHYSIO_TIER_CATALOG,
+  alignHomePhysioTierSections,
+  pricingSessionsFromTiers,
+} from './homePhysioTiers';
 
 /** Default PhysioAtHome / Home Physiotherapy page content (CRF-2026-0006). */
 
@@ -114,55 +119,7 @@ export const HOME_PHYSIO_DEFAULTS = {
     tiers_intro:
       'Unlike standard listings, home sessions on The Urban Physio give you full control over the level of expertise coming to you.',
     tiers_note: "Not sure which tier suits your condition? WhatsApp us or call before booking — we'll guide you.",
-    tiers: [
-      {
-        key: 'certified',
-        name: 'Certified Physio',
-        badge: '',
-        price: '₹1,200',
-        original: '₹1,500',
-        summary: 'Best for common musculoskeletal conditions, pain management, and general rehabilitation.',
-        qualification: 'BPT from a recognised institution',
-        experience: '1–3 years',
-        speciality:
-          'Orthopaedic conditions, back and neck pain, post-operative rehabilitation, sports injuries, general physiotherapy',
-        case_handling: 'Clinical assessment, SOAP-based documentation, structured home exercise prescription via TUP app',
-        cta_label: 'Book a Certified Physio — ₹1,200',
-        cta_link: `${HOME_VISIT_BOOK_PATH}&tier=certified`,
-      },
-      {
-        key: 'senior',
-        name: 'Senior Physio',
-        badge: 'Most Booked',
-        price: '₹1,500',
-        original: '₹1,800',
-        summary: 'Ideal when you want deeper clinical judgement and multi-session rehabilitation planning.',
-        qualification: 'BPT with advanced certification or MPT',
-        experience: '3–6 years',
-        speciality:
-          "Chronic pain, sports rehabilitation, neurological physiotherapy, women's health, cardiorespiratory, post-surgical recovery",
-        case_handling:
-          'Multi-session treatment planning, condition-specific manual therapy, outcome measurement and progressive rehabilitation protocols',
-        cta_label: 'Book a Senior Physio — ₹1,500',
-        cta_link: `${HOME_VISIT_BOOK_PATH}&tier=senior`,
-      },
-      {
-        key: 'specialist',
-        name: 'Specialist Consultant',
-        badge: 'Expert Care',
-        price: '₹2,000',
-        original: '₹2,500',
-        summary: 'For complex, high-dependency, or specialist-led recovery that needs senior clinical judgement.',
-        qualification: 'MPT in a specialised domain',
-        experience: '6+ years',
-        speciality:
-          'Neurological rehabilitation, advanced sports physiotherapy, complex post-operative cases, vestibular/balance rehabilitation, chronic complex pain, high-dependency elderly care',
-        case_handling:
-          'Advanced manual therapy, instrument-assisted techniques, complex case management and specialist-level clinical judgement',
-        cta_label: 'Book a Specialist Consultant — ₹2,000',
-        cta_link: `${HOME_VISIT_BOOK_PATH}&tier=specialist`,
-      },
-    ],
+    tiers: HOME_PHYSIO_TIER_CATALOG.map((tier) => ({ ...tier })),
     how_heading: 'How a Home Session Works',
     how_cta_label: 'Book Your First Session Now',
     how_cta_link: HOME_VISIT_BOOK_PATH,
@@ -273,11 +230,7 @@ export const HOME_PHYSIO_DEFAULTS = {
     pricing_payment: 'UPI · Credit & Debit Cards · Net Banking · EMI available on all packages',
     pricing_cta_label: 'Book Now & Lock in Your Price',
     pricing_cta_link: HOME_VISIT_BOOK_PATH,
-    pricing_sessions: [
-      { name: 'Certified Physio', original: '₹1,500', price: '₹1,200' },
-      { name: 'Senior Physio', original: '₹1,800', price: '₹1,500' },
-      { name: 'Specialist Consultant', original: '₹2,500', price: '₹2,000' },
-    ],
+    pricing_sessions: pricingSessionsFromTiers(HOME_PHYSIO_TIER_CATALOG),
     pricing_packages: [
       { name: 'Certified', sessions: '15 Sessions', price: '₹16,499', save: 'Save ₹1,501' },
       { name: 'Senior', sessions: '15 Sessions', price: '₹19,999', save: 'Save ₹2,501' },
@@ -412,5 +365,5 @@ export function mergeHomePhysioSections(raw = {}) {
       out[key] = defaults[key];
     }
   });
-  return out;
+  return alignHomePhysioTierSections(out);
 }

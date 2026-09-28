@@ -3,6 +3,7 @@
  * Run: node frontend/src/services/kinestexSessionBoundary.node-test.mjs
  */
 import {
+  buildKinesteXLaunchPostData,
   buildKinesteXSessionResult,
   mapCompletionStatus,
   onKinesteXSessionCompleted,
@@ -42,6 +43,7 @@ check('provider kinestex', result.provider === 'kinestex');
 check('status completed', result.status === 'completed');
 check('keeps provider_session_id', result.provider_session_id === 'ksx-1');
 check('keeps client_session_id', result.client_session_id === clientId);
+check('omits appointment when context has none', result.appointment_id === null);
 check('does not invent extra metric fields', !('repetitions' in result) && !('score' in result));
   check('preserves workout_overview', result.workout_overview?.calories === 4);
   check('map exit cancelled', mapCompletionStatus('exit_kinestex') === 'cancelled');
@@ -72,6 +74,13 @@ const exitCompleted = buildKinesteXSessionResult({
 });
 check('exit after stats can persist as completed', exitCompleted.status === 'completed');
 
+const withAppointment = buildKinesteXSessionResult({
+  eventType: 'workout_completed',
+  context: { prescription_id: 9, item_id: 3, exercise_id: 7, appointment_id: 44 },
+  clientSessionId: clientId,
+});
+check('copies consultation appointment_id into the result', withAppointment.appointment_id === 44);
+
 validateKinesteXSessionResult(result);
 check('validate accepts envelope', true);
 
@@ -89,6 +98,27 @@ const saved = await onKinesteXSessionCompleted(result, async (payload) => {
   return { session: { id: 1 }, duplicate: false, created: true, echo: payload.client_session_id };
 });
 check('onKinesteXSessionCompleted calls persist', persistCalls === 1 && saved.echo === clientId);
+
+const launch = buildKinesteXLaunchPostData({
+  session: 'ksx_sess_public_launch',
+  company: 'Urban Physio',
+  userId: 'tup_p1_u2',
+  key: 'COMPANY_SECRET_KEY',
+  api_key: 'COMPANY_SECRET_KEY',
+  customWorkoutExercises: [{ exerciseId: 'ex1', reps: 10 }],
+  customParameters: { api_key: 'COMPANY_SECRET_KEY', videoFit: 'contain' },
+});
+check('launch postData uses session', launch?.session === 'ksx_sess_public_launch');
+check('launch postData omits company API key field', launch && !('key' in launch) && !('api_key' in launch));
+check(
+  'launch postData does not contain the secret value',
+  launch && !JSON.stringify(launch).includes('COMPANY_SECRET_KEY')
+);
+check('legacy key-only payload is not launched', buildKinesteXLaunchPostData({
+  key: 'COMPANY_SECRET_KEY',
+  company: 'Urban Physio',
+  userId: 'tup_p1_u2',
+}) === null);
 
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

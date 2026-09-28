@@ -38,7 +38,8 @@ export default function OffersPage() {
   const [formErrors, setFormErrors] = useState({});
   const [isDragging, setIsDragging] = useState(false);
 
-  const [statusQuery, setStatusQuery] = useState('');
+  const [ownSubmissions, setOwnSubmissions] = useState([]);
+  const [selectedStatusId, setSelectedStatusId] = useState('');
   const [statusResult, setStatusResult] = useState(null);
   const [statusLoading, setStatusLoading] = useState(false);
   const [activeFaq, setActiveFaq] = useState({ 0: true, 1: true });
@@ -76,6 +77,7 @@ export default function OffersPage() {
   }, []);
 
   const s = data.sections || OFFERS_DEFAULTS.sections;
+  const requiredKm = Math.max(10, Number.parseFloat(s.required_distance_km) || 10);
   const vis = s.sections_visibility || OFFERS_DEFAULTS.sections.sections_visibility;
   const heroImage = resolveMediaUrl(data.hero_image) || data.hero_image || HEALTHCARE_IMAGES.sportsPhysio;
   const faqs = s.faqs || [];
@@ -154,8 +156,8 @@ export default function OffersPage() {
     if (!form.email.trim()) errors.email = 'Valid email address is required';
     if (!form.phone.trim()) errors.phone = 'Contact phone number is required';
     if (!form.run_date) errors.run_date = 'Date of run is required';
-    if (!form.distance_km || parseFloat(form.distance_km) <= 0) {
-      errors.distance_km = 'Valid completed distance is required';
+    if (!(Number.parseFloat(form.distance_km) >= requiredKm)) {
+      errors.distance_km = `A completed distance of at least ${requiredKm} KM is required.`;
     }
     if (!proofFile) errors.proof_file = 'Run proof screenshot or document is required';
     if (!form.consent_given) {
@@ -198,19 +200,76 @@ export default function OffersPage() {
     }
   };
 
+  useEffect(() => {
+    if (!user) {
+      setOwnSubmissions([]);
+      setSelectedStatusId('');
+      setStatusResult(null);
+      return undefined;
+    }
+
+    let cancelled = false;
+    setStatusLoading(true);
+    offers
+      .mySubmissions()
+      .then(async (res) => {
+        const list = Array.isArray(res.data ?? res) ? res.data ?? res : [];
+        if (cancelled) return;
+        setOwnSubmissions(list);
+        if (!list.length) {
+          setSelectedStatusId('');
+          setStatusResult(null);
+          return;
+        }
+        const id = list[0].id;
+        setSelectedStatusId(String(id));
+        try {
+          const statusRes = await offers.status({ id });
+          if (!cancelled) setStatusResult(statusRes.data ?? statusRes);
+        } catch (err) {
+          if (!cancelled) setStatusResult(null);
+          if (!cancelled && err.status && err.status !== 404 && err.status !== 401) {
+            toast.error(err.message || 'Could not load your campaign status');
+          }
+        }
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setOwnSubmissions([]);
+        setStatusResult(null);
+        if (err.status && err.status !== 404 && err.status !== 401) {
+          toast.error(err.message || 'Could not load your campaign status');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setStatusLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, submissionSuccess]);
+
   const handleCheckStatus = async (e) => {
     e.preventDefault();
-    if (!statusQuery.trim()) {
-      toast.error('Please enter a Submission ID, Email, or Phone number');
+    if (!user) return;
+    const id = Number(selectedStatusId);
+    if (!id) {
+      toast.error('Choose one of your submissions');
+      return;
+    }
+    const ownsId = ownSubmissions.some((row) => Number(row.id) === id);
+    if (!ownsId) {
+      toast.error('You can only view your own campaign submission');
       return;
     }
     setStatusLoading(true);
-    setStatusResult(null);
     try {
-      const res = await offers.status({ query: statusQuery.trim() });
+      const res = await offers.status({ id });
       setStatusResult(res.data ?? res);
     } catch (err) {
-      toast.error(err.message || 'No submission found matching your query');
+      setStatusResult(null);
+      toast.error(err.message || 'No submission found for your account');
     } finally {
       setStatusLoading(false);
     }
@@ -860,7 +919,7 @@ export default function OffersPage() {
                           <input
                             type="number"
                             step="0.01"
-                            min="1"
+                            min={requiredKm}
                             required
                             value={form.distance_km}
                             onChange={(e) => setForm({ ...form, distance_km: e.target.value })}
@@ -1030,28 +1089,46 @@ export default function OffersPage() {
                       {s.status_heading || 'Check Live Submission Status'}
                     </h3>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      {s.status_subheading ||
-                        'Already submitted? Check your verification and reward status in real time.'}
+                      {user
+                        ? 'Status is shown only for the account you are signed in with.'
+                        : 'Sign in to view your own campaign submission. Lookup by ID, email, or phone is not available.'}
                     </p>
                   </div>
                 </div>
 
+                {!user ? (
+                  <Link
+                    to="/patient/login"
+                    state={{ from: '/offers' }}
+                    className="inline-flex items-center justify-center gap-2 btn-primary text-sm !py-3 !px-6 rounded-2xl cursor-pointer"
+                  >
+                    <FaIcon icon="fa-right-to-bracket" />
+                    Sign in to view your status
+                  </Link>
+                ) : ownSubmissions.length === 0 && !statusLoading ? (
+                  <p className="text-sm text-slate-600">No campaign submission is linked to this account yet.</p>
+                ) : (
                 <form onSubmit={handleCheckStatus} className="flex flex-col sm:flex-row gap-3">
-                  <input
-                    type="text"
-                    value={statusQuery}
-                    onChange={(e) => setStatusQuery(e.target.value)}
-                    placeholder={s.status_search_placeholder || 'Enter Submission ID, Email, or Phone number'}
+                  <select
+                    value={selectedStatusId}
+                    onChange={(e) => setSelectedStatusId(e.target.value)}
                     className="flex-1 rounded-2xl border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:border-[#376299] focus:ring-2 focus:ring-[#376299]/15"
-                  />
+                  >
+                    {ownSubmissions.map((row) => (
+                      <option key={row.id} value={row.id}>
+                        {row.reference_code || `UP-10K-${row.id}`} · {row.status_label || row.status}
+                      </option>
+                    ))}
+                  </select>
                   <button
                     type="submit"
-                    disabled={statusLoading}
+                    disabled={statusLoading || ownSubmissions.length === 0}
                     className="btn-primary text-sm shrink-0 !py-3 !px-6 rounded-2xl cursor-pointer"
                   >
-                    {statusLoading ? <FaIcon icon="fa-spinner" className="fa-spin" /> : 'Check Status'}
+                    {statusLoading ? <FaIcon icon="fa-spinner" className="fa-spin" /> : 'Refresh Status'}
                   </button>
                 </form>
+                )}
 
                 {statusResult && (
                   <div className="mt-6 p-5 sm:p-7 rounded-3xl bg-slate-50 border border-slate-200 animate-fade-in space-y-6">

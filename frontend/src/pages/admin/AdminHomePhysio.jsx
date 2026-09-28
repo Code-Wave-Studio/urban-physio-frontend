@@ -11,6 +11,11 @@ import CareEcosystemEditor from '../../components/admin/CareEcosystemEditor';
 import EnrollmentEditor from '../../components/admin/EnrollmentEditor';
 import { admin, uploadCmsImage } from '../../services/api';
 import { HOME_PHYSIO_DEFAULTS, mergeHomePhysioSections } from '../../constants/homePhysioDefaults';
+import {
+  applyPricingSessionsToTiers,
+  pricingSessionsFromTiers,
+  syncTierPriceLabels,
+} from '../../constants/homePhysioTiers';
 import toast from 'react-hot-toast';
 
 const TABS = [
@@ -60,6 +65,30 @@ export default function AdminHomePhysio() {
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   const setSection = (k, v) => setForm((f) => ({ ...f, sections: { ...f.sections, [k]: v } }));
+  const setTiers = (tiers) =>
+    setForm((f) => {
+      const next = syncTierPriceLabels(f.sections.tiers, tiers);
+      return {
+        ...f,
+        sections: {
+          ...f.sections,
+          tiers: next,
+          pricing_sessions: pricingSessionsFromTiers(next),
+        },
+      };
+    });
+  const setPricingSessions = (sessions) =>
+    setForm((f) => {
+      const tiers = applyPricingSessionsToTiers(f.sections.tiers, sessions);
+      return {
+        ...f,
+        sections: {
+          ...f.sections,
+          tiers,
+          pricing_sessions: pricingSessionsFromTiers(tiers),
+        },
+      };
+    });
 
   const save = async (e) => {
     e.preventDefault();
@@ -346,7 +375,7 @@ export default function AdminHomePhysio() {
               </CmsField>
               <CmsListEditor
                 items={s.tiers}
-                onChange={(v) => setSection('tiers', v)}
+                onChange={setTiers}
                 addLabel="Add tier"
                 fields={[
                   { key: 'name', label: 'Name' },
@@ -428,9 +457,12 @@ export default function AdminHomePhysio() {
                 <input className="input-field" value={s.pricing_heading} onChange={(e) => setSection('pricing_heading', e.target.value)} />
               </CmsField>
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Single sessions</p>
+              <p className="text-xs text-slate-500">
+                These rows are the Certified, Senior, and Specialist tier prices. Editing one updates that tier card.
+              </p>
               <CmsListEditor
                 items={s.pricing_sessions}
-                onChange={(v) => setSection('pricing_sessions', v)}
+                onChange={setPricingSessions}
                 addLabel="Add session price"
                 fields={[
                   { key: 'name', label: 'Tier name' },

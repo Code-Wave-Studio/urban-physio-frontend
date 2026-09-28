@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { buildKinesteXLaunchPostData } from '../../services/kinestexSessionBoundary';
 
 const DEFAULT_ORIGIN = 'https://ai.kinestex.com';
 
 /**
  * Official KinesteX post-session movement / skeleton replay.
- * Docs: route `session/{id}` with company key + original userId
+ * Docs: route `session/{id}` with a server-minted launch session + original userId
  * (https://www.kinestex.com/docs/guides/guide-completed-workouts).
  * SDK 0.0.3 has no createCustomComponentView — HTML/JS iframe + postMessage used.
  * Does not fabricate landmarks or replay URLs.
@@ -38,15 +39,8 @@ export default function KinesteXSessionReplay({ sdk, onExit, onError, className 
 
   const postCredentials = () => {
     const win = iframeRef.current?.contentWindow;
-    if (!win || !sdk?.key || !sdk?.company || !sdk?.userId) return;
-    const payload = {
-      key: String(sdk.key),
-      company: String(sdk.company),
-      userId: String(sdk.userId),
-    };
-    if (sdk.style && typeof sdk.style === 'object') {
-      payload.style = sdk.style;
-    }
+    const payload = buildKinesteXLaunchPostData(sdk);
+    if (!win || !payload) return;
     try {
       win.postMessage(payload, origin);
     } catch {

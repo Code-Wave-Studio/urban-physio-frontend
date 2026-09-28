@@ -54,7 +54,7 @@ export default function KinesteXMovementAnalysisReport({
       const res = await kinestex.prepareSessionReplay(session.id);
       const data = res?.data ?? res;
       const sdk = data?.sdk;
-      if (!sdk?.key || !sdk?.company || !sdk?.userId || !sdk?.provider_session_id) {
+      if (!sdk?.session || !sdk?.company || !sdk?.userId || !sdk?.provider_session_id || sdk?.key || sdk?.api_key) {
         throw new Error('Movement replay credentials were incomplete.');
       }
       setReplaySdk(sdk);

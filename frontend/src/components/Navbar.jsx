@@ -60,12 +60,6 @@ const EXPLORE_SECTIONS = [
         iconBg: 'bg-teal-100 text-teal-600 group-hover:bg-teal-600 group-hover:text-white',
         badge: 'Online',
       },
-    ],
-  },
-  {
-    title: 'Community & Resources',
-    icon: 'fa-users',
-    items: [
       {
         to: '/offers',
         label: 'Offers',
@@ -74,6 +68,12 @@ const EXPLORE_SECTIONS = [
         iconBg: 'bg-rose-100 text-rose-600 group-hover:bg-rose-600 group-hover:text-white',
         badge: 'Reward',
       },
+    ],
+  },
+  {
+    title: 'Community & Resources',
+    icon: 'fa-users',
+    items: [
       {
         to: '/podcast',
         label: 'Podcast',
@@ -283,7 +283,7 @@ export default function Navbar({
                   aria-haspopup="true"
                   onClick={() => setMoreOpen((open) => !open)}
                 >
-                  Explore
+                  More
                   <FaIcon icon="fa-chevron-down" className={`text-[10px] transition-transform duration-200 ${moreOpen ? 'rotate-180 text-primary-600' : 'text-slate-400'}`} />
                 </button>
                 {moreOpen && (
@@ -304,9 +304,6 @@ export default function Navbar({
                             Specialized treatments, at-home visits &amp; resources
                           </span>
                         </div>
-                        <span className="text-[11px] font-semibold text-slate-400 bg-slate-100/80 px-2 py-0.5 rounded-full">
-                          10 Options
-                        </span>
                       </div>
 
                       

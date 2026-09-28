@@ -16,6 +16,7 @@ import {
   uploadReport,
   treatments,
   conditions,
+  homePhysio,
 } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocation } from '../contexts/LocationContext';
@@ -36,7 +37,13 @@ import BookingScheduleStep, {
 import BookingChiefComplaintStep from '../components/booking/BookingChiefComplaintStep';
 import BookingPersonalDetailsStep from '../components/booking/BookingPersonalDetailsStep';
 import { POLICY_LAST_UPDATED } from '../constants/policyPages';
-import { matchPainTypeLabel, matchHomeConditionLabel } from '../utils/bookUrl';
+import {
+  matchPainTypeLabel,
+  matchHomeConditionLabel,
+  preferredClinicMayOverride,
+  readHomePhysioTier,
+  resolveBookingConsultationType,
+} from '../utils/bookUrl';
 import { applyPatientProfileToBooking } from '../utils/patientBookingPrefill';
 import { buildSchedulePayload, createEmptySessions, isStructuredPackageId } from '../utils/bookingScheduleUtils';
 import CouponInput from '../components/platform/CouponInput';
@@ -114,7 +121,13 @@ export default function BookAppointmentWizard() {
   const { city, coords, loading: locLoading, setShowSelector } = useLocation();
   const [step, setStep] = useState(0);
   const [doctorsLoading, setDoctorsLoading] = useState(false);
-  const [form, setForm] = useState(initialForm);
+  const [form, setForm] = useState(() => ({
+    ...initialForm(),
+    consultation_type: resolveBookingConsultationType(
+      searchParams.get('type'),
+      searchParams.get('mode')
+    ),
+  }));
   const [doctorList, setDoctorList] = useState([]);
   const [clinicList, setClinicList] = useState([]);
   const [clinicDoctors, setClinicDoctors] = useState([]);
@@ -156,6 +169,8 @@ export default function BookAppointmentWizard() {
   const [emergencyCtx, setEmergencyCtx] = useState(null);
   const preselectedClinicId = searchParams.get('clinic_id');
   const preselectedDoctorFromQuery = searchParams.get('doctor_id');
+  const [homePhysioTier, setHomePhysioTier] = useState(() => readHomePhysioTier(searchParams.get('tier')));
+  const [homePhysioTierLabel, setHomePhysioTierLabel] = useState('');
   const lockedClinic = Boolean(preselectedClinicId && form.consultation_type === 'clinic');
   const lockedDoctor = Boolean(doctorIdParam || preselectedDoctorFromQuery);
 
@@ -364,34 +379,46 @@ export default function BookAppointmentWizard() {
   }, [prefillPackageId, prefillTreatmentPackageId, prefillDate, prefillSlotTime, adminPackages, doctorPackages]);
 
   useEffect(() => {
-    const t = searchParams.get('type');
-    const mode = searchParams.get('mode');
-    const modeAlias = {
-      'home-visit': 'home_visit',
-      home_visit: 'home_visit',
-      homevisit: 'home_visit',
-      online: 'online',
-      telephysio: 'online',
-      'tele-physio': 'online',
-      clinic: 'clinic',
-    };
-    const resolved = t || modeAlias[mode] || '';
-    if (resolved && ['online', 'clinic', 'home_visit'].includes(resolved)) {
+    const resolved = resolveBookingConsultationType(searchParams.get('type'), searchParams.get('mode'));
+    if (resolved) {
       patch({ consultation_type: resolved });
     }
     const cid = searchParams.get('clinic_id');
-    if (cid) {
+    if (cid && preferredClinicMayOverride(searchParams.get('type'), searchParams.get('mode'))) {
       patch({ clinic_id: cid, consultation_type: 'clinic' });
     }
     const did = searchParams.get('doctor_id');
     if (did && !doctorIdParam) {
       patch({ doctor_id: did });
     }
+    const tier = readHomePhysioTier(searchParams.get('tier'));
+    setHomePhysioTier(tier);
+    if (!tier) setHomePhysioTierLabel('');
   }, [searchParams, doctorIdParam]);
 
-  // Smart routing: intake-linked preferred clinic when URL has no clinic_id
+  useEffect(() => {
+    if (!homePhysioTier) return undefined;
+    let cancelled = false;
+    homePhysio
+      .settings()
+      .then((res) => {
+        if (cancelled) return;
+        const sections = (res?.data ?? res)?.sections || {};
+        const tiers = Array.isArray(sections.tiers) ? sections.tiers : [];
+        const match = tiers.find((tier) => readHomePhysioTier(tier?.key) === homePhysioTier);
+        setHomePhysioTierLabel(match?.name ? String(match.name) : '');
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [homePhysioTier]);
+
+  // Smart routing: intake-linked preferred clinic when URL has no clinic_id.
+  // An explicit Home Visit or Online / TelePhysio URL keeps that mode.
   useEffect(() => {
     if (searchParams.get('clinic_id') || doctorIdParam || isEmergency) return undefined;
+    if (!preferredClinicMayOverride(searchParams.get('type'), searchParams.get('mode'))) {
+      return undefined;
+    }
     let cancelled = false;
     patients.preferredClinic()
       .then((res) => {
@@ -523,6 +550,7 @@ export default function BookAppointmentWizard() {
 
   useEffect(() => {
     if (!preselectedClinicId) return;
+    if (!preferredClinicMayOverride(searchParams.get('type'), searchParams.get('mode'))) return;
     clinics
       .get(preselectedClinicId)
       .then((res) => {
@@ -532,7 +560,7 @@ export default function BookAppointmentWizard() {
         setPrefillLabel((prev) => prev || c.name);
       })
       .catch(() => {});
-  }, [preselectedClinicId]);
+  }, [preselectedClinicId, searchParams]);
 
   useEffect(() => {
     const painTypeParam = searchParams.get('pain_type');
@@ -991,6 +1019,9 @@ export default function BookAppointmentWizard() {
         ...(selectedDoctorPackage?.package_source === 'doctor' && form.doctor_package_id
           ? { doctor_package_id: Number(form.doctor_package_id) }
           : {}),
+        ...(form.consultation_type === 'home_visit' && homePhysioTier
+          ? { home_physio_tier: homePhysioTier }
+          : {}),
         ...(isEmergency && emergencyCtx
           ? {
               is_emergency: true,
@@ -1139,6 +1170,12 @@ export default function BookAppointmentWizard() {
                   </button>
                 ))}
               </div>
+              {form.consultation_type === 'home_visit' && homePhysioTier && (
+                <p className="text-sm text-slate-600">
+                  Preferred physiotherapist tier:{' '}
+                  <strong>{homePhysioTierLabel || homePhysioTier}</strong>
+                </p>
+              )}
             </div>
           )}
 
@@ -1224,6 +1261,12 @@ export default function BookAppointmentWizard() {
                   <span className="text-slate-500">Service:</span>{' '}
                   <strong className="capitalize">{form.consultation_type?.replace('_', ' ')}</strong>
                 </p>
+                {form.consultation_type === 'home_visit' && homePhysioTier && (
+                  <p>
+                    <span className="text-slate-500">Physiotherapist tier:</span>{' '}
+                    <strong>{homePhysioTierLabel || homePhysioTier}</strong>
+                  </p>
+                )}
                 <p>
                   <span className="text-slate-500">Package:</span> {form.package_label || 'Single Visit'} ({form.number_of_sessions} visit{form.number_of_sessions > 1 ? 's' : ''})
                 </p>

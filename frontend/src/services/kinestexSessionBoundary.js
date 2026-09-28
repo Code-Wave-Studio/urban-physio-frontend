@@ -21,6 +21,8 @@ export function buildKinesteXSessionResult({
   statusOverride = null,
 }) {
   const data = eventData && typeof eventData === 'object' ? eventData : {};
+  const appointmentRaw = Number(context.appointment_id);
+  const appointmentId = Number.isInteger(appointmentRaw) && appointmentRaw > 0 ? appointmentRaw : null;
   // SDK sometimes nests fields under data / value.
   const sessionId =
     data.session_id ??
@@ -41,6 +43,7 @@ export function buildKinesteXSessionResult({
     exercise_id: context.exercise_id ?? null,
     kinestex_exercise_id: context.kinestex_exercise_id ?? null,
     client_session_id: clientSessionId || null,
+    appointment_id: appointmentId,
     // Never invent a KinesteX session id
     provider_session_id: sessionId || null,
     cancellation_reason: typeof data.reason === 'string' ? data.reason : null,
@@ -131,6 +134,45 @@ export function patientFriendlyKinesteXError(eventType, eventData) {
     return 'AI monitoring could not start. Please try again in a supported browser with a working camera.';
   }
   return 'AI monitoring stopped unexpectedly. You can try again or mark the exercise complete manually.';
+}
+
+const LAUNCH_SECRET_FIELDS = ['key', 'api_key', 'apiKey', 'secret', 'token', 'access_token', 'authorization'];
+
+/**
+ * Browser postMessage for a KinesteX iframe. Uses the server-minted session id.
+ * Drops company API key / provider secret fields if a payload still contains them.
+ * @param {object|null|undefined} sdk
+ * @param {object} [extras]
+ */
+export function buildKinesteXLaunchPostData(sdk, extras = {}) {
+  if (!sdk || typeof sdk !== 'object') return null;
+  const session = String(sdk.session || '').trim();
+  const company = String(sdk.company || '').trim();
+  const userId = String(sdk.userId || '').trim();
+  if (!session || !company || !userId) return null;
+
+  const payload = {
+    session,
+    company,
+    userId,
+    ...(extras && typeof extras === 'object' ? extras : {}),
+  };
+  if (sdk.style && typeof sdk.style === 'object') payload.style = sdk.style;
+  if (Array.isArray(sdk.customWorkoutExercises) && sdk.customWorkoutExercises.length) {
+    payload.customWorkoutExercises = sdk.customWorkoutExercises;
+  }
+  if (sdk.shouldSendStats !== undefined) payload.shouldSendStats = sdk.shouldSendStats !== false;
+  if (sdk.customParameters && typeof sdk.customParameters === 'object') {
+    const custom = { ...sdk.customParameters };
+    LAUNCH_SECRET_FIELDS.forEach((field) => {
+      delete custom[field];
+    });
+    payload.customParameters = custom;
+  }
+  LAUNCH_SECRET_FIELDS.forEach((field) => {
+    delete payload[field];
+  });
+  return payload;
 }
 
 export function patientFriendlySaveError(err) {

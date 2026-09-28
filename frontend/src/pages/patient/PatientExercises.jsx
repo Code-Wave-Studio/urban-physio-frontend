@@ -200,7 +200,7 @@ export default function PatientExercises() {
         item_id: aiPrepEx.id,
       });
       const payload = res.data;
-      if (!payload?.sdk?.key || !payload?.sdk?.company || !payload?.sdk?.customWorkoutExercises?.length) {
+      if (!payload?.sdk?.session || !payload?.sdk?.company || !payload?.sdk?.customWorkoutExercises?.length || payload?.sdk?.key || payload?.sdk?.api_key) {
         throw new Error('AI session could not be prepared.');
       }
       setAiSessionPayload(payload);

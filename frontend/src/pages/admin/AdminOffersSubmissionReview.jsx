@@ -79,9 +79,9 @@ export default function AdminOffersSubmissionReview() {
 
       toast.success(
         targetStatus === 'approved'
-          ? '🎉 Submission approved successfully!'
+          ? 'Submission approved. Reward status recorded once. No second reward is issued.'
           : targetStatus === 'rejected'
-          ? 'Submission rejected with reason provided.'
+          ? 'Submission rejected. No reward was granted.'
           : 'Submission marked as under review / changes requested.'
       );
       fetchDetail();
@@ -391,11 +391,12 @@ export default function AdminOffersSubmissionReview() {
               {submission.reward_status}
             </p>
             <p className="text-[11px] font-medium text-purple-700 mt-1">
-              {submission.reward_status === 'claimed'
-                ? 'Claimed by participant'
-                : submission.reward_status === 'approved'
-                ? 'Voucher ready'
-                : 'Free session reward'}
+              {submission.reward_fulfillment?.message
+                || (submission.reward_status === 'claimed'
+                  ? 'Claimed by participant'
+                  : submission.reward_status === 'approved'
+                  ? 'Voucher ready'
+                  : 'Free session reward')}
             </p>
           </div>
 
