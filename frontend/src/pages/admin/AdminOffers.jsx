@@ -104,7 +104,7 @@ export default function AdminOffers() {
           hero_image: d.hero_image || '',
           seo_title: d.seo_title || '',
           seo_description: d.seo_description || '',
-          sections: mergeOffersSections(d?.sections || {}),
+          sections: mergeOffersSections(d?.sections || {}, d?.hero_title || ''),
         });
       })
       .catch((err) => toast.error(err.message || 'Could not load campaign settings'))
@@ -129,6 +129,23 @@ export default function AdminOffers() {
   const setSetting = (k, v) => setSettingsForm((f) => ({ ...f, [k]: v }));
   const setSection = (k, v) =>
     setSettingsForm((f) => ({ ...f, sections: { ...f.sections, [k]: v } }));
+  const setHeadlinePart = (key, value) => {
+    setSettingsForm((f) => {
+      const prefix = key === 'hero_title_prefix' ? value : f.sections?.hero_title_prefix || '';
+      const highlight = key === 'hero_title_highlight' ? value : f.sections?.hero_title_highlight || '';
+      const hero_title = [prefix.trim(), highlight.trim()].filter(Boolean).join(' ');
+      return {
+        ...f,
+        hero_title,
+        sections: {
+          ...f.sections,
+          hero_title_prefix: prefix,
+          hero_title_highlight: highlight,
+          hero_title,
+        },
+      };
+    });
+  };
 
   const handleSaveSettings = async (e) => {
     if (e?.preventDefault) e.preventDefault();
@@ -162,6 +179,13 @@ export default function AdminOffers() {
   };
 
   const s = settingsForm?.sections || OFFERS_DEFAULTS.sections;
+  const campaignTitle =
+    [s.hero_title_prefix, s.hero_title_highlight]
+      .map((part) => String(part || '').trim())
+      .filter(Boolean)
+      .join(' ') ||
+    String(settingsForm.hero_title || '').trim() ||
+    'Offers & Campaigns';
   const stats = submissionsData?.stats || {
     total: 0,
     pending: 0,
@@ -206,10 +230,9 @@ export default function AdminOffers() {
               <span className="text-xs font-bold uppercase tracking-wider text-primary-700 bg-primary-100/80 px-2.5 py-0.5 rounded-md">
                 Campaign &amp; Offers
               </span>
-              <span className="text-xs text-slate-500 font-semibold">CRF-2026-0006</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
-              Run 10 KM &amp; Get Free Physiotherapy
+              {campaignTitle}
             </h1>
             <p className="text-sm text-slate-600 mt-1">
               Review and verify participant submissions, manage rewards, and customize landing page copy.{' '}
@@ -510,15 +533,32 @@ export default function AdminOffers() {
                         placeholder="e.g. Exclusive Fitness & Recovery Campaign"
                       />
                     </CmsField>
-                    <CmsField label="Hero Headline (Main Title)">
-                      <input
-                        type="text"
-                        value={settingsForm.hero_title || ''}
-                        onChange={(e) => setSetting('hero_title', e.target.value)}
-                        className="input-field"
-                        placeholder="e.g. Run 10 KM. Get Free Physiotherapy Sessions."
-                      />
-                    </CmsField>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <CmsField
+                        label="Campaign headline"
+                        hint="The campaign title. Shown in this admin header and on the public page."
+                      >
+                        <input
+                          type="text"
+                          value={s.hero_title_prefix || ''}
+                          onChange={(e) => setHeadlinePart('hero_title_prefix', e.target.value)}
+                          className="input-field"
+                          placeholder="e.g. Run 10 KM."
+                        />
+                      </CmsField>
+                      <CmsField
+                        label="Highlighted Headline Text"
+                        hint="Gradient phrase that follows the headline."
+                      >
+                        <input
+                          type="text"
+                          value={s.hero_title_highlight || ''}
+                          onChange={(e) => setHeadlinePart('hero_title_highlight', e.target.value)}
+                          className="input-field"
+                          placeholder="e.g. Get Free Physiotherapy Sessions."
+                        />
+                      </CmsField>
+                    </div>
                     <CmsField label="Hero Subtitle / Description Copy">
                       <textarea
                         rows={3}
@@ -545,6 +585,15 @@ export default function AdminOffers() {
                         preview="image"
                       />
                     </CmsField>
+                    <CmsField label="Hero Image Alt Text">
+                      <input
+                        type="text"
+                        value={s.hero_image_alt || ''}
+                        onChange={(e) => setSection('hero_image_alt', e.target.value)}
+                        className="input-field"
+                        placeholder="e.g. Run 10 KM and get free physiotherapy recovery sessions"
+                      />
+                    </CmsField>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <CmsField label="Primary CTA Button Label">
                         <input
@@ -565,6 +614,68 @@ export default function AdminOffers() {
                         />
                       </CmsField>
                     </div>
+                  </CmsPanel>
+
+                  <CmsPanel title="Hero Image Card Overlay" icon="fa-image">
+                    <p className="text-xs text-slate-500 mb-2">
+                      Text layered on the hero photo: campaign badge, target chip, title, and short description.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <CmsField label="Overlay Badge">
+                        <input
+                          type="text"
+                          value={s.hero_card_badge || ''}
+                          onChange={(e) => setSection('hero_card_badge', e.target.value)}
+                          className="input-field"
+                          placeholder="e.g. Verified Campaign"
+                        />
+                      </CmsField>
+                      <CmsField label="Overlay Target Chip">
+                        <input
+                          type="text"
+                          value={s.hero_card_target || ''}
+                          onChange={(e) => setSection('hero_card_target', e.target.value)}
+                          className="input-field"
+                          placeholder="e.g. 10.0 KM Target"
+                        />
+                      </CmsField>
+                    </div>
+                    <CmsField label="Overlay Title">
+                      <input
+                        type="text"
+                        value={s.hero_card_title || ''}
+                        onChange={(e) => setSection('hero_card_title', e.target.value)}
+                        className="input-field"
+                        placeholder="e.g. Fitness Meets Clinical Recovery"
+                      />
+                    </CmsField>
+                    <CmsField label="Overlay Description">
+                      <textarea
+                        rows={2}
+                        value={s.hero_card_text || ''}
+                        onChange={(e) => setSection('hero_card_text', e.target.value)}
+                        className="input-field min-h-[70px]"
+                        placeholder="e.g. Submit your verified 10 KM run proof and consult licensed physiotherapists at clinic or online."
+                      />
+                    </CmsField>
+                  </CmsPanel>
+
+                  <CmsPanel title="Compatible Tracker Tags" icon="fa-stopwatch">
+                    <CmsField label="Trackers Label">
+                      <input
+                        type="text"
+                        value={s.hero_trackers_label || ''}
+                        onChange={(e) => setSection('hero_trackers_label', e.target.value)}
+                        className="input-field"
+                        placeholder="e.g. Compatible Trackers:"
+                      />
+                    </CmsField>
+                    <CmsListEditor
+                      items={s.hero_trackers || []}
+                      onChange={(items) => setSection('hero_trackers', items)}
+                      addLabel="Add Tracker Tag"
+                      fields={[{ key: 'value', label: 'Tracker name (e.g. Strava)' }]}
+                    />
                   </CmsPanel>
 
                   <CmsPanel title="Hero 3 Quick Stat Highlight Badges" icon="fa-chart-simple">

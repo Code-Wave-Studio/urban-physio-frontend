@@ -87,15 +87,16 @@ export default function KinesteXMovementAnalysisReport({
           <FaIcon icon="fa-person-walking" className="text-teal-600" />
           {title}
         </h3>
-        <p className="text-sm text-slate-600 mt-1">
-          <span className="font-semibold text-slate-800">{session.exercise_name || 'Exercise'}</span>
-          <span className="text-slate-400"> · </span>
-          {formatWhen(session.session_at || session.completed_at || session.created_at)}
+        <p className="mt-1 flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-sm leading-snug text-slate-600">
+          <span className="font-semibold text-slate-800 break-words">{session.exercise_name || 'Exercise'}</span>
+          <span className="text-slate-400" aria-hidden="true">·</span>
+          <span className="break-words">{formatWhen(session.session_at || session.completed_at || session.created_at)}</span>
         </p>
       </div>
 
-      <div className={`grid gap-4 items-start ${showMetrics ? 'grid-cols-1 lg:grid-cols-5' : 'grid-cols-1'}`}>
-        <div className={`${showMetrics ? 'lg:col-span-3' : ''} min-w-0 space-y-2`}>
+      <div className="kx-analysis-frame">
+      <div className={`kx-analysis-grid ${showMetrics ? 'is-split' : ''}`}>
+        <div className="min-w-0 max-w-full space-y-2">
           <p className="text-[10px] uppercase tracking-wide font-semibold text-slate-400">
             Movement / skeleton
           </p>
@@ -132,7 +133,7 @@ export default function KinesteXMovementAnalysisReport({
         </div>
 
         {showMetrics ? (
-          <div className="lg:col-span-2 min-w-0 space-y-2">
+          <div className="min-w-0 max-w-full space-y-2">
             <p className="text-[10px] uppercase tracking-wide font-semibold text-slate-400">Performance</p>
             <KinesteXWorkoutOverview
               metrics={session.metrics}
@@ -140,15 +141,16 @@ export default function KinesteXMovementAnalysisReport({
               emptyMessage="Performance metrics were not included in this session result."
             />
             {analysis?.status === 'upload_failed' ? (
-              <p className="text-[11px] text-amber-800 rounded-lg bg-amber-50 px-3 py-2">
+              <p className="text-[11px] leading-relaxed text-amber-800 rounded-lg bg-amber-50 px-3 py-2 break-words">
                 Metrics may still be available even when movement recording failed to upload.
               </p>
             ) : null}
-            <p className="text-[10px] text-slate-400">
+            <p className="text-[11px] leading-relaxed text-slate-500 break-words">
               Objective KinesteX metrics only — AI Exercise Feedback from recorded session data, not a medical diagnosis.
             </p>
           </div>
         ) : null}
+      </div>
       </div>
     </div>
   );

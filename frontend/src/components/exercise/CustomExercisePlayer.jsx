@@ -22,6 +22,8 @@ export default function CustomExercisePlayer({
   title = '',
   className = '',
   layout = 'landscape',
+  autoPlay = false,
+  loop = true,
 }) {
   const containerRef = useRef(null);
   const videoRef = useRef(null);
@@ -35,46 +37,84 @@ export default function CustomExercisePlayer({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(100);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(Boolean(autoPlay));
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPip, setIsPip] = useState(false);
   const [iframeError, setIframeError] = useState(false);
   const [ytStarted, setYtStarted] = useState(false);
+  const [autoPlayBlocked, setAutoPlayBlocked] = useState(false);
 
   // Reset click-to-play when switching exercises
   useEffect(() => {
-    setYtStarted(false);
+    setYtStarted(Boolean(autoPlay));
     setIframeError(false);
     setIsPlaying(false);
+    setAutoPlayBlocked(false);
+    setIsMuted(Boolean(autoPlay));
     setCurrentTime(0);
     setDuration(0);
-  }, [media.url, media.videoId, media.type]);
+  }, [media.url, media.videoId, media.type, autoPlay]);
 
   // YouTube — start muted only after explicit play in portrait (gallery) mode
   const youtubeEmbedUrl = useMemo(() => {
     if (media.type !== 'youtube' || !media.videoId) return null;
-    if (isPortrait && !ytStarted) return null;
+    if (isPortrait && !ytStarted && !autoPlay) return null;
     const params = new URLSearchParams({
-      autoplay: '1',
+      autoplay: autoPlay || ytStarted || !isPortrait ? '1' : '0',
       controls: '1',
       rel: '0',
       modestbranding: '1',
       playsinline: '1',
     });
+    if (autoPlay) params.set('mute', '1');
+    if (autoPlay && loop) {
+      params.set('loop', '1');
+      params.set('playlist', media.videoId);
+    }
     return `https://www.youtube.com/embed/${media.videoId}?${params.toString()}`;
-  }, [media, isPortrait, ytStarted]);
+  }, [media, isPortrait, ytStarted, autoPlay, loop]);
 
   useEffect(() => {
-    if (media.type !== 'video' || !videoRef.current) return;
+    if (media.type !== 'video' || !videoRef.current) return undefined;
+    const wantsPlay = autoPlay || !isPortrait;
+    if (!wantsPlay) return undefined;
+    const v = videoRef.current;
+    let cancelled = false;
+    const start = async () => {
+      try {
+        await v.play();
+        if (!cancelled) setAutoPlayBlocked(false);
+      } catch {
+        if (cancelled) return;
+        v.muted = true;
+        setIsMuted(true);
+        try {
+          await v.play();
+          if (!cancelled) setAutoPlayBlocked(false);
+        } catch {
+          if (!cancelled) setAutoPlayBlocked(true);
+        }
+      }
+    };
+    start();
+    return () => {
+      cancelled = true;
+    };
+  }, [autoPlay, isPortrait, media.type, media.url]);
+
+  useEffect(() => {
+    if (media.type !== 'video' || !videoRef.current) return undefined;
     const v = videoRef.current;
 
     const onTimeUpdate = () => setCurrentTime(v.currentTime);
     const onLoadedMetadata = () => setDuration(v.duration);
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
-    const onEnded = () => setIsPlaying(false);
+    const onEnded = () => {
+      if (!v.loop) setIsPlaying(false);
+    };
 
     v.addEventListener('timeupdate', onTimeUpdate);
     v.addEventListener('loadedmetadata', onLoadedMetadata);
@@ -192,7 +232,7 @@ export default function CustomExercisePlayer({
   if (media.type === 'youtube') {
     return (
       <div className={`w-full ${frameClass} rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-xl relative flex items-center justify-center ${className}`}>
-        {isPortrait && !ytStarted && !iframeError && (
+        {isPortrait && !autoPlay && !ytStarted && !iframeError && (
           <button
             type="button"
             className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-slate-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-400"
@@ -252,9 +292,9 @@ export default function CustomExercisePlayer({
           ref={videoRef}
           src={media.url}
           poster={media.thumbnailUrl || undefined}
-          autoPlay={!isPortrait}
-          loop
-          muted={isMuted || isPortrait}
+          autoPlay={autoPlay || !isPortrait}
+          loop={loop}
+          muted={isMuted || (isPortrait && !autoPlay)}
           playsInline
           controls={false}
           controlsList="nodownload noplaybackrate"
@@ -264,7 +304,7 @@ export default function CustomExercisePlayer({
         />
 
         
-        {!isPlaying && (
+        {!isPlaying && (!autoPlay || autoPlayBlocked) && (
           <button
             type="button"
             onClick={togglePlay}

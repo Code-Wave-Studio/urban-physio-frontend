@@ -20,10 +20,20 @@ export const OFFERS_DEFAULTS = {
   seo_description: OFFERS_SEO.description,
   sections: {
     hero_badge: 'Exclusive Fitness & Recovery Campaign',
+    hero_title_prefix: 'Run 10 KM.',
+    hero_title_highlight: 'Get Free Physiotherapy Sessions.',
     hero_primary_cta_label: 'Join the Campaign',
     hero_primary_cta_action: 'scroll_form',
     hero_secondary_cta_label: 'Learn How It Works',
     hero_secondary_cta_action: 'scroll_steps',
+    hero_trackers_label: 'Compatible Trackers:',
+    hero_trackers: ['Strava', 'Nike Run Club', 'Garmin', 'Apple Health', 'Samsung Health', 'GPS Watches'],
+    hero_image_alt: 'Run 10 KM and get free physiotherapy recovery sessions',
+    hero_card_badge: 'Verified Campaign',
+    hero_card_target: '10.0 KM Target',
+    hero_card_title: 'Fitness Meets Clinical Recovery',
+    hero_card_text:
+      'Submit your verified 10 KM run proof and consult licensed physiotherapists at clinic or online.',
     hero_highlights: [
       { label: 'Target Distance', value: '10 KM', icon: 'fa-person-running' },
       { label: 'Reward', value: 'Free Physiotherapy', icon: 'fa-gift' },
@@ -239,9 +249,37 @@ export const OFFERS_DEFAULTS = {
   },
 };
 
-export function mergeOffersSections(raw = {}) {
+/** Split a stored full headline into the plain phrase and the gradient phrase. */
+export function splitHeroHeadline(title = '') {
+  const prefixDefault = OFFERS_DEFAULTS.sections.hero_title_prefix;
+  const highlightDefault = OFFERS_DEFAULTS.sections.hero_title_highlight;
+  const trimmed = String(title || '').trim().replace(/\s+/g, ' ');
+  if (!trimmed) {
+    return { prefix: '', highlight: '' };
+  }
+  if (trimmed === `${prefixDefault} ${highlightDefault}`) {
+    return { prefix: prefixDefault, highlight: highlightDefault };
+  }
+  if (trimmed.endsWith(highlightDefault) && trimmed.length > highlightDefault.length) {
+    const prefix = trimmed.slice(0, trimmed.length - highlightDefault.length).trim();
+    if (prefix) return { prefix, highlight: highlightDefault };
+  }
+  const dot = trimmed.indexOf('. ');
+  if (dot !== -1) {
+    const prefix = trimmed.slice(0, dot + 1).trim();
+    const highlight = trimmed.slice(dot + 2).trim();
+    if (prefix && highlight) return { prefix, highlight };
+  }
+  return { prefix: trimmed, highlight: '' };
+}
+
+export function mergeOffersSections(raw = {}, heroTitle = '') {
   const defaults = OFFERS_DEFAULTS.sections;
-  const merged = { ...defaults, ...(raw || {}) };
+  const source = raw && typeof raw === 'object' ? raw : {};
+  const hasSplit =
+    Object.prototype.hasOwnProperty.call(source, 'hero_title_prefix') ||
+    Object.prototype.hasOwnProperty.call(source, 'hero_title_highlight');
+  const merged = { ...defaults, ...source };
   const listKeys = [
     'hero_highlights',
     'highlights_cards',
@@ -255,9 +293,16 @@ export function mergeOffersSections(raw = {}) {
       merged[key] = defaults[key];
     }
   });
+  if (!hasSplit) {
+    const split = splitHeroHeadline(heroTitle);
+    if (split.prefix || split.highlight) {
+      merged.hero_title_prefix = split.prefix;
+      merged.hero_title_highlight = split.highlight;
+    }
+  }
   merged.sections_visibility = {
     ...defaults.sections_visibility,
-    ...(raw?.sections_visibility || {}),
+    ...(source.sections_visibility || {}),
   };
   return merged;
 }

@@ -4,6 +4,7 @@ import FaIcon from '../FaIcon';
 import GlassModal, { GlassModalBody, GlassModalFooter, GlassModalHeader } from '../GlassModal';
 import { kinestex } from '../../services/api';
 import KinesteXMovementAnalysisReport from './KinesteXMovementAnalysisReport';
+import KinesteXSessionEventDetails from './KinesteXSessionEventDetails.jsx';
 
 function na(value) {
   if (value === null || value === undefined || value === '') return 'N/A';
@@ -32,9 +33,13 @@ function statusClass(status) {
 
 function Metric({ label, value }) {
   return (
-    <div className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5 text-center min-w-0">
-      <p className="text-[10px] uppercase tracking-wide text-slate-400 truncate">{label}</p>
-      <p className="text-sm sm:text-base font-bold text-slate-800 mt-0.5 break-words">{value}</p>
+    <div className="min-w-0 max-w-full rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5 text-center">
+      <p className="text-[11px] font-semibold uppercase tracking-normal text-slate-500 leading-snug break-words">
+        {label}
+      </p>
+      <p className="mt-0.5 text-sm font-bold leading-snug text-slate-800 break-words [overflow-wrap:anywhere] sm:text-base">
+        {value}
+      </p>
     </div>
   );
 }
@@ -214,7 +219,7 @@ export default function KinesteXAiPerformancePanel({
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4 min-w-0">
+          <div className="kx-metric-grid mb-4">
             <Metric label="AI sessions" value={summary.total_ai_sessions ?? 0} />
             <Metric label="Completed" value={summary.completed_ai_sessions ?? 0} />
             <Metric label="Total reps" value={na(summary.total_repetitions)} />
@@ -357,7 +362,7 @@ export default function KinesteXAiPerformancePanel({
         </>
       )}
 
-      <GlassModal open={!!detail} onClose={() => setDetail(null)} size="lg" zIndex={10050}>
+      <GlassModal open={!!detail} onClose={() => setDetail(null)} size="xl" zIndex={10050}>
         <GlassModalHeader
           title="AI session"
           subtitle={detail?.exercise_name || ''}
@@ -371,7 +376,7 @@ export default function KinesteXAiPerformancePanel({
           ) : detailError ? (
             <p className="text-sm text-rose-700">{detailError}</p>
           ) : detail ? (
-            <div className="space-y-4">
+            <div className="min-w-0 max-w-full space-y-4">
               <div className="flex flex-wrap gap-2">
                 <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-700">
                   AI Monitored
@@ -380,31 +385,20 @@ export default function KinesteXAiPerformancePanel({
                   {detail.session_status}
                 </span>
               </div>
-              <dl className="grid sm:grid-cols-2 gap-x-4 gap-y-2 text-sm min-w-0">
-                <div className="min-w-0">
-                  <dt className="text-[10px] uppercase text-slate-400">Date / time</dt>
-                  <dd className="text-slate-800 break-words">{formatWhen(detail.session_at || detail.completed_at || detail.created_at)}</dd>
-                </div>
-                <div className="min-w-0">
-                  <dt className="text-[10px] uppercase text-slate-400">Exercise</dt>
-                  <dd className="text-slate-800 break-words">{detail.exercise_name || 'N/A'}</dd>
-                </div>
-                <div className="min-w-0">
-                  <dt className="text-[10px] uppercase text-slate-400">Rehab plan</dt>
-                  <dd className="text-slate-800 break-words">{detail.prescription_title || `Plan #${detail.prescription_id}`}</dd>
-                </div>
-                <div className="min-w-0">
-                  <dt className="text-[10px] uppercase text-slate-400">Prescription item</dt>
-                  <dd className="text-slate-800">{detail.item_id ? `#${detail.item_id}` : 'N/A'}</dd>
-                </div>
-                <div className="min-w-0">
-                  <dt className="text-[10px] uppercase text-slate-400">Completion event</dt>
-                  <dd className="text-slate-800 break-words">{na(detail.completion_event)}</dd>
-                </div>
-                <div className="min-w-0">
-                  <dt className="text-[10px] uppercase text-slate-400">Provider session ID</dt>
-                  <dd className="text-slate-800 break-all">{na(detail.provider_session_id)}</dd>
-                </div>
+              <dl className="kx-metric-grid text-sm">
+                {[
+                  ['Date / time', formatWhen(detail.session_at || detail.completed_at || detail.created_at)],
+                  ['Exercise', detail.exercise_name || 'N/A'],
+                  ['Rehab plan', detail.prescription_title || `Plan #${detail.prescription_id}`],
+                  ['Prescription item', detail.item_id ? `#${detail.item_id}` : 'N/A'],
+                  ['Completion event', na(detail.completion_event)],
+                  ['Provider session ID', na(detail.provider_session_id)],
+                ].map(([label, value]) => (
+                  <div key={label} className="min-w-0 max-w-full rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
+                    <dt className="text-[10px] font-semibold uppercase tracking-normal text-slate-400">{label}</dt>
+                    <dd className="mt-0.5 text-slate-800 leading-snug break-words [overflow-wrap:anywhere]">{value}</dd>
+                  </div>
+                ))}
               </dl>
               <KinesteXMovementAnalysisReport session={detail} />
               {detail.kinestex_exercise_id ? (
@@ -425,25 +419,7 @@ export default function KinesteXAiPerformancePanel({
                   Cancelled: {detail.cancellation_reason}
                 </p>
               )}
-              {Array.isArray(detail.session_events) && detail.session_events.length > 0 && (
-                <div>
-                  <p className="text-sm font-semibold text-slate-800 mb-2">Session events</p>
-                  <ul className="space-y-1.5 max-h-40 overflow-y-auto">
-                    {detail.session_events.map((ev, i) => (
-                      <li key={`${ev.event}-${i}`} className="text-xs text-slate-600 rounded-lg bg-slate-50 px-3 py-1.5">
-                        <span className="font-semibold text-slate-700">{ev.event}</span>
-                        {Object.entries(ev)
-                          .filter(([k]) => k !== 'event')
-                          .map(([k, v]) => (
-                            <span key={k} className="ml-2">
-                              {k}: {String(v)}
-                            </span>
-                          ))}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              <KinesteXSessionEventDetails events={detail.session_events} />
             </div>
           ) : null}
         </GlassModalBody>

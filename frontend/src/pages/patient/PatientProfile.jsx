@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import PasswordSecuritySection from '../../components/PasswordSecuritySection';
 import PatientAddressSection from '../../components/patient/PatientAddressSection';
@@ -8,6 +8,7 @@ import FaIcon from '../../components/FaIcon';
 import { patients, uploadAvatar } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { PATIENT_NAV } from '../../constants/patientNav';
+import { patientMustSetPassword } from '../../utils/authRedirect';
 import toast from 'react-hot-toast';
 
 const TABS = [
@@ -50,6 +51,8 @@ export default function PatientProfile() {
   const { user, setUser, refreshUser } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const mustSetPassword = patientMustSetPassword(user);
   const [tab, setTab] = useState(() => searchParams.get('tab') || 'personal');
   const [form, setForm] = useState(emptyForm);
   const [addresses, setAddresses] = useState([]);
@@ -83,17 +86,32 @@ export default function PatientProfile() {
     if (t && TABS.some((x) => x.id === t)) setTab(t);
   }, [searchParams]);
 
+  useEffect(() => {
+    if (!mustSetPassword || searchParams.get('tab') === 'security') return;
+    navigate('/patient/profile?tab=security&required=1', {
+      replace: true,
+      state: location.state,
+    });
+  }, [mustSetPassword, searchParams, navigate, location.state]);
+
   const onPasswordUpdated = (authUser) => {
-    if (authUser && typeof authUser === 'object') {
+    const customized = Number(authUser?.password_customized ?? authUser?.user?.password_customized) === 1;
+    const nextUser = authUser?.user && typeof authUser.user === 'object' ? authUser.user : authUser;
+    if (nextUser && typeof nextUser === 'object') {
       setUser((u) => {
-        const merged = { ...u, ...authUser };
+        const merged = { ...u, ...nextUser, password_customized: customized ? 1 : nextUser.password_customized };
         localStorage.setItem('user', JSON.stringify(merged));
         return merged;
       });
     }
+    if (customized) {
+      const next = location.state?.next || '/patient';
+      navigate(next, { replace: true });
+    }
   };
 
   const switchTab = (id) => {
+    if (mustSetPassword && id !== 'security') return;
     setTab(id);
     navigate(id === 'personal' ? '/patient/profile' : `/patient/profile?tab=${id}`, { replace: true });
   };
@@ -189,9 +207,16 @@ export default function PatientProfile() {
         {tab === 'security' ? (
           <div className="glass-card !p-6">
             <h2 className="font-semibold text-slate-900 mb-4">Password & security</h2>
+            {mustSetPassword ? (
+              <p className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-4">
+                Change the temporary password from your campaign email before you continue.
+              </p>
+            ) : null}
             <PasswordSecuritySection
               passwordCustomized={!!user?.password_customized}
               onUpdated={onPasswordUpdated}
+              forgotLoginPath="/patient/login"
+              forgotLoginRole="patient"
             />
           </div>
         ) : tab === 'location' ? (

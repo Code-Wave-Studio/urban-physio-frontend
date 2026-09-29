@@ -28,6 +28,7 @@ import { TELE_PAIN_MAP_DEFAULTS, isPainMapEnabled, painMapSectionProps, visibleP
 import { isRoadmapEnabled } from '../constants/recoveryRoadmapDefaults';
 import { isEcosystemEnabled } from '../constants/careEcosystemDefaults';
 import { isEnrolEnabled } from '../constants/enrollmentDefaults';
+import { isSectionOn } from '../constants/sectionVisibility';
 
 export default function TelePhysioPage() {
   const { whatsapp } = useContact();
@@ -66,9 +67,16 @@ export default function TelePhysioPage() {
   }, [loading]);
 
   const s = data.sections || TELEPHYSIO_DEFAULTS.sections;
+  const showHero = isSectionOn(s, 'hero_enabled');
+  const showOverview = isSectionOn(s, 'overview_enabled');
+  const showSteps = isSectionOn(s, 'steps_enabled');
+  const showBenefits = isSectionOn(s, 'benefits_enabled');
+  const showPricing = isSectionOn(s, 'pricing_enabled');
+  const showVoice = isSectionOn(s, 'voice_enabled');
+  const showCommunity = isSectionOn(s, 'community_enabled');
   const heroImage = resolveMediaUrl(data.hero_image) || data.hero_image || HEALTHCARE_IMAGES.onlineConsult;
-  const faqs = s.faqs || [];
-  const testimonials = s.testimonials || [];
+  const faqs = showVoice ? s.faqs || [] : [];
+  const testimonials = showVoice ? s.testimonials || [] : [];
   const painPoints = useMemo(() => visiblePainAreas(s.pain_areas), [s.pain_areas]);
   const buildTelePainBookUrl = useMemo(
     () => (area) => {
@@ -128,6 +136,8 @@ export default function TelePhysioPage() {
         jsonLd={jsonLd}
       />
       <Navbar />
+      {showHero && (
+      <>
       <section className="relative overflow-hidden bg-gradient-to-br from-teal-700 via-primary-800 to-slate-950 text-white lg:max-h-[95vh] flex flex-col justify-center">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-teal-500/20 via-transparent to-transparent pointer-events-none" aria-hidden />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16 relative w-full">
@@ -223,6 +233,8 @@ export default function TelePhysioPage() {
           </div>
         </div>
       </section>
+      </>
+      )}
 
       <OrgLogosSection />
 
@@ -246,6 +258,8 @@ export default function TelePhysioPage() {
       <PhysioTeamSection />
 
       {isEnrolEnabled(s) && <EnrollmentSection theme="tele" sections={s} />}
+      {showOverview && (
+      <>
       <section className="py-12 sm:py-16 bg-white border-b border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
@@ -358,6 +372,10 @@ export default function TelePhysioPage() {
           </div>
         </div>
       </section>
+      </>
+      )}
+      {showSteps && (
+      <>
       <section className="py-12 sm:py-16 bg-white border-y border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-10">
@@ -447,6 +465,10 @@ export default function TelePhysioPage() {
           )}
         </div>
       </section>
+      </>
+      )}
+      {showBenefits && (
+      <>
       <section className="py-12 sm:py-16 bg-white border-y border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-10">
@@ -521,6 +543,10 @@ export default function TelePhysioPage() {
           </div>
         </div>
       </section>
+      </>
+      )}
+      {showPricing && (
+      <>
       <section className="py-12 sm:py-16 bg-white border-y border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-10">
@@ -631,6 +657,8 @@ export default function TelePhysioPage() {
           )}
         </div>
       </section>
+      </>
+      )}
       {testimonials.length > 0 && (
         <section className="py-12 sm:py-16 bg-white border-y border-slate-200/80">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -675,6 +703,7 @@ export default function TelePhysioPage() {
           </div>
         </section>
       )}
+      {showVoice && (
       <section className="py-12 sm:py-16 bg-slate-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-10">
@@ -722,6 +751,8 @@ export default function TelePhysioPage() {
           </div>
         </div>
       </section>
+      )}
+      {showPricing && (
       <section className="py-14 sm:py-20 bg-gradient-to-br from-teal-800 via-primary-900 to-slate-950 text-white relative overflow-hidden">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
@@ -750,8 +781,9 @@ export default function TelePhysioPage() {
           </div>
         </div>
       </section>
+      )}
 
-      <CommunityPreviewSection sections={s} accent="teal" />
+      {showCommunity && <CommunityPreviewSection sections={s} accent="teal" />}
 
       <Footer />
     </div>

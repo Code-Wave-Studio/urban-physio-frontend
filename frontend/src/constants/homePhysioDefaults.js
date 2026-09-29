@@ -29,8 +29,18 @@ export const HOME_PHYSIO_DEFAULTS = {
   seo_title: HOME_PHYSIO_SEO.title,
   seo_description: HOME_PHYSIO_SEO.description,
   sections: {
+    hero_enabled: '1',
+    story_enabled: '1',
+    book_enabled: '1',
+    pricing_enabled: '1',
+    voice_enabled: '1',
+    community_enabled: '1',
+    hero_cta_enabled: '1',
     hero_cta_label: 'Book Your Home Session',
     hero_cta_link: HOME_VISIT_BOOK_PATH,
+    hero_call_enabled: '1',
+    hero_call_label: 'Call Now',
+    hero_call_link: '',
     trust_signals: [
       'BPT / MPT Certified',
       'Hospital-Experienced Only',

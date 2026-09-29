@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
+import ForceTempPasswordChange from './components/ForceTempPasswordChange';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -201,6 +202,7 @@ export default function App() {
   return (
     <SeoProvider>
       <ScrollToTop />
+      <ForceTempPasswordChange />
       <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />

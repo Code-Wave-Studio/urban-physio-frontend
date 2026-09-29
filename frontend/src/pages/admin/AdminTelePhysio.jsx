@@ -9,8 +9,10 @@ import PainMapEditor from '../../components/admin/PainMapEditor';
 import RecoveryRoadmapEditor from '../../components/admin/RecoveryRoadmapEditor';
 import CareEcosystemEditor from '../../components/admin/CareEcosystemEditor';
 import EnrollmentEditor from '../../components/admin/EnrollmentEditor';
+import SectionVisibilityToggle from '../../components/admin/SectionVisibilityToggle';
 import { admin, uploadCmsImage } from '../../services/api';
 import { TELEPHYSIO_DEFAULTS, mergeTelePhysioSections } from '../../constants/telephysioDefaults';
+import { isSectionOn } from '../../constants/sectionVisibility';
 import toast from 'react-hot-toast';
 
 const TABS = [
@@ -66,7 +68,18 @@ export default function AdminTelePhysio() {
     e.preventDefault();
     setSaving(true);
     try {
-      await admin.updateTelePhysioSettings(form);
+      const saved = await admin.updateTelePhysioSettings(form);
+      const d = saved?.data && typeof saved.data === 'object' ? saved.data : null;
+      if (d?.sections) {
+        setForm({
+          hero_title: d.hero_title ?? '',
+          hero_subtitle: d.hero_subtitle ?? '',
+          hero_image: d.hero_image ?? '',
+          seo_title: d.seo_title ?? '',
+          seo_description: d.seo_description ?? '',
+          sections: mergeTelePhysioSections(d.sections),
+        });
+      }
       toast.success('TelePhysio by Myoreset page published');
     } catch (err) {
       toast.error(err.message || 'Save failed');
@@ -147,6 +160,13 @@ export default function AdminTelePhysio() {
         {/* TAB 1: HERO & TRUST */}
         {tab === 'hero' && (
           <div className="space-y-5" role="tabpanel">
+            <SectionVisibilityToggle
+              label="Show hero & trust"
+              description="When off, the hero and trust bar are hidden on the live page."
+              on={isSectionOn(s, 'hero_enabled')}
+              onChange={(v) => setSection('hero_enabled', v)}
+              accent="teal"
+            />
             <CmsPanel title="Hero Section" icon="fa-flag">
               <div className="grid sm:grid-cols-2 gap-3">
                 <CmsField label="Hero badge">
@@ -241,6 +261,13 @@ export default function AdminTelePhysio() {
         {/* TAB 2: OVERVIEW & SUITABILITY */}
         {tab === 'overview' && (
           <div className="space-y-5" role="tabpanel">
+            <SectionVisibilityToggle
+              label="Show overview & suitability"
+              description="When off, the clinical overview and patient-profile sections are hidden on the live page."
+              on={isSectionOn(s, 'overview_enabled')}
+              onChange={(v) => setSection('overview_enabled', v)}
+              accent="teal"
+            />
             <CmsPanel title="What Is TelePhysio?" icon="fa-circle-info">
               <CmsField label="Section heading">
                 <input
@@ -380,6 +407,13 @@ export default function AdminTelePhysio() {
         {/* TAB 3: STEPS & TIMELINE */}
         {tab === 'steps' && (
           <div className="space-y-5" role="tabpanel">
+            <SectionVisibilityToggle
+              label="Show steps & timeline"
+              description="When off, the process steps and session timeline are hidden on the live page."
+              on={isSectionOn(s, 'steps_enabled')}
+              onChange={(v) => setSection('steps_enabled', v)}
+              accent="teal"
+            />
             <CmsPanel title="How TelePhysio Works" icon="fa-list-ol">
               <CmsField label="Section heading">
                 <input
@@ -447,6 +481,13 @@ export default function AdminTelePhysio() {
         {/* TAB 4: BENEFITS & CONDITIONS */}
         {tab === 'benefits' && (
           <div className="space-y-5" role="tabpanel">
+            <SectionVisibilityToggle
+              label="Show benefits & conditions"
+              description="When off, the benefits and conditions sections are hidden on the live page."
+              on={isSectionOn(s, 'benefits_enabled')}
+              onChange={(v) => setSection('benefits_enabled', v)}
+              accent="teal"
+            />
             <CmsPanel title="Why Choose TelePhysio?" icon="fa-certificate">
               <CmsField label="Section heading">
                 <input
@@ -513,6 +554,13 @@ export default function AdminTelePhysio() {
         {/* TAB 5: PRICING & JOURNEY */}
         {tab === 'pricing' && (
           <div className="space-y-5" role="tabpanel">
+            <SectionVisibilityToggle
+              label="Show pricing & journey"
+              description="When off, the recovery summary, pricing cards, and closing banner are hidden on the live page."
+              on={isSectionOn(s, 'pricing_enabled')}
+              onChange={(v) => setSection('pricing_enabled', v)}
+              accent="teal"
+            />
             <CmsPanel title="Pricing Cards" icon="fa-tag">
               <CmsField label="Section heading">
                 <input
@@ -597,6 +645,13 @@ export default function AdminTelePhysio() {
         {/* TAB 6: REVIEWS & FAQ */}
         {tab === 'voice' && (
           <div className="space-y-5" role="tabpanel">
+            <SectionVisibilityToggle
+              label="Show reviews & FAQ"
+              description="When off, patient reviews and the FAQ are hidden on the live page."
+              on={isSectionOn(s, 'voice_enabled')}
+              onChange={(v) => setSection('voice_enabled', v)}
+              accent="teal"
+            />
             <CmsPanel title="Patient Testimonials" icon="fa-comment-dots">
               <CmsField label="Section heading">
                 <input
@@ -655,6 +710,13 @@ export default function AdminTelePhysio() {
 
         {tab === 'community' && (
           <div className="space-y-5" role="tabpanel">
+            <SectionVisibilityToggle
+              label="Show social & portal"
+              description="When off, the community and portal preview is hidden on the live page."
+              on={isSectionOn(s, 'community_enabled')}
+              onChange={(v) => setSection('community_enabled', v)}
+              accent="teal"
+            />
             <CommunityPreviewEditor
               sections={s}
               onChange={setSection}

@@ -10,6 +10,25 @@ export function CmsField({ label, hint, children }) {
   );
 }
 
+const LINE_LIST_KEYS = new Set(['items', 'features', 'points']);
+
+function readField(item, field) {
+  if (typeof item === 'string') return item;
+  const value = item?.[field.key];
+  if (Array.isArray(value)) return value.join(field.key === 'items' ? ' · ' : '\n');
+  return value ?? '';
+}
+
+function writeField(field, raw) {
+  if (LINE_LIST_KEYS.has(field.key)) {
+    return String(raw)
+      .split(/\s*[·\n]\s*/)
+      .map((part) => part.trim())
+      .filter(Boolean);
+  }
+  return raw;
+}
+
 export function CmsListEditor({ items, onChange, fields, addLabel }) {
   const list = items || [];
   return (
@@ -34,13 +53,7 @@ export function CmsListEditor({ items, onChange, fields, addLabel }) {
                 className="input-field text-sm min-h-[72px]"
                 placeholder={f.label}
                 aria-label={f.label}
-                value={
-                  typeof item === 'string'
-                    ? item
-                    : Array.isArray(item[f.key])
-                      ? item[f.key].join(' · ')
-                      : item[f.key] || ''
-                }
+                value={readField(item, f)}
                 onChange={(e) => {
                   if (typeof item === 'string') {
                     const next = [...list];
@@ -48,11 +61,7 @@ export function CmsListEditor({ items, onChange, fields, addLabel }) {
                     onChange(next);
                   } else {
                     const next = [...list];
-                    const raw = e.target.value;
-                    next[i] = {
-                      ...next[i],
-                      [f.key]: f.key === 'items' ? raw.split(/\s*[·\n]\s*/).filter(Boolean) : raw,
-                    };
+                    next[i] = { ...next[i], [f.key]: writeField(f, e.target.value) };
                     onChange(next);
                   }
                 }}

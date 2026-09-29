@@ -31,8 +31,13 @@ function isBookingPage(pathname) {
 }
 
 const SCROLL_SHOW_AFTER = 320;
+const INTRO_STEP_MS = 500;
+const INTRO_HOLD_MS = 1500;
+const INTRO_CLOSED = { call: false, wa: false, book: false };
 const HOME_VISIT_WA =
   "Hi, I'd like to book a home physiotherapy session";
+const TELEPHYSIO_WA =
+  "Hi, I'd like to book a TelePhysio online physiotherapy session";
 
 const BOOK_OPTIONS = [
   { to: bookHomeVisitUrl(), label: 'Home Visit', icon: 'fa-house-medical' },
@@ -56,11 +61,13 @@ export default function FloatingActions() {
   const [hiddenByOverlay, setHiddenByOverlay] = useState(false);
   const [openFab, setOpenFab] = useState(null);
   const [bookMenuOpen, setBookMenuOpen] = useState(false);
+  const [introOpen, setIntroOpen] = useState(INTRO_CLOSED);
   const hideAll = isBookingPage(pathname);
   const showFloating = isMarketingPage(pathname) && !isStaffDashboard(pathname) && !hideAll;
 
   const waDigits = whatsappDigits(whatsapp);
-  const waUrl = showFloating ? whatsappChatUrl(whatsapp, HOME_VISIT_WA) : null;
+  const waText = pathname === '/telephysio' ? TELEPHYSIO_WA : HOME_VISIT_WA;
+  const waUrl = showFloating ? whatsappChatUrl(whatsapp, waText) : null;
   const telHref = phone ? `tel:${String(phone).replace(/\s/g, '')}` : null;
 
   useEffect(() => {
@@ -105,6 +112,45 @@ export default function FloatingActions() {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [bookMenuOpen]);
+
+  const hasCall = Boolean(telHref);
+  const hasWa = Boolean(waUrl);
+
+  useEffect(() => {
+    if (!showFloating) return undefined;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+
+    // Open labels only. Stack stays Book, then Call, then WhatsApp.
+    const steps = [];
+    if (hasCall) steps.push('call');
+    if (hasWa) steps.push('wa');
+    steps.push('book');
+
+    let cancelled = false;
+    const timers = [];
+    const later = (fn, ms) => {
+      timers.push(window.setTimeout(() => {
+        if (!cancelled) fn();
+      }, ms));
+    };
+
+    steps.forEach((id, index) => {
+      later(() => {
+        setIntroOpen((current) => ({ ...current, [id]: true }));
+      }, index * INTRO_STEP_MS);
+    });
+
+    later(
+      () => setIntroOpen(INTRO_CLOSED),
+      (steps.length - 1) * INTRO_STEP_MS + INTRO_HOLD_MS,
+    );
+
+    return () => {
+      cancelled = true;
+      timers.forEach((id) => window.clearTimeout(id));
+      setIntroOpen(INTRO_CLOSED);
+    };
+  }, [showFloating, pathname, hasCall, hasWa]);
 
   const onFabActivate = (id) => (e) => {
     if (!isTouchLike()) return;
@@ -157,7 +203,7 @@ export default function FloatingActions() {
 
           <button
             type="button"
-            className={`fab-rail-btn fab-rail-book ${bookMenuOpen ? 'is-open' : ''}`}
+            className={`fab-rail-btn fab-rail-book ${bookMenuOpen || introOpen.book ? 'is-open' : ''}`}
             title="Book a Session"
             aria-label="Book a Session"
             aria-haspopup="menu"
@@ -177,7 +223,7 @@ export default function FloatingActions() {
         {telHref && (
           <a
             href={telHref}
-            className={`fab-rail-btn fab-rail-call ${openFab === 'call' ? 'is-open' : ''}`}
+            className={`fab-rail-btn fab-rail-call ${openFab === 'call' || introOpen.call ? 'is-open' : ''}`}
             title={phone ? `Call ${phone}` : 'Call Us'}
             aria-label={phone ? `Call us at ${phone}` : 'Call us'}
             onClick={onFabActivate('call')}
@@ -196,7 +242,7 @@ export default function FloatingActions() {
             href={waUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className={`fab-rail-btn fab-rail-wa ${openFab === 'wa' ? 'is-open' : ''}`}
+            className={`fab-rail-btn fab-rail-wa ${openFab === 'wa' || introOpen.wa ? 'is-open' : ''}`}
             title={whatsapp || 'WhatsApp'}
             aria-label={`Chat on WhatsApp${waDigits ? ` (${whatsapp})` : ''}`}
             onClick={onFabActivate('wa')}

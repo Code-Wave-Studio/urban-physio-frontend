@@ -9,14 +9,37 @@ import PainMapEditor from '../../components/admin/PainMapEditor';
 import RecoveryRoadmapEditor from '../../components/admin/RecoveryRoadmapEditor';
 import CareEcosystemEditor from '../../components/admin/CareEcosystemEditor';
 import EnrollmentEditor from '../../components/admin/EnrollmentEditor';
+import SectionVisibilityToggle from '../../components/admin/SectionVisibilityToggle';
 import { admin, uploadCmsImage } from '../../services/api';
 import { HOME_PHYSIO_DEFAULTS, mergeHomePhysioSections } from '../../constants/homePhysioDefaults';
+import { isSectionOn } from '../../constants/sectionVisibility';
 import {
   applyPricingSessionsToTiers,
   pricingSessionsFromTiers,
   syncTierPriceLabels,
 } from '../../constants/homePhysioTiers';
 import toast from 'react-hot-toast';
+
+function HeroButtonSwitch({ on, onChange, label }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      aria-label={label}
+      onClick={() => onChange(on ? '0' : '1')}
+      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition ${
+        on ? 'bg-primary-600' : 'bg-slate-300'
+      }`}
+    >
+      <span
+        className={`inline-block h-4 w-4 rounded-full bg-white shadow transform transition ${
+          on ? 'translate-x-6' : 'translate-x-1'
+        }`}
+      />
+    </button>
+  );
+}
 
 const TABS = [
   { id: 'hero', label: 'Hero & trust', icon: 'fa-flag' },
@@ -94,7 +117,18 @@ export default function AdminHomePhysio() {
     e.preventDefault();
     setSaving(true);
     try {
-      await admin.updateHomePhysioSettings(form);
+      const saved = await admin.updateHomePhysioSettings(form);
+      const d = saved?.data && typeof saved.data === 'object' ? saved.data : null;
+      if (d?.sections) {
+        setForm({
+          hero_title: d.hero_title ?? '',
+          hero_subtitle: d.hero_subtitle ?? '',
+          hero_image: d.hero_image ?? '',
+          seo_title: d.seo_title ?? '',
+          seo_description: d.seo_description ?? '',
+          sections: mergeHomePhysioSections(d.sections),
+        });
+      }
       toast.success('Home Physiotherapy page published');
     } catch (err) {
       toast.error(err.message || 'Save failed');
@@ -174,6 +208,12 @@ export default function AdminHomePhysio() {
 
         {tab === 'hero' && (
           <div className="space-y-5" role="tabpanel">
+            <SectionVisibilityToggle
+              label="Show hero & trust"
+              description="When off, the hero and trust bar are hidden on the live page."
+              on={isSectionOn(s, 'hero_enabled')}
+              onChange={(v) => setSection('hero_enabled', v)}
+            />
             <CmsPanel title="Hero" icon="fa-flag">
               <CmsField label="Headline">
                 <textarea className="input-field min-h-[72px]" value={form.hero_title} onChange={(e) => set('hero_title', e.target.value)} />
@@ -181,13 +221,53 @@ export default function AdminHomePhysio() {
               <CmsField label="Subheadline">
                 <textarea className="input-field min-h-[100px]" value={form.hero_subtitle} onChange={(e) => set('hero_subtitle', e.target.value)} />
               </CmsField>
-              <div className="grid sm:grid-cols-2 gap-3">
-                <CmsField label="Button label">
-                  <input className="input-field" value={s.hero_cta_label} onChange={(e) => setSection('hero_cta_label', e.target.value)} />
-                </CmsField>
-                <CmsField label="Button link">
-                  <input className="input-field" value={s.hero_cta_link} onChange={(e) => setSection('hero_cta_link', e.target.value)} />
-                </CmsField>
+              <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 sm:p-4 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">Book via WhatsApp</p>
+                    <p className="text-xs text-slate-500 mt-0.5">Primary hero button. Hidden when this is off.</p>
+                  </div>
+                  <HeroButtonSwitch
+                    label="Show Book via WhatsApp"
+                    on={isSectionOn(s, 'hero_cta_enabled')}
+                    onChange={(v) => setSection('hero_cta_enabled', v)}
+                  />
+                </div>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <CmsField label="Label">
+                    <input className="input-field" value={s.hero_cta_label || ''} onChange={(e) => setSection('hero_cta_label', e.target.value)} />
+                  </CmsField>
+                  <CmsField label="Link">
+                    <input className="input-field" value={s.hero_cta_link || ''} onChange={(e) => setSection('hero_cta_link', e.target.value)} />
+                  </CmsField>
+                </div>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 sm:p-4 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">Call Now</p>
+                    <p className="text-xs text-slate-500 mt-0.5">Shown beside Book via WhatsApp. Opens the phone number with tel:.</p>
+                  </div>
+                  <HeroButtonSwitch
+                    label="Show Call Now"
+                    on={isSectionOn(s, 'hero_call_enabled')}
+                    onChange={(v) => setSection('hero_call_enabled', v)}
+                  />
+                </div>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <CmsField label="Label">
+                    <input className="input-field" value={s.hero_call_label || ''} onChange={(e) => setSection('hero_call_label', e.target.value)} />
+                  </CmsField>
+                  <CmsField label="Phone number" hint="Leave blank to use the site contact phone. Saved and opened as tel:.">
+                    <input
+                      className="input-field"
+                      inputMode="tel"
+                      placeholder="+91 98765 43210"
+                      value={s.hero_call_link || ''}
+                      onChange={(e) => setSection('hero_call_link', e.target.value)}
+                    />
+                  </CmsField>
+                </div>
               </div>
               <MediaUrlOrUpload
                 label="Hero image"
@@ -228,6 +308,12 @@ export default function AdminHomePhysio() {
 
         {tab === 'story' && (
           <div className="space-y-5" role="tabpanel">
+            <SectionVisibilityToggle
+              label="Show story"
+              description="When off, the format, outcomes, and difference sections are hidden on the live page."
+              on={isSectionOn(s, 'story_enabled')}
+              onChange={(v) => setSection('story_enabled', v)}
+            />
             <CmsPanel title="Is home physio right for you?" icon="fa-scale-balanced">
               <CmsField label="Heading">
                 <input className="input-field" value={s.fit_heading} onChange={(e) => setSection('fit_heading', e.target.value)} />
@@ -366,6 +452,12 @@ export default function AdminHomePhysio() {
 
         {tab === 'book' && (
           <div className="space-y-5" role="tabpanel">
+            <SectionVisibilityToggle
+              label="Show tiers & booking"
+              description="When off, the physiotherapist tiers, how-it-works steps, and conditions are hidden on the live page."
+              on={isSectionOn(s, 'book_enabled')}
+              onChange={(v) => setSection('book_enabled', v)}
+            />
             <CmsPanel title="Physiotherapist tiers" icon="fa-user-doctor">
               <CmsField label="Heading">
                 <input className="input-field" value={s.tiers_heading} onChange={(e) => setSection('tiers_heading', e.target.value)} />
@@ -452,6 +544,12 @@ export default function AdminHomePhysio() {
 
         {tab === 'price' && (
           <div className="space-y-5" role="tabpanel">
+            <SectionVisibilityToggle
+              label="Show pricing & areas"
+              description="When off, the rates and service-area sections are hidden on the live page."
+              on={isSectionOn(s, 'pricing_enabled')}
+              onChange={(v) => setSection('pricing_enabled', v)}
+            />
             <CmsPanel title="Pricing" icon="fa-tag">
               <CmsField label="Heading">
                 <input className="input-field" value={s.pricing_heading} onChange={(e) => setSection('pricing_heading', e.target.value)} />
@@ -522,6 +620,12 @@ export default function AdminHomePhysio() {
 
         {tab === 'voice' && (
           <div className="space-y-5" role="tabpanel">
+            <SectionVisibilityToggle
+              label="Show reviews & FAQ"
+              description="When off, patient stories and the FAQ are hidden on the live page."
+              on={isSectionOn(s, 'voice_enabled')}
+              onChange={(v) => setSection('voice_enabled', v)}
+            />
             <CmsPanel title="Testimonials" icon="fa-comment-dots">
               <CmsField label="Heading">
                 <input className="input-field" value={s.testimonials_heading} onChange={(e) => setSection('testimonials_heading', e.target.value)} />
@@ -557,6 +661,12 @@ export default function AdminHomePhysio() {
 
         {tab === 'community' && (
           <div className="space-y-5" role="tabpanel">
+            <SectionVisibilityToggle
+              label="Show social & portal"
+              description="When off, the community and portal preview is hidden on the live page."
+              on={isSectionOn(s, 'community_enabled')}
+              onChange={(v) => setSection('community_enabled', v)}
+            />
             <CommunityPreviewEditor
               sections={s}
               onChange={setSection}

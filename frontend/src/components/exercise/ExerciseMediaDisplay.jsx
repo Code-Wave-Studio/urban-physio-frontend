@@ -17,6 +17,8 @@ export default function ExerciseMediaDisplay({
   title = '',
   variant = 'player',
   layout = 'landscape',
+  autoPlay = false,
+  loop = true,
 }) {
   const media = useMemo(() => parseMediaSource(exercise || mediaUrl), [exercise, mediaUrl]);
   const label = title || (exercise && exercise.name) || 'Exercise Media';
@@ -45,6 +47,8 @@ export default function ExerciseMediaDisplay({
         title={label}
         className={className}
         layout={isPortrait ? 'portrait' : 'landscape'}
+        autoPlay={autoPlay}
+        loop={loop}
       />
     );
   }

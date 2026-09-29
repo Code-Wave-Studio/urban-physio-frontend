@@ -5,8 +5,12 @@
 import {
   alignHomePhysioTierSections,
   applyPricingSessionsToTiers,
+  faqsWithLivePrices,
   homePhysioTierBookLink,
+  textWithLivePrices,
+  tierButtonLabel,
 } from './homePhysioTiers.js';
+import { isSectionOn } from './sectionVisibility.js';
 
 let passed = 0;
 let failed = 0;
@@ -91,6 +95,55 @@ check(
   'pricing-tab edit updates the matching button label',
   edited[0].cta_label === 'Book a Certified Physio — ₹1,250'
 );
+
+const liveTiers = [
+  { key: 'certified', price: '₹1,100' },
+  { key: 'senior', price: '₹1,450' },
+  { key: 'specialist', price: '₹2,100' },
+];
+const livePackages = [
+  { name: 'Certified', price: '₹15,999' },
+  { name: 'Senior', price: '₹19,999' },
+  { name: 'Specialist', price: '₹26,999' },
+];
+const rewritten = textWithLivePrices(
+  'Certified Physio (₹1,200). Senior Physio (₹1,500). Specialist Consultant (₹2,000). Packages ₹16,499, ₹19,999, and ₹26,999.',
+  liveTiers,
+  livePackages
+);
+check(
+  'stored FAQ copy uses the current CMS prices',
+  rewritten === 'Certified Physio (₹1,100). Senior Physio (₹1,450). Specialist Consultant (₹2,100). Packages ₹15,999, ₹19,999, and ₹26,999.'
+);
+check(
+  'unchanged package amount is left alone',
+  rewritten.includes('₹19,999') && rewritten.includes('₹26,999')
+);
+const swapped = textWithLivePrices('A ₹1,200 then B ₹1,500', [
+  { key: 'certified', price: '₹1,500' },
+  { key: 'senior', price: '₹1,200' },
+  { key: 'specialist', price: '₹2,000' },
+], []);
+check('price swap does not collide', swapped === 'A ₹1,500 then B ₹1,200');
+check(
+  'button label follows the CMS price',
+  tierButtonLabel({ name: 'Certified Physio', price: '₹1,100', cta_label: 'Book a Certified Physio — ₹1,200' })
+    === 'Book a Certified Physio — ₹1,100'
+);
+check(
+  'button label keeps a custom label that already includes the CMS price',
+  tierButtonLabel({ name: 'Certified Physio', price: '₹1,100', cta_label: 'Book certified — ₹1,100 today' })
+    === 'Book certified — ₹1,100 today'
+);
+const faqRows = faqsWithLivePrices(
+  [{ q: 'Rates?', a: 'Certified Physio (₹1,200) per visit.' }],
+  liveTiers,
+  livePackages
+);
+check('FAQ helper rewrites only the answer', faqRows[0].q === 'Rates?' && faqRows[0].a === 'Certified Physio (₹1,100) per visit.');
+check('missing section flag stays visible', isSectionOn({}, 'hero_enabled') === true);
+check('section flag off hides the section', isSectionOn({ hero_enabled: '0' }, 'hero_enabled') === false);
+check('section flag on shows the section', isSectionOn({ story_enabled: '1' }, 'story_enabled') === true);
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

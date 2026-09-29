@@ -48,9 +48,28 @@ export default function PayInvoicePage() {
         name: info?.clinic_name || 'The Urban Physio',
         description: `Invoice ${order.invoice_number || info?.invoice_number || ''}`,
         order_id: order.order_id,
-        handler: () => {
-          toast.success('Payment submitted — clinic will confirm shortly');
-          setInfo((prev) => (prev ? { ...prev, status: 'paid', amount_due: 0 } : prev));
+        handler: async (response) => {
+          try {
+            const verified = await publicInvoicePay.verify(token, {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+            const data = verified.data || verified;
+            toast.success('Payment confirmed');
+            setInfo((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    status: data.status || prev.status,
+                    amount_due: data.amount_due ?? 0,
+                    amount_paid: data.amount_paid ?? prev.amount_paid,
+                  }
+                : prev
+            );
+          } catch (err) {
+            toast.error(err.message || 'Payment could not be confirmed. Contact the clinic if you were charged.');
+          }
         },
         modal: { ondismiss: () => toast('Payment cancelled') },
       });

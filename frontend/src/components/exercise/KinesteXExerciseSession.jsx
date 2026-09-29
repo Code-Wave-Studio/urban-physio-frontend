@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import FaIcon from '../FaIcon';
+import { MAC_CENTER_STAGE_NOTE } from './macCenterStageNote';
 import KinesteXWorkoutOverview from './KinesteXWorkoutOverview';
 import KinesteXMovementAnalysisReport from './KinesteXMovementAnalysisReport';
 import {
@@ -50,6 +51,7 @@ export default function KinesteXExerciseSession({
   const [persisted, setPersisted] = useState(null);
   const [motionSaveState, setMotionSaveState] = useState('idle'); // idle | uploading | complete | failed | timed_out
   const [coachMuted, setCoachMuted] = useState(false);
+  const [showMacNote, setShowMacNote] = useState(true);
   const motionGraceTimerRef = useRef(null);
 
   saveStateRef.current = saveState;
@@ -429,50 +431,66 @@ export default function KinesteXExerciseSession({
     >
       {!showResultCard && (
         <div className="kinestex-session-chrome">
-          <div className="min-w-0 flex-1">
-            <p className="text-sm sm:text-base font-semibold truncate leading-tight">
-              {context.exercise_name || 'AI-Guided Exercise'}
-            </p>
-            <p className="text-[11px] sm:text-xs text-slate-300/90 truncate">
-              AI Personal Trainer · {context.sets || 1}×{context.reps || 10}
-              {lifecycle === 'paused'
-                ? ' · Stay in camera view'
-                : lifecycle === 'starting'
-                  ? ' · Starting…'
-                  : coachMuted
-                    ? ' · Coach muted'
-                    : ' · Active'}
-            </p>
-          </div>
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {(lifecycle === 'active' || lifecycle === 'paused') && (
+          <div className="kinestex-session-chrome-row">
+            <div className="kinestex-session-title">
+              <p className="text-sm font-semibold leading-tight sm:text-base">
+                {context.exercise_name || 'AI-Guided Exercise'}
+              </p>
+              <p className="text-[11px] leading-tight text-slate-300 sm:text-xs">
+                AI Personal Trainer · {context.sets || 1}×{context.reps || 10}
+                {lifecycle === 'paused'
+                  ? ' · Stay in camera view'
+                  : lifecycle === 'starting'
+                    ? ' · Starting…'
+                    : coachMuted
+                      ? ' · Coach muted'
+                      : ' · Active'}
+              </p>
+            </div>
+            <div className="kinestex-session-actions">
+              {(lifecycle === 'active' || lifecycle === 'paused') && (
+                <button
+                  type="button"
+                  className="inline-flex min-h-10 items-center rounded-lg bg-white/15 px-3 text-xs font-semibold hover:bg-white/25 sm:text-sm"
+                  aria-label={coachMuted ? 'Unmute coach speech' : 'Mute coach speech'}
+                  aria-pressed={coachMuted}
+                  title={coachMuted ? 'Unmute coach' : 'Mute coach'}
+                  onClick={toggleCoachSpeech}
+                >
+                  <FaIcon icon={coachMuted ? 'fa-volume-xmark' : 'fa-volume-high'} className="mr-1.5" />
+                  {coachMuted ? 'Unmute' : 'Mute'}
+                </button>
+              )}
               <button
                 type="button"
-                className="min-h-10 px-2.5 sm:px-3 text-xs sm:text-sm font-semibold rounded-lg bg-white/15 hover:bg-white/25"
-                aria-label={coachMuted ? 'Unmute coach speech' : 'Mute coach speech'}
-                aria-pressed={coachMuted}
-                title={coachMuted ? 'Unmute coach' : 'Mute coach'}
-                onClick={toggleCoachSpeech}
+                className="inline-flex min-h-10 items-center rounded-lg bg-white/15 px-3 text-sm font-semibold hover:bg-white/25 sm:px-4"
+                aria-label="Exit AI session"
+                onClick={() => {
+                  if (bestStatusRef.current !== 'completed' && saveStateRef.current !== 'saved') {
+                    emitBoundary('workout_exit_request', { reason: 'user_exit' }, 'cancelled');
+                  } else {
+                    onClose?.();
+                  }
+                }}
               >
-                <FaIcon icon={coachMuted ? 'fa-volume-xmark' : 'fa-volume-high'} className="sm:mr-1.5" />
-                <span className="hidden sm:inline">{coachMuted ? 'Unmute' : 'Mute'}</span>
+                Exit
               </button>
-            )}
-            <button
-              type="button"
-              className="min-h-10 px-3 sm:px-4 text-sm font-semibold rounded-lg bg-white/15 hover:bg-white/25"
-              aria-label="Exit AI session"
-              onClick={() => {
-                if (bestStatusRef.current !== 'completed' && saveStateRef.current !== 'saved') {
-                  emitBoundary('workout_exit_request', { reason: 'user_exit' }, 'cancelled');
-                } else {
-                  onClose?.();
-                }
-              }}
-            >
-              Exit
-            </button>
+            </div>
           </div>
+          {showMacNote ? (
+            <div className="kinestex-mac-note" role="note">
+              <FaIcon icon="fa-laptop" className="mt-0.5 shrink-0 text-amber-200" />
+              <p>{MAC_CENTER_STAGE_NOTE}</p>
+              <button
+                type="button"
+                className="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-semibold text-amber-100 hover:bg-white/10"
+                aria-label="Dismiss Mac camera note"
+                onClick={() => setShowMacNote(false)}
+              >
+                Dismiss
+              </button>
+            </div>
+          ) : null}
         </div>
       )}
 
@@ -496,7 +514,7 @@ export default function KinesteXExerciseSession({
 
       {showResultCard && (
         <div className="kinestex-session-result">
-          <div className="bg-white rounded-2xl p-5 sm:p-6 max-w-md w-full text-center shadow-xl max-h-full overflow-y-auto">
+          <div className="bg-white rounded-2xl p-5 sm:p-6 max-w-xl w-full text-center shadow-xl max-h-full overflow-y-auto min-w-0">
             {saveState === 'saving' && (
               <>
                 <div className="w-14 h-14 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center mx-auto mb-3">

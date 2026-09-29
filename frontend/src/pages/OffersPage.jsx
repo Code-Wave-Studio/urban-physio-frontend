@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import FaIcon from '../components/FaIcon';
@@ -7,7 +7,7 @@ import SeoBreadcrumbs from '../components/seo/SeoBreadcrumbs';
 import ManagedPageSeo from '../components/seo/ManagedPageSeo';
 import { offers } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import { resolveMediaUrl } from '../utils/mediaUrl';
+import { sanitizeCmsImageUrl } from '../utils/mediaUrl';
 import { HEALTHCARE_IMAGES } from '../utils/healthcareImages';
 import {
   OFFERS_DEFAULTS,
@@ -18,6 +18,7 @@ import toast from 'react-hot-toast';
 
 export default function OffersPage() {
   const { user } = useAuth();
+  const location = useLocation();
   const [data, setData] = useState(OFFERS_DEFAULTS);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -69,7 +70,7 @@ export default function OffersPage() {
         setData({
           ...OFFERS_DEFAULTS,
           ...d,
-          sections: mergeOffersSections(d?.sections || {}),
+          sections: mergeOffersSections(d?.sections || {}, d?.hero_title || ''),
         });
       })
       .catch(() => setData(OFFERS_DEFAULTS))
@@ -79,13 +80,30 @@ export default function OffersPage() {
   const s = data.sections || OFFERS_DEFAULTS.sections;
   const requiredKm = Math.max(10, Number.parseFloat(s.required_distance_km) || 10);
   const vis = s.sections_visibility || OFFERS_DEFAULTS.sections.sections_visibility;
-  const heroImage = resolveMediaUrl(data.hero_image) || data.hero_image || HEALTHCARE_IMAGES.sportsPhysio;
+  const cmsHeroImage = sanitizeCmsImageUrl(data.hero_image);
+  const heroImage = cmsHeroImage || HEALTHCARE_IMAGES.sportsPhysio;
+  const heroPrefix = String(s.hero_title_prefix ?? '').trim();
+  const heroHighlight = String(s.hero_title_highlight ?? '').trim();
+  const heroTitleFallback = !heroPrefix && !heroHighlight ? String(data.hero_title ?? '').trim() : '';
+  const heroTrackers = (Array.isArray(s.hero_trackers) ? s.hero_trackers : [])
+    .map((item) => (typeof item === 'string' ? item : item?.label || item?.value || ''))
+    .map((item) => String(item).trim())
+    .filter(Boolean);
   const faqs = s.faqs || [];
 
   const handleScrollTo = (ref) => {
     if (ref?.current) {
       ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+  };
+
+  const scrollToLiveStatus = () => {
+    const node = statusRef.current || document.getElementById('live-status');
+    if (!node) return;
+    if (location.hash !== '#live-status') {
+      window.history.replaceState(null, '', `${location.pathname}${location.search}#live-status`);
+    }
+    node.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const validateAndProcessFile = (file) => {
@@ -250,6 +268,15 @@ export default function OffersPage() {
     };
   }, [user, submissionSuccess]);
 
+  useEffect(() => {
+    if (location.hash !== '#live-status') return undefined;
+    const timer = window.setTimeout(() => {
+      const node = statusRef.current || document.getElementById('live-status');
+      node?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [location.hash, loading, user]);
+
   const handleCheckStatus = async (e) => {
     e.preventDefault();
     if (!user) return;
@@ -309,12 +336,9 @@ export default function OffersPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-slate-800 selection:bg-[#376299]/15 selection:text-[#376299]">
       <ManagedPageSeo
-        pageKey="offers"
-        fallback={{
-          title: data.seo_title || OFFERS_SEO.title,
-          description: data.seo_description || OFFERS_SEO.description,
-          canonicalPath: '/offers',
-        }}
+        fallbackTitle={data.seo_title || OFFERS_SEO.title}
+        fallbackDescription={data.seo_description || OFFERS_SEO.description}
+        fallbackKeywords={OFFERS_SEO.keywords}
       />
       <Navbar />
 
@@ -330,33 +354,37 @@ export default function OffersPage() {
 
               <div className="lg:col-span-7 space-y-5 sm:space-y-6 text-center lg:text-left">
 
+                {s.hero_badge ? (
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/90 border border-slate-200/80 shadow-xs backdrop-blur-md">
                   <span className="relative flex h-2.5 w-2.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF6F61] opacity-75" />
                     <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#FF6F61]" />
                   </span>
                   <span className="text-xs sm:text-sm font-bold tracking-wide text-slate-800">
-                    {s.hero_badge || 'Exclusive Fitness & Recovery Campaign'}
+                    {s.hero_badge}
                   </span>
                 </div>
+                ) : null}
 
 
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.12]">
-                  Run 10 KM.{' '}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#376299] via-primary-700 to-[#FF6F61]">
-                    Get Free Physiotherapy Sessions.
-                  </span>
+                  {heroTitleFallback || heroPrefix}
+                  {heroPrefix && heroHighlight ? ' ' : ''}
+                  {heroHighlight ? (
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#376299] via-primary-700 to-[#FF6F61]">
+                      {heroHighlight}
+                    </span>
+                  ) : null}
                 </h1>
 
 
                 <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-normal">
-                  {data.hero_subtitle ||
-                    'Complete your 10 KM run and take a step toward better recovery with free physiotherapy sessions from The Urban Physio.'}
+                  {data.hero_subtitle}
                 </p>
 
 
                 <div className="grid grid-cols-3 gap-2.5 sm:gap-4 pt-1">
-                  {(s.hero_highlights || OFFERS_DEFAULTS.sections.hero_highlights).map((item, idx) => (
+                  {(s.hero_highlights || []).map((item, idx) => (
                     <div
                       key={idx}
                       className="group p-3.5 sm:p-4 rounded-2xl bg-white/80 backdrop-blur-md border border-slate-200/90 shadow-xs hover:border-[#376299]/40 hover:shadow-md transition-all duration-300 text-center lg:text-left"
@@ -382,7 +410,7 @@ export default function OffersPage() {
                     className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-gradient-to-r from-[#376299] to-primary-800 hover:from-primary-700 hover:to-primary-900 text-white font-bold text-base shadow-lg shadow-[#376299]/25 hover:shadow-xl hover:shadow-[#376299]/35 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer"
                   >
                     <FaIcon icon="fa-paper-plane" className="text-sm" />
-                    {s.hero_primary_cta_label || 'Join the Campaign'}
+                    {s.hero_primary_cta_label}
                   </button>
                   <button
                     type="button"
@@ -390,20 +418,24 @@ export default function OffersPage() {
                     className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-white/90 border border-slate-200 text-slate-700 hover:text-[#376299] hover:border-[#376299]/40 font-bold text-base shadow-xs hover:bg-slate-50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer"
                   >
                     <FaIcon icon="fa-circle-info" className="text-[#376299]" />
-                    {s.hero_secondary_cta_label || 'Learn How It Works'}
+                    {s.hero_secondary_cta_label}
                   </button>
                 </div>
 
 
+                {(s.hero_trackers_label || heroTrackers.length > 0) && (
                 <div className="pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-2 text-xs text-slate-500">
-                  <span className="font-semibold text-slate-400">Compatible Trackers:</span>
-                  {['Strava', 'Nike Run Club', 'Garmin', 'Apple Health', 'Samsung Health', 'GPS Watches'].map((app, i) => (
+                  {s.hero_trackers_label ? (
+                    <span className="font-semibold text-slate-400">{s.hero_trackers_label}</span>
+                  ) : null}
+                  {heroTrackers.map((app, i) => (
                     <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100/80 text-slate-600 font-medium text-[11px] border border-slate-200/60">
                       <FaIcon icon="fa-circle-check" className="text-emerald-500 text-[9px]" />
                       {app}
                     </span>
                   ))}
                 </div>
+                )}
               </div>
 
 
@@ -415,27 +447,37 @@ export default function OffersPage() {
                   <div className="relative rounded-3xl overflow-hidden border border-slate-200/90 bg-white shadow-2xl">
                     <img
                       src={heroImage}
-                      alt="Run 10 KM and get free physiotherapy recovery sessions"
+                      alt={s.hero_image_alt || ''}
                       className="w-full h-80 sm:h-96 lg:h-[26rem] object-cover object-center"
                       loading="lazy"
                     />
 
 
                     <div className="p-6 bg-gradient-to-t from-slate-950 via-slate-900/70 to-transparent absolute inset-0 flex flex-col justify-end text-white">
+                      {(s.hero_card_badge || s.hero_card_target) && (
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="inline-block px-3 py-1 rounded-md bg-[#FF6F61] text-white text-[11px] font-extrabold uppercase tracking-widest shadow-xs">
-                          Verified Campaign
-                        </span>
-                        <span className="inline-block px-2.5 py-1 rounded-md bg-white/20 backdrop-blur-md text-white text-[11px] font-bold">
-                          10.0 KM Target
-                        </span>
+                        {s.hero_card_badge ? (
+                          <span className="inline-block px-3 py-1 rounded-md bg-[#FF6F61] text-white text-[11px] font-extrabold uppercase tracking-widest shadow-xs">
+                            {s.hero_card_badge}
+                          </span>
+                        ) : null}
+                        {s.hero_card_target ? (
+                          <span className="inline-block px-2.5 py-1 rounded-md bg-white/20 backdrop-blur-md text-white text-[11px] font-bold">
+                            {s.hero_card_target}
+                          </span>
+                        ) : null}
                       </div>
-                      <h3 className="text-xl sm:text-2xl font-extrabold leading-tight tracking-tight">
-                        Fitness Meets Clinical Recovery
-                      </h3>
-                      <p className="text-xs sm:text-sm text-slate-300 mt-1 leading-relaxed">
-                        Submit your verified 10 KM run proof and consult licensed physiotherapists at clinic or online.
-                      </p>
+                      )}
+                      {s.hero_card_title ? (
+                        <h3 className="text-xl sm:text-2xl font-extrabold leading-tight tracking-tight">
+                          {s.hero_card_title}
+                        </h3>
+                      ) : null}
+                      {s.hero_card_text ? (
+                        <p className="text-xs sm:text-sm text-slate-300 mt-1 leading-relaxed">
+                          {s.hero_card_text}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -450,10 +492,12 @@ export default function OffersPage() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="text-center max-w-2xl mx-auto mb-12">
                 <span className="inline-block text-xs font-extrabold uppercase tracking-widest text-[#FF6F61] bg-[#FF6F61]/10 px-3.5 py-1 rounded-full border border-[#FF6F61]/20">
-                  {s.highlights_heading || 'Campaign Overview'}
+                  Campaign Overview
                 </span>
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 mt-3 tracking-tight">
-                  Four Steps to Your Free Session
+                  {s.highlights_heading && s.highlights_heading !== 'Campaign Overview'
+                    ? s.highlights_heading
+                    : 'Four Steps to Your Free Session'}
                 </h2>
                 <p className="text-sm sm:text-base text-slate-600 mt-2">
                   {s.highlights_subheading ||
@@ -684,6 +728,7 @@ export default function OffersPage() {
         )}
 
 
+        {vis.submission_form !== false && (
         <section ref={formRef} id="submit-run" className="py-20 bg-[#F1F5F9]/80">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -718,6 +763,11 @@ export default function OffersPage() {
                 <p className="text-sm text-slate-600 max-w-lg mx-auto mb-6">
                   {s.form_success_message ||
                     'Your 10 KM run submission has been received and is currently under clinical review. Keep your Reference Code safe.'}
+                </p>
+                <p className="text-xs text-slate-500 max-w-md mx-auto -mt-3 mb-6">
+                  {submissionSuccess.account_created
+                    ? 'We emailed a temporary password. Sign in and change it to view this submission.'
+                    : 'A confirmation email is on its way. Sign in with your patient account to view this submission.'}
                 </p>
 
 
@@ -760,10 +810,7 @@ export default function OffersPage() {
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5">
                   <button
                     type="button"
-                    onClick={() => {
-                      setStatusQuery(submissionSuccess.reference_code);
-                      handleScrollTo(statusRef);
-                    }}
+                    onClick={scrollToLiveStatus}
                     className="btn-primary text-sm w-full sm:w-auto !py-3 !px-6 cursor-pointer"
                   >
                     <FaIcon icon="fa-magnifying-glass" className="mr-1.5" />
@@ -797,7 +844,7 @@ export default function OffersPage() {
                     </p>
                     <button
                       type="button"
-                      onClick={() => handleScrollTo(statusRef)}
+                      onClick={scrollToLiveStatus}
                       className="mt-2 btn-primary text-xs !py-2 !px-4"
                     >
                       Go to Status Tracker
@@ -1080,8 +1127,8 @@ export default function OffersPage() {
             )}
 
 
-            {vis.status_tracker && (
-              <div ref={statusRef} className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-md">
+            {(vis.status_tracker || submissionSuccess) && (
+              <div id="live-status" ref={statusRef} className="scroll-mt-24 rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-md">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                   <div>
                     <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2.5">
@@ -1099,7 +1146,7 @@ export default function OffersPage() {
                 {!user ? (
                   <Link
                     to="/patient/login"
-                    state={{ from: '/offers' }}
+                    state={{ from: '/offers#live-status' }}
                     className="inline-flex items-center justify-center gap-2 btn-primary text-sm !py-3 !px-6 rounded-2xl cursor-pointer"
                   >
                     <FaIcon icon="fa-right-to-bracket" />
@@ -1270,6 +1317,7 @@ export default function OffersPage() {
             )}
           </div>
         </section>
+        )}
 
 
         {vis.faqs && faqs.length > 0 && (

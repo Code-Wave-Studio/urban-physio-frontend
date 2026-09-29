@@ -1068,12 +1068,18 @@ export const about = {
   settings: () => api.get('/about/settings'),
 };
 
+const freshCmsGet = (url) =>
+  api.get(url, {
+    params: { _: Date.now() },
+    headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+  });
+
 export const homePhysio = {
-  settings: () => api.get('/home-physio/settings'),
+  settings: () => freshCmsGet('/home-physio/settings'),
 };
 
 export const telephysio = {
-  settings: () => api.get('/telephysio/settings'),
+  settings: () => freshCmsGet('/telephysio/settings'),
 };
 
 export const kinestex = {
@@ -1172,6 +1178,7 @@ export const consultation = {
 export const publicInvoicePay = {
   info: (token) => api.get(`/public/invoice-pay/${token}`),
   order: (token) => api.post(`/public/invoice-pay/${token}/order`, {}),
+  verify: (token, payload) => api.post(`/public/invoice-pay/${token}/verify`, payload),
 };
 
 /** Patient Portal — dashboard aggregates (bills, progress, prescriptions, video) */

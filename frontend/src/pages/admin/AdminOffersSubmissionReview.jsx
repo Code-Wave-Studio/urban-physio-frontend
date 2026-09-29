@@ -302,7 +302,7 @@ export default function AdminOffersSubmissionReview() {
                     <span>
                       Campaign:{' '}
                       <strong className="text-slate-800 font-bold">
-                        Run 10 KM &amp; Get Free Physiotherapy
+                        {submission.campaign_title || 'Offers & Campaigns'}
                       </strong>
                     </span>
                     <span className="text-slate-300">•</span>

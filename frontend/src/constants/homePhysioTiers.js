@@ -231,3 +231,66 @@ export function syncTierPriceLabels(previous, nextTiers) {
     return tier;
   });
 }
+
+/** Package amounts that ship in the default FAQ copy. Live CMS prices replace these at render time. */
+export const HOME_PHYSIO_PACKAGE_PRICE_DEFAULTS = [
+  { name: 'Certified', price: '₹16,499' },
+  { name: 'Senior', price: '₹19,999' },
+  { name: 'Specialist', price: '₹26,999' },
+];
+
+function priceSwaps(defaults, liveRows, match) {
+  return defaults
+    .map((base) => {
+      const live = (liveRows || []).find((row) => match(base, row));
+      const to = String(live?.price || '').trim();
+      const from = String(base.price || '').trim();
+      if (!from || !to || from === to) return null;
+      return { from, to };
+    })
+    .filter(Boolean);
+}
+
+/**
+ * Swap catalog prices embedded in stored copy for the current CMS prices.
+ * Uses placeholders so two tiers can exchange amounts without colliding.
+ */
+export function textWithLivePrices(text, tiers, packages) {
+  if (typeof text !== 'string' || text === '') return text;
+  const swaps = [
+    ...priceSwaps(HOME_PHYSIO_TIER_CATALOG, tiers, (base, row) => row?.key === base.key),
+    ...priceSwaps(
+      HOME_PHYSIO_PACKAGE_PRICE_DEFAULTS,
+      packages,
+      (base, row) => row?.name && base.name && row.name === base.name
+    ),
+  ];
+  if (!swaps.length) return text;
+  let out = text;
+  swaps.forEach((swap, index) => {
+    out = out.split(swap.from).join(`\u0000P${index}\u0000`);
+  });
+  swaps.forEach((swap, index) => {
+    out = out.split(`\u0000P${index}\u0000`).join(swap.to);
+  });
+  return out;
+}
+
+export function faqsWithLivePrices(faqs, tiers, packages) {
+  return (Array.isArray(faqs) ? faqs : []).map((item) => {
+    if (!item || typeof item.a !== 'string') return item;
+    const answer = textWithLivePrices(item.a, tiers, packages);
+    return answer === item.a ? item : { ...item, a: answer };
+  });
+}
+
+/** Button label follows the CMS price when the stored label still quotes an older amount. */
+export function tierButtonLabel(tier) {
+  const price = String(tier?.price || '').trim();
+  const name = String(tier?.name || 'Physio').trim();
+  const label = String(tier?.cta_label || '').trim();
+  if (!label) return price ? `Book a ${name} — ${price}` : `Book a ${name}`;
+  if (!price || label.includes(price)) return label;
+  if (/₹[\d,]+/.test(label)) return label.replace(/₹[\d,]+/g, price);
+  return label;
+}

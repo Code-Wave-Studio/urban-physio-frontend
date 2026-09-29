@@ -19,7 +19,8 @@ import { homePhysio } from '../services/api';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import { HEALTHCARE_IMAGES } from '../utils/healthcareImages';
 import { bookHomeVisitUrl, withPainAreaParams } from '../utils/bookUrl';
-import { homePhysioTierBookLink } from '../constants/homePhysioTiers';
+import { faqsWithLivePrices, homePhysioTierBookLink, tierButtonLabel } from '../constants/homePhysioTiers';
+import { isSectionOn } from '../constants/sectionVisibility';
 import {
   HOME_PHYSIO_DEFAULTS,
   HOME_PHYSIO_SEO,
@@ -29,6 +30,15 @@ import { HOME_PAIN_MAP_DEFAULTS, isPainMapEnabled, painMapSectionProps, visibleP
 import { isRoadmapEnabled } from '../constants/recoveryRoadmapDefaults';
 import { isEcosystemEnabled } from '../constants/careEcosystemDefaults';
 import { isEnrolEnabled } from '../constants/enrollmentDefaults';
+import { useContact } from '../contexts/ContactContext';
+
+function toTelHref(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  const body = /^tel:/i.test(raw) ? raw.slice(4) : raw;
+  const compact = body.replace(/[^\d+]/g, '');
+  return compact ? `tel:${compact}` : '';
+}
 
 function categoryItems(cat) {
   return Array.isArray(cat.items)
@@ -39,6 +49,7 @@ function categoryItems(cat) {
 }
 
 export default function HomePhysiotherapyPage() {
+  const { phone } = useContact();
   const [data, setData] = useState(HOME_PHYSIO_DEFAULTS);
   const [loading, setLoading] = useState(true);
   const [fitHomeOpen, setFitHomeOpen] = useState(false);
@@ -83,8 +94,17 @@ export default function HomePhysiotherapyPage() {
   }, [loading]);
 
   const s = data.sections || HOME_PHYSIO_DEFAULTS.sections;
+  const showHero = isSectionOn(s, 'hero_enabled');
+  const showHeroBook = isSectionOn(s, 'hero_cta_enabled');
+  const showHeroCall = isSectionOn(s, 'hero_call_enabled');
+  const callHref = toTelHref(s.hero_call_link || phone);
+  const showStory = isSectionOn(s, 'story_enabled');
+  const showBook = isSectionOn(s, 'book_enabled');
+  const showPricing = isSectionOn(s, 'pricing_enabled');
+  const showVoice = isSectionOn(s, 'voice_enabled');
+  const showCommunity = isSectionOn(s, 'community_enabled');
   const heroImage = resolveMediaUrl(data.hero_image) || data.hero_image || HEALTHCARE_IMAGES.homeVisit;
-  const faqs = s.faqs || [];
+  const faqs = showVoice ? faqsWithLivePrices(s.faqs || [], s.tiers, s.pricing_packages) : [];
   const testimonials = s.testimonials || [];
   const featuredQuotes = testimonials.slice(0, 2);
   const carouselQuotes = testimonials.slice(2);
@@ -137,6 +157,8 @@ export default function HomePhysiotherapyPage() {
       />
       <Navbar />
 
+      {showHero && (
+      <>
       <section className="relative overflow-hidden bg-gradient-to-br from-orange-600 via-primary-700 to-primary-950 text-white lg:max-h-[95vh] flex flex-col justify-center">
         <div className="absolute inset-0 hp-hero-grid pointer-events-none" aria-hidden />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16 relative w-full">
@@ -152,14 +174,27 @@ export default function HomePhysiotherapyPage() {
               <p className="mt-4 text-primary-100 text-[15px] md:text-lg leading-relaxed max-w-xl">
                 {data.hero_subtitle}
               </p>
-              <div className="mt-7 flex flex-col sm:flex-row gap-3">
+              {(showHeroBook || (showHeroCall && callHref)) && (
+              <div className="mt-7 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3">
+                {showHeroBook && (
                 <CtaLink
                   to={s.hero_cta_link}
-                  className="btn-primary !bg-white !text-primary-700 hover:!bg-orange-50 shadow-lg"
+                  className="btn-primary !bg-white !text-primary-700 hover:!bg-orange-50 shadow-lg w-full sm:w-auto"
                 >
                   {s.hero_cta_label}
                 </CtaLink>
+                )}
+                {showHeroCall && callHref && (
+                <a
+                  href={callHref}
+                  className="btn-primary !bg-white !text-primary-700 hover:!bg-orange-50 shadow-lg booking-cta-shadow inline-flex items-center justify-center gap-2 min-h-11 px-6 w-full sm:w-auto"
+                >
+                  <FaIcon icon="fa-phone" />
+                  {s.hero_call_label || 'Call Now'}
+                </a>
+                )}
               </div>
+              )}
               <ul className="mt-8 grid sm:grid-cols-2 gap-2.5">
                 {(s.trust_signals || []).map((item) => (
                   <li key={item} className="flex items-start gap-2 text-sm text-white/90">
@@ -201,6 +236,8 @@ export default function HomePhysiotherapyPage() {
           </ul>
         </div>
       </section>
+      </>
+      )}
 
       <OrgLogosSection />
 
@@ -225,6 +262,8 @@ export default function HomePhysiotherapyPage() {
 
       {isEnrolEnabled(s) && <EnrollmentSection theme="home" sections={s} />}
 
+      {showStory && (
+      <>
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-pad">
         <SectionHead eyebrow="Choose your format" heading={s.fit_heading} intro={s.fit_intro} />
         <div className="grid md:grid-cols-2 gap-4 md:gap-6">
@@ -363,7 +402,11 @@ export default function HomePhysiotherapyPage() {
           )}
         </div>
       </section>
+      </>
+      )}
 
+      {showBook && (
+      <>
       <section className="bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-pad">
           <SectionHead eyebrow="Choose your physio" heading={s.tiers_heading} intro={s.tiers_intro} />
@@ -419,7 +462,7 @@ export default function HomePhysiotherapyPage() {
                     to={homePhysioTierBookLink(tier.key, tier.cta_link)}
                     className="btn-primary mt-5 w-full justify-center text-sm min-h-11"
                   >
-                    {tier.cta_label}
+                    {tierButtonLabel(tier)}
                   </Link>
                 </article>
               );
@@ -485,7 +528,11 @@ export default function HomePhysiotherapyPage() {
           </div>
         </div>
       </section>
+      </>
+      )}
 
+      {showPricing && (
+      <>
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-pad">
         <SectionHead eyebrow="Transparent rates" heading={s.pricing_heading} />
         <div className="grid sm:grid-cols-3 gap-3 max-w-3xl mx-auto">
@@ -554,7 +601,11 @@ export default function HomePhysiotherapyPage() {
           <p className="mt-6 text-center text-sm text-slate-600">{s.areas_pincode}</p>
         </div>
       </section>
+      </>
+      )}
 
+      {showVoice && (
+      <>
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-pad">
         <SectionHead eyebrow="Patient stories" heading={s.testimonials_heading} />
         <div className="grid md:grid-cols-2 gap-4 mb-5">
@@ -592,6 +643,8 @@ export default function HomePhysiotherapyPage() {
           </div>
         </div>
       </section>
+      </>
+      )}
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 md:pb-14">
         <div className="relative overflow-hidden rounded-2xl md:rounded-3xl text-white text-center">
@@ -611,7 +664,7 @@ export default function HomePhysiotherapyPage() {
         </div>
       </section>
 
-      <CommunityPreviewSection sections={s} accent="orange" />
+      {showCommunity && <CommunityPreviewSection sections={s} accent="orange" />}
 
       <Footer />
     </div>

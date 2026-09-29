@@ -5,6 +5,7 @@
 import assert from 'node:assert/strict';
 import {
   buildWorkoutOverviewRows,
+  buildWorkoutOverviewSections,
   formatAccuracy,
   formatDuration,
 } from './kinestexWorkoutOverviewMetrics.js';
@@ -45,5 +46,22 @@ assert.equal(formatAccuracy(null), null);
 assert.equal(formatDuration(26), '26s');
 assert.equal(formatDuration(90), '1m 30s');
 assert.equal(formatDuration(null), null);
+
+const sections = buildWorkoutOverviewSections({
+  repetitions: 10,
+  accuracy: 100,
+  mistakes: 0,
+  calories: 1.56,
+  score: 100,
+  duration_seconds: 22,
+  sets_completed: null,
+});
+assert.deepEqual(
+  sections.map((section) => section.title),
+  ['Repetitions', 'Accuracy & form', 'Effort & time']
+);
+assert.equal(sections[0].items[0].value, 10);
+assert.equal(sections[1].items[0].value, '100%');
+assert.equal(sections[2].items[1].value, '22s');
 
 console.log('KinesteXWorkoutOverview.node-test.mjs: OK');

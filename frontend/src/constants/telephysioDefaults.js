@@ -26,6 +26,13 @@ export const TELEPHYSIO_DEFAULTS = {
   seo_title: TELEPHYSIO_SEO.title,
   seo_description: TELEPHYSIO_SEO.description,
   sections: {
+    hero_enabled: '1',
+    overview_enabled: '1',
+    steps_enabled: '1',
+    benefits_enabled: '1',
+    pricing_enabled: '1',
+    voice_enabled: '1',
+    community_enabled: '1',
     hero_badge: 'TelePhysio by Myoreset',
     hero_cta_label: 'Book a TelePhysio Session',
     hero_cta_link: TELEPHYSIO_BOOK_PATH,
