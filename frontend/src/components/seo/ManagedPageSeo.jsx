@@ -17,6 +17,7 @@ export default function ManagedPageSeo({
   nofollow: forceNofollow = false,
   canonical: canonicalOverride,
   image: imageOverride,
+  preferFallbackWhenUnmanaged = false,
 }) {
   const location = useLocation();
   const path = pathOverride || location.pathname || '/';
@@ -37,8 +38,13 @@ export default function ManagedPageSeo({
     };
   }, [path]);
 
-  const title = meta?.title || fallbackTitle;
-  const description = meta?.description || fallbackDescription;
+  // meta.found === false means no active seo_pages row: the API returns site-wide defaults,
+  // which must not outrank page-level CMS copy for pages that opt in.
+  const useFallback = preferFallbackWhenUnmanaged && meta?.found === false;
+  const copy = useFallback ? {} : meta || {};
+  const title = (useFallback && fallbackTitle) || meta?.title || fallbackTitle;
+  const description = (useFallback && fallbackDescription) || meta?.description || fallbackDescription;
+  const keywords = (useFallback && fallbackKeywords) || meta?.keywords || fallbackKeywords;
   const robotsParts = (meta?.robots || 'index, follow').split(',').map((s) => s.trim());
   const noindex = forceNoindex || robotsParts.includes('noindex');
   const nofollow = forceNofollow || robotsParts.includes('nofollow');
@@ -53,14 +59,14 @@ export default function ManagedPageSeo({
     <PageMeta
       title={title}
       description={description}
-      keywords={meta?.keywords || fallbackKeywords}
+      keywords={keywords}
       canonical={canonicalOverride || meta?.canonical || path}
       image={imageOverride || meta?.og?.image}
       ogType={meta?.og?.type || 'website'}
-      ogTitle={meta?.og?.title}
-      ogDescription={meta?.og?.description}
-      twitterTitle={meta?.twitter?.title}
-      twitterDescription={meta?.twitter?.description}
+      ogTitle={copy.og?.title}
+      ogDescription={copy.og?.description}
+      twitterTitle={copy.twitter?.title}
+      twitterDescription={copy.twitter?.description}
       twitterImage={meta?.twitter?.image}
       twitterCard={meta?.twitter?.card}
       twitterSite={meta?.twitter?.site}

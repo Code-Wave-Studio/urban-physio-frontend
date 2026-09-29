@@ -1068,10 +1068,11 @@ export const about = {
   settings: () => api.get('/about/settings'),
 };
 
+// Keep this a plain GET: custom request headers force a CORS preflight on the
+// cross-origin API. Freshness comes from the timestamp param + the endpoint's no-store.
 const freshCmsGet = (url) =>
   api.get(url, {
     params: { _: Date.now() },
-    headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
   });
 
 export const homePhysio = {

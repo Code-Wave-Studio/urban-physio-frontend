@@ -75,7 +75,10 @@ export default function HomePhysiotherapyPage() {
           sections: mergeHomePhysioSections(d?.sections || {}),
         });
       })
-      .catch(() => setData(HOME_PHYSIO_DEFAULTS))
+      .catch((err) => {
+        console.warn('Home Physiotherapy CMS content failed to load; showing defaults.', err);
+        setData(HOME_PHYSIO_DEFAULTS);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -154,6 +157,7 @@ export default function HomePhysiotherapyPage() {
         fallbackDescription={data.seo_description || HOME_PHYSIO_SEO.description}
         fallbackKeywords={HOME_PHYSIO_SEO.keywords}
         jsonLd={jsonLd}
+        preferFallbackWhenUnmanaged
       />
       <Navbar />
 

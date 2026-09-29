@@ -686,11 +686,12 @@ export default function AdminHomePhysio() {
                 <textarea className="input-field min-h-[80px]" value={form.seo_description} onChange={(e) => set('seo_description', e.target.value)} />
               </CmsField>
               <p className="text-xs text-slate-500">
-                Advanced sitemap / Open Graph overrides also live in{' '}
+                Used as the live page title and description. If an active{' '}
                 <Link to="/admin/seo" className="text-primary-700 font-semibold hover:underline">
                   SEO settings
-                </Link>
-                .
+                </Link>{' '}
+                entry exists for <code>/home-physiotherapy</code>, that entry takes priority (it also controls sitemap and
+                Open Graph overrides).
               </p>
             </CmsPanel>
           </div>
