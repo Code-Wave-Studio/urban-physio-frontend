@@ -1,4 +1,7 @@
+import { Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import lazyWithRetry from './utils/lazyWithRetry';
+import AppErrorBoundary from './components/AppErrorBoundary';
 import ProtectedRoute from './components/ProtectedRoute';
 import ForceTempPasswordChange from './components/ForceTempPasswordChange';
 import Home from './pages/Home';
@@ -17,83 +20,85 @@ import Treatments from './pages/Treatments';
 import TreatmentDetail from './pages/TreatmentDetail';
 import Conditions from './pages/Conditions';
 import ConditionDetail from './pages/ConditionDetail';
-import PatientDashboard from './pages/patient/PatientDashboard';
-import PatientAppointments from './pages/patient/PatientAppointments';
-import PatientReports from './pages/patient/PatientReports';
+const PatientDashboard = lazyWithRetry(() => import('./pages/patient/PatientDashboard'));
+const PatientAppointments = lazyWithRetry(() => import('./pages/patient/PatientAppointments'));
+const PatientReports = lazyWithRetry(() => import('./pages/patient/PatientReports'));
 import DocumentsPage from './pages/DocumentsPage';
-import ClinicDashboardPage from './pages/clinic/ClinicDashboardPage';
-import ClinicPortalHome from './pages/clinic/ClinicPortalHome';
-import ClinicAdminHome from './pages/clinic/ClinicAdminHome';
-import ClinicStaffPage from './pages/clinic/ClinicStaffPage';
-import ClinicPortalDoctors from './pages/clinic/ClinicPortalDoctors';
-import ClinicPortalProfile from './pages/clinic/ClinicPortalProfile';
-import ClinicPortalAppointments from './pages/clinic/ClinicPortalAppointments';
-import ClinicPortalPatients from './pages/clinic/ClinicPortalPatients';
-import ClinicPortalEarnings from './pages/clinic/ClinicPortalEarnings';
-import ClinicBillingPage from './pages/clinic/ClinicBillingPage';
-import ClinicAdvancedSearchPage from './pages/clinic/ClinicAdvancedSearchPage';
-import DoctorAdvancedSearchPage from './pages/doctor/DoctorAdvancedSearchPage';
-import AdminAdvancedSearchPage from './pages/admin/AdminAdvancedSearchPage';
-import DoctorCalendarPage from './pages/doctor/DoctorCalendarPage';
-import AdminCalendarPage from './pages/admin/AdminCalendarPage';
-import ClinicCalendarPage from './pages/clinic/ClinicCalendarPage';
-import ClinicPackagesPage from './pages/clinic/ClinicPackagesPage';
-import ClinicReportsPage from './pages/clinic/ClinicReportsPage';
-import ClinicTeamPage from './pages/clinic/ClinicTeamPage';
-import ClinicBrandingPage from './pages/clinic/ClinicBrandingPage';
-import ClinicCreatePackagePage from './pages/clinic/ClinicCreatePackagePage';
-import ClinicClinicalLibraryPage from './pages/clinic/ClinicClinicalLibraryPage';
-import ClinicAvailabilityPage from './pages/clinic/ClinicAvailabilityPage';
-import ClinicAvailabilitySettingsPage from './pages/clinic/ClinicAvailabilitySettingsPage';
-import ClinicQrPage from './pages/clinic/ClinicQrPage';
-import ClinicFormsPage from './pages/clinic/ClinicFormsPage';
-import ClinicPatientDetailPage from './pages/clinic/ClinicPatientDetailPage';
-import ClinicAssessmentBuilderPage from './pages/clinic/ClinicAssessmentBuilderPage';
-import PrescriptionDocumentViewPage from './pages/clinic/PrescriptionDocumentViewPage';
-import ClinicProtocolBuilderPage from './pages/clinic/ClinicProtocolBuilderPage';
-import ClinicSuggestionChipsPage from './pages/clinic/ClinicSuggestionChipsPage';
-import ClinicNotificationsManagePage from './pages/clinic/ClinicNotificationsManagePage';
-import ClinicCommunicationPage from './pages/clinic/ClinicCommunicationPage';
-import ClinicExerciseRehabPage from './pages/clinic/ClinicExerciseRehabPage';
-import ClinicBackOfficePage from './pages/clinic/ClinicBackOfficePage';
-import ClinicAiAnalyticsPage from './pages/clinic/ClinicAiAnalyticsPage';
-import ClinicNotesPage from './pages/clinic/ClinicNotesPage';
-import ClinicSupportCenterPage from './pages/clinic/ClinicSupportCenterPage';
-import AdminSupportCenterPage from './pages/admin/AdminSupportCenterPage';
-import ClinicInvoiceGeneratorPage from './pages/clinic/ClinicInvoiceGeneratorPage';
+const ClinicDashboardPage = lazyWithRetry(() => import('./pages/clinic/ClinicDashboardPage'));
+const ClinicPortalHome = lazyWithRetry(() => import('./pages/clinic/ClinicPortalHome'));
+const ClinicAdminHome = lazyWithRetry(() => import('./pages/clinic/ClinicAdminHome'));
+const ClinicStaffPage = lazyWithRetry(() => import('./pages/clinic/ClinicStaffPage'));
+const ClinicPortalDoctors = lazyWithRetry(() => import('./pages/clinic/ClinicPortalDoctors'));
+const ClinicPortalProfile = lazyWithRetry(() => import('./pages/clinic/ClinicPortalProfile'));
+const ClinicPortalAppointments = lazyWithRetry(() => import('./pages/clinic/ClinicPortalAppointments'));
+const ClinicPortalPatients = lazyWithRetry(() => import('./pages/clinic/ClinicPortalPatients'));
+const ClinicPortalEarnings = lazyWithRetry(() => import('./pages/clinic/ClinicPortalEarnings'));
+const ClinicBillingPage = lazyWithRetry(() => import('./pages/clinic/ClinicBillingPage'));
+const ClinicAdvancedSearchPage = lazyWithRetry(() => import('./pages/clinic/ClinicAdvancedSearchPage'));
+const DoctorAdvancedSearchPage = lazyWithRetry(() => import('./pages/doctor/DoctorAdvancedSearchPage'));
+const AdminAdvancedSearchPage = lazyWithRetry(() => import('./pages/admin/AdminAdvancedSearchPage'));
+const DoctorCalendarPage = lazyWithRetry(() => import('./pages/doctor/DoctorCalendarPage'));
+const AdminCalendarPage = lazyWithRetry(() => import('./pages/admin/AdminCalendarPage'));
+const ClinicCalendarPage = lazyWithRetry(() => import('./pages/clinic/ClinicCalendarPage'));
+const ClinicPackagesPage = lazyWithRetry(() => import('./pages/clinic/ClinicPackagesPage'));
+const ClinicReportsPage = lazyWithRetry(() => import('./pages/clinic/ClinicReportsPage'));
+const ClinicTeamPage = lazyWithRetry(() => import('./pages/clinic/ClinicTeamPage'));
+const ClinicBrandingPage = lazyWithRetry(() => import('./pages/clinic/ClinicBrandingPage'));
+const ClinicCreatePackagePage = lazyWithRetry(() => import('./pages/clinic/ClinicCreatePackagePage'));
+const ClinicClinicalLibraryPage = lazyWithRetry(() => import('./pages/clinic/ClinicClinicalLibraryPage'));
+const ClinicAvailabilityPage = lazyWithRetry(() => import('./pages/clinic/ClinicAvailabilityPage'));
+const ClinicAvailabilitySettingsPage = lazyWithRetry(() => import('./pages/clinic/ClinicAvailabilitySettingsPage'));
+const ClinicQrPage = lazyWithRetry(() => import('./pages/clinic/ClinicQrPage'));
+const ClinicFormsPage = lazyWithRetry(() => import('./pages/clinic/ClinicFormsPage'));
+const ClinicPatientDetailPage = lazyWithRetry(() => import('./pages/clinic/ClinicPatientDetailPage'));
+const ClinicAssessmentBuilderPage = lazyWithRetry(() => import('./pages/clinic/ClinicAssessmentBuilderPage'));
+const PrescriptionDocumentViewPage = lazyWithRetry(() => import('./pages/clinic/PrescriptionDocumentViewPage'));
+const ClinicProtocolBuilderPage = lazyWithRetry(() => import('./pages/clinic/ClinicProtocolBuilderPage'));
+const ClinicSuggestionChipsPage = lazyWithRetry(() => import('./pages/clinic/ClinicSuggestionChipsPage'));
+const ClinicNotificationsManagePage = lazyWithRetry(() => import('./pages/clinic/ClinicNotificationsManagePage'));
+const ClinicCommunicationPage = lazyWithRetry(() => import('./pages/clinic/ClinicCommunicationPage'));
+const ClinicExerciseRehabPage = lazyWithRetry(() => import('./pages/clinic/ClinicExerciseRehabPage'));
+const ClinicBackOfficePage = lazyWithRetry(() => import('./pages/clinic/ClinicBackOfficePage'));
+const ClinicAiAnalyticsPage = lazyWithRetry(() => import('./pages/clinic/ClinicAiAnalyticsPage'));
+const ClinicNotesPage = lazyWithRetry(() => import('./pages/clinic/ClinicNotesPage'));
+const ClinicSupportCenterPage = lazyWithRetry(() => import('./pages/clinic/ClinicSupportCenterPage'));
+const AdminSupportCenterPage = lazyWithRetry(() => import('./pages/admin/AdminSupportCenterPage'));
+const ClinicInvoiceGeneratorPage = lazyWithRetry(() => import('./pages/clinic/ClinicInvoiceGeneratorPage'));
 import ClinicQrIntakePage from './pages/public/ClinicQrIntakePage';
 import ClinicProgressPublicPage from './pages/public/ClinicProgressPublicPage';
 import PayInvoicePage from './pages/public/PayInvoicePage';
-import PatientProfile from './pages/patient/PatientProfile';
-import AdminInvoiceSettings from './pages/admin/AdminInvoiceSettings';
-import AdminBillingPage from './pages/admin/AdminBillingPage';
-import AdminZoomMeetings from './pages/admin/AdminZoomMeetings';
-import AdminWallet from './pages/admin/AdminWallet';
-import AdminNotificationSettings from './pages/admin/AdminNotificationSettings';
-import AdminSeo from './pages/admin/AdminSeo';
+const PatientProfile = lazyWithRetry(() => import('./pages/patient/PatientProfile'));
+const AdminInvoiceSettings = lazyWithRetry(() => import('./pages/admin/AdminInvoiceSettings'));
+const AdminBillingPage = lazyWithRetry(() => import('./pages/admin/AdminBillingPage'));
+const AdminZoomMeetings = lazyWithRetry(() => import('./pages/admin/AdminZoomMeetings'));
+const AdminWallet = lazyWithRetry(() => import('./pages/admin/AdminWallet'));
+const AdminNotificationSettings = lazyWithRetry(() => import('./pages/admin/AdminNotificationSettings'));
+const AdminSeo = lazyWithRetry(() => import('./pages/admin/AdminSeo'));
 import NotFoundPage from './pages/NotFoundPage';
-import AdminPainSelection from './pages/admin/AdminPainSelection';
-import AdminBookingSettings from './pages/admin/booking/AdminBookingSettings';
-import AdminContact from './pages/admin/AdminContact';
-import DoctorDashboard from './pages/doctor/DoctorDashboard';
-import DoctorAppointments from './pages/doctor/DoctorAppointments';
-import DoctorEarnings from './pages/doctor/DoctorEarnings';
-import DoctorPatients from './pages/doctor/DoctorPatients';
-import DoctorProfile from './pages/doctor/DoctorProfile';
-import DoctorClinics from './pages/doctor/DoctorClinics';
-import DoctorAddClinic from './pages/doctor/DoctorAddClinic';
-import DoctorClinicAvailability from './pages/doctor/DoctorClinicAvailability';
-import DoctorBookingFilters from './pages/doctor/DoctorBookingFilters';
+const AdminPainSelection = lazyWithRetry(() => import('./pages/admin/AdminPainSelection'));
+const AdminBookingSettings = lazyWithRetry(() => import('./pages/admin/booking/AdminBookingSettings'));
+const AdminContact = lazyWithRetry(() => import('./pages/admin/AdminContact'));
+const DoctorDashboard = lazyWithRetry(() => import('./pages/doctor/DoctorDashboard'));
+const DoctorAppointments = lazyWithRetry(() => import('./pages/doctor/DoctorAppointments'));
+const DoctorEarnings = lazyWithRetry(() => import('./pages/doctor/DoctorEarnings'));
+const DoctorPatients = lazyWithRetry(() => import('./pages/doctor/DoctorPatients'));
+const DoctorProfile = lazyWithRetry(() => import('./pages/doctor/DoctorProfile'));
+const DoctorClinics = lazyWithRetry(() => import('./pages/doctor/DoctorClinics'));
+const DoctorAddClinic = lazyWithRetry(() => import('./pages/doctor/DoctorAddClinic'));
+const DoctorClinicAvailability = lazyWithRetry(() => import('./pages/doctor/DoctorClinicAvailability'));
+const DoctorBookingFilters = lazyWithRetry(() => import('./pages/doctor/DoctorBookingFilters'));
 import NotificationsPage from './pages/NotificationsPage';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminUsers from './pages/admin/AdminUsers';
-import AdminAppointments from './pages/admin/AdminAppointments';
-import AdminLogs from './pages/admin/AdminLogs';
-import AdminProfile from './pages/admin/AdminProfile';
-import AdminConditions from './pages/admin/AdminConditions';
-import AdminTreatments from './pages/admin/AdminTreatments';
-import AdminClinics from './pages/admin/AdminClinics';
-import AdminLocations from './pages/admin/AdminLocations';
+const AdminDashboard = lazyWithRetry(() => import('./pages/admin/AdminDashboard'));
+const AdminUsers = lazyWithRetry(() => import('./pages/admin/AdminUsers'));
+const AdminAppointments = lazyWithRetry(() => import('./pages/admin/AdminAppointments'));
+const AdminLogs = lazyWithRetry(() => import('./pages/admin/AdminLogs'));
+const AdminCmsPublishing = lazyWithRetry(() => import('./pages/admin/AdminCmsPublishing'));
+const AdminLeads = lazyWithRetry(() => import('./pages/admin/AdminLeads'));
+const AdminProfile = lazyWithRetry(() => import('./pages/admin/AdminProfile'));
+const AdminConditions = lazyWithRetry(() => import('./pages/admin/AdminConditions'));
+const AdminTreatments = lazyWithRetry(() => import('./pages/admin/AdminTreatments'));
+const AdminClinics = lazyWithRetry(() => import('./pages/admin/AdminClinics'));
+const AdminLocations = lazyWithRetry(() => import('./pages/admin/AdminLocations'));
 import PolicyPage from './pages/legal/PolicyPage';
 import FaqPage from './pages/FaqPage';
 import CareersPage from './pages/CareersPage';
@@ -106,58 +111,58 @@ import CancellationHelpPage from './pages/CancellationHelpPage';
 import LicensePage from './pages/LicensePage';
 import HtmlSitemapPage from './pages/HtmlSitemapPage';
 import EmergencyBookingWizard from './pages/EmergencyBookingWizard';
-import DoctorEmergency from './pages/doctor/DoctorEmergency';
-import AdminEmergency from './pages/admin/AdminEmergency';
+const DoctorEmergency = lazyWithRetry(() => import('./pages/doctor/DoctorEmergency'));
+const AdminEmergency = lazyWithRetry(() => import('./pages/admin/AdminEmergency'));
 import SearchResultsPage from './pages/SearchResultsPage';
-import DoctorCustomSlots from './pages/doctor/DoctorCustomSlots';
+const DoctorCustomSlots = lazyWithRetry(() => import('./pages/doctor/DoctorCustomSlots'));
 import AppointmentRequestsPage from './pages/AppointmentRequestsPage';
 import TreatmentPackages from './pages/TreatmentPackages';
 import PackageBookingWizard from './pages/PackageBookingWizard';
 import ExerciseLibrary from './pages/ExerciseLibrary';
 import ExerciseDetail from './pages/ExerciseDetail';
-import AdminTreatmentPackages from './pages/admin/AdminTreatmentPackages';
-import AdminDoctorPackages from './pages/admin/AdminDoctorPackages';
-import AdminExercises from './pages/admin/AdminExercises';
-import PatientPackages from './pages/patient/PatientPackages';
-import PatientSaved from './pages/patient/PatientSaved';
-import PatientTreatmentJourney from './pages/patient/PatientTreatmentJourney';
-import DoctorTreatmentJourney from './pages/doctor/DoctorTreatmentJourney';
-import DoctorPackages from './pages/doctor/DoctorPackages';
-import DoctorTreatmentServices from './pages/doctor/DoctorTreatmentServices';
-import DoctorServicePackages from './pages/doctor/DoctorServicePackages';
-import DoctorAdminPackagePrices from './pages/doctor/DoctorAdminPackagePrices';
-import DoctorPrescriptions from './pages/doctor/DoctorPrescriptions';
-import PatientExercises from './pages/patient/PatientExercises';
-import PatientBills from './pages/patient/PatientBills';
-import PatientWallet from './pages/patient/PatientWallet';
-import PatientProgress from './pages/patient/PatientProgress';
-import PatientVideoConsultations from './pages/patient/PatientVideoConsultations';
-import PatientPrescriptions from './pages/patient/PatientPrescriptions';
-import PatientConsultationPage from './pages/patient/PatientConsultationPage';
-import DoctorConsultationPage from './pages/doctor/DoctorConsultationPage';
-import DoctorConsultationRoomsPage from './pages/doctor/DoctorConsultationRoomsPage';
-import ClinicConsultationPage from './pages/clinic/ClinicConsultationPage';
-import ClinicConsultationRoomsPage from './pages/clinic/ClinicConsultationRoomsPage';
+const AdminTreatmentPackages = lazyWithRetry(() => import('./pages/admin/AdminTreatmentPackages'));
+const AdminDoctorPackages = lazyWithRetry(() => import('./pages/admin/AdminDoctorPackages'));
+const AdminExercises = lazyWithRetry(() => import('./pages/admin/AdminExercises'));
+const PatientPackages = lazyWithRetry(() => import('./pages/patient/PatientPackages'));
+const PatientSaved = lazyWithRetry(() => import('./pages/patient/PatientSaved'));
+const PatientTreatmentJourney = lazyWithRetry(() => import('./pages/patient/PatientTreatmentJourney'));
+const DoctorTreatmentJourney = lazyWithRetry(() => import('./pages/doctor/DoctorTreatmentJourney'));
+const DoctorPackages = lazyWithRetry(() => import('./pages/doctor/DoctorPackages'));
+const DoctorTreatmentServices = lazyWithRetry(() => import('./pages/doctor/DoctorTreatmentServices'));
+const DoctorServicePackages = lazyWithRetry(() => import('./pages/doctor/DoctorServicePackages'));
+const DoctorAdminPackagePrices = lazyWithRetry(() => import('./pages/doctor/DoctorAdminPackagePrices'));
+const DoctorPrescriptions = lazyWithRetry(() => import('./pages/doctor/DoctorPrescriptions'));
+const PatientExercises = lazyWithRetry(() => import('./pages/patient/PatientExercises'));
+const PatientBills = lazyWithRetry(() => import('./pages/patient/PatientBills'));
+const PatientWallet = lazyWithRetry(() => import('./pages/patient/PatientWallet'));
+const PatientProgress = lazyWithRetry(() => import('./pages/patient/PatientProgress'));
+const PatientVideoConsultations = lazyWithRetry(() => import('./pages/patient/PatientVideoConsultations'));
+const PatientPrescriptions = lazyWithRetry(() => import('./pages/patient/PatientPrescriptions'));
+const PatientConsultationPage = lazyWithRetry(() => import('./pages/patient/PatientConsultationPage'));
+const DoctorConsultationPage = lazyWithRetry(() => import('./pages/doctor/DoctorConsultationPage'));
+const DoctorConsultationRoomsPage = lazyWithRetry(() => import('./pages/doctor/DoctorConsultationRoomsPage'));
+const ClinicConsultationPage = lazyWithRetry(() => import('./pages/clinic/ClinicConsultationPage'));
+const ClinicConsultationRoomsPage = lazyWithRetry(() => import('./pages/clinic/ClinicConsultationRoomsPage'));
 import PhysioFeed from './pages/PhysioFeed';
 import PhysioFeedDetail from './pages/PhysioFeedDetail';
-import AdminPhysioFeed from './pages/admin/AdminPhysioFeed';
-import AdminAbout from './pages/admin/AdminAbout';
-import AdminHomePhysio from './pages/admin/AdminHomePhysio';
-import AdminTelePhysio from './pages/admin/AdminTelePhysio';
-import AdminKinesteX from './pages/admin/AdminKinesteX';
-import AdminOffers from './pages/admin/AdminOffers';
-import AdminOffersSubmissionReview from './pages/admin/AdminOffersSubmissionReview';
-import AdminHomeHero from './pages/admin/AdminHomeHero';
-import AdminHomeImages from './pages/admin/AdminHomeImages';
-import AdminHomeBanners from './pages/admin/AdminHomeBanners';
-import AdminTestimonials from './pages/admin/AdminTestimonials';
-import AdminPhysioTeam from './pages/admin/AdminPhysioTeam';
-import AdminOrgLogos from './pages/admin/AdminOrgLogos';
-import AdminBadges from './pages/admin/AdminBadges';
-import AdminCoupons from './pages/admin/AdminCoupons';
-import AdminReviews from './pages/admin/AdminReviews';
-import AdminAnalytics from './pages/admin/AdminAnalytics';
-import AdminCareers from './pages/admin/AdminCareers';
+const AdminPhysioFeed = lazyWithRetry(() => import('./pages/admin/AdminPhysioFeed'));
+const AdminAbout = lazyWithRetry(() => import('./pages/admin/AdminAbout'));
+const AdminHomePhysio = lazyWithRetry(() => import('./pages/admin/AdminHomePhysio'));
+const AdminTelePhysio = lazyWithRetry(() => import('./pages/admin/AdminTelePhysio'));
+const AdminKinesteX = lazyWithRetry(() => import('./pages/admin/AdminKinesteX'));
+const AdminOffers = lazyWithRetry(() => import('./pages/admin/AdminOffers'));
+const AdminOffersSubmissionReview = lazyWithRetry(() => import('./pages/admin/AdminOffersSubmissionReview'));
+const AdminHomeHero = lazyWithRetry(() => import('./pages/admin/AdminHomeHero'));
+const AdminHomeImages = lazyWithRetry(() => import('./pages/admin/AdminHomeImages'));
+const AdminHomeBanners = lazyWithRetry(() => import('./pages/admin/AdminHomeBanners'));
+const AdminTestimonials = lazyWithRetry(() => import('./pages/admin/AdminTestimonials'));
+const AdminPhysioTeam = lazyWithRetry(() => import('./pages/admin/AdminPhysioTeam'));
+const AdminOrgLogos = lazyWithRetry(() => import('./pages/admin/AdminOrgLogos'));
+const AdminBadges = lazyWithRetry(() => import('./pages/admin/AdminBadges'));
+const AdminCoupons = lazyWithRetry(() => import('./pages/admin/AdminCoupons'));
+const AdminReviews = lazyWithRetry(() => import('./pages/admin/AdminReviews'));
+const AdminAnalytics = lazyWithRetry(() => import('./pages/admin/AdminAnalytics'));
+const AdminCareers = lazyWithRetry(() => import('./pages/admin/AdminCareers'));
 import { ADMIN_NAV } from './constants/adminNav';
 
 import { DOCTOR_NAV } from './constants/doctorNav';
@@ -203,6 +208,15 @@ export default function App() {
     <SeoProvider>
       <ScrollToTop />
       <ForceTempPasswordChange />
+      <AppErrorBoundary>
+      <Suspense
+        fallback={
+          <div className="min-h-screen flex items-center justify-center" role="status" aria-live="polite">
+            <span className="sr-only">Loading…</span>
+            <div className="h-10 w-10 rounded-full border-4 border-teal-600 border-t-transparent animate-spin" />
+          </div>
+        }
+      >
       <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
@@ -437,11 +451,15 @@ export default function App() {
       <Route path="/admin/booking-settings" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminBookingSettings /></ProtectedRoute>} />
       <Route path="/admin/documents" element={<ProtectedRoute roles={['admin', 'super_admin']}><DocumentsPage /></ProtectedRoute>} />
       <Route path="/admin/logs" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminLogs /></ProtectedRoute>} />
+      <Route path="/admin/publishing" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminCmsPublishing /></ProtectedRoute>} />
+      <Route path="/admin/leads" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminLeads /></ProtectedRoute>} />
       <Route path="/admin/profile" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminProfile /></ProtectedRoute>} />
       <Route path="/admin/notifications" element={<ProtectedRoute roles={['admin', 'super_admin']}><NotificationsPage /></ProtectedRoute>} />
       <Route path="/admin/notification-settings" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminNotificationSettings /></ProtectedRoute>} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
+      </Suspense>
+      </AppErrorBoundary>
     </SeoProvider>
   );
 }

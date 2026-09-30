@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import toast from 'react-hot-toast';
 import FaIcon from '../../FaIcon';
 import { clinicPortal } from '../../../services/api';
+import { htmlToText, sanitizeHtml } from '../../../utils/htmlContent';
 
 const NOTE_TYPES = [
   { id: 'daily_treatment', label: 'Daily Treatment Note', color: 'bg-teal-50 text-teal-700 border-teal-200', icon: 'fa-calendar-day' },
@@ -27,11 +28,8 @@ function ModalScrollLock({ children }) {
   return children;
 }
 
-function stripHtml(html) {
-  const d = document.createElement('div');
-  d.innerHTML = html || '';
-  return d.textContent || '';
-}
+// Inert parse: assigning untrusted HTML to a live element's innerHTML would fire <img onerror=...>.
+const stripHtml = htmlToText;
 
 function parseTags(raw) {
   let tags = [];
@@ -132,7 +130,7 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
 
   const openEditNote = (n) => {
     setEditingId(n.id);
-    const html = n.body_html || '';
+    const html = sanitizeHtml(n.body_html || '');
     setForm({
       title: n.title || '',
       note_type: n.note_type || 'daily_treatment',
@@ -686,7 +684,7 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
                 
                 <div className="mt-3 text-sm text-slate-700 prose prose-slate max-w-none">
                   {isExpanded ? (
-                    <div dangerouslySetInnerHTML={{ __html: n.body_html || n.body_text }} />
+                    <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(n.body_html || n.body_text) }} />
                   ) : (
                     <p className="line-clamp-3">{n.body_text || stripHtml(n.body_html)}</p>
                   )}
@@ -765,7 +763,7 @@ export default function PatientClinicalNotesTab({ clinicId, patientKey, appointm
               <div className="p-6 sm:p-7 overflow-y-auto flex-1 space-y-5">
                 <div
                   className="prose prose-slate max-w-none text-xs sm:text-sm leading-relaxed text-slate-800"
-                  dangerouslySetInnerHTML={{ __html: detailModalNote.body_html || detailModalNote.body_text }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(detailModalNote.body_html || detailModalNote.body_text) }}
                 />
 
                 {detailModalNote.attachment_url && (

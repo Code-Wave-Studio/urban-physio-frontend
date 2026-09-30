@@ -31,6 +31,7 @@ import {
 } from '../../components/clinic/patients/patientDirectoryUtils';
 import { clinicPortal } from '../../services/api';
 import useClinicPortal from '../../hooks/useClinicPortal';
+import { escapeHtml } from '../../utils/escapeHtml';
 
 function readStored(key, fallback) {
   try {
@@ -465,7 +466,10 @@ export default function ClinicPortalPatients() {
 
     const htmlCards = targets
       .map((p) => {
-        const info = formatPatientLabelInfo(p, privacy);
+        // Patient fields can come from public self-registration: escape before building the print markup.
+        const info = Object.fromEntries(
+          Object.entries(formatPatientLabelInfo(p, privacy)).map(([k, v]) => [k, escapeHtml(v)])
+        );
         return `
       <div class="patient-label-sticker">
         <div class="sticker-header">
@@ -509,7 +513,7 @@ export default function ClinicPortalPatients() {
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Patient Labels — ${clinic?.name || 'Clinic'}</title>
+  <title>Patient Labels — ${escapeHtml(clinic?.name || 'Clinic')}</title>
   <style>
     @page { margin: 8mm; size: auto; }
     * { box-sizing: border-box; }

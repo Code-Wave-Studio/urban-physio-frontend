@@ -31,6 +31,8 @@ import { isRoadmapEnabled } from '../constants/recoveryRoadmapDefaults';
 import { isEcosystemEnabled } from '../constants/careEcosystemDefaults';
 import { isEnrolEnabled } from '../constants/enrollmentDefaults';
 import { useContact } from '../contexts/ContactContext';
+import { ANALYTICS_EVENTS, trackCta, trackEvent } from '../utils/analytics';
+import { serviceOfferSchema } from '../utils/seoSchema';
 
 function toTelHref(value) {
   const raw = String(value || '').trim();
@@ -81,6 +83,16 @@ export default function HomePhysiotherapyPage() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  // Analytics: one service_view per page visit once the CMS content is on screen.
+  useEffect(() => {
+    if (loading) return;
+    trackEvent(ANALYTICS_EVENTS.SERVICE_VIEW, {
+      item_id: 'home_physiotherapy',
+      item_name: 'Home Physiotherapy',
+      service_type: 'home_physiotherapy',
+    });
+  }, [loading]);
 
   useEffect(() => {
     if (loading || typeof window === 'undefined') return undefined;
@@ -138,8 +150,32 @@ export default function HomePhysiotherapyPage() {
           about: { '@type': 'MedicalTherapy', name: 'Home physiotherapy' },
         }),
         faqPageSchema(faqs),
+        // Service + plan/price schema built only from the live CMS tiers/packages (offers without a real price are skipped).
+        serviceOfferSchema({
+          name: 'Home Physiotherapy',
+          serviceType: 'Physiotherapy home visit',
+          description: data.seo_description || HOME_PHYSIO_SEO.description,
+          url: typeof window !== 'undefined' ? `${window.location.origin}/home-physiotherapy` : undefined,
+          areaServed: (s.areas || []).map((a) => a?.name),
+          catalogName: 'Home physiotherapy session pricing',
+          offers: [
+            ...(s.tiers || []).map((t) => ({
+              name: `${t.name} – single home session`,
+              price: t.price,
+              description: t.summary,
+              url:
+                typeof window !== 'undefined'
+                  ? `${window.location.origin}/home-physiotherapy#tier-${t.key}`
+                  : undefined,
+            })),
+            ...(s.pricing_packages || []).map((p) => ({
+              name: `${p.name} – ${p.sessions}`,
+              price: p.price,
+            })),
+          ],
+        }),
       ].filter(Boolean),
-    [data.hero_title, data.seo_description, faqs]
+    [data.hero_title, data.seo_description, faqs, s.areas, s.tiers, s.pricing_packages]
   );
 
   if (loading) {
@@ -183,6 +219,7 @@ export default function HomePhysiotherapyPage() {
                 {showHeroBook && (
                 <CtaLink
                   to={s.hero_cta_link}
+                  ctaId="hp_hero_book"
                   className="btn-primary !bg-white !text-primary-700 hover:!bg-orange-50 shadow-lg w-full sm:w-auto"
                 >
                   {s.hero_cta_label}
@@ -191,6 +228,7 @@ export default function HomePhysiotherapyPage() {
                 {showHeroCall && callHref && (
                 <a
                   href={callHref}
+                  onClick={() => trackCta({ id: 'hp_hero_call', label: s.hero_call_label || 'Call Now', href: callHref })}
                   className="btn-primary !bg-white !text-primary-700 hover:!bg-orange-50 shadow-lg booking-cta-shadow inline-flex items-center justify-center gap-2 min-h-11 px-6 w-full sm:w-auto"
                 >
                   <FaIcon icon="fa-phone" />
@@ -323,7 +361,7 @@ export default function HomePhysiotherapyPage() {
             {s.fit_reassurance}
           </p>
           <div className="mt-5">
-            <CtaLink to={s.hero_cta_link}>{s.fit_cta_label}</CtaLink>
+            <CtaLink to={s.hero_cta_link} ctaId="hp_fit_book">{s.fit_cta_label}</CtaLink>
           </div>
         </div>
       </section>
@@ -439,7 +477,16 @@ export default function HomePhysiotherapyPage() {
                   <Expandable
                     id={`tier-${tier.key}`}
                     open={open}
-                    onToggle={() => setTierOpen((prev) => ({ ...prev, [tier.key]: !prev[tier.key] }))}
+                    onToggle={() => {
+                      if (!open) {
+                        trackEvent(
+                          ANALYTICS_EVENTS.PLAN_VIEW,
+                          { plan_id: tier.key, plan_name: tier.name, service_type: 'home_physiotherapy', section: 'tiers' },
+                          { oncePerSession: `hp-tier-${tier.key}` }
+                        );
+                      }
+                      setTierOpen((prev) => ({ ...prev, [tier.key]: !prev[tier.key] }));
+                    }}
                     label="See details ↓"
                     className="mt-4"
                   >
@@ -464,6 +511,13 @@ export default function HomePhysiotherapyPage() {
                   </Expandable>
                   <Link
                     to={homePhysioTierBookLink(tier.key, tier.cta_link)}
+                    onClick={() =>
+                      trackCta({
+                        id: `hp_tier_${tier.key}_book`,
+                        label: tierButtonLabel(tier),
+                        href: homePhysioTierBookLink(tier.key, tier.cta_link),
+                      })
+                    }
                     className="btn-primary mt-5 w-full justify-center text-sm min-h-11"
                   >
                     {tierButtonLabel(tier)}
@@ -493,7 +547,7 @@ export default function HomePhysiotherapyPage() {
           ))}
         </div>
         <div className="mt-8 text-center">
-          <CtaLink to={s.how_cta_link}>{s.how_cta_label}</CtaLink>
+          <CtaLink to={s.how_cta_link} ctaId="hp_how_book">{s.how_cta_label}</CtaLink>
         </div>
       </section>
 
@@ -528,7 +582,7 @@ export default function HomePhysiotherapyPage() {
             </Expandable>
           </div>
           <div className="mt-8 text-center">
-            <CtaLink to={s.hero_cta_link}>{s.conditions_cta_label}</CtaLink>
+            <CtaLink to={s.hero_cta_link} ctaId="hp_conditions_book">{s.conditions_cta_label}</CtaLink>
           </div>
         </div>
       </section>
@@ -552,7 +606,16 @@ export default function HomePhysiotherapyPage() {
           <Expandable
             id="packages"
             open={pkgOpen}
-            onToggle={() => setPkgOpen((v) => !v)}
+            onToggle={() => {
+              if (!pkgOpen) {
+                trackEvent(
+                  ANALYTICS_EVENTS.PLAN_VIEW,
+                  { plan_id: 'session_packages', plan_name: 'Session packages', service_type: 'home_physiotherapy', section: 'pricing' },
+                  { oncePerSession: 'hp-packages' }
+                );
+              }
+              setPkgOpen((v) => !v);
+            }}
             label={`${s.pricing_toggle} ↓`}
           >
             <div className="grid md:grid-cols-3 gap-4 pt-5 text-left max-w-4xl mx-auto">
@@ -570,7 +633,7 @@ export default function HomePhysiotherapyPage() {
         <p className="mt-6 text-center text-sm font-medium text-orange-700">{s.pricing_offer}</p>
         <p className="mt-2 text-center text-xs text-slate-500">{s.pricing_payment}</p>
         <div className="mt-6 text-center">
-          <CtaLink to={s.pricing_cta_link}>{s.pricing_cta_label}</CtaLink>
+          <CtaLink to={s.pricing_cta_link} ctaId="hp_pricing_book">{s.pricing_cta_label}</CtaLink>
         </div>
       </section>
 
@@ -585,7 +648,17 @@ export default function HomePhysiotherapyPage() {
                   key={city.name}
                   type="button"
                   aria-expanded={open}
-                  onClick={() => setAreaOpen(open ? null : i)}
+                  onClick={() => {
+                    if (!open) {
+                      trackEvent(ANALYTICS_EVENTS.CHIP_SELECT, {
+                        chip_id: `area_${i}`,
+                        chip_label: city.name,
+                        section: 'service_area',
+                        service_type: 'home_physiotherapy',
+                      });
+                    }
+                    setAreaOpen(open ? null : i);
+                  }}
                   className={`px-4 py-2.5 rounded-full text-sm font-semibold border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
                     open
                       ? 'bg-primary-600 text-white border-primary-600'
@@ -659,6 +732,7 @@ export default function HomePhysiotherapyPage() {
             <div className="mt-6">
               <CtaLink
                 to={s.hero_cta_link}
+                ctaId="hp_final_book"
                 className="btn-primary !bg-white !text-primary-700 hover:!bg-orange-50"
               >
                 {s.hero_cta_label}

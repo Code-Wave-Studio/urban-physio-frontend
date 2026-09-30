@@ -22,6 +22,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLocation } from '../contexts/LocationContext';
 import toast from 'react-hot-toast';
 import { openRazorpayCheckout, handlePaymentError } from '../utils/razorpayCheckout';
+import { ANALYTICS_EVENTS, trackEvent } from '../utils/analytics';
 import BookingPolicyAcceptance, {
   allPoliciesAccepted,
   emptyPolicyAcceptance,
@@ -237,6 +238,12 @@ export default function BookAppointmentWizard() {
     const now = payNowAmount();
     return Math.max(0, round2(total - now));
   };
+
+  // Analytics: one booking_start per wizard visit. No patient, clinic or doctor data is sent.
+  useEffect(() => {
+    trackEvent(ANALYTICS_EVENTS.BOOKING_START, { source: isEmergency ? 'emergency' : 'standard' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     // Auto-default payment option when service changes
@@ -927,6 +934,20 @@ export default function BookAppointmentWizard() {
     setMapOpen(true);
   };
 
+  // Analytics: booking_complete carries only the booking type and whether payment was taken.
+  // The appointment id is used solely as a local once-per-session guard and is never sent.
+  const trackBookingComplete = (appt, paid) => {
+    trackEvent(
+      ANALYTICS_EVENTS.BOOKING_COMPLETE,
+      {
+        booking_type: form.consultation_type || undefined,
+        payment_required: !!paid,
+        source: isEmergency ? 'emergency' : 'standard',
+      },
+      { oncePerSession: `appt-${appt?.id ?? 'unknown'}` }
+    );
+  };
+
   const handleMapConfirm = ({ lat, lng }) => {
     patch({ map_latitude: lat, map_longitude: lng });
     if (form.consultation_type !== 'home_visit') {
@@ -1053,6 +1074,7 @@ export default function BookAppointmentWizard() {
             await openRazorpayCheckout(orderRes);
           }
           setCreatedAppt(appt);
+          trackBookingComplete(appt, true);
           if (isEmergency) {
             sessionStorage.removeItem('emergency_booking_context');
           }
@@ -1070,6 +1092,7 @@ export default function BookAppointmentWizard() {
         }
       } else {
         setCreatedAppt(appt);
+        trackBookingComplete(appt, false);
         if (isEmergency) {
           sessionStorage.removeItem('emergency_booking_context');
         }

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import FaIcon from '../FaIcon';
 import { HOME_VISIT_BOOK_PATH } from '../../constants/homePhysioDefaults';
+import { trackCta } from '../../utils/analytics';
 
 export function bookHref(link) {
   return link || HOME_VISIT_BOOK_PATH;
@@ -20,10 +21,11 @@ export function SectionHead({ eyebrow, heading, intro, align = 'center' }) {
   );
 }
 
-export function CtaLink({ to, children, className = 'btn-primary', icon = 'fa-calendar-check' }) {
+export function CtaLink({ to, children, className = 'btn-primary', icon = 'fa-calendar-check', ctaId = 'home_physio_cta' }) {
   return (
     <Link
       to={bookHref(to)}
+      onClick={() => trackCta({ id: ctaId, label: children, href: bookHref(to) })}
       className={`${className} booking-cta-shadow inline-flex items-center justify-center gap-2 min-h-11 px-6`}
     >
       <FaIcon icon={icon} />

@@ -582,6 +582,25 @@ export const admin = {
   offersSubmissionDetail: (id) => api.get(`/admin/offers-submissions/${id}`),
   updateOffersSubmissionStatus: (id, data) => api.post(`/admin/offers-submissions/${id}/status`, data),
   updateOffersRewardStatus: (id, data) => api.post(`/admin/offers-submissions/${id}/reward`, data),
+  // Phase 8 — CMS drafts / publish / revision history (admin only)
+  cmsList: (type, params) => api.get(`/admin/cms/${type}`, { params }),
+  cmsShow: (type, id) => api.get(`/admin/cms/${type}/${id}`),
+  cmsSaveDraft: (type, id, fields) => api.put(`/admin/cms/${type}/${id}/draft`, { fields }),
+  cmsDiscardDraft: (type, id) => api.delete(`/admin/cms/${type}/${id}/draft`),
+  cmsPreview: (type, id) => api.get(`/admin/cms/${type}/${id}/preview`),
+  cmsPublish: (type, id, data = {}) => api.post(`/admin/cms/${type}/${id}/publish`, data),
+  cmsUnpublish: (type, id, data = {}) => api.post(`/admin/cms/${type}/${id}/unpublish`, data),
+  cmsRevisions: (type, id, params) => api.get(`/admin/cms/${type}/${id}/revisions`, { params }),
+  cmsRevision: (type, id, no) => api.get(`/admin/cms/${type}/${id}/revisions/${no}`),
+  cmsRestore: (type, id, no, data = {}) => api.post(`/admin/cms/${type}/${id}/revisions/${no}/restore`, data),
+  cmsHistory: (params) => api.get('/admin/cms/history', { params }),
+  // Phase 8 — leads (admin only)
+  leadsList: (params) => api.get('/admin/leads', { params }),
+  leadsSummary: () => api.get('/admin/leads/summary'),
+  leadShow: (id) => api.get(`/admin/leads/${id}`),
+  leadUpdateStatus: (id, data) => api.post(`/admin/leads/${id}/status`, data),
+  leadUpdateNotes: (id, admin_notes) => api.put(`/admin/leads/${id}`, { admin_notes }),
+  leadDelete: (id) => api.delete(`/admin/leads/${id}`),
   heroSettings: () => api.get('/admin/hero-settings'),
   updateHeroSettings: (data) => api.put('/admin/hero-settings', data),
   homeBannerSettings: () => api.get('/admin/home-banner-settings'),
@@ -679,6 +698,11 @@ export const admin = {
 export const contact = {
   settings: () => api.get('/contact/settings'),
   sendMessage: (data) => api.post('/contact/message', data),
+};
+
+/** Phase 8 — public, write-only lead capture. Returns only a generic acknowledgement. */
+export const leads = {
+  submit: (data) => api.post('/leads', data),
 };
 
 export const offers = {
@@ -916,10 +940,6 @@ export const clinicPortal = {
     api.put(`/clinic-portal/${clinicId}/communication/providers`, data),
   commSyncWhatsAppTemplates: (clinicId) =>
     api.post(`/clinic-portal/${clinicId}/communication/sync-whatsapp-templates`),
-  patientCommunicationLog: (clinicId, patientKey, params) =>
-    api.get(`/clinic-portal/${clinicId}/patients/${patientKey}/communication-log`, { params }),
-  markPatientCommRead: (clinicId, patientKey) =>
-    api.post(`/clinic-portal/${clinicId}/patients/${patientKey}/communication-log/read`),
   doctorAvailability: (clinicId) => api.get(`/clinic-portal/${clinicId}/doctor-availability`),
   setDoctorAvailability: (clinicId, data) =>
     api.post(`/clinic-portal/${clinicId}/doctor-availability`, data),
@@ -1097,6 +1117,8 @@ export const kinestex = {
   /** Doctor/clinic/admin only — patient JWT is rejected */
   analysisSessions: (params) => api.get('/kinestex/analysis', { params }),
   analysisSession: (id) => api.get(`/kinestex/analysis/${id}`),
+  /** Phase 9: AI progress for one plan enrolment. Server authorises by JWT (patient own / assigned clinician / admin). */
+  planProgress: (enrolmentId) => api.get(`/kinestex/plan-progress/${encodeURIComponent(enrolmentId)}`),
 };
 
 export const home = {

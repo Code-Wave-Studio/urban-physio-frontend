@@ -12,6 +12,7 @@ import {
   resolveTreatmentLink,
 } from '../../constants/painSelectionData';
 import { bookPainAreaUrl } from '../../utils/bookUrl';
+import { ANALYTICS_EVENTS, sanitizePath, trackCta, trackEvent } from '../../utils/analytics';
 import { sanitizeCmsImageUrl } from '../../utils/mediaUrl';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -326,6 +327,7 @@ function PainTreatAccordion({
                 type="button"
                 onClick={() => {
                   const url = buildBookUrl(selected);
+                  trackCta({ id: 'pain_selection_book', label: copy.bookLabel, href: url });
                   if (!user) {
                     navigate(`/login?redirect=${encodeURIComponent(url)}`);
                     return;
@@ -459,7 +461,18 @@ export default function PainSelectionSection({
   const selected = useMemo(() => getPainPointById(selectedId, painPoints), [selectedId, painPoints]);
   const treatmentLink = useMemo(() => resolveKnowMore(selected), [selected, resolveKnowMore]);
 
+  const selectedIdRef = useRef(selectedId);
+  selectedIdRef.current = selectedId;
+
   const handleSelect = useCallback((id) => {
+    // Analytics: only the stable chip id (CMS/content slug) is sent, once per real change.
+    if (selectedIdRef.current !== id) {
+      trackEvent(ANALYTICS_EVENTS.CHIP_SELECT, {
+        chip_id: String(id),
+        section: 'pain_selection',
+        source: sanitizePath(window.location.pathname),
+      });
+    }
     setSelectedId(id);
   }, []);
 

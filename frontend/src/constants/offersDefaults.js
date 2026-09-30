@@ -159,6 +159,11 @@ export const OFFERS_DEFAULTS = {
       'Strava, Nike Run Club, Garmin, Apple Health, Samsung Health, Google Fit, or GPS running watch export (JPG, PNG, WebP, PDF)',
     reward_details: '1 Complimentary Clinical Physiotherapy Assessment & Recovery Session',
     reward_validity_days: '60',
+    reward_approved_title: 'Congratulations! Your 10 KM run is verified.',
+    reward_approved_message:
+      'You are eligible for your complimentary clinical physiotherapy consultation. Book now or present your reference code at the clinic desk.',
+    reward_cta_label: 'Book Free Session',
+    reward_cta_destination: 'book',
     rules: [
       'Participants must complete a single recorded run of at least 10 KM.',
       'The run proof must clearly display the total distance, date of run, and elapsed time.',

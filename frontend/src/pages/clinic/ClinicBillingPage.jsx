@@ -5,6 +5,7 @@ import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
 import GlassModal, { GlassModalBody, GlassModalFooter, GlassModalHeader } from '../../components/GlassModal';
 import { clinicPortal } from '../../services/api';
 import useClinicPortal from '../../hooks/useClinicPortal';
+import { escapeHtml } from '../../utils/escapeHtml';
 
 const TABS = [
   { id: 'overview', label: 'Overview', icon: 'fa-gauge' },
@@ -50,7 +51,9 @@ function printReceiptHtml(r) {
   if (!w) return;
   const p = r.payment || {};
   const clinic = r.clinic || {};
-  w.document.write(`<!doctype html><html><head><title>Receipt ${r.receipt_number || ''}</title>
+  // Every dynamic value is HTML-escaped: this markup is written into a same-origin window.
+  const e = escapeHtml;
+  w.document.write(`<!doctype html><html><head><title>Receipt ${e(r.receipt_number)}</title>
     <style>
       body{font-family:system-ui,sans-serif;padding:24px;color:#0f172a;font-size:13px}
       h1{font-size:18px;margin:0 0 4px} h2{font-size:14px;margin:16px 0 8px;border-bottom:1px solid #e2e8f0;padding-bottom:4px}
@@ -58,21 +61,21 @@ function printReceiptHtml(r) {
       .box{border:1px solid #cbd5e1;border-radius:12px;padding:14px;margin-top:10px}
       .total{font-size:16px;font-weight:700}
     </style></head><body>
-    <h1>${clinic.name || 'Clinic'}</h1>
-    <p class="muted">${clinic.address || ''}</p>
-    ${clinic.gstin ? `<p class="muted">GSTIN: ${clinic.gstin}</p>` : ''}
+    <h1>${e(clinic.name || 'Clinic')}</h1>
+    <p class="muted">${e(clinic.address)}</p>
+    ${clinic.gstin ? `<p class="muted">GSTIN: ${e(clinic.gstin)}</p>` : ''}
     <div class="box">
-      <div class="row"><span>Receipt</span><strong>${r.receipt_number || '—'}</strong></div>
-      <div class="row"><span>Invoice</span><strong>${r.invoice_number || '—'}</strong></div>
-      <div class="row"><span>Date</span><span>${r.issued_at || ''}</span></div>
-      <div class="row"><span>Patient</span><span>${r.patient?.name || '—'}</span></div>
-      <div class="row"><span>Doctor</span><span>${r.doctor?.name || '—'}</span></div>
-      <div class="row"><span>Booking</span><span>${r.appointment?.booking_id || '—'}</span></div>
-      <div class="row"><span>Channel</span><span>${p.channel || '—'} / ${p.method || '—'}</span></div>
-      ${Number(p.discount_amount) > 0 ? `<div class="row"><span>Discount</span><span>- ${money(p.discount_amount)}</span></div>` : ''}
-      ${Number(p.gst_amount) > 0 ? `<div class="row"><span>GST (${p.gst_percent}%)</span><span>${money(p.gst_amount)}</span></div>` : ''}
-      <div class="row total"><span>Paid</span><span>${money(p.amount)}</span></div>
-      <div class="row"><span>Status</span><span>${p.status || '—'}</span></div>
+      <div class="row"><span>Receipt</span><strong>${e(r.receipt_number || '—')}</strong></div>
+      <div class="row"><span>Invoice</span><strong>${e(r.invoice_number || '—')}</strong></div>
+      <div class="row"><span>Date</span><span>${e(r.issued_at)}</span></div>
+      <div class="row"><span>Patient</span><span>${e(r.patient?.name || '—')}</span></div>
+      <div class="row"><span>Doctor</span><span>${e(r.doctor?.name || '—')}</span></div>
+      <div class="row"><span>Booking</span><span>${e(r.appointment?.booking_id || '—')}</span></div>
+      <div class="row"><span>Channel</span><span>${e(p.channel || '—')} / ${e(p.method || '—')}</span></div>
+      ${Number(p.discount_amount) > 0 ? `<div class="row"><span>Discount</span><span>- ${e(money(p.discount_amount))}</span></div>` : ''}
+      ${Number(p.gst_amount) > 0 ? `<div class="row"><span>GST (${e(p.gst_percent)}%)</span><span>${e(money(p.gst_amount))}</span></div>` : ''}
+      <div class="row total"><span>Paid</span><span>${e(money(p.amount))}</span></div>
+      <div class="row"><span>Status</span><span>${e(p.status || '—')}</span></div>
     </div>
     <p class="muted" style="margin-top:16px">Computer-generated receipt — The Urban Physio</p>
     <script>window.print()</script></body></html>`);

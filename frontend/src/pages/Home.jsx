@@ -257,21 +257,21 @@ export default function Home() {
                   className="min-w-0 inline-flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-3.5 sm:py-4 md:py-3.5 min-h-[3.25rem] sm:min-h-0 rounded-2xl text-xs sm:text-sm md:text-base font-bold text-primary-800 bg-white shadow-[0_6px_20px_-4px_rgba(0,0,0,0.35)] border border-white/90 ring-2 ring-white/30 hover:bg-orange-50 hover:shadow-[0_10px_28px_-4px_rgba(0,0,0,0.4)] active:scale-[0.98] transition-all duration-200"
                 >
                   <FaIcon icon="fa-user-doctor" className="text-base sm:text-lg text-primary-600 shrink-0" />
-                  <span className="truncate leading-tight text-center">Find Doctor</span>
+                  <span className="leading-tight text-center break-words min-w-0">Find Doctor</span>
                 </Link>
                 <Link
                   to="/clinics"
                   className="min-w-0 inline-flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-3.5 sm:py-4 md:py-3.5 min-h-[3.25rem] sm:min-h-0 rounded-2xl text-xs sm:text-sm md:text-base font-bold text-primary-800 bg-white shadow-[0_6px_20px_-4px_rgba(0,0,0,0.35)] border border-white/90 ring-2 ring-white/30 hover:bg-orange-50 hover:shadow-[0_10px_28px_-4px_rgba(0,0,0,0.4)] active:scale-[0.98] transition-all duration-200"
                 >
                   <FaIcon icon="fa-hospital" className="text-base sm:text-lg text-primary-600 shrink-0" />
-                  <span className="truncate leading-tight text-center">Find Clinic</span>
+                  <span className="leading-tight text-center break-words min-w-0">Find Clinic</span>
                 </Link>
                 <Link
                   to="/book"
                   className="min-w-0 inline-flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-3.5 sm:py-4 md:py-3.5 min-h-[3.25rem] sm:min-h-0 rounded-2xl text-xs sm:text-sm md:text-base font-bold text-white bg-gradient-to-br from-orange-400 via-orange-500 to-primary-600 shadow-[0_8px_24px_-4px_rgba(234,88,12,0.55)] ring-2 ring-orange-200/50 hover:from-orange-300 hover:via-orange-400 hover:to-primary-500 hover:shadow-[0_12px_32px_-4px_rgba(234,88,12,0.6)] active:scale-[0.98] transition-all duration-200"
                 >
                   <FaIcon icon="fa-calendar-check" className="text-base sm:text-lg shrink-0" />
-                  <span className="truncate leading-tight text-center">Book Appointment</span>
+                  <span className="leading-tight text-center break-words min-w-0">Book Appointment</span>
                 </Link>
               </div>
             </div>

@@ -6,6 +6,7 @@ import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
 import useClinicPortal from '../../hooks/useClinicPortal';
 import { clinicPortal } from '../../services/api';
 import { resolveMediaUrl } from '../../utils/mediaUrl';
+import { escapeHtml } from '../../utils/escapeHtml';
 
 function money(n) {
   return `₹${Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -49,7 +50,35 @@ function patientKey(p) {
   return '';
 }
 
-function buildPrintHtml({ clinicName, brandColor, logo, settings, items, opts, totals, savedInvoice, upiQrUrl, insurance }) {
+/** Everything interpolated below is escaped: this string is document.write()n into a same-origin window. */
+const SAFE_COLOR = /^#[0-9a-f]{3,8}$/i;
+
+function buildPrintHtml({ clinicName: rawClinicName, brandColor: rawBrandColor, logo: rawLogo, settings: rawSettings, items, opts: rawOpts, totals, savedInvoice: rawInvoice, upiQrUrl: rawUpiQr, insurance: rawInsurance }) {
+  const brandColor = SAFE_COLOR.test(String(rawBrandColor || '')) ? rawBrandColor : '#0d9488';
+  const clinicName = escapeHtml(rawClinicName);
+  const logo = escapeHtml(rawLogo);
+  const upiQrUrl = rawUpiQr ? escapeHtml(rawUpiQr) : '';
+  const settings = rawSettings
+    ? { ...rawSettings, gstin: escapeHtml(rawSettings.gstin), upi_id: escapeHtml(rawSettings.upi_id), footer_notes: escapeHtml(rawSettings.footer_notes) }
+    : rawSettings;
+  const opts = {
+    ...rawOpts,
+    notes: escapeHtml(rawOpts?.notes),
+    cgst_rate: Number(rawOpts?.cgst_rate) || 0,
+    sgst_rate: Number(rawOpts?.sgst_rate) || 0,
+    igst_rate: Number(rawOpts?.igst_rate) || 0,
+  };
+  const savedInvoice = rawInvoice
+    ? { ...rawInvoice, invoice_number: escapeHtml(rawInvoice.invoice_number), payment_link: /^https?:\/\//i.test(String(rawInvoice.payment_link || '')) ? escapeHtml(rawInvoice.payment_link) : '' }
+    : rawInvoice;
+  const insurance = rawInsurance
+    ? {
+        ...rawInsurance,
+        doctorReg: escapeHtml(rawInsurance.doctorReg),
+        diagnosis: escapeHtml(rawInsurance.diagnosis),
+        treatment: escapeHtml(rawInsurance.treatment),
+      }
+    : rawInsurance;
   const rows = items.filter((it) => it.description).map((it) => {
     const qty = Math.max(1, Number(it.qty) || 1);
     const amt = qty * (Number(it.unit_price) || 0);
@@ -58,7 +87,7 @@ function buildPrintHtml({ clinicName, brandColor, logo, settings, items, opts, t
          <td style="padding:8px;border-bottom:1px solid #e2e8f0;font-size:11px">${insurance.treatment || '—'}</td>`
       : '';
     return `<tr>
-      <td style="padding:8px;border-bottom:1px solid #e2e8f0"><strong>${it.description}</strong>${it.detail ? `<div style="color:#94a3b8;font-size:11px">${it.detail}</div>` : ''}</td>
+      <td style="padding:8px;border-bottom:1px solid #e2e8f0"><strong>${escapeHtml(it.description)}</strong>${it.detail ? `<div style="color:#94a3b8;font-size:11px">${escapeHtml(it.detail)}</div>` : ''}</td>
       <td style="padding:8px;border-bottom:1px solid #e2e8f0;text-align:center">${qty}</td>
       <td style="padding:8px;border-bottom:1px solid #e2e8f0;text-align:right">${money(it.unit_price)}</td>
       <td style="padding:8px;border-bottom:1px solid #e2e8f0;text-align:right">${money(amt)}</td>

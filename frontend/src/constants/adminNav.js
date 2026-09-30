@@ -27,6 +27,7 @@ export const ADMIN_NAV = [
   { to: '/admin/support', label: 'Support Centre', icon: 'fa-life-ring', section: 'core' },
   { to: '/admin/analytics', label: 'Analytics', icon: 'fa-chart-pie', section: 'core' },
   { to: '/admin/logs', label: 'Audit Logs', icon: 'fa-clipboard-list', section: 'core' },
+  { to: '/admin/leads', label: 'Leads', icon: 'fa-inbox', section: 'core' },
 
   { to: '/admin/users', label: 'Users', icon: 'fa-users', section: 'network' },
   { to: '/admin/clinics', label: 'Clinics', icon: 'fa-hospital', section: 'network' },
@@ -42,6 +43,7 @@ export const ADMIN_NAV = [
   { to: '/admin/physiofeed', label: 'PhysioFeed', icon: 'fa-rss', section: 'content' },
   { to: '/admin/reviews', label: 'Reviews', icon: 'fa-star', section: 'content' },
   { to: '/admin/about', label: 'About Us', icon: 'fa-building', section: 'content' },
+  { to: '/admin/publishing', label: 'Publishing & History', icon: 'fa-clock-rotate-left', section: 'content' },
   { to: '/admin/home-physio', label: 'Home Physiotherapy', icon: 'fa-house-medical', section: 'content' },
   { to: '/admin/telephysio', label: 'TelePhysio by Myoreset', icon: 'fa-video', section: 'content' },
   { to: '/admin/physiotherapists', label: 'Our Physiotherapists', icon: 'fa-user-doctor', section: 'content' },

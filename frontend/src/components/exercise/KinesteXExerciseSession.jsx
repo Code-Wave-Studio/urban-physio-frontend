@@ -13,6 +13,7 @@ import {
   patientFriendlySaveError,
 } from '../../services/kinestexSessionBoundary';
 import { kinestex } from '../../services/api';
+import { ANALYTICS_EVENTS, trackEvent } from '../../utils/analytics';
 
 /** Keep iframe alive briefly so late workout_session_saved / motion upload events can merge. */
 const MOTION_SAVE_GRACE_MS = 45000;
@@ -115,6 +116,8 @@ export default function KinesteXExerciseSession({
       if (kind !== 'completed' && notifiedRef.current.completed) return;
       if (notifiedRef.current[kind]) return;
       notifiedRef.current[kind] = true;
+      // Analytics: outcome only. Never the result payload (reps, scores, motion data, patient/exercise ids).
+      trackEvent(ANALYTICS_EVENTS.AI_SESSION_COMPLETE, { feature: 'kinestex', outcome: kind });
       if (kind === 'completed' && onCompleted) onCompleted(result);
       else if (kind === 'failed' && onFailed) onFailed(result);
       else if (kind === 'cancelled' && onCancelled) onCancelled(result);
@@ -237,6 +240,7 @@ export default function KinesteXExerciseSession({
             startedRef.current = true;
             try {
               sdkRef.current.sendAction('workout_activity_action', 'start');
+              trackEvent(ANALYTICS_EVENTS.AI_SESSION_START, { feature: 'kinestex' });
             } catch (e) {
               setErrorMessage('AI monitoring could not start. Please try again.');
               setLifecycle('failed');

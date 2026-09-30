@@ -10,6 +10,7 @@ import { clinicPortal } from '../../services/api';
 import useClinicPortal from '../../hooks/useClinicPortal';
 import { STATUS_STYLES, TYPE_ICONS, formatTime, formatType } from '../../utils/appointmentListUtils';
 import { to12Hour } from '../../utils/timeFormat';
+import { escapeHtml } from '../../utils/escapeHtml';
 
 const STATUS_FILTERS = [
   { id: 'all',       label: 'All' },
@@ -211,13 +212,13 @@ export default function ClinicPortalAppointments() {
       .box{border:1px solid #cbd5e1;border-radius:12px;padding:16px;margin-top:12px}</style></head><body>
       <h1>The Urban Physio — Appointment Slip</h1>
       <div class="box">
-        <p><strong>${(a.patient_name || 'Patient').replace(/</g, '')}</strong></p>
-        <p>Booking: ${a.booking_id || a.id}</p>
-        <p>Doctor: ${(a.doctor_name || '—').replace(/</g, '')}</p>
-        <p>Date: ${a.appointment_date} · ${fmtApptTime(a.start_time)}</p>
-        <p>Type: ${formatType(a.consultation_type)}</p>
-        <p>Status: ${a.status}</p>
-        <p>Amount: ${money(a.amount)} (${a.payment_status || 'unpaid'})</p>
+        <p><strong>${escapeHtml(a.patient_name || 'Patient')}</strong></p>
+        <p>Booking: ${escapeHtml(a.booking_id || a.id)}</p>
+        <p>Doctor: ${escapeHtml(a.doctor_name || '—')}</p>
+        <p>Date: ${escapeHtml(a.appointment_date)} · ${escapeHtml(fmtApptTime(a.start_time))}</p>
+        <p>Type: ${escapeHtml(formatType(a.consultation_type))}</p>
+        <p>Status: ${escapeHtml(a.status)}</p>
+        <p>Amount: ${escapeHtml(money(a.amount))} (${escapeHtml(a.payment_status || 'unpaid')})</p>
       </div>
       </body></html>`;
 

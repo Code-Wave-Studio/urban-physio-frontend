@@ -1,10 +1,12 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import FaIcon from '../components/FaIcon';
 import SeoBreadcrumbs from '../components/seo/SeoBreadcrumbs';
 import ManagedPageSeo from '../components/seo/ManagedPageSeo';
+import { ANALYTICS_EVENTS, trackEvent } from '../utils/analytics';
+import { faqPageSchema } from '../components/seo/PageMeta';
 import { offers } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { sanitizeCmsImageUrl } from '../utils/mediaUrl';
@@ -90,12 +92,26 @@ export default function OffersPage() {
     .map((item) => String(item).trim())
     .filter(Boolean);
   const faqs = s.faqs || [];
+  // FAQ structured data only mirrors FAQs that are actually visible on the page.
+  const jsonLd = useMemo(
+    () => (vis.faqs && faqs.length > 0 ? faqPageSchema(faqs.filter((f) => f?.q && f?.a)) : null),
+    [vis.faqs, faqs]
+  );
 
   const handleScrollTo = (ref) => {
     if (ref?.current) {
       ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
+
+  // Analytics: stable ids per CTA slot; labels are CMS copy, never user input.
+  const trackOfferCta = (ctaId, label, destination) =>
+    trackEvent(ANALYTICS_EVENTS.CTA_CLICK, {
+      cta_id: ctaId,
+      cta_label: label,
+      cta_location: 'offers',
+      destination,
+    });
 
   const scrollToLiveStatus = () => {
     const node = statusRef.current || document.getElementById('live-status');
@@ -204,6 +220,8 @@ export default function OffersPage() {
       const res = await offers.submit(fd);
       const payload = res.data ?? res;
       setSubmissionSuccess(payload);
+      // Analytics: nothing about the participant, their run, or their reference code is sent.
+      trackEvent(ANALYTICS_EVENTS.OFFER_SUBMIT, { campaign: 'run_10km', source: 'offers_form' });
       toast.success('Campaign submission received successfully!');
       if (formRef.current) {
         formRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -339,6 +357,7 @@ export default function OffersPage() {
         fallbackTitle={data.seo_title || OFFERS_SEO.title}
         fallbackDescription={data.seo_description || OFFERS_SEO.description}
         fallbackKeywords={OFFERS_SEO.keywords}
+        jsonLd={jsonLd}
       />
       <Navbar />
 
@@ -406,7 +425,10 @@ export default function OffersPage() {
                 <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 pt-2">
                   <button
                     type="button"
-                    onClick={() => handleScrollTo(formRef)}
+                    onClick={() => {
+                      trackOfferCta('offers_hero_join', s.hero_primary_cta_label, 'submission_form');
+                      handleScrollTo(formRef);
+                    }}
                     className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-gradient-to-r from-[#376299] to-primary-800 hover:from-primary-700 hover:to-primary-900 text-white font-bold text-base shadow-lg shadow-[#376299]/25 hover:shadow-xl hover:shadow-[#376299]/35 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer"
                   >
                     <FaIcon icon="fa-paper-plane" className="text-sm" />
@@ -414,7 +436,10 @@ export default function OffersPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleScrollTo(stepsRef)}
+                    onClick={() => {
+                      trackOfferCta('offers_hero_how_it_works', s.hero_secondary_cta_label, 'how_it_works');
+                      handleScrollTo(stepsRef);
+                    }}
                     className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-white/90 border border-slate-200 text-slate-700 hover:text-[#376299] hover:border-[#376299]/40 font-bold text-base shadow-xs hover:bg-slate-50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer"
                   >
                     <FaIcon icon="fa-circle-info" className="text-[#376299]" />
@@ -609,7 +634,10 @@ export default function OffersPage() {
                   <div className="pt-2">
                     <button
                       type="button"
-                      onClick={() => handleScrollTo(formRef)}
+                      onClick={() => {
+                        trackOfferCta('offers_mid_submit_proof', 'Submit Your Run Proof', 'submission_form');
+                        handleScrollTo(formRef);
+                      }}
                       className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#376299]/10 text-[#376299] hover:bg-[#376299] hover:text-white font-bold text-sm transition-all duration-200 cursor-pointer"
                     >
                       <span>Submit Your Run Proof</span>
@@ -1296,21 +1324,48 @@ export default function OffersPage() {
                     )}
 
 
-                    {(statusResult.reward_status === 'approved' || statusResult.reward_status === 'eligible') && (
-                      <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div>
-                          <span className="text-xs sm:text-sm font-bold text-emerald-950 block">
-                            🎉 Congratulations! Your 10 KM run is verified.
-                          </span>
-                          <span className="text-xs text-emerald-800 font-normal">
-                            You are eligible for your complimentary clinical physiotherapy consultation. Book now or present your reference code at the clinic desk.
-                          </span>
+                    {(statusResult.reward_status === 'approved' || statusResult.reward_status === 'eligible') && (() => {
+                      const rw = statusResult.reward || {};
+                      const ctaPath = rw.cta_path || '/book';
+                      const validUntil = rw.valid_until
+                        ? new Date(`${rw.valid_until}T00:00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+                        : '';
+                      if (rw.expired) {
+                        return (
+                          <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-700 space-y-1">
+                            <span className="text-xs sm:text-sm font-bold text-slate-900 block">
+                              Your reward validity period has ended.
+                            </span>
+                            <span className="font-normal">
+                              {validUntil ? `This reward was valid until ${validUntil}. ` : ''}
+                              Please contact the clinic team if you have any questions about your entry.
+                            </span>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                          <div>
+                            <span className="text-xs sm:text-sm font-bold text-emerald-950 block">
+                              {rw.approved_title || 'Congratulations! Your 10 KM run is verified.'}
+                            </span>
+                            <span className="text-xs text-emerald-800 font-normal block">
+                              {rw.approved_message ||
+                                'You are eligible for your complimentary clinical physiotherapy consultation. Book now or present your reference code at the clinic desk.'}
+                            </span>
+                            {validUntil && (
+                              <span className="text-[11px] text-emerald-700 font-semibold block mt-1">Valid until {validUntil}</span>
+                            )}
+                          </div>
+                          <Link
+                            to={ctaPath}
+                            onClick={() => trackOfferCta('offers_reward_cta', rw.cta_label || 'Book Free Session', ctaPath)}
+                            className="btn-primary text-xs !py-2.5 !px-5 shrink-0 rounded-xl shadow-md cursor-pointer">
+                            {rw.cta_label || 'Book Free Session'}
+                          </Link>
                         </div>
-                        <Link to="/book" className="btn-primary text-xs !py-2.5 !px-5 shrink-0 rounded-xl shadow-md cursor-pointer">
-                          Book Free Session
-                        </Link>
-                      </div>
-                    )}
+                      );
+                    })()}
                   </div>
                 )}
               </div>
@@ -1391,7 +1446,10 @@ export default function OffersPage() {
               <div className="pt-3">
                 <button
                   type="button"
-                  onClick={() => handleScrollTo(formRef)}
+                  onClick={() => {
+                    trackOfferCta('offers_final_join', s.final_primary_cta_label || 'Join the Campaign', 'submission_form');
+                    handleScrollTo(formRef);
+                  }}
                   className="inline-flex items-center gap-2.5 px-9 py-4 rounded-2xl bg-white text-[#376299] hover:bg-slate-50 font-black text-base shadow-2xl hover:scale-105 active:scale-100 transition-all duration-200 cursor-pointer"
                 >
                   <FaIcon icon="fa-paper-plane" className="text-[#FF6F61]" />

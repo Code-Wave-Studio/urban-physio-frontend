@@ -883,6 +883,47 @@ export default function AdminOffers() {
                     />
                   </CmsField>
 
+                  <CmsField label="Verified Participant Heading (shown on status check)">
+                    <input
+                      type="text"
+                      value={s.reward_approved_title || ''}
+                      onChange={(e) => setSection('reward_approved_title', e.target.value)}
+                      className="input-field"
+                      placeholder="e.g. Congratulations! Your 10 KM run is verified."
+                    />
+                  </CmsField>
+                  <CmsField label="Verified Participant Message">
+                    <textarea
+                      rows={2}
+                      value={s.reward_approved_message || ''}
+                      onChange={(e) => setSection('reward_approved_message', e.target.value)}
+                      className="input-field"
+                      placeholder="e.g. You are eligible for your complimentary clinical physiotherapy consultation..."
+                    />
+                  </CmsField>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <CmsField label="Reward Button Label">
+                      <input
+                        type="text"
+                        value={s.reward_cta_label || ''}
+                        onChange={(e) => setSection('reward_cta_label', e.target.value)}
+                        className="input-field"
+                        placeholder="Book Free Session"
+                      />
+                    </CmsField>
+                    <CmsField label="Reward Button Destination">
+                      <select
+                        value={s.reward_cta_destination || 'book'}
+                        onChange={(e) => setSection('reward_cta_destination', e.target.value)}
+                        className="input-field"
+                      >
+                        <option value="book">Book an appointment (/book)</option>
+                        <option value="home_physiotherapy">Home Physiotherapy (/home-physiotherapy)</option>
+                        <option value="telephysio">TelePhysio (/telephysio)</option>
+                      </select>
+                    </CmsField>
+                  </div>
+
                   <CmsField label="Accepted Proof Types Description">
                     <input
                       type="text"

@@ -5,6 +5,7 @@ import {
   writeCookieConsent,
 } from '../constants/cookieConsent';
 import CookieConsentUI from '../components/CookieConsentUI';
+import { syncAnalyticsConsent } from '../utils/analytics';
 
 const CookieConsentContext = createContext(null);
 
@@ -26,6 +27,7 @@ export function CookieConsentProvider({ children }) {
       clearNonEssentialCookieData();
     }
     const saved = writeCookieConsent(prefs);
+    syncAnalyticsConsent(saved);
     setConsent(saved);
     setShowBanner(false);
     setShowPreferences(false);

@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import PageMeta from './PageMeta';
+import { mergeJsonLd } from '../../utils/seoSchema';
 import { seo as seoApi } from '../../services/api';
 
 /**
@@ -17,7 +18,10 @@ export default function ManagedPageSeo({
   nofollow: forceNofollow = false,
   canonical: canonicalOverride,
   image: imageOverride,
-  preferFallbackWhenUnmanaged = false,
+  // Default true: when no seo_pages row exists the API answers with the SITE-WIDE title/description, which would
+  // give every unmanaged page (policies, treatment/condition/exercise details ...) the same <title>. A page's own
+  // fallback copy is always more specific, so it wins unless the page explicitly opts out.
+  preferFallbackWhenUnmanaged = true,
 }) {
   const location = useLocation();
   const path = pathOverride || location.pathname || '/';
@@ -49,7 +53,11 @@ export default function ManagedPageSeo({
   const noindex = forceNoindex || robotsParts.includes('noindex');
   const nofollow = forceNofollow || robotsParts.includes('nofollow');
 
-  const schema = meta?.schema || jsonLd;
+  // CMS/admin schema and breadcrumb win per type; page-specific nodes the CMS lacks (FAQ, Service, plans) are kept.
+  const schema = useMemo(
+    () => mergeJsonLd(meta?.schema, meta?.breadcrumb, jsonLd),
+    [meta?.schema, meta?.breadcrumb, jsonLd]
+  );
   const robots =
     forceNoindex || forceNofollow
       ? `${noindex ? 'noindex' : 'index'}, ${nofollow ? 'nofollow' : 'follow'}`
@@ -74,6 +82,7 @@ export default function ManagedPageSeo({
       noindex={noindex}
       nofollow={nofollow}
       robots={robots}
+      hreflang={meta?.hreflang || undefined}
     />
   );
 }

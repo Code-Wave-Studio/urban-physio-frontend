@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 
 import { SITE_LOGO_FILE } from '../../constants/siteBrand';
+import { normalizeHreflang } from '../../utils/seoSchema';
 
 const SITE = 'The Urban Physio';
 const DEFAULT_OG = `/${SITE_LOGO_FILE}`;
@@ -25,6 +26,44 @@ function upsertLink(rel, href) {
     document.head.appendChild(el);
   }
   el.setAttribute('href', href);
+}
+
+const HREFLANG_ATTR = 'data-page-meta-hreflang';
+
+/** Replace every hreflang alternate this hook created with the given set. Empty set removes them. */
+function setHreflangAlternates(entries) {
+  document.querySelectorAll(`link[${HREFLANG_ATTR}]`).forEach((el) => el.remove());
+  entries.forEach(({ lang, href }) => {
+    const el = document.createElement('link');
+    el.setAttribute('rel', 'alternate');
+    el.setAttribute('hreflang', lang);
+    el.setAttribute('href', href);
+    el.setAttribute(HREFLANG_ATTR, '1');
+    document.head.appendChild(el);
+  });
+}
+
+// Values from the static index.html, captured once so they can be restored when a page with its own meta unmounts.
+// Without this, a route that does not render PageMeta would inherit the previous page's canonical / noindex.
+let staticDefaults = null;
+function captureStaticDefaults() {
+  if (staticDefaults || typeof document === 'undefined') return;
+  staticDefaults = {
+    canonical: document.querySelector('link[rel="canonical"]')?.getAttribute('href') || null,
+    ogUrl: document.querySelector('meta[property="og:url"]')?.getAttribute('content') || null,
+    robots: document.querySelector('meta[name="robots"]')?.getAttribute('content') || 'index, follow',
+  };
+}
+
+function restoreStaticDefaults() {
+  if (!staticDefaults) return;
+  const robots = document.querySelector('meta[name="robots"]');
+  if (robots) robots.setAttribute('content', staticDefaults.robots);
+  const canonical = document.querySelector('link[rel="canonical"]');
+  if (canonical && staticDefaults.canonical) canonical.setAttribute('href', staticDefaults.canonical);
+  const ogUrl = document.querySelector('meta[property="og:url"]');
+  if (ogUrl && staticDefaults.ogUrl) ogUrl.setAttribute('content', staticDefaults.ogUrl);
+  setHreflangAlternates([]);
 }
 
 function upsertJsonLd(id, data) {
@@ -56,8 +95,10 @@ export function usePageMeta({
   noindex = false,
   nofollow = false,
   robots,
+  hreflang = 'en-IN',
 }) {
   useEffect(() => {
+    captureStaticDefaults();
     const fullTitle = title ? (title.includes(SITE) ? title : `${title} | ${SITE}`) : SITE;
     document.title = fullTitle;
 
@@ -88,13 +129,15 @@ export function usePageMeta({
     upsertMeta('name', 'twitter:image:alt', twitterTitle || fullTitle);
     if (twitterSite) upsertMeta('name', 'twitter:site', twitterSite);
 
+    let canonicalUrl;
     if (canonical) {
-      const url = canonical.startsWith('http') ? canonical : `${window.location.origin}${canonical.startsWith('/') ? '' : '/'}${canonical}`;
-      upsertLink('canonical', url);
-      upsertMeta('property', 'og:url', url);
+      canonicalUrl = canonical.startsWith('http') ? canonical : `${window.location.origin}${canonical.startsWith('/') ? '' : '/'}${canonical}`;
     } else if (typeof window !== 'undefined') {
-      upsertLink('canonical', window.location.href);
-      upsertMeta('property', 'og:url', window.location.href);
+      canonicalUrl = window.location.href;
+    }
+    if (canonicalUrl) {
+      upsertLink('canonical', canonicalUrl);
+      upsertMeta('property', 'og:url', canonicalUrl);
     }
 
     if (typeof window !== 'undefined') {
@@ -108,6 +151,20 @@ export function usePageMeta({
       `${noindex ? 'noindex' : 'index'}, ${nofollow ? 'nofollow' : 'follow'}`;
     upsertMeta('name', 'robots', robotsContent);
 
+    // Language-aware alternates. The site is single-language, so the page is its own en-IN alternate and x-default.
+    // noindex pages are not advertised as alternates.
+    const lang = normalizeHreflang(hreflang);
+    upsertMeta('property', 'og:locale', lang.replace('-', '_'));
+    const isNoindex = /noindex/i.test(robotsContent);
+    setHreflangAlternates(
+      canonicalUrl && !isNoindex
+        ? [
+            { lang, href: canonicalUrl },
+            { lang: 'x-default', href: canonicalUrl },
+          ]
+        : []
+    );
+
     if (jsonLd) {
       upsertJsonLd('page-json-ld', jsonLd);
     }
@@ -115,6 +172,7 @@ export function usePageMeta({
     return () => {
       const ld = document.getElementById('page-json-ld');
       if (ld) ld.remove();
+      restoreStaticDefaults();
     };
   }, [
     title,
@@ -134,6 +192,7 @@ export function usePageMeta({
     noindex,
     nofollow,
     robots,
+    hreflang,
   ]);
 }
 

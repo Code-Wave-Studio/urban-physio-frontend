@@ -18,6 +18,9 @@ import { resolveMediaUrl } from '../utils/mediaUrl';
 import { HEALTHCARE_IMAGES } from '../utils/healthcareImages';
 import { bookTelePhysioUrl, withPainAreaParams } from '../utils/bookUrl';
 import { useContact } from '../contexts/ContactContext';
+import useOnceVisible from '../hooks/useOnceVisible';
+import { serviceOfferSchema } from '../utils/seoSchema';
+import { ANALYTICS_EVENTS, trackCta, trackEvent } from '../utils/analytics';
 import { whatsappChatUrl } from '../utils/whatsapp';
 import {
   TELEPHYSIO_DEFAULTS,
@@ -36,6 +39,26 @@ export default function TelePhysioPage() {
   const [loading, setLoading] = useState(true);
   const [activeStep, setActiveStep] = useState(null);
   const [faqOpen, setFaqOpen] = useState({ 0: true, 1: true });
+
+  // Analytics: one service_view per visit once content is shown; plan_view per pricing card when scrolled into view.
+  useEffect(() => {
+    if (loading) return;
+    trackEvent(ANALYTICS_EVENTS.SERVICE_VIEW, {
+      item_id: 'telephysio',
+      item_name: 'TeleRehab / TelePhysio',
+      service_type: 'telephysio',
+    });
+  }, [loading]);
+
+  const pricingRef = useOnceVisible(() => {
+    (data.sections?.pricing_cards || []).forEach((pkg, i) => {
+      trackEvent(
+        ANALYTICS_EVENTS.PLAN_VIEW,
+        { plan_id: `tele_plan_${i + 1}`, plan_name: pkg?.title, service_type: 'telephysio', section: 'pricing' },
+        { oncePerSession: `tele-plan-${i + 1}` }
+      );
+    });
+  });
 
   useEffect(() => {
     telephysio
@@ -103,8 +126,22 @@ export default function TelePhysioPage() {
           about: { '@type': 'MedicalTherapy', name: 'Online Physiotherapy Consultation' },
         }),
         faqPageSchema(faqs),
+        // Service + plan schema from the live CMS pricing cards (cards without a real price are skipped).
+        serviceOfferSchema({
+          name: 'TelePhysio online physiotherapy consultation',
+          serviceType: 'Online physiotherapy consultation',
+          description: data.seo_description || TELEPHYSIO_SEO.description,
+          url: typeof window !== 'undefined' ? `${window.location.origin}/telephysio` : undefined,
+          areaServed: ['India'],
+          catalogName: 'TelePhysio pricing',
+          offers: (s.pricing_cards || []).map((c) => ({
+            name: c?.title,
+            price: c?.price,
+            description: c?.duration,
+          })),
+        }),
       ].filter(Boolean),
-    [data.hero_title, data.seo_description, faqs]
+    [data.hero_title, data.seo_description, faqs, s.pricing_cards]
   );
 
   const toggleFaq = (index) => {
@@ -157,6 +194,7 @@ export default function TelePhysioPage() {
               <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5">
                 <Link
                   to={s.hero_cta_link || bookTelePhysioUrl()}
+                  onClick={() => trackCta({ id: 'tele_hero_book', label: s.hero_cta_label || 'Book a TelePhysio Session', href: s.hero_cta_link || bookTelePhysioUrl() })}
                   className="btn-primary !bg-white !text-teal-900 hover:!bg-teal-50 shadow-xl font-bold py-3 px-6 text-center rounded-xl transition-all active:scale-[0.98]"
                 >
                   <FaIcon icon="fa-video" className="mr-2 text-teal-700" />
@@ -164,6 +202,7 @@ export default function TelePhysioPage() {
                 </Link>
                 <a
                   href={whatsappHref}
+                  onClick={() => trackCta({ id: 'tele_hero_whatsapp', label: s.secondary_cta_label || 'Talk to a Physiotherapist', href: whatsappHref })}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-2 border border-white/30 hover:bg-white/10 text-white font-semibold py-3 px-5 rounded-xl transition-all text-center"
@@ -291,6 +330,7 @@ export default function TelePhysioPage() {
               <div className="mt-6">
                 <Link
                   to={s.what_cta_link || bookTelePhysioUrl()}
+                  onClick={() => trackCta({ id: 'tele_what_book', label: s.what_cta_label || 'Book Your Online Consultation', href: s.what_cta_link || bookTelePhysioUrl() })}
                   className="btn-primary inline-flex items-center gap-2 !bg-teal-700 hover:!bg-teal-800 text-white font-bold px-6 py-3 rounded-xl shadow-md transition-all active:scale-[0.98]"
                 >
                   <FaIcon icon="fa-video" />
@@ -589,7 +629,7 @@ export default function TelePhysioPage() {
           </div>
         </div>
       </section>
-      <section className="py-12 sm:py-16 bg-slate-50">
+      <section ref={pricingRef} className="py-12 sm:py-16 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-10">
             <span className="text-xs font-bold uppercase tracking-wider text-teal-700 bg-teal-100/70 px-3 py-1 rounded-full">
@@ -641,6 +681,7 @@ export default function TelePhysioPage() {
                 <div className="mt-8 pt-4">
                   <Link
                     to={pkg.cta_link || bookTelePhysioUrl()}
+                    onClick={() => trackCta({ id: `tele_plan_${i + 1}_book`, label: pkg.cta_label || 'Book TelePhysio', href: pkg.cta_link || bookTelePhysioUrl() })}
                     className="btn-primary w-full block text-center !bg-teal-700 hover:!bg-teal-800 text-white font-bold py-3 rounded-xl shadow-sm transition-all"
                   >
                     {pkg.cta_label || 'Book TelePhysio'}
@@ -764,6 +805,7 @@ export default function TelePhysioPage() {
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5">
             <Link
               to={s.final_primary_cta_link || bookTelePhysioUrl()}
+              onClick={() => trackCta({ id: 'tele_final_book', label: s.final_primary_cta_label || 'Book a TelePhysio Session', href: s.final_primary_cta_link || bookTelePhysioUrl() })}
               className="btn-primary w-full sm:w-auto !bg-white !text-teal-900 hover:!bg-teal-50 shadow-xl font-bold py-3.5 px-8 rounded-xl transition-all active:scale-[0.98]"
             >
               <FaIcon icon="fa-video" className="mr-2 text-teal-700" />
@@ -771,6 +813,7 @@ export default function TelePhysioPage() {
             </Link>
             <a
               href={whatsappHref}
+              onClick={() => trackCta({ id: 'tele_final_whatsapp', label: s.final_secondary_cta_label || 'Talk to Us', href: whatsappHref })}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 border border-white/30 hover:bg-white/10 text-white font-semibold py-3.5 px-6 rounded-xl transition-all w-full sm:w-auto"

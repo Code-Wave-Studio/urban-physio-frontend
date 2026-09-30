@@ -7,6 +7,23 @@
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
+      // Google Consent Mode v2: everything is denied until the visitor's cookie-banner choice says otherwise.
+      // Keep the version below in sync with COOKIE_CONSENT_VERSION (src/constants/cookieConsent.js);
+      // frontend/tests/seo-analytics-static.test.mjs fails if they drift.
+      (function () {
+        var analytics = 'denied';
+        try {
+          var c = JSON.parse(localStorage.getItem('tup_cookie_consent') || 'null');
+          if (c && c.version === 1 && c.analytics === true) analytics = 'granted';
+        } catch (e) {}
+        gtag('consent', 'default', {
+          analytics_storage: analytics,
+          ad_storage: 'denied',
+          ad_user_data: 'denied',
+          ad_personalization: 'denied',
+          wait_for_update: 500
+        });
+      })();
       gtag('js', new Date());
       gtag('config', 'G-L99NTLTYLP');
     </script>
@@ -50,7 +67,9 @@
     <meta name="twitter:image" content="https://theurbanphysio.com/logo.png" />
     <meta name="twitter:image:alt" content="The Urban Physio Logo" />
     <!-- Structured Data (Schema.org) for Search Engines -->
-    <script type="application/ld+json">
+    <!-- Fallback for crawlers that do not run JS. SeoContext removes this block once the admin-managed
+         global schema (global-seo-json-ld) is applied, so Organization/WebSite are never declared twice. -->
+    <script type="application/ld+json" id="static-org-json-ld">
     {
       "@context": "https://schema.org",
       "@graph": [

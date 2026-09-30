@@ -4,6 +4,7 @@ import FaIcon from '../../components/FaIcon';
 import ClinicPortalShell from '../../components/clinic/ClinicPortalShell';
 import useClinicPortal from '../../hooks/useClinicPortal';
 import { clinicPortal } from '../../services/api';
+import { htmlToText, sanitizeHtml } from '../../utils/htmlContent';
 
 const MIN_LIST = 220;
 const DEFAULT_LIST = 320;
@@ -21,11 +22,8 @@ const NOTE_BG_PRESETS = [
 
 const TAG_COLORS = ['#0d9488', '#0284c7', '#7c3aed', '#db2777', '#ea580c', '#ca8a04', '#64748b', '#be123c'];
 
-function stripHtml(html) {
-  const d = document.createElement('div');
-  d.innerHTML = html || '';
-  return d.textContent || '';
-}
+// Inert parse: assigning untrusted HTML to a live element's innerHTML would fire <img onerror=...>.
+const stripHtml = htmlToText;
 
 function parseTags(raw) {
   let tags = [];
@@ -114,7 +112,7 @@ export default function ClinicNotesPage() {
       if (editorRef.current) editorRef.current.innerHTML = '';
       return;
     }
-    const html = active.body_html || '';
+    const html = sanitizeHtml(active.body_html || '');
     setDraft({
       title: active.title || '',
       body_html: html,

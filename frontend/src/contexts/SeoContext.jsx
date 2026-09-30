@@ -60,17 +60,29 @@ function applyIntegrations(config) {
 
   if (config.schema && Array.isArray(config.schema['@graph']) && config.schema['@graph'].length) {
     upsertJsonLd('global-seo-json-ld', config.schema);
+    // The admin-managed graph supersedes the static index.html fallback; keep only one Organization/WebSite.
+    document.getElementById('static-org-json-ld')?.remove();
   }
 
-  const gtm = (config.google_tag_manager_id || '').trim();
-  const ga = (config.google_analytics_id || '').trim();
+  // These IDs are interpolated into inline scripts, so only well-formed measurement IDs are ever used.
+  const rawGtm = String(config.google_tag_manager_id || '').trim();
+  const rawGa = String(config.google_analytics_id || '').trim();
+  const gtm = /^GTM-[A-Z0-9]{3,20}$/i.test(rawGtm) ? rawGtm : '';
+  const ga = /^(G|AW|UA|GT)-[A-Z0-9-]{3,30}$/i.test(rawGa) ? rawGa : '';
+
+  // index.html already boots GTM + GA4 (with Consent Mode). Never boot the same container / property a
+  // second time: that double-counts every page view and every event.
+  const alreadyLoaded = (id) =>
+    !!id &&
+    (!!(window.google_tag_manager && window.google_tag_manager[id]) ||
+      !!document.querySelector(`script[src*="id=${encodeURIComponent(id)}"]`));
 
   if (gtm) {
-    ensureInlineScript(
+    if (!alreadyLoaded(gtm)) ensureInlineScript(
       'seo-gtm-boot',
       `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${gtm}');`
     );
-  } else if (ga) {
+  } else if (ga && !alreadyLoaded(ga)) {
     ensureScript('seo-ga-src', `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(ga)}`);
     ensureInlineScript(
       'seo-ga-boot',
