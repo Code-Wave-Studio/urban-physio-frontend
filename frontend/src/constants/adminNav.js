@@ -23,6 +23,7 @@ export const ADMIN_NAV = [
   { to: '/admin/appointments', label: 'Appointments', icon: 'fa-calendar-check', section: 'core' },
   { to: '/admin/booking-settings', label: 'Booking', icon: 'fa-puzzle-piece', section: 'core' },
   { to: '/admin/zoom', label: 'Zoom Meetings', icon: 'fa-video', section: 'core' },
+  { to: '/admin/tele-rehab', label: 'Tele-Rehab', icon: 'fa-display', section: 'core' },
   { to: '/admin/emergency', label: 'Emergency', icon: 'fa-truck-medical', section: 'core' },
   { to: '/admin/support', label: 'Support Centre', icon: 'fa-life-ring', section: 'core' },
   { to: '/admin/analytics', label: 'Analytics', icon: 'fa-chart-pie', section: 'core' },

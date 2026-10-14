@@ -6,7 +6,9 @@ import KinesteXWorkoutOverview from './KinesteXWorkoutOverview';
 import KinesteXMovementAnalysisReport from './KinesteXMovementAnalysisReport';
 import {
   buildKinesteXLaunchPostData,
+  kinesteXStyleName,
   buildKinesteXSessionResult,
+  cameraCaptureSupported,
   newClientSessionId,
   onKinesteXSessionCompleted,
   patientFriendlyKinesteXError,
@@ -37,6 +39,7 @@ export default function KinesteXExerciseSession({
   const iframeRef = useRef(null);
   const startedRef = useRef(false);
   const persistInFlightRef = useRef(false);
+  const pendingPersistRef = useRef(null);
   const bestStatusRef = useRef(null);
   const notifiedRef = useRef({ completed: false, failed: false, cancelled: false });
   const saveStateRef = useRef('idle');
@@ -53,7 +56,9 @@ export default function KinesteXExerciseSession({
   const [motionSaveState, setMotionSaveState] = useState('idle'); // idle | uploading | complete | failed | timed_out
   const [coachMuted, setCoachMuted] = useState(false);
   const [showMacNote, setShowMacNote] = useState(true);
+  const [closeRequested, setCloseRequested] = useState(false);
   const motionGraceTimerRef = useRef(null);
+  const cameraOk = cameraCaptureSupported();
 
   saveStateRef.current = saveState;
 
@@ -73,7 +78,7 @@ export default function KinesteXExerciseSession({
   }, [sdk?.base_url]);
 
   const frameSrc = useMemo(() => {
-    const style = postData?.style?.style ? String(postData.style.style) : 'light';
+    const style = kinesteXStyleName(postData?.style, 'light');
     return `${frameOrigin}/custom-workout?style=${encodeURIComponent(style)}`;
   }, [frameOrigin, postData?.style]);
 
@@ -125,40 +130,52 @@ export default function KinesteXExerciseSession({
     [onCompleted, onFailed, onCancelled]
   );
 
+  const flushPersist = useCallback(() => {
+    if (persistInFlightRef.current) return;
+    const next = pendingPersistRef.current;
+    if (!next) return;
+    pendingPersistRef.current = null;
+    const currentSave = saveStateRef.current;
+    if (currentSave === 'saved' && next.kind !== 'completed') {
+      flushPersist();
+      return;
+    }
+    persistInFlightRef.current = true;
+    if (currentSave !== 'saved') {
+      saveStateRef.current = 'saving';
+      setSaveState('saving');
+    }
+    setSaveError('');
+    onKinesteXSessionCompleted(next.result, (payload) => kinestex.saveSessionResult(payload))
+      .then((saved) => {
+        setPersisted(saved);
+        saveStateRef.current = 'saved';
+        setSaveState('saved');
+        finish(next.kind, { ...next.result, persisted: saved });
+      })
+      .catch((err) => {
+        saveStateRef.current = 'save_failed';
+        setSaveState('save_failed');
+        setSaveError(patientFriendlySaveError(err));
+      })
+      .finally(() => {
+        persistInFlightRef.current = false;
+        flushPersist();
+      });
+  }, [finish]);
+
   const persistResult = useCallback(
-    async (result, kind) => {
-      // Allow later completed events to merge; do not re-save cancelled/failed after completed.
-      // Read saveState via ref: SDK message listener does not refresh handleMessage.
+    (result, kind) => {
+      // Later workout_session_saved must not be dropped while an earlier overview save is in flight.
+      // A stale write without the KinesteX session id would erase the id replay needs.
       const currentSave = saveStateRef.current;
       if (currentSave === 'saved' && kind !== 'completed') {
         return;
       }
-      if (persistInFlightRef.current && currentSave === 'saving' && kind !== 'completed') {
-        return;
-      }
-      persistInFlightRef.current = true;
-      if (currentSave !== 'saved') {
-        saveStateRef.current = 'saving';
-        setSaveState('saving');
-      }
-      setSaveError('');
-      try {
-        const saved = await onKinesteXSessionCompleted(result, (payload) =>
-          kinestex.saveSessionResult(payload)
-        );
-        setPersisted(saved);
-        saveStateRef.current = 'saved';
-        setSaveState('saved');
-        persistInFlightRef.current = false;
-        finish(kind, { ...result, persisted: saved });
-      } catch (err) {
-        persistInFlightRef.current = false;
-        saveStateRef.current = 'save_failed';
-        setSaveState('save_failed');
-        setSaveError(patientFriendlySaveError(err));
-      }
+      pendingPersistRef.current = { result, kind };
+      flushPersist();
     },
-    [finish]
+    [flushPersist]
   );
 
   const emitBoundary = useCallback(
@@ -239,6 +256,8 @@ export default function KinesteXExerciseSession({
           if (!startedRef.current && sdkRef.current?.sendAction) {
             startedRef.current = true;
             try {
+              // Config (shouldSendStats / motionDataEnabled) must be applied before start.
+              postToFrame(postDataRef.current);
               sdkRef.current.sendAction('workout_activity_action', 'start');
               trackEvent(ANALYTICS_EVENTS.AI_SESSION_START, { feature: 'kinestex' });
             } catch (e) {
@@ -312,6 +331,7 @@ export default function KinesteXExerciseSession({
             eventsRef.current.workout_completed ||
             eventsRef.current.workout_session_saved
           ) {
+            beginMotionGrace();
             emitBoundary(type, payload, 'completed');
           } else {
             emitBoundary(type, payload, 'cancelled');
@@ -321,7 +341,7 @@ export default function KinesteXExerciseSession({
           break;
       }
     },
-    [emitBoundary, beginMotionGrace, clearMotionGrace]
+    [emitBoundary, beginMotionGrace, clearMotionGrace, postToFrame]
   );
 
   const postDataRef = useRef(postData);
@@ -399,13 +419,39 @@ export default function KinesteXExerciseSession({
   const showResultCard =
     (lifecycle === 'completed' || lifecycle === 'failed' || lifecycle === 'cancelled') &&
     saveState !== 'idle';
-  // Stay mounted (CSS-hidden) while saving / waiting for motion upload events so
-  // workout_session_saved + session_save_complete can merge into the same row.
-  const motionPending =
-    lifecycle === 'completed' &&
-    (motionSaveState === 'idle' || motionSaveState === 'uploading');
-  const keepSdkMounted =
-    saveState === 'idle' || saveState === 'saving' || (saveState === 'saved' && motionPending);
+  // Stay mounted while saving / waiting for motion upload so the provider can
+  // finish the skeletal recording. Do not visibility-hide the iframe during that wait.
+  const motionSettled =
+    motionSaveState === 'complete' || motionSaveState === 'failed' || motionSaveState === 'timed_out';
+  const motionPending = lifecycle === 'completed' && !motionSettled;
+  const keepSdkMounted = !showResultCard || motionPending || saveState === 'saving';
+
+  useEffect(() => {
+    if (closeRequested && !motionPending && saveState !== 'saving') {
+      onClose?.();
+    }
+  }, [closeRequested, motionPending, saveState, onClose]);
+
+  if (!cameraOk) {
+    return createPortal(
+      <div
+        className="kinestex-session-overlay items-center justify-center p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-label="AI session"
+      >
+        <div className="bg-white rounded-2xl p-6 max-w-md w-full text-center max-h-full overflow-y-auto">
+          <p className="text-slate-700 font-medium">
+            This browser cannot use the camera for AI monitoring. Open the exercise on a secure page (https or localhost) with a camera, or mark it complete manually.
+          </p>
+          <button type="button" className="btn-primary mt-4 min-h-10" onClick={onClose}>
+            Close
+          </button>
+        </div>
+      </div>,
+      document.body
+    );
+  }
 
   if (!postData) {
     return createPortal(
@@ -472,6 +518,8 @@ export default function KinesteXExerciseSession({
                 onClick={() => {
                   if (bestStatusRef.current !== 'completed' && saveStateRef.current !== 'saved') {
                     emitBoundary('workout_exit_request', { reason: 'user_exit' }, 'cancelled');
+                  } else if (motionPending) {
+                    setCloseRequested(true);
                   } else {
                     onClose?.();
                   }
@@ -500,7 +548,7 @@ export default function KinesteXExerciseSession({
 
       {keepSdkMounted && (
         <div
-          className={`kinestex-session-stage${showResultCard ? ' is-hidden' : ''}`}
+          className="kinestex-session-stage"
           key={mountKey.current}
         >
           <iframe
@@ -509,7 +557,7 @@ export default function KinesteXExerciseSession({
             src={frameSrc}
             className="kinestex-sdk-root"
             style={{ border: 0, position: 'absolute', inset: 0, width: '100%', height: '100%' }}
-            allow="camera; microphone; autoplay; clipboard-read; clipboard-write; fullscreen"
+            allow="camera; microphone; autoplay; accelerometer; gyroscope; magnetometer; clipboard-read; clipboard-write; fullscreen"
             allowFullScreen
             onLoad={() => postToFrame(postData)}
           />
@@ -517,7 +565,7 @@ export default function KinesteXExerciseSession({
       )}
 
       {showResultCard && (
-        <div className="kinestex-session-result">
+        <div className={`kinestex-session-result${keepSdkMounted ? ' is-overlay' : ''}`}>
           <div className="bg-white rounded-2xl p-5 sm:p-6 max-w-xl w-full text-center shadow-xl max-h-full overflow-y-auto min-w-0">
             {saveState === 'saving' && (
               <>
@@ -564,22 +612,34 @@ export default function KinesteXExerciseSession({
                       It is not a clinical assessment.
                     </p>
                   )}
-                  {motionSaveState === 'uploading' && (
+                  {motionSaveState === 'uploading' || motionSaveState === 'idle' ? (
                     <p className="text-[11px] text-slate-500 mt-2">
                       Saving movement recording to KinesteX…
                     </p>
-                  )}
+                  ) : null}
                   {motionSaveState === 'failed' && (
                     <p className="text-[11px] text-amber-800 mt-2 rounded-lg bg-amber-50 px-3 py-2">
                       Movement recording could not be saved for this session. Performance metrics were still stored.
+                    </p>
+                  )}
+                  {motionSaveState === 'timed_out' && (
+                    <p className="text-[11px] text-amber-800 mt-2 rounded-lg bg-amber-50 px-3 py-2">
+                      Movement recording did not finish uploading. Performance metrics were still stored. Replay is available only if KinesteX saved the session.
                     </p>
                   )}
                 </div>
                 <p className="text-xs text-slate-400 mt-3">
                   You can still use Mark Complete on your rehab plan if needed.
                 </p>
-                <button type="button" className="btn-primary mt-5 w-full min-h-10" onClick={onClose}>
-                  Done
+                <button
+                  type="button"
+                  className="btn-primary mt-5 w-full min-h-10"
+                  onClick={() => {
+                    if (motionPending) setCloseRequested(true);
+                    else onClose?.();
+                  }}
+                >
+                  {motionPending || closeRequested ? 'Saving movement…' : 'Done'}
                 </button>
               </>
             )}

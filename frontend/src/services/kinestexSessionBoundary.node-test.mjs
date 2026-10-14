@@ -5,11 +5,16 @@
 import {
   buildKinesteXLaunchPostData,
   buildKinesteXSessionResult,
+  cameraCaptureSupported,
+  isKinesteXReplaySessionId,
+  kinesteXStyleName,
   mapCompletionStatus,
   onKinesteXSessionCompleted,
+  patientFriendlyKinesteXError,
   validateKinesteXSessionResult,
   newClientSessionId,
 } from './kinestexSessionBoundary.js';
+import { formatSessionInstant, parseStoredUtcDate } from '../utils/sessionTime.js';
 
 let passed = 0;
 let failed = 0;
@@ -119,6 +124,104 @@ check('legacy key-only payload is not launched', buildKinesteXLaunchPostData({
   company: 'Urban Physio',
   userId: 'tup_p1_u2',
 }) === null);
+
+const motionLaunch = buildKinesteXLaunchPostData({
+  session: 'ksx_sess_public_launch',
+  company: 'Urban Physio',
+  userId: 'tup_p1_u2',
+  shouldSendStats: true,
+  motionDataEnabled: true,
+  motionTrackingEnabled: true,
+  customWorkoutExercises: [{ exerciseId: 'ex1', reps: 10 }],
+}, { videoFit: 'contain' });
+check('motion launch sets shouldSendStats', motionLaunch?.shouldSendStats === true);
+check('motion launch keeps landmark recording on', motionLaunch?.motionDataEnabled === true);
+check('motion launch enables tracking', motionLaunch?.motionTrackingEnabled === true);
+check(
+  'motion flags are also inside customParameters',
+  motionLaunch?.customParameters?.shouldSendStats === true
+    && motionLaunch?.customParameters?.motionDataEnabled === true
+    && motionLaunch?.customParameters?.videoFit === 'contain'
+);
+
+const landmarks = [
+  { name: 'leftShoulder', x: 0.42, y: 0.31, z: -0.2, visibility: 0.93 },
+  { name: 'leftHip', x: 0.48, y: 0.62, z: -0.05, visibility: 0.88 },
+];
+const skeletal = buildKinesteXSessionResult({
+  eventType: 'session_save_complete',
+  eventData: { data: { session_id: 18535 } },
+  context: { prescription_id: 9, item_id: 3, exercise_id: 7 },
+  collected: {
+    workout_session_saved: { type: 'workout_session_saved', data: { session_id: 18535 } },
+    session_save_complete: { type: 'session_save_complete' },
+    pose_landmarks: { poseLandmarks: landmarks },
+  },
+  clientSessionId: clientId,
+  startedAt: '2026-10-14T09:18:00.000Z',
+});
+check('skeletal fixture keeps provider session id', skeletal.provider_session_id === 18535);
+check(
+  'skeletal fixture keeps pose landmarks for replay linkage',
+  skeletal.raw_events?.pose_landmarks?.poseLandmarks?.[1]?.name === 'leftHip'
+);
+check('skeletal fixture does not invent extra landmarks', skeletal.raw_events.pose_landmarks.poseLandmarks.length === 2);
+
+check(
+  'camera permission message',
+  /allow camera/i.test(patientFriendlyKinesteXError('error_occurred', { message: 'Permission denied' }))
+);
+check(
+  'unsupported camera message',
+  /not have a supported camera/i.test(patientFriendlyKinesteXError('error_occurred', { message: 'Camera not supported' }))
+);
+check(
+  'non-camera unsupported stays generic',
+  /supported camera/i.test(patientFriendlyKinesteXError('error_occurred', { message: 'WebGL not supported' })) === false
+);
+check(
+  'empty frame message',
+  /did not produce a video frame/i.test(patientFriendlyKinesteXError('error_occurred', { message: 'empty frame' }))
+);
+check('camera helper rejects missing getUserMedia', cameraCaptureSupported({ mediaDevices: {} }, true) === false);
+check(
+  'camera helper accepts getUserMedia without opening it',
+  cameraCaptureSupported({ mediaDevices: { getUserMedia() {} } }, true) === true
+);
+check('camera helper rejects insecure context', cameraCaptureSupported({ mediaDevices: { getUserMedia() {} } }, false) === false);
+
+const utcMs = Date.UTC(2026, 9, 14, 9, 18, 0);
+check('naive UTC datetime parses as UTC', parseStoredUtcDate('2026-10-14 09:18:00')?.getTime() === utcMs);
+check('Z datetime parses as the same instant', parseStoredUtcDate('2026-10-14T09:18:00.000Z')?.getTime() === utcMs);
+check('IST offset parses once to the same instant', parseStoredUtcDate('2026-10-14T14:48:00+05:30')?.getTime() === utcMs);
+const istClock = formatSessionInstant('2026-10-14 09:18:00', 'en-GB', {
+  timeZone: 'Asia/Kolkata',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+check('UTC 09:18 displays as 14:48 in Kolkata', istClock.includes('14:48'));
+const pacificClock = formatSessionInstant('2026-10-14 09:18:00', 'en-GB', {
+  timeZone: 'America/Los_Angeles',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+const styled = buildKinesteXLaunchPostData({
+  session: 'ksx_sess_public_launch',
+  company: 'Urban Physio',
+  userId: 'tup_p1_u2',
+  style: { style: 'light' },
+});
+check('launch style is the string light', styled?.style === 'light');
+check('style helper reads a string', kinesteXStyleName('dark') === 'dark');
+check('numeric kinestex session id is replayable', isKinesteXReplaySessionId('18535'));
+check('non-numeric provider id is not a replay route', isKinesteXReplaySessionId('ksx-sess-1') === false);
+check('empty provider id is not a replay route', isKinesteXReplaySessionId('') === false);
+check('malformed sdk does not throw', buildKinesteXLaunchPostData('not-an-object') === null);
+
+check('display uses the zone, not a hardcoded seven-hour offset', pacificClock.includes('02:18'));
+check('already-zoned value is not shifted twice', parseStoredUtcDate('2026-10-14T09:18:00Z')?.getTime() === utcMs);
 
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

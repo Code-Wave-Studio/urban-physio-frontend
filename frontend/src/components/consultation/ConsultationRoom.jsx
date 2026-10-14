@@ -18,6 +18,8 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { formatTime } from '../../utils/appointmentListUtils';
 import { showAiReadyBadge } from '../exercise/KinesteXMappingFields';
+import { usePrivacyBadges } from '../../hooks/usePrivacyBadges';
+import PrivacyClaimBadges from '../privacy/PrivacyClaimBadges';
 
 const TABS = [
   { id: 'video', label: 'Video Call', shortLabel: 'Video', icon: 'fa-video' },
@@ -196,6 +198,7 @@ function VideoPanel({ room, canStart, onSessionStarted }) {
 
 function ExercisePanel({ room, onReload, onStartAi, aiSessionActive, aiTick }) {
   const isDoctor = room.permissions?.can_prescribe;
+  const assignmentPrivacyBadges = usePrivacyBadges('assignment');
   const [library, setLibrary] = useState([]);
   const [kinestexOn, setKinestexOn] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState(null);
@@ -457,6 +460,7 @@ function ExercisePanel({ room, onReload, onStartAi, aiSessionActive, aiTick }) {
                           {ex.sets} sets × {ex.reps} reps
                           {ex.hold_seconds ? ` · hold ${ex.hold_seconds}s` : ''} · {ex.frequency || 'Daily'}
                         </p>
+                        <PrivacyClaimBadges badges={assignmentPrivacyBadges} variant="card" className="mt-2" />
                         {ex.special_instructions && (
                           <p className="text-sm text-amber-800 bg-amber-50 rounded-lg px-2.5 py-1.5 mt-2">{ex.special_instructions}</p>
                         )}

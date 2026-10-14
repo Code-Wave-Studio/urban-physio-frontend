@@ -6,6 +6,8 @@ import FaIcon from '../FaIcon';
 import { bookExerciseUrl } from '../../utils/bookUrl';
 import { exerciseDetailPath } from '../../utils/exerciseDetail';
 import { hasExerciseMedia } from '../../utils/mediaParser';
+import LibraryAiPersonalTrainer from './LibraryAiPersonalTrainer';
+import PrivacyClaimBadges from '../privacy/PrivacyClaimBadges';
 
 const AREA_GRADIENT = {
   back: 'bg-gradient-to-br from-violet-500/20 to-purple-500/10',
@@ -18,9 +20,8 @@ const AREA_GRADIENT = {
 /**
  * Exercise opening sheet — demonstration → name/meta → how to perform → details → action.
  */
-export default function ExerciseDetailModal({ exercise, onClose }) {
+export default function ExerciseDetailModal({ exercise, onClose, privacyBadges = [] }) {
   const hasMedia = exercise ? hasExerciseMedia(exercise) : false;
-  const aiReady = Boolean(exercise?.kinestex?.ai_supported && exercise?.kinestex?.mapped);
 
   return (
     <ExerciseBottomSheet
@@ -69,14 +70,10 @@ export default function ExerciseDetailModal({ exercise, onClose }) {
 
           <div>
             <h2 className="text-lg font-bold text-slate-900 leading-snug">{exercise.name}</h2>
+            <PrivacyClaimBadges badges={privacyBadges} variant="card" className="mt-2" />
             <p className="text-sm text-slate-500 mt-1 capitalize">
               {[exercise.body_area, exercise.difficulty].filter(Boolean).join(' · ')}
             </p>
-            {aiReady && (
-              <span className="inline-flex mt-2 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md bg-teal-50 text-teal-800 border border-teal-100">
-                AI-Guided when prescribed
-              </span>
-            )}
           </div>
 
           <div className="grid grid-cols-3 gap-2">
@@ -106,6 +103,8 @@ export default function ExerciseDetailModal({ exercise, onClose }) {
             instructions={exercise.instructions}
             compact
           />
+
+          <LibraryAiPersonalTrainer exercise={exercise} />
         </div>
       )}
     </ExerciseBottomSheet>

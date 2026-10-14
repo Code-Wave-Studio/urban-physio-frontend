@@ -9,6 +9,7 @@ import KinesteXMappingFields, {
   showAiReadyBadge,
 } from '../../components/exercise/KinesteXMappingFields';
 import FaIcon from '../../components/FaIcon';
+import PrivacyBadgeSettingsPanel from '../../components/admin/PrivacyBadgeSettingsPanel';
 import { admin, uploadCmsImage, uploadCmsVideo } from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -153,6 +154,10 @@ export default function AdminExercises() {
         <button type="button" onClick={openCreate} className="btn-primary inline-flex items-center gap-2">
           <FaIcon icon="fa-plus" /> Add exercise
         </button>
+      </div>
+
+      <div className="mb-6">
+        <PrivacyBadgeSettingsPanel placements={['library', 'assignment']} />
       </div>
 
       <div className="glass-card p-4 mb-6">

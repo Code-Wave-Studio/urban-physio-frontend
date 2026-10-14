@@ -30,6 +30,10 @@ export default function AdminKinesteX() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
+  const [mapLimit, setMapLimit] = useState('5');
+  const [mapping, setMapping] = useState(false);
+  const [mapReport, setMapReport] = useState(null);
+  const [previewedLimit, setPreviewedLimit] = useState(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -101,6 +105,45 @@ export default function AdminKinesteX() {
       toast.error(err.message || 'Save failed');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const runMap = async (dryRun) => {
+    const trimmed = String(mapLimit).trim();
+    const payload = { dry_run: dryRun };
+    if (trimmed !== '') {
+      const limit = Number(trimmed);
+      if (!Number.isInteger(limit) || limit < 1 || limit > 5000) {
+        toast.error('Sample size must be a whole number from 1 to 5000, or blank for the full catalogue.');
+        return;
+      }
+      payload.limit = limit;
+    }
+    if (!dryRun) {
+      const scope = payload.limit ? `the first ${payload.limit} eligible exercises` : 'the full eligible catalogue';
+      const ok = window.confirm(
+        `Apply KinesteX mappings for ${scope}? Existing mappings stay as they are. Exercise records are not deleted.`
+      );
+      if (!ok) return;
+    }
+    setMapping(true);
+    try {
+      const res = await admin.kinestexBulkExerciseMap(payload);
+      const report = res.data || null;
+      setMapReport(report);
+      if (report?.run_error) {
+        toast.error(report.run_error);
+      } else if (dryRun) {
+        setPreviewedLimit(trimmed);
+        toast.success('Preview ready');
+      } else {
+        setPreviewedLimit(null);
+        toast.success('Bulk mapping finished');
+      }
+    } catch (err) {
+      toast.error(err.message || 'Bulk mapping failed');
+    } finally {
+      setMapping(false);
     }
   };
 
@@ -288,6 +331,95 @@ export default function AdminKinesteX() {
               </button>
             </div>
           </form>
+        )}
+
+        {!loading && (
+          <section className="glass-card !p-6 md:!p-8 mt-6 space-y-4">
+            <div>
+              <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <FaIcon icon="fa-link" className="text-primary-600" />
+                Bulk exercise mapping
+              </h2>
+              <p className="text-xs text-slate-500 mt-1">
+                Matches active global exercises to KinesteX by the official English title key.
+                Preview writes nothing. Apply keeps existing mappings and does not delete exercises.
+              </p>
+            </div>
+            <label className="block text-sm font-semibold text-slate-800">
+              Sample size
+              <input
+                className="input w-full mt-1.5"
+                inputMode="numeric"
+                value={mapLimit}
+                onChange={(e) => {
+                  setMapLimit(e.target.value);
+                  setPreviewedLimit(null);
+                }}
+                placeholder="Blank maps the full catalogue"
+                disabled={mapping}
+              />
+            </label>
+            <p className="text-[11px] text-slate-500">
+              Use 5 against the sandbox first. Leave blank to include every eligible exercise.
+              Preview this sample size before Apply. The API key stays on the server.
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <button type="button" className="btn-secondary" disabled={mapping || !meta.api_key_configured} onClick={() => runMap(true)}>
+                {mapping ? 'Working…' : 'Preview'}
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                disabled={mapping || !meta.api_key_configured || previewedLimit !== String(mapLimit).trim()}
+                onClick={() => runMap(false)}
+              >
+                Apply mappings
+              </button>
+            </div>
+            {!meta.api_key_configured && (
+              <p className="text-xs text-amber-700">Save a server-side API key before running a preview.</p>
+            )}
+            {mapReport && (
+              <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 space-y-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                  {[
+                    ['Mapped', mapReport.counts?.successful ?? 0],
+                    ['Skipped', mapReport.counts?.skipped ?? 0],
+                    ['Conflicts', mapReport.counts?.conflicting ?? 0],
+                    ['Failed', mapReport.counts?.failed ?? 0],
+                  ].map(([label, value]) => (
+                    <div key={label} className="rounded-lg bg-white border border-slate-100 px-2 py-2">
+                      <p className="text-lg font-bold text-slate-900">{value}</p>
+                      <p className="text-[11px] uppercase tracking-wide text-slate-500">{label}</p>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-600">
+                  {mapReport.dry_run ? 'Preview only. Nothing was saved.' : 'Mappings saved.'}
+                  {' '}Catalogue {mapReport.catalog_complete ? 'complete' : 'incomplete'}.
+                  {mapReport.unresolved ? ` ${mapReport.unresolved} unresolved.` : ''}
+                  {mapReport.exercise_records?.deleted ? ' Exercise deletions were detected outside this action.' : ''}
+                </p>
+                {mapReport.run_error && (
+                  <p className="text-xs text-rose-700">{mapReport.run_error}</p>
+                )}
+                <ul className="max-h-64 overflow-auto space-y-1 text-xs text-slate-700">
+                  {(mapReport.items || [])
+                    .filter((item) => item.outcome !== 'successful')
+                    .slice(0, 40)
+                    .map((item) => (
+                      <li key={`${item.exercise_id}-${item.reason}`}>
+                        <span className="font-semibold">{item.name}</span>
+                        {' · '}
+                        {item.outcome}
+                        {' · '}
+                        {item.reason}
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            )}
+          </section>
         )}
       </div>
     </AdminDashboardLayout>

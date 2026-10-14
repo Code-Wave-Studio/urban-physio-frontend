@@ -7,6 +7,8 @@ import FaIcon from '../components/FaIcon';
 import ExerciseDetailModal from '../components/exercise/ExerciseDetailModal';
 import ExerciseGalleryCard from '../components/exercise/ExerciseGalleryCard';
 import { exercises } from '../services/api';
+import { useKinestexPublicStatus } from '../hooks/useKinestexPublicStatus';
+import { usePrivacyBadges } from '../hooks/usePrivacyBadges';
 import ManagedPageSeo from '../components/seo/ManagedPageSeo';
 import SeoBreadcrumbs from '../components/seo/SeoBreadcrumbs';
 
@@ -35,6 +37,8 @@ export default function ExerciseLibrary() {
   const [search, setSearch] = useState('');
   const [bodyArea, setBodyArea] = useState('');
   const [selected, setSelected] = useState(null);
+  const aiIntegrationActive = useKinestexPublicStatus();
+  const libraryPrivacyBadges = usePrivacyBadges('library');
 
   useEffect(() => {
     setLoading(true);
@@ -173,6 +177,8 @@ export default function ExerciseLibrary() {
                 exercise={ex}
                 index={idx}
                 onOpen={setSelected}
+                aiIntegrationActive={aiIntegrationActive === true}
+                privacyBadges={libraryPrivacyBadges}
               />
             ))}
           </div>
@@ -193,7 +199,7 @@ export default function ExerciseLibrary() {
         </section>
       </main>
 
-      <ExerciseDetailModal exercise={selected} onClose={() => setSelected(null)} />
+      <ExerciseDetailModal exercise={selected} onClose={() => setSelected(null)} privacyBadges={libraryPrivacyBadges} />
 
       <Footer />
     </div>

@@ -2,11 +2,15 @@ import { useCallback, useEffect, useState } from 'react';
 import FaIcon from '../FaIcon';
 import { kinestex } from '../../services/api';
 
+import { formatSessionInstant } from '../../utils/sessionTime';
+
 function formatWhen(value) {
-  if (!value) return 'N/A';
-  const d = new Date(String(value).replace(' ', 'T'));
-  if (Number.isNaN(d.getTime())) return String(value);
-  return d.toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  return formatSessionInstant(value, 'en-IN', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  }, 'N/A');
 }
 
 function num(v, suffix = '') {

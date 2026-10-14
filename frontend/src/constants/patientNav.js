@@ -14,6 +14,7 @@ export const PATIENT_NAV = [
   { to: '/book', label: 'Book Appointment', icon: 'fa-calendar-plus', section: 'visits' },
   { to: '/patient/appointments', label: 'Appointments', icon: 'fa-calendar-check', section: 'visits' },
   { to: '/patient/video-consultations', label: 'Video Consultation', icon: 'fa-video', section: 'visits' },
+  { to: '/patient/tele-rehab', label: 'Tele-Rehab', icon: 'fa-display', section: 'visits' },
   { to: '/emergency/book', label: 'Emergency Care', icon: 'fa-truck-medical', section: 'visits' },
 
   { to: '/patient/exercises', label: 'My Rehab Plan', icon: 'fa-person-walking', section: 'health' },

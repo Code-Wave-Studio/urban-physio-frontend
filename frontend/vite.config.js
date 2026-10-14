@@ -66,6 +66,9 @@ export default defineConfig(({ mode }) => {
         [apiProxyPath]: {
           target: 'http://localhost',
           changeOrigin: true,
+          // This Apache serves PHP through index.php/path when .htaccess rewrites are not applied.
+          // The API router strips the index.php prefix, so the same path still works when rewrites are on.
+          rewrite: (path) => path.replace(/\/backend\/api\/(?!index\.php(?:\/|$))/, '/backend/api/index.php/'),
         },
       },
     },

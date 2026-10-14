@@ -14,8 +14,10 @@ import {
   isOrgLogoComplete,
 } from '../../constants/orgLogosDefaults';
 import toast from 'react-hot-toast';
+import { useTeleRehabPageName } from '../../hooks/useTeleRehabPageName';
 
 export default function AdminOrgLogos() {
+  const telePageName = useTeleRehabPageName();
   const [enabled, setEnabled] = useState(true);
   const [heading, setHeading] = useState(ORG_LOGOS_COPY.heading);
   const [highlight, setHighlight] = useState(ORG_LOGOS_COPY.heading_highlight);
@@ -85,7 +87,7 @@ export default function AdminOrgLogos() {
         heading_highlight: highlight,
         items: items.map((it, i) => ({ ...it, sort_order: i })),
       });
-      toast.success('Organisation logos published on Home Physiotherapy and TelePhysio');
+      toast.success(`Organisation logos published on Home Physiotherapy and ${telePageName}`);
       load();
     } catch (err) {
       toast.error(err.response?.data?.message || err.message || 'Save failed');
@@ -107,7 +109,7 @@ export default function AdminOrgLogos() {
             </Link>{' '}
             and{' '}
             <Link to="/telephysio" target="_blank" className="text-teal-700 font-semibold hover:underline">
-              TelePhysio by Myoreset
+              {telePageName}
             </Link>
             . Heading and logos update on both pages automatically.
           </p>
@@ -129,7 +131,7 @@ export default function AdminOrgLogos() {
               />
               <span>
                 <span className="font-semibold text-slate-900 block">Show this section on both pages</span>
-                <span className="text-xs text-slate-500">When off, the logo strip is hidden on Home Physiotherapy and TelePhysio.</span>
+                <span className="text-xs text-slate-500">When off, the logo strip is hidden on Home Physiotherapy and {telePageName}.</span>
               </span>
             </label>
 
@@ -276,7 +278,7 @@ export default function AdminOrgLogos() {
                 Preview Home Physiotherapy
               </Link>
               <Link to="/telephysio" target="_blank" className="btn-outline text-sm">
-                Preview TelePhysio
+                Preview {telePageName}
               </Link>
             </div>
           </form>

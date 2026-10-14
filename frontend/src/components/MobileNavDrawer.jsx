@@ -20,6 +20,7 @@ import {
   speedDialForRole,
 } from './nav/navDrawerLinks';
 import { useNavDrawerSummary } from '../hooks/useNavDrawerSummary';
+import { labelForTeleRehabLink, useTeleRehabPageName } from '../hooks/useTeleRehabPageName';
 import { hapticClose, hapticOpen } from '../utils/haptics';
 
 function isLinkActive(pathname, search, to) {
@@ -202,6 +203,7 @@ export default function MobileNavDrawer({
   onLogout,
 }) {
   const { pathname, search } = useLocation();
+  const telePageName = useTeleRehabPageName();
   const wasOpen = useRef(false);
   const { summary, loading: summaryLoading } = useNavDrawerSummary(open, user);
   const speedDial = speedDialForRole(hasRole);
@@ -333,7 +335,9 @@ export default function MobileNavDrawer({
           {user && hasRole('super_admin', 'admin', 'sub_admin') && (
             <NavCategoryCard title="Admin Portal">
               <PortalNavSections
-                links={ADMIN_PORTAL_LINKS}
+                links={ADMIN_PORTAL_LINKS.map((link) =>
+                  link.to === '/admin/telephysio' ? { ...link, label: telePageName } : link
+                )}
                 sectionOrder={ADMIN_SECTION_ORDER}
                 unreadCount={summary.unreadNotifications}
                 onNavigate={handleNavigate}
@@ -348,6 +352,7 @@ export default function MobileNavDrawer({
                 <NavListItem
                   key={link.to + link.label}
                   {...link}
+                  label={labelForTeleRehabLink(link.to, link.label, telePageName)}
                   pathname={pathname}
                   search={search}
                   onNavigate={handleNavigate}

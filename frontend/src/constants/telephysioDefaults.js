@@ -10,6 +10,9 @@ import { TELE_ENROL_DEFAULTS } from './enrollmentDefaults';
 
 export const TELEPHYSIO_BOOK_PATH = '/book?type=online&mode=telephysio';
 
+/** Safe default: the page's current public identity. */
+export const TELE_REHAB_PAGE_NAME_DEFAULT = 'TelePhysio by Myoreset';
+
 export const TELEPHYSIO_SEO = {
   title: 'TelePhysio by Myoreset | Online Physiotherapy Consultation | The Urban Physio',
   description:
@@ -33,6 +36,7 @@ export const TELEPHYSIO_DEFAULTS = {
     pricing_enabled: '1',
     voice_enabled: '1',
     community_enabled: '1',
+    page_name: TELE_REHAB_PAGE_NAME_DEFAULT,
     hero_badge: 'TelePhysio by Myoreset',
     hero_cta_label: 'Book a TelePhysio Session',
     hero_cta_link: TELEPHYSIO_BOOK_PATH,
@@ -426,5 +430,86 @@ export function mergeTelePhysioSections(raw = {}) {
       out[k] = d[k];
     }
   }
+  if (!String(out.page_name || '').trim()) {
+    out.page_name = d.page_name;
+  }
   return out;
+}
+
+const TELE_REHAB_BRAND_ALIASES = [
+  'TelePhysio by Myoreset',
+  'Tele-Rehab by Myoreset',
+  'Tele Rehab by Myoreset',
+  'Tele-Physio',
+  'Tele-Rehab',
+  'TelePhysio',
+  'TeleRehab',
+];
+
+const NON_DISPLAY_KEYS = new Set([
+  'page_name',
+  'id',
+  'slug',
+  'icon',
+  'visual',
+  'step',
+  'number',
+  'rating',
+  'sort_order',
+  'in_loop',
+]);
+
+function isNonDisplayKey(key) {
+  if (NON_DISPLAY_KEYS.has(key)) return true;
+  if (/image_alt$/i.test(key)) return false;
+  if (/(^|_)image($|_)/i.test(key)) return true;
+  return /(^|_)(link|url|href|icon|slug|path|enabled)$/i.test(key);
+}
+
+/** Same replacement rules as TelePhysioSettingsHelper::applyPageNameToString. */
+export function applyTeleRehabPageNameToString(text, pageName = TELE_REHAB_PAGE_NAME_DEFAULT) {
+  const source = String(text ?? '');
+  const name = String(pageName || '').trim();
+  if (!source || !name) return source;
+  const guards = [];
+  let guarded = source.replace(/(?:https?:\/\/|\/)[^\s<>"']+|mode=telephysio\b/gi, (match) => {
+    const token = `\u001e${guards.length}\u001f`;
+    guards.push([token, match]);
+    return token;
+  });
+  const placeholder = '\u001ePN\u001f';
+  const boundary = (literal) =>
+    new RegExp(
+      `(?<![\\p{L}\\p{N}])${literal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}])`,
+      'gu'
+    );
+  const nameContainsAlias = TELE_REHAB_BRAND_ALIASES.some(
+    (alias) => alias !== name && boundary(alias).test(name)
+  );
+  if (nameContainsAlias) {
+    guarded = guarded.replace(boundary(name), placeholder);
+  }
+  for (const alias of TELE_REHAB_BRAND_ALIASES) {
+    guarded = guarded.replace(boundary(alias), placeholder);
+  }
+  guarded = guarded.split(placeholder).join(name);
+  for (const [token, match] of guards) {
+    guarded = guarded.split(token).join(match);
+  }
+  return guarded;
+}
+
+export function applyTeleRehabPageName(value, pageName = TELE_REHAB_PAGE_NAME_DEFAULT) {
+  if (Array.isArray(value)) {
+    return value.map((item) => applyTeleRehabPageName(item, pageName));
+  }
+  if (value && typeof value === 'object') {
+    const out = {};
+    for (const [key, item] of Object.entries(value)) {
+      out[key] = isNonDisplayKey(key) ? item : applyTeleRehabPageName(item, pageName);
+    }
+    return out;
+  }
+  if (typeof value !== 'string') return value;
+  return applyTeleRehabPageNameToString(value, pageName);
 }

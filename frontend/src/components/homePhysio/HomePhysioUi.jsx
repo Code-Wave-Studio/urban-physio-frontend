@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import FaIcon from '../FaIcon';
+import TestimonialMediaGallery from '../testimonials/TestimonialMediaGallery';
 import { HOME_VISIT_BOOK_PATH } from '../../constants/homePhysioDefaults';
 import { trackCta } from '../../utils/analytics';
 
@@ -53,10 +54,11 @@ export function CheckRow({ children, tone = 'good' }) {
 export function QuoteCard({ quote, featured = false }) {
   return (
     <blockquote
-      className={`glass-card relative overflow-hidden p-5 sm:p-6 h-full ${
+      className={`glass-card relative overflow-hidden p-4 sm:p-6 h-full ${
         featured ? 'sm:p-7' : ''
       }`}
     >
+      <TestimonialMediaGallery media={quote.media} name={quote.name} />
       <FaIcon icon="fa-quote-left" className="text-primary-200 text-2xl mb-3" />
       <div className="flex gap-0.5 text-amber-500 mb-3" aria-label={`${quote.rating || 5} out of 5 stars`}>
         {Array.from({ length: Number(quote.rating) || 5 }).map((_, i) => (

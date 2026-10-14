@@ -13,6 +13,11 @@ import { exercises } from '../services/api';
 import { bookExerciseUrl } from '../utils/bookUrl';
 import { exerciseDetailPath, normalizeExerciseDetailPayload } from '../utils/exerciseDetail';
 import { hasExerciseMedia, parseMediaSource } from '../utils/mediaParser';
+import LibraryAiPersonalTrainer from '../components/exercise/LibraryAiPersonalTrainer';
+import { catalogueExerciseAiMapped } from '../utils/libraryAiTrainer';
+import { useKinestexPublicStatus } from '../hooks/useKinestexPublicStatus';
+import { usePrivacyBadges } from '../hooks/usePrivacyBadges';
+import PrivacyClaimBadges from '../components/privacy/PrivacyClaimBadges';
 
 const DIFFICULTY_STYLES = {
   beginner: 'bg-emerald-50 text-emerald-800 border-emerald-100',
@@ -58,6 +63,7 @@ function DetailSkeleton() {
 
 export default function ExerciseDetail() {
   const { slug } = useParams();
+  const libraryPrivacyBadges = usePrivacyBadges('library');
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -104,7 +110,8 @@ export default function ExerciseDetail() {
 
   const media = useMemo(() => (item ? parseMediaSource(item) : null), [item]);
   const hasMedia = item ? hasExerciseMedia(item) : false;
-  const aiReady = Boolean(item?.kinestex?.ai_supported && item?.kinestex?.mapped);
+  const aiIntegrationActive = useKinestexPublicStatus();
+  const aiReady = aiIntegrationActive === true && catalogueExerciseAiMapped(item);
   const difficulty = item?.difficulty || null;
   const bodyArea = item?.body_area || item?.category || null;
 
@@ -255,13 +262,14 @@ export default function ExerciseDetail() {
                   )}
                   {aiReady && (
                     <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full border border-teal-200 bg-teal-50 text-teal-800">
-                      AI-Guided when prescribed
+                      AI Personal Trainer
                     </span>
                   )}
                 </div>
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
                   {name}
                 </h1>
+                <PrivacyClaimBadges badges={libraryPrivacyBadges} variant="card" className="mt-3" />
                 {item.instructions && (
                   <p className="mt-3 text-sm md:text-base text-slate-600 leading-relaxed max-w-2xl">
                     {String(item.instructions).split(/\r?\n/).filter(Boolean)[0]}
@@ -286,17 +294,7 @@ export default function ExerciseDetail() {
                 </p>
               )}
 
-              {aiReady && (
-                <div className="rounded-xl bg-teal-50/90 border border-teal-100 px-4 py-3 text-sm text-teal-900">
-                  <p className="font-semibold flex items-center gap-1.5">
-                    <FaIcon icon="fa-person-walking" aria-hidden="true" />
-                    AI monitoring available when prescribed
-                  </p>
-                  <p className="mt-1 text-teal-800/90 text-xs leading-relaxed">
-                    When your physiotherapist assigns this exercise with AI monitoring, you can start guided sessions from My Rehab Plan.
-                  </p>
-                </div>
-              )}
+              <LibraryAiPersonalTrainer exercise={item} />
 
               <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
                 <Link

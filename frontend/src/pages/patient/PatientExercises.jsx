@@ -8,6 +8,8 @@ import KinesteXAiExercisePrepBrief from '../../components/exercise/KinesteXAiExe
 import KinesteXExerciseSession from '../../components/exercise/KinesteXExerciseSession';
 import KinesteXPatientAiHistory from '../../components/exercise/KinesteXPatientAiHistory';
 import { exercisePrescriptions, kinestex } from '../../services/api';
+import { usePrivacyBadges } from '../../hooks/usePrivacyBadges';
+import PrivacyClaimBadges from '../../components/privacy/PrivacyClaimBadges';
 import { PATIENT_NAV } from '../../constants/patientNav';
 import { hasExerciseMedia } from '../../utils/mediaParser';
 import toast from 'react-hot-toast';
@@ -42,6 +44,7 @@ export default function PatientExercises() {
   const [tab, setTab] = useState('today'); // today | progress | history | ai-history
   const [lastTap, setLastTap] = useState({ id: null, at: 0 });
   const [streak, setStreak] = useState(0);
+  const assignmentPrivacyBadges = usePrivacyBadges('assignment');
   const [aiHistoryTick, setAiHistoryTick] = useState(0);
 
   const [aiPrepEx, setAiPrepEx] = useState(null);
@@ -88,7 +91,9 @@ export default function PatientExercises() {
   }, [activeId, loadDetail]);
 
   const progress = detail?.progress;
-  const exercises = detail?.exercises || [];
+  const exercises = (detail?.exercises || []).filter(
+    (ex) => ex.is_active !== false && Number(ex.is_active) !== 0
+  );
 
   const todayDone = useMemo(
     () => exercises.filter((e) => e.today_log?.status === 'completed').length,
@@ -460,6 +465,7 @@ export default function PatientExercises() {
                                 {ex.difficulty}
                               </span>
                             )}
+                            <PrivacyClaimBadges badges={assignmentPrivacyBadges} variant="card" className="mt-2" />
                           </div>
 
                           {ex.ai_monitoring_effective && (
@@ -661,6 +667,7 @@ export default function PatientExercises() {
 
             <div>
               <h3 className="text-lg font-bold text-slate-900 leading-snug">{previewEx.exercise_name}</h3>
+              <PrivacyClaimBadges badges={assignmentPrivacyBadges} variant="card" className="mt-2" />
               <p className="text-sm text-slate-500 mt-1 capitalize">
                 {[previewEx.body_area || previewEx.category, previewEx.difficulty].filter(Boolean).join(' · ')}
               </p>

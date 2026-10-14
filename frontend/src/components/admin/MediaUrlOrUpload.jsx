@@ -72,6 +72,7 @@ export default function MediaUrlOrUpload({
   accent = 'violet',
   onClear,
   previewClass: customPreviewClass,
+  urlLabel,
 }) {
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -140,8 +141,19 @@ export default function MediaUrlOrUpload({
       onClear();
       return;
     }
-    onUrlChange('');
+    handleUrlUpdate('');
   };
+
+  const linkLabel = urlLabel || (preview === 'video' ? 'Video URL / link' : preview === 'audio' ? 'Audio URL / link' : 'Image URL / link');
+  const acceptLabel = accept
+    ? accept
+        .split(',')
+        .map((part) => part.trim().replace(/^\./, '').split('/').pop().toUpperCase())
+        .filter(Boolean)
+        .join(', ')
+    : preview === 'video'
+      ? 'MP4, WEBM, MOV'
+      : 'JPG, PNG, WEBP';
 
   return (
     <div
@@ -193,15 +205,15 @@ export default function MediaUrlOrUpload({
       <div className="grid md:grid-cols-[1fr_auto_auto] gap-3 items-center">
         <div>
           <label className="block text-xs font-semibold text-slate-600 mb-1">
-            Image URL / Link
+            {linkLabel}
           </label>
           <div className="relative">
             <input
               type="url"
               className="input-field text-sm !py-2 !pl-9 pr-3 w-full bg-white"
-              placeholder="https://example.com/image.webp"
-              value={urlValue || ''}
-              onChange={(e) => onUrlChange(e.target.value)}
+              placeholder={preview === 'video' ? 'https://example.com/video.mp4' : 'https://example.com/image.webp'}
+              value={currentUrl}
+              onChange={(e) => handleUrlUpdate(e.target.value)}
             />
             <FaIcon
               icon="fa-link"
@@ -241,8 +253,8 @@ export default function MediaUrlOrUpload({
       
       <div className="flex flex-wrap items-center justify-between text-[11px] text-slate-500 pt-0.5">
         <span className="inline-flex items-center gap-1.5">
-          <FaIcon icon="fa-file-image" className="text-slate-400" />
-          Supported formats: {accept ? accept.replaceAll('image/', '').toUpperCase() : 'JPG, PNG, WEBP'}
+          <FaIcon icon={preview === 'video' ? 'fa-file-video' : 'fa-file-image'} className="text-slate-400" />
+          Supported formats: {acceptLabel}
         </span>
         <span>Max size: {maxMb} MB</span>
       </div>

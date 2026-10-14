@@ -14,6 +14,7 @@ import CareEcosystemSection from '../components/ecosystem/CareEcosystemSection';
 import PhysioTeamSection from '../components/physioTeam/PhysioTeamSection';
 import OrgLogosSection from '../components/orgLogos/OrgLogosSection';
 import EnrollmentSection from '../components/enrollment/EnrollmentSection';
+import TestimonialMediaGallery from '../components/testimonials/TestimonialMediaGallery';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import { HEALTHCARE_IMAGES } from '../utils/healthcareImages';
 import { bookTelePhysioUrl, withPainAreaParams } from '../utils/bookUrl';
@@ -25,6 +26,8 @@ import { whatsappChatUrl } from '../utils/whatsapp';
 import {
   TELEPHYSIO_DEFAULTS,
   TELEPHYSIO_SEO,
+  TELE_REHAB_PAGE_NAME_DEFAULT,
+  applyTeleRehabPageName,
   mergeTelePhysioSections,
 } from '../constants/telephysioDefaults';
 import { TELE_PAIN_MAP_DEFAULTS, isPainMapEnabled, painMapSectionProps, visiblePainAreas } from '../constants/painMapDefaults';
@@ -32,23 +35,43 @@ import { isRoadmapEnabled } from '../constants/recoveryRoadmapDefaults';
 import { isEcosystemEnabled } from '../constants/careEcosystemDefaults';
 import { isEnrolEnabled } from '../constants/enrollmentDefaults';
 import { isSectionOn } from '../constants/sectionVisibility';
+import { usePrivacyBadges } from '../hooks/usePrivacyBadges';
+import PrivacyClaimBadges from '../components/privacy/PrivacyClaimBadges';
+
+function pageContent(raw) {
+  const sections = mergeTelePhysioSections(raw?.sections || {});
+  const pageName =
+    String(raw?.page_name || sections.page_name || TELE_REHAB_PAGE_NAME_DEFAULT).trim() ||
+    TELE_REHAB_PAGE_NAME_DEFAULT;
+  const next = {
+    ...TELEPHYSIO_DEFAULTS,
+    ...(raw || {}),
+    page_name: pageName,
+    sections: { ...sections, page_name: pageName },
+  };
+  return applyTeleRehabPageName(next, pageName);
+}
 
 export default function TelePhysioPage() {
   const { whatsapp } = useContact();
-  const [data, setData] = useState(TELEPHYSIO_DEFAULTS);
+  const [data, setData] = useState(() => pageContent(TELEPHYSIO_DEFAULTS));
   const [loading, setLoading] = useState(true);
   const [activeStep, setActiveStep] = useState(null);
   const [faqOpen, setFaqOpen] = useState({ 0: true, 1: true });
+  const pageName =
+    String(data.page_name || data.sections?.page_name || TELE_REHAB_PAGE_NAME_DEFAULT).trim() ||
+    TELE_REHAB_PAGE_NAME_DEFAULT;
+  const heroPrivacyBadges = usePrivacyBadges('hero');
 
   // Analytics: one service_view per visit once content is shown; plan_view per pricing card when scrolled into view.
   useEffect(() => {
     if (loading) return;
     trackEvent(ANALYTICS_EVENTS.SERVICE_VIEW, {
       item_id: 'telephysio',
-      item_name: 'TeleRehab / TelePhysio',
+      item_name: pageName,
       service_type: 'telephysio',
     });
-  }, [loading]);
+  }, [loading, pageName]);
 
   const pricingRef = useOnceVisible(() => {
     (data.sections?.pricing_cards || []).forEach((pkg, i) => {
@@ -65,13 +88,9 @@ export default function TelePhysioPage() {
       .settings()
       .then((res) => {
         const d = res.data ?? res;
-        setData({
-          ...TELEPHYSIO_DEFAULTS,
-          ...d,
-          sections: mergeTelePhysioSections(d?.sections || {}),
-        });
+        setData(pageContent(d));
       })
-      .catch(() => setData(TELEPHYSIO_DEFAULTS))
+      .catch(() => setData(pageContent(TELEPHYSIO_DEFAULTS)))
       .finally(() => setLoading(false));
   }, []);
 
@@ -117,7 +136,7 @@ export default function TelePhysioPage() {
       [
         breadcrumbSchema([
           { label: 'Home', href: '/' },
-          { label: 'TelePhysio by Myoreset' },
+          { label: pageName },
         ]),
         medicalWebPageSchema({
           name: data.hero_title || TELEPHYSIO_DEFAULTS.hero_title,
@@ -128,12 +147,12 @@ export default function TelePhysioPage() {
         faqPageSchema(faqs),
         // Service + plan schema from the live CMS pricing cards (cards without a real price are skipped).
         serviceOfferSchema({
-          name: 'TelePhysio online physiotherapy consultation',
+          name: `${pageName} online physiotherapy consultation`,
           serviceType: 'Online physiotherapy consultation',
           description: data.seo_description || TELEPHYSIO_SEO.description,
           url: typeof window !== 'undefined' ? `${window.location.origin}/telephysio` : undefined,
           areaServed: ['India'],
-          catalogName: 'TelePhysio pricing',
+          catalogName: `${pageName} pricing`,
           offers: (s.pricing_cards || []).map((c) => ({
             name: c?.title,
             price: c?.price,
@@ -141,7 +160,7 @@ export default function TelePhysioPage() {
           })),
         }),
       ].filter(Boolean),
-    [data.hero_title, data.seo_description, faqs, s.pricing_cards]
+    [data.hero_title, data.seo_description, faqs, s.pricing_cards, pageName]
   );
 
   const toggleFaq = (index) => {
@@ -150,11 +169,11 @@ export default function TelePhysioPage() {
 
   const whatsappHref = useMemo(() => {
     return (
-      whatsappChatUrl(whatsapp, 'Hello! I would like to inquire about TelePhysio online physiotherapy consultation.') ||
+      whatsappChatUrl(whatsapp, `Hello! I would like to inquire about ${pageName} online physiotherapy consultation.`) ||
       'https://wa.me/918448945434?text=' +
-        encodeURIComponent('Hello! I would like to inquire about TelePhysio online physiotherapy consultation.')
+        encodeURIComponent(`Hello! I would like to inquire about ${pageName} online physiotherapy consultation.`)
     );
-  }, [whatsapp]);
+  }, [whatsapp, pageName]);
 
   if (loading) {
     return (
@@ -182,7 +201,7 @@ export default function TelePhysioPage() {
             <div className="min-w-0">
               <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider bg-white/15 border border-white/20 px-3.5 py-1.5 rounded-full mb-4 backdrop-blur-xs">
                 <FaIcon icon="fa-video" className="text-white" />
-                <span>{s.hero_badge || 'TelePhysio by Myoreset'}</span>
+                <span>{s.hero_badge || pageName}</span>
               </div>
               <h1 className="text-[1.85rem] sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-[1.15]">
                 {data.hero_title || TELEPHYSIO_DEFAULTS.hero_title}
@@ -194,11 +213,11 @@ export default function TelePhysioPage() {
               <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5">
                 <Link
                   to={s.hero_cta_link || bookTelePhysioUrl()}
-                  onClick={() => trackCta({ id: 'tele_hero_book', label: s.hero_cta_label || 'Book a TelePhysio Session', href: s.hero_cta_link || bookTelePhysioUrl() })}
+                  onClick={() => trackCta({ id: 'tele_hero_book', label: s.hero_cta_label || `Book a ${pageName} Session`, href: s.hero_cta_link || bookTelePhysioUrl() })}
                   className="btn-primary tele-btn-book font-bold py-3 px-6 text-center rounded-xl transition-all active:scale-[0.98]"
                 >
                   <FaIcon icon="fa-video" className="mr-2 text-white" />
-                  {s.hero_cta_label || 'Book a TelePhysio Session'}
+                  {s.hero_cta_label || `Book a ${pageName} Session`}
                 </Link>
                 <a
                   href={whatsappHref}
@@ -222,6 +241,7 @@ export default function TelePhysioPage() {
                   </li>
                 ))}
               </ul>
+              <PrivacyClaimBadges badges={heroPrivacyBadges} variant="hero" className="mt-6" />
             </div>
 
             
@@ -229,7 +249,7 @@ export default function TelePhysioPage() {
               <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/25 aspect-[4/3] max-h-[440px] bg-slate-900">
                 <img
                   src={heroImage}
-                  alt="TelePhysio by Myoreset online video consultation with a qualified physiotherapist"
+                  alt={`${pageName} online video consultation with a qualified physiotherapist`}
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
@@ -307,7 +327,7 @@ export default function TelePhysioPage() {
                 <FaIcon icon="fa-circle-info" /> Clinical Overview
               </span>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                {s.what_heading || 'What Is TelePhysio?'}
+                {s.what_heading || `What Is ${pageName}?`}
               </h2>
               <p className="mt-4 text-base text-slate-600 leading-relaxed">
                 {s.what_body}
@@ -315,7 +335,7 @@ export default function TelePhysioPage() {
 
               <div className="tele-card-header-soft mt-6 p-5 rounded-2xl border border-logo-200">
                 <h3 className="text-sm font-bold text-logo-800 uppercase tracking-wider mb-3">
-                  {s.what_use_cases_title || 'TelePhysio is especially effective for:'}
+                  {s.what_use_cases_title || `${pageName} is especially effective for:`}
                 </h3>
                 <div className="grid sm:grid-cols-2 gap-2.5">
                   {(s.what_use_cases || []).map((uc, i) => (
@@ -423,7 +443,7 @@ export default function TelePhysioPage() {
               4-Step Process
             </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">
-              {s.how_heading || 'How TelePhysio Works'}
+              {s.how_heading || `How ${pageName} Works`}
             </h2>
             <p className="text-sm sm:text-base text-slate-600 mt-2">
               {s.how_subheading}
@@ -470,7 +490,7 @@ export default function TelePhysioPage() {
               Session Breakdown
             </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">
-              {s.session_heading || 'What Happens During Your TelePhysio Session?'}
+              {s.session_heading || `What Happens During Your ${pageName} Session?`}
             </h2>
             <p className="text-sm sm:text-base text-slate-600 mt-2">
               {s.session_subheading}
@@ -516,7 +536,7 @@ export default function TelePhysioPage() {
               Key Advantages
             </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">
-              {s.benefits_heading || 'Why Choose TelePhysio?'}
+              {s.benefits_heading || `Why Choose ${pageName}?`}
             </h2>
             <p className="text-sm sm:text-base text-slate-600 mt-2">
               {s.benefits_subheading}
@@ -685,10 +705,10 @@ export default function TelePhysioPage() {
                 <div className="mt-8 pt-4">
                   <Link
                     to={pkg.cta_link || bookTelePhysioUrl()}
-                    onClick={() => trackCta({ id: `tele_plan_${i + 1}_book`, label: pkg.cta_label || 'Book TelePhysio', href: pkg.cta_link || bookTelePhysioUrl() })}
+                    onClick={() => trackCta({ id: `tele_plan_${i + 1}_book`, label: pkg.cta_label || `Book ${pageName}`, href: pkg.cta_link || bookTelePhysioUrl() })}
                     className="btn-primary tele-btn-book w-full block text-center font-bold py-3 rounded-xl transition-all"
                   >
-                    {pkg.cta_label || 'Book TelePhysio'}
+                    {pkg.cta_label || `Book ${pageName}`}
                   </Link>
                 </div>
               </div>
@@ -719,19 +739,20 @@ export default function TelePhysioPage() {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
               {testimonials.map((t, idx) => (
                 <div
-                  key={idx}
-                  className="rounded-2xl border border-slate-200 bg-white p-6 flex flex-col justify-between shadow-xs"
+                  key={`${t.name || 'story'}-${idx}`}
+                  className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 flex flex-col justify-between shadow-xs min-w-0"
                 >
-                  <div>
-                    <div className="flex items-center gap-1 text-amber-400 text-xs mb-3">
-                      {[...Array(t.rating || 5)].map((_, r) => (
+                  <div className="min-w-0">
+                    <TestimonialMediaGallery media={t.media} name={t.name} />
+                    <div className="flex items-center gap-1 text-amber-400 text-xs mb-3" aria-label={`${t.rating || 5} out of 5 stars`}>
+                      {[...Array(Math.min(5, Number(t.rating) || 5))].map((_, r) => (
                         <FaIcon key={r} icon="fa-star" />
                       ))}
                     </div>
-                    <p className="text-xs sm:text-sm text-slate-700 italic leading-relaxed">
+                    <p className="text-sm text-slate-700 italic leading-relaxed">
                       &ldquo;{t.quote}&rdquo;
                     </p>
                   </div>
@@ -809,11 +830,11 @@ export default function TelePhysioPage() {
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5">
             <Link
               to={s.final_primary_cta_link || bookTelePhysioUrl()}
-              onClick={() => trackCta({ id: 'tele_final_book', label: s.final_primary_cta_label || 'Book a TelePhysio Session', href: s.final_primary_cta_link || bookTelePhysioUrl() })}
+              onClick={() => trackCta({ id: 'tele_final_book', label: s.final_primary_cta_label || `Book a ${pageName} Session`, href: s.final_primary_cta_link || bookTelePhysioUrl() })}
               className="btn-primary tele-btn-book w-full sm:w-auto font-bold py-3.5 px-8 rounded-xl transition-all active:scale-[0.98]"
             >
               <FaIcon icon="fa-video" className="mr-2 text-white" />
-              {s.final_primary_cta_label || 'Book a TelePhysio Session'}
+              {s.final_primary_cta_label || `Book a ${pageName} Session`}
             </Link>
             <a
               href={whatsappHref}

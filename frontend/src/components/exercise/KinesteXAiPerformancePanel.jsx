@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import FaIcon from '../FaIcon';
 import GlassModal, { GlassModalBody, GlassModalFooter, GlassModalHeader } from '../GlassModal';
 import { kinestex } from '../../services/api';
+import { formatSessionInstant } from '../../utils/sessionTime';
 import KinesteXMovementAnalysisReport from './KinesteXMovementAnalysisReport';
 import KinesteXSessionEventDetails from './KinesteXSessionEventDetails.jsx';
 
@@ -12,16 +13,13 @@ function na(value) {
 }
 
 function formatWhen(value) {
-  if (!value) return 'N/A';
-  const d = new Date(String(value).replace(' ', 'T'));
-  if (Number.isNaN(d.getTime())) return String(value);
-  return d.toLocaleString('en-IN', {
+  return formatSessionInstant(value, 'en-IN', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-  });
+  }, 'N/A');
 }
 
 function statusClass(status) {

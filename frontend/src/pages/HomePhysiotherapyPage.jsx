@@ -686,14 +686,14 @@ export default function HomePhysiotherapyPage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-pad">
         <SectionHead eyebrow="Patient stories" heading={s.testimonials_heading} />
         <div className="grid md:grid-cols-2 gap-4 mb-5">
-          {featuredQuotes.map((t) => (
-            <QuoteCard key={t.name} quote={t} featured />
+          {featuredQuotes.map((t, idx) => (
+            <QuoteCard key={`${t.name || 'story'}-${idx}`} quote={t} featured />
           ))}
         </div>
         {carouselQuotes.length > 0 && (
-          <div className="mobile-scroll-x md:grid md:grid-cols-3 md:gap-4">
-            {carouselQuotes.map((t) => (
-              <div key={t.name} className="mobile-scroll-item min-w-[260px]">
+          <div className="mobile-scroll-x md:grid md:grid-cols-2 xl:grid-cols-3 md:gap-4">
+            {carouselQuotes.map((t, idx) => (
+              <div key={`${t.name || 'story'}-${idx}`} className="mobile-scroll-item min-w-0">
                 <QuoteCard quote={t} />
               </div>
             ))}

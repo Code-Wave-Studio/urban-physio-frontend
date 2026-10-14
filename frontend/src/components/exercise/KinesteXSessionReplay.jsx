@@ -1,19 +1,31 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { buildKinesteXLaunchPostData } from '../../services/kinestexSessionBoundary';
+import {
+  buildKinesteXLaunchPostData,
+  isKinesteXReplaySessionId,
+  kinesteXStyleName,
+} from '../../services/kinestexSessionBoundary';
 
 const DEFAULT_ORIGIN = 'https://ai.kinestex.com';
+const LAUNCH_WAIT_MS = 20000;
 
 /**
- * Official KinesteX post-session movement / skeleton replay.
- * Docs: route `session/{id}` with a server-minted launch session + original userId
- * (https://www.kinestex.com/docs/guides/guide-completed-workouts).
- * SDK 0.0.3 has no createCustomComponentView — HTML/JS iframe + postMessage used.
- * Does not fabricate landmarks or replay URLs.
+ * Official KinesteX post-session 3D / skeletal replay.
+ * The player route is `session/{numericId}`. Landmark frames, timestamps, and the
+ * skeletal model stay in KinesteX (downloaded by that page when has_motion_recording
+ * is set). This host only supplies a server-minted launch session and the original userId.
+ * Docs: https://www.kinestex.com/docs/guides/guide-completed-workouts
+ * The current web player reads launch fields from the postMessage object itself.
+ * It does not read a nested customParameters bag, and it compares style to "light"/"dark".
  */
 export default function KinesteXSessionReplay({ sdk, onExit, onError, className = '' }) {
   const iframeRef = useRef(null);
+  const launchedRef = useRef(false);
+  const onExitRef = useRef(onExit);
+  const onErrorRef = useRef(onError);
   const [loading, setLoading] = useState(true);
   const [frameError, setFrameError] = useState('');
+  onExitRef.current = onExit;
+  onErrorRef.current = onError;
 
   const origin = useMemo(() => {
     const base = String(sdk?.base_url || DEFAULT_ORIGIN).replace(/\/$/, '');
@@ -24,32 +36,37 @@ export default function KinesteXSessionReplay({ sdk, onExit, onError, className 
     }
   }, [sdk?.base_url]);
 
-  const providerSessionId = sdk?.provider_session_id
+  const providerSessionId = isKinesteXReplaySessionId(sdk?.provider_session_id)
     ? String(sdk.provider_session_id).trim()
     : '';
 
+  const launchPayload = useMemo(() => buildKinesteXLaunchPostData(sdk), [sdk]);
+
   const src = useMemo(() => {
-    if (!providerSessionId) return '';
+    if (!providerSessionId || !launchPayload) return '';
     const route = sdk?.route
       ? String(sdk.route).replace(/^\//, '')
       : `session/${encodeURIComponent(providerSessionId)}`;
-    const style = sdk?.style?.style ? String(sdk.style.style) : 'light';
+    const style = kinesteXStyleName(launchPayload.style, 'light');
     return `${origin}/${route}${route.includes('?') ? '&' : '?'}style=${encodeURIComponent(style)}`;
-  }, [origin, providerSessionId, sdk?.route, sdk?.style]);
+  }, [origin, providerSessionId, launchPayload, sdk?.route]);
 
   const postCredentials = () => {
     const win = iframeRef.current?.contentWindow;
-    const payload = buildKinesteXLaunchPostData(sdk);
-    if (!win || !payload) return;
+    if (!win || !launchPayload || launchedRef.current) return;
     try {
-      win.postMessage(payload, origin);
+      win.postMessage(launchPayload, origin);
     } catch {
       /* ignore cross-origin post failures */
     }
   };
 
   useEffect(() => {
+    launchedRef.current = false;
+    setLoading(true);
+    setFrameError('');
     if (!src) return undefined;
+
     const onMessage = (event) => {
       if (event.origin !== origin) return;
       let data = event.data;
@@ -60,24 +77,44 @@ export default function KinesteXSessionReplay({ sdk, onExit, onError, className 
       }
       const type = data?.type;
       if (!type) return;
-      if (type === 'kinestex_loaded' || type === 'kinestex_launched') {
-        setLoading(false);
+      if (type === 'kinestex_loaded') {
         postCredentials();
       }
+      if (type === 'kinestex_launched') {
+        launchedRef.current = true;
+        setLoading(false);
+        setFrameError('');
+      }
       if (type === 'exit_kinestex' || type === 'workout_exit_request') {
-        onExit?.();
+        onExitRef.current?.();
       }
       if (type === 'error_occurred') {
         const msg = 'Movement replay could not be loaded for this session.';
+        launchedRef.current = true;
         setFrameError(msg);
         setLoading(false);
-        onError?.(msg, data);
+        onErrorRef.current?.(msg, data);
       }
     };
     window.addEventListener('message', onMessage);
-    return () => window.removeEventListener('message', onMessage);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- postCredentials closes over latest sdk
-  }, [origin, src, onExit, onError, sdk]);
+    const retry = window.setInterval(() => {
+      if (!launchedRef.current) postCredentials();
+    }, 1500);
+    const giveUp = window.setTimeout(() => {
+      if (launchedRef.current) return;
+      const msg = 'Movement replay did not finish loading. Try again in a moment.';
+      setFrameError(msg);
+      setLoading(false);
+      onErrorRef.current?.(msg);
+    }, LAUNCH_WAIT_MS);
+    return () => {
+      window.removeEventListener('message', onMessage);
+      window.clearInterval(retry);
+      window.clearTimeout(giveUp);
+    };
+    // Callbacks are read from refs so a parent re-render does not restart the launch timer.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [origin, src, launchPayload]);
 
   if (!providerSessionId || !src) {
     return (
@@ -106,10 +143,7 @@ export default function KinesteXSessionReplay({ sdk, onExit, onError, className 
         style={{ minHeight: 'min(70vh, 520px)', height: 'min(70vh, 520px)', aspectRatio: '16 / 10' }}
         allow="autoplay; clipboard-read; clipboard-write; fullscreen"
         allowFullScreen
-        onLoad={() => {
-          setLoading(false);
-          postCredentials();
-        }}
+        onLoad={() => postCredentials()}
       />
     </div>
   );

@@ -515,14 +515,12 @@
     overflow: hidden;
   }
 
-  .kinestex-session-stage.is-hidden {
+  /* Keep the iframe in layout while motion uploads. visibility:hidden throttles
+     the provider frame and drops the skeletal recording. */
+  .kinestex-session-result.is-overlay {
     position: absolute;
     inset: 0;
-    flex: none;
-    width: 100%;
-    height: 100%;
-    visibility: hidden;
-    pointer-events: none;
+    z-index: 4;
   }
 
   .kinestex-session-stage > div {
@@ -4291,6 +4289,74 @@
 
   .fab-rail-btn:active {
     transform: scale(0.96);
+  }
+
+  .fab-book-option-slot {
+    display: grid;
+    grid-template-rows: 1fr;
+    min-height: 0;
+  }
+
+  .fab-book-option-slot > .fab-book-option {
+    min-height: 0;
+  }
+
+  /* First-visit reveal / coordinated collapse: items enter and leave one at a time. */
+  .fab-book-wrap.is-sequenced .fab-book-menu {
+    gap: 0;
+  }
+
+  .fab-book-wrap.is-sequenced.is-open .fab-book-menu {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: none;
+    transform: none;
+    transition: none;
+  }
+
+  .fab-book-wrap.is-sequenced .fab-book-option-slot {
+    grid-template-rows: 0fr;
+    opacity: 0;
+    margin-top: 0;
+    pointer-events: none;
+    overflow: hidden;
+    transition:
+      grid-template-rows 0.28s ease,
+      opacity 0.24s ease,
+      margin-top 0.28s ease;
+  }
+
+  .fab-book-wrap.is-sequenced .fab-book-option-slot > .fab-book-option {
+    overflow: hidden;
+    transform: translateY(6px);
+    transition: transform 0.28s ease;
+  }
+
+  .fab-book-wrap.is-sequenced .fab-book-option-slot.is-in {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .fab-book-wrap.is-sequenced .fab-book-option-slot.is-in + .fab-book-option-slot.is-in {
+    margin-top: 0.375rem;
+  }
+
+  .fab-book-wrap.is-sequenced .fab-book-option-slot.is-in > .fab-book-option {
+    transform: translateY(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fab,
+    .fab-rail-btn,
+    .fab-rail-label,
+    .fab-book-menu,
+    .fab-book-option,
+    .fab-book-option-slot,
+    .fab-scroll-top {
+      transition: none !important;
+      animation: none !important;
+    }
   }
 }
 

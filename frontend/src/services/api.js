@@ -576,6 +576,9 @@ export const admin = {
   updateTelePhysioSettings: (data) => api.put('/admin/telephysio-settings', data),
   kinestexSettings: () => api.get('/admin/kinestex-settings'),
   updateKinesteXSettings: (data) => api.put('/admin/kinestex-settings', data),
+  kinestexBulkExerciseMap: (data) => api.post('/admin/kinestex-exercise-map', data),
+  privacyBadgeSettings: () => api.get('/admin/privacy-badge-settings'),
+  updatePrivacyBadgeSettings: (data) => api.put('/admin/privacy-badge-settings', data),
   offersSettings: () => api.get('/admin/offers-settings'),
   updateOffersSettings: (data) => api.put('/admin/offers-settings', data),
   offersSubmissions: (params) => api.get('/admin/offers-submissions', { params }),
@@ -1103,8 +1106,21 @@ export const telephysio = {
   settings: () => freshCmsGet('/telephysio/settings'),
 };
 
+/** Tele-Rehab dashboard. Server scopes every row to the signed-in user. */
+export const teleRehab = {
+  dashboard: (params) => api.get('/tele-rehab/dashboard', { params }),
+};
+
+export const privacyBadges = {
+  list: () => api.get('/privacy-badges'),
+};
+
 export const kinestex = {
   settings: () => api.get('/kinestex/settings'),
+  /** Catalogue exercise + caller assignment. No launch session, provider id, or API key. */
+  libraryEligibility: (exerciseId) => api.get('/kinestex/library/eligibility', { params: { exercise_id: exerciseId } }),
+  /** Patient-only: start Custom Workout for an assigned AI-enabled library exercise. */
+  prepareLibrarySession: (data) => api.post('/kinestex/library/prepare', data),
   /** Patient-only: validate eligibility and return official SDK Custom Workout init payload. Optional appointment_id scopes a consultation start. */
   prepareSession: (data) => api.post('/kinestex/session/prepare', data),
   /** Patient-only: persist Phase 4 session result envelope */

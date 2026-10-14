@@ -14,6 +14,7 @@ import {
   isPhysioComplete,
 } from '../../constants/physioTeamDefaults';
 import toast from 'react-hot-toast';
+import { useTeleRehabPageName } from '../../hooks/useTeleRehabPageName';
 
 function specialtiesToText(value) {
   if (Array.isArray(value)) return value.join(', ');
@@ -21,6 +22,7 @@ function specialtiesToText(value) {
 }
 
 export default function AdminPhysioTeam() {
+  const telePageName = useTeleRehabPageName();
   const [enabled, setEnabled] = useState(true);
   const [heading, setHeading] = useState(PHYSIO_TEAM_COPY.heading);
   const [highlight, setHighlight] = useState(PHYSIO_TEAM_COPY.heading_highlight);
@@ -134,7 +136,7 @@ export default function AdminPhysioTeam() {
           sort_order: i,
         })),
       });
-      toast.success('Physiotherapist section published on Home Physiotherapy and TelePhysio');
+      toast.success(`Physiotherapist section published on Home Physiotherapy and ${telePageName}`);
       load();
     } catch (err) {
       toast.error(err.response?.data?.message || err.message || 'Save failed');
@@ -156,7 +158,7 @@ export default function AdminPhysioTeam() {
             </Link>{' '}
             and{' '}
             <Link to="/telephysio" target="_blank" className="text-teal-700 font-semibold hover:underline">
-              TelePhysio by Myoreset
+              {telePageName}
             </Link>
             . Changes here appear on both pages automatically.
           </p>
@@ -178,7 +180,7 @@ export default function AdminPhysioTeam() {
               />
               <span>
                 <span className="font-semibold text-slate-900 block">Show this section on both pages</span>
-                <span className="text-xs text-slate-500">When off, the whole block is hidden on Home Physiotherapy and TelePhysio.</span>
+                <span className="text-xs text-slate-500">When off, the whole block is hidden on Home Physiotherapy and {telePageName}.</span>
               </span>
             </label>
 
@@ -441,7 +443,7 @@ export default function AdminPhysioTeam() {
                 Preview Home Physiotherapy
               </Link>
               <Link to="/telephysio" target="_blank" className="btn-outline text-sm">
-                Preview TelePhysio
+                Preview {telePageName}
               </Link>
             </div>
           </form>

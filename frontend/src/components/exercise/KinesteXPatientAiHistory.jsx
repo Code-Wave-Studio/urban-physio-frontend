@@ -10,11 +10,10 @@ import KinesteXWorkoutOverview, {
 } from './KinesteXWorkoutOverview';
 import KinesteXMovementAnalysisReport from './KinesteXMovementAnalysisReport';
 
+import { formatSessionInstant } from '../../utils/sessionTime';
+
 function formatWhen(value) {
-  if (!value) return '—';
-  const d = new Date(String(value).replace(' ', 'T'));
-  if (Number.isNaN(d.getTime())) return String(value);
-  return d.toLocaleString('en-IN', {
+  return formatSessionInstant(value, 'en-IN', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -24,17 +23,11 @@ function formatWhen(value) {
 }
 
 function formatDate(value) {
-  if (!value) return '—';
-  const d = new Date(String(value).replace(' ', 'T'));
-  if (Number.isNaN(d.getTime())) return String(value);
-  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  return formatSessionInstant(value, 'en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 function formatTime(value) {
-  if (!value) return '—';
-  const d = new Date(String(value).replace(' ', 'T'));
-  if (Number.isNaN(d.getTime())) return String(value);
-  return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  return formatSessionInstant(value, 'en-IN', { hour: '2-digit', minute: '2-digit' });
 }
 
 function statusClass(status) {

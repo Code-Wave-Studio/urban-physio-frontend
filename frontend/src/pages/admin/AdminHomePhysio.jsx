@@ -4,13 +4,15 @@ import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import FaIcon from '../../components/FaIcon';
 import MediaUrlOrUpload from '../../components/admin/MediaUrlOrUpload';
 import { CmsField, CmsListEditor, CmsPanel } from '../../components/admin/CmsFormKit';
+import TestimonialItemsEditor from '../../components/admin/TestimonialItemsEditor';
+import { stripBlankTestimonialMedia, testimonialMediaError } from '../../utils/testimonialMedia';
 import CommunityPreviewEditor from '../../components/admin/CommunityPreviewEditor';
 import PainMapEditor from '../../components/admin/PainMapEditor';
 import RecoveryRoadmapEditor from '../../components/admin/RecoveryRoadmapEditor';
 import CareEcosystemEditor from '../../components/admin/CareEcosystemEditor';
 import EnrollmentEditor from '../../components/admin/EnrollmentEditor';
 import SectionVisibilityToggle from '../../components/admin/SectionVisibilityToggle';
-import { admin, uploadCmsImage } from '../../services/api';
+import { admin, uploadCmsImage, uploadCmsVideo } from '../../services/api';
 import { HOME_PHYSIO_DEFAULTS, mergeHomePhysioSections } from '../../constants/homePhysioDefaults';
 import { isSectionOn } from '../../constants/sectionVisibility';
 import {
@@ -115,9 +117,21 @@ export default function AdminHomePhysio() {
 
   const save = async (e) => {
     e.preventDefault();
+    const mediaError = testimonialMediaError(form.sections?.testimonials);
+    if (mediaError) {
+      toast.error(mediaError);
+      return;
+    }
+    const payload = {
+      ...form,
+      sections: {
+        ...form.sections,
+        testimonials: stripBlankTestimonialMedia(form.sections?.testimonials),
+      },
+    };
     setSaving(true);
     try {
-      const saved = await admin.updateHomePhysioSettings(form);
+      const saved = await admin.updateHomePhysioSettings(payload);
       const d = saved?.data && typeof saved.data === 'object' ? saved.data : null;
       if (d?.sections) {
         setForm({
@@ -630,16 +644,17 @@ export default function AdminHomePhysio() {
               <CmsField label="Heading">
                 <input className="input-field" value={s.testimonials_heading} onChange={(e) => setSection('testimonials_heading', e.target.value)} />
               </CmsField>
-              <CmsListEditor
+              <TestimonialItemsEditor
                 items={s.testimonials}
                 onChange={(v) => setSection('testimonials', v)}
-                addLabel="Add testimonial"
-                fields={[
-                  { key: 'name', label: 'Name' },
-                  { key: 'city', label: 'Locality' },
-                  { key: 'rating', label: 'Rating (1–5)' },
-                  { key: 'text', label: 'Quote', type: 'textarea' },
-                ]}
+                quoteKey="text"
+                quoteLabel="Quote"
+                placeKey="city"
+                placeLabel="Locality"
+                uploadImage={uploadCmsImage}
+                uploadVideo={uploadCmsVideo}
+                pageLabel="Home Physiotherapy"
+                accent="orange"
               />
             </CmsPanel>
             <CmsPanel title="FAQs" icon="fa-circle-question">

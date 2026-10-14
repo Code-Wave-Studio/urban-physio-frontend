@@ -141,6 +141,8 @@ export default function ClinicExerciseRehabPage() {
   const [libQ, setLibQ] = useState('');
   const [media, setMedia] = useState({ exercises: [], assets: [], providers: [] });
   const [plans, setPlans] = useState([]);
+  const [plansLoading, setPlansLoading] = useState(false);
+  const [planActionId, setPlanActionId] = useState(null);
   const [exModal, setExModal] = useState(false);
   const [exForm, setExForm] = useState(EMPTY_EX);
   const [editingEx, setEditingEx] = useState(null);
@@ -203,13 +205,24 @@ export default function ClinicExerciseRehabPage() {
       .catch(() => setKinestexOn(false));
   }, []);
 
+  const loadPlans = useCallback(async () => {
+    if (!clinicId) return;
+    setPlansLoading(true);
+    try {
+      const r = await exercisePrescriptions.list();
+      setPlans(r.data || []);
+    } catch (e) {
+      setPlans([]);
+      toast.error(e.message || 'Could not load exercise plans');
+    } finally {
+      setPlansLoading(false);
+    }
+  }, [clinicId]);
+
   useEffect(() => {
     if (!clinicId || (section !== 'hep' && section !== 'progress')) return;
-    exercisePrescriptions
-      .list()
-      .then((r) => setPlans(r.data || []))
-      .catch(() => setPlans([]));
-  }, [clinicId, section]);
+    loadPlans();
+  }, [clinicId, section, loadPlans]);
 
   useEffect(() => {
     if (!clinicId || section !== 'media') return;
@@ -411,6 +424,18 @@ export default function ClinicExerciseRehabPage() {
       toast.error('Select a patient');
       return;
     }
+    if (!assignForm.title.trim()) {
+      toast.error('Program title is required');
+      return;
+    }
+    if (!assignForm.reps || !String(assignForm.reps).trim()) {
+      toast.error('Reps is required');
+      return;
+    }
+    if (Number(assignForm.sets) < 1) {
+      toast.error('Sets must be at least 1');
+      return;
+    }
     setAssignSaving(true);
     try {
       const payload = {
@@ -453,13 +478,29 @@ export default function ClinicExerciseRehabPage() {
   };
 
   const clonePlan = async (rx) => {
+    setPlanActionId(rx.id);
     try {
       await exercisePrescriptions.clone(rx.id);
       toast.success('Program cloned as draft');
-      const r = await exercisePrescriptions.list();
-      setPlans(r.data || []);
+      await loadPlans();
     } catch (err) {
       toast.error(err.message || 'Clone failed');
+    } finally {
+      setPlanActionId(null);
+    }
+  };
+
+  const deactivatePlan = async (rx) => {
+    if (!window.confirm(`Deactivate "${rx.title}"? The patient will stop seeing it. Completed sessions stay on record.`)) return;
+    setPlanActionId(rx.id);
+    try {
+      await exercisePrescriptions.cancel(rx.id);
+      toast.success('Plan deactivated');
+      await loadPlans();
+    } catch (err) {
+      toast.error(err.message || 'Could not deactivate the plan');
+    } finally {
+      setPlanActionId(null);
     }
   };
 
@@ -719,27 +760,34 @@ export default function ClinicExerciseRehabPage() {
               </Link>
             </div>
             <div className="grid gap-3">
-              {plans.slice(0, 40).map((rx) => (
+              {plansLoading && [1, 2, 3].map((i) => <div key={i} className="glass-card h-20 animate-pulse" />)}
+              {!plansLoading && plans.slice(0, 40).map((rx) => (
                 <div key={rx.id} className="glass-card !p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <p className="font-semibold text-slate-900">{rx.title}</p>
                     <p className="text-xs text-slate-500 mt-0.5">
                       {rx.patient_first_name} {rx.patient_last_name} · {rx.status}
                       {rx.publish_status ? ` · ${rx.publish_status}` : ''}
+                      {rx.exercise_count != null ? ` · ${rx.exercise_count} exercises` : ''}
                       {rx.progress_today ? ` · today ${rx.progress_today.percent}%` : ''}
                     </p>
                   </div>
-                  <div className="flex gap-2">
-                    <button type="button" className="btn-outline !py-1.5 !px-3 text-xs" onClick={() => clonePlan(rx)}>
+                  <div className="flex flex-wrap gap-2">
+                    <button type="button" className="btn-outline !py-1.5 !px-3 text-xs" onClick={() => clonePlan(rx)} disabled={planActionId === rx.id}>
                       <FaIcon icon="fa-clone" className="mr-1" /> Clone
                     </button>
-                    <Link to="/clinic-portal/exercises" className="btn-outline !py-1.5 !px-3 text-xs">
-                      Manage
+                    <Link to={`/clinic-portal/exercises?edit=${rx.id}`} className="btn-outline !py-1.5 !px-3 text-xs">
+                      Edit
                     </Link>
+                    {rx.status !== 'cancelled' && (
+                      <button type="button" className="text-xs text-rose-600 font-medium px-2" onClick={() => deactivatePlan(rx)} disabled={planActionId === rx.id}>
+                        {planActionId === rx.id ? 'Working…' : 'Deactivate'}
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
-              {!plans.length && <p className="text-sm text-slate-500 text-center py-8">No programs yet — assign your first HEP.</p>}
+              {!plansLoading && !plans.length && <p className="text-sm text-slate-500 text-center py-8">No programs yet — assign your first HEP.</p>}
             </div>
           </div>
         )}

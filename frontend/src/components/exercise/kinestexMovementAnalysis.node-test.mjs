@@ -38,6 +38,28 @@ const failedUpload = deriveMovementAnalysisFromEvents(
 );
 check('motion upload error → not available', !failedUpload.available && failedUpload.status === 'upload_failed');
 
+const both = deriveMovementAnalysisFromEvents(
+  {
+    workout_session_saved: { session_id: 18535 },
+    session_save_complete: {},
+    motion_upload_error: { error: 'stale' },
+  },
+  '18535'
+);
+check('completed upload wins over a stale motion error', both.available && both.status === 'ready');
+
+const nonNumeric = deriveMovementAnalysisFromEvents(
+  { workout_session_saved: { session_id: 'ksx-sess-1' }, session_save_complete: {} },
+  'ksx-sess-1'
+);
+check('non-numeric provider id is unavailable', !nonNumeric.available && nonNumeric.status === 'unavailable');
+
+const empty = deriveMovementAnalysisFromEvents({}, '');
+check('empty payload is unavailable', !empty.available && empty.status === 'unavailable');
+
+const malformed = deriveMovementAnalysisFromEvents(null, null);
+check('malformed collected events do not throw', !malformed.available);
+
 check('motion settled on complete', motionUploadSettled({ session_save_complete: true }));
 check('motion settled on error', motionUploadSettled({ motion_upload_error: { error: 'x' } }));
 check('motion not settled mid-upload', !motionUploadSettled({ motion_upload_progress: { completed: 1, total: 2 } }));

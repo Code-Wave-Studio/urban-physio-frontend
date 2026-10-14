@@ -5,6 +5,8 @@ import FaIcon from '../FaIcon';
 import ExerciseDetailModal from '../exercise/ExerciseDetailModal';
 import ExerciseGalleryCard from '../exercise/ExerciseGalleryCard';
 import { exercises } from '../../services/api';
+import { useKinestexPublicStatus } from '../../hooks/useKinestexPublicStatus';
+import { usePrivacyBadges } from '../../hooks/usePrivacyBadges';
 
 const FALLBACK = [
   { id: 1, name: 'Cat-Cow Stretch', slug: 'cat-cow-stretch', body_area: 'back', difficulty: 'beginner', default_sets: 2, default_reps: '10', instructions: 'Arch and round your spine slowly with breath.', video_url: 'https://www.youtube.com/watch?v=inpok4MKVLM' },
@@ -19,6 +21,8 @@ export default function ExercisesSection() {
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
+  const aiIntegrationActive = useKinestexPublicStatus();
+  const libraryPrivacyBadges = usePrivacyBadges('library');
 
   useEffect(() => {
     exercises
@@ -75,6 +79,8 @@ export default function ExercisesSection() {
                 index={idx}
                 onOpen={setSelected}
                 showSave={false}
+                aiIntegrationActive={aiIntegrationActive === true}
+                privacyBadges={libraryPrivacyBadges}
               />
             ))}
           </div>
@@ -91,7 +97,7 @@ export default function ExercisesSection() {
         </div>
       </div>
 
-      <ExerciseDetailModal exercise={selected} onClose={() => setSelected(null)} />
+      <ExerciseDetailModal exercise={selected} onClose={() => setSelected(null)} privacyBadges={libraryPrivacyBadges} />
     </section>
   );
 }

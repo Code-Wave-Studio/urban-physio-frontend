@@ -3,6 +3,7 @@ import FaIcon from '../FaIcon';
 import SaveExerciseButton from './SaveExerciseButton';
 import ExerciseMediaDisplay from './ExerciseMediaDisplay';
 import { hasExerciseMedia } from '../../utils/mediaParser';
+import PrivacyClaimBadges from '../privacy/PrivacyClaimBadges';
 
 const DIFFICULTY_STYLES = {
   beginner: 'bg-emerald-50 text-emerald-700 border-emerald-100',
@@ -28,9 +29,11 @@ export default function ExerciseGalleryCard({
   index = 0,
   onOpen,
   showSave = true,
+  aiIntegrationActive = false,
+  privacyBadges = [],
 }) {
   const hasMedia = hasExerciseMedia(exercise);
-  const aiReady = Boolean(exercise?.kinestex?.ai_supported && exercise?.kinestex?.mapped);
+  const aiReady = aiIntegrationActive === true && Boolean(exercise?.kinestex?.ai_supported && exercise?.kinestex?.mapped);
   const name = exercise?.name || 'Exercise';
   const difficulty = exercise?.difficulty || 'beginner';
   const bodyArea = exercise?.body_area || 'general';
@@ -54,16 +57,19 @@ export default function ExerciseGalleryCard({
 
   return (
     <motion.article
-      role="button"
-      tabIndex={0}
-      aria-label={`View ${name}`}
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(index * 0.03, 0.3) }}
-      className="exercise-gallery-card group flex flex-col overflow-hidden cursor-pointer bg-white border border-slate-200/90 rounded-xl shadow-sm hover:shadow-md hover:border-teal-200/80 transition-[box-shadow,border-color,transform] duration-200 hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-500"
-      onClick={() => onOpen?.(exercise)}
-      onKeyDown={handleKeyDown}
+      className="exercise-gallery-card group flex flex-col overflow-hidden bg-white border border-slate-200/90 rounded-xl shadow-sm hover:shadow-md hover:border-teal-200/80 transition-[box-shadow,border-color,transform] duration-200 hover:-translate-y-0.5"
     >
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label={`View ${name}`}
+        className="flex flex-col flex-1 min-w-0 cursor-pointer rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-500"
+        onClick={() => onOpen?.(exercise)}
+        onKeyDown={handleKeyDown}
+      >
       <div className="exercise-gallery-media relative w-full shrink-0 overflow-hidden bg-slate-900 rounded-t-xl">
         {hasMedia ? (
           <>
@@ -92,7 +98,7 @@ export default function ExerciseGalleryCard({
 
         {aiReady && (
           <span className="absolute top-2 left-2 z-[1] text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-teal-600/95 text-white leading-none">
-            AI-Guided
+            AI Personal Trainer
           </span>
         )}
       </div>
@@ -123,6 +129,8 @@ export default function ExerciseGalleryCard({
           <FaIcon icon="fa-arrow-right" className="text-[10px] transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
         </span>
       </div>
+      </div>
+      <PrivacyClaimBadges badges={privacyBadges} variant="card" className="px-3 pb-2.5" />
     </motion.article>
   );
 }

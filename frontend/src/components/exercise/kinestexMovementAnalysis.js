@@ -9,16 +9,29 @@ export function deriveMovementAnalysisFromEvents(collected = {}, providerSession
   const hasSaved =
     hasProvider || !!raw.workout_session_saved;
 
-  if (raw.motion_upload_error) {
+  const replayId = hasProvider && /^[1-9][0-9]{0,11}$/.test(String(providerSessionId).trim());
+
+  if (raw.session_save_complete && replayId) {
     return {
-      available: false,
-      replay_supported: false,
-      status: 'upload_failed',
-      message: 'Movement recording could not be saved for this session.',
+      available: true,
+      replay_supported: true,
+      status: 'ready',
+      message: 'KinesteX movement replay is available for this session.',
     };
   }
 
-  if (!hasSaved) {
+  if (raw.motion_upload_error || (!replayId && hasProvider)) {
+    return {
+      available: false,
+      replay_supported: false,
+      status: raw.motion_upload_error ? 'upload_failed' : 'unavailable',
+      message: raw.motion_upload_error
+        ? 'Movement recording could not be saved for this session.'
+        : 'Movement analysis is not available for this session.',
+    };
+  }
+
+  if (!hasSaved || !replayId) {
     return {
       available: false,
       replay_supported: false,

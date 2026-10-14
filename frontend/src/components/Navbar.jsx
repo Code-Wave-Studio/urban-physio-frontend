@@ -8,6 +8,7 @@ import MobileNavDrawer from './MobileNavDrawer';
 import NotificationBell from './NotificationBell';
 import PortalProfileCard from './portal/PortalProfileCard';
 import { setFloatingActionsHidden } from '../utils/floatingActionsBus';
+import { labelForTeleRehabLink, useTeleRehabPageName } from '../hooks/useTeleRehabPageName';
 
 const PRIMARY_NAV_LINKS = [
   { to: '/', label: 'Home' },
@@ -122,6 +123,7 @@ export default function Navbar({
   portalProfileCard = null,
 }) {
   const { pathname, search } = useLocation();
+  const telePageName = useTeleRehabPageName();
   const { user, logout, hasRole } = useAuth();
   const { city, setShowSelector, locationLabel } = useLocationContext();
   const navigate = useNavigate();
@@ -334,7 +336,7 @@ export default function Navbar({
                                     <div className="min-w-0 flex-1">
                                       <div className="flex items-center gap-1.5">
                                         <span className="site-nav-mega-menu__label">
-                                          {link.label}
+                                          {labelForTeleRehabLink(link.to, link.label, telePageName)}
                                         </span>
                                         {link.badge && (
                                           <span className="site-nav-mega-menu__badge">

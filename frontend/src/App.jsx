@@ -137,6 +137,7 @@ const PatientBills = lazyWithRetry(() => import('./pages/patient/PatientBills'))
 const PatientWallet = lazyWithRetry(() => import('./pages/patient/PatientWallet'));
 const PatientProgress = lazyWithRetry(() => import('./pages/patient/PatientProgress'));
 const PatientVideoConsultations = lazyWithRetry(() => import('./pages/patient/PatientVideoConsultations'));
+const TeleRehabDashboardPage = lazyWithRetry(() => import('./pages/teleRehab/TeleRehabDashboardPage'));
 const PatientPrescriptions = lazyWithRetry(() => import('./pages/patient/PatientPrescriptions'));
 const PatientConsultationPage = lazyWithRetry(() => import('./pages/patient/PatientConsultationPage'));
 const DoctorConsultationPage = lazyWithRetry(() => import('./pages/doctor/DoctorConsultationPage'));
@@ -328,6 +329,7 @@ export default function App() {
       <Route path="/patient/wallet" element={<ProtectedRoute roles={['patient']}><PatientWallet /></ProtectedRoute>} />
       <Route path="/patient/progress" element={<ProtectedRoute roles={['patient']}><PatientProgress /></ProtectedRoute>} />
       <Route path="/patient/video-consultations" element={<ProtectedRoute roles={['patient']}><PatientVideoConsultations /></ProtectedRoute>} />
+      <Route path="/patient/tele-rehab" element={<ProtectedRoute roles={['patient']}><TeleRehabDashboardPage portal="patient" /></ProtectedRoute>} />
       <Route path="/patient/consultation/:appointmentId" element={<ProtectedRoute roles={['patient']}><PatientConsultationPage /></ProtectedRoute>} />
       <Route path="/patient/prescriptions" element={<ProtectedRoute roles={['patient']}><PatientPrescriptions /></ProtectedRoute>} />
       <Route path="/patient/treatment-journey" element={<ProtectedRoute roles={['patient']}><PatientTreatmentJourney /></ProtectedRoute>} />
@@ -338,6 +340,7 @@ export default function App() {
       <Route path="/doctor" element={<ProtectedRoute roles={['doctor']}><DoctorDashboard /></ProtectedRoute>} />
       <Route path="/doctor/appointments" element={<ProtectedRoute roles={['doctor']}><DoctorAppointments /></ProtectedRoute>} />
       <Route path="/doctor/consultation-rooms" element={<ProtectedRoute roles={['doctor']}><DoctorConsultationRoomsPage /></ProtectedRoute>} />
+      <Route path="/doctor/tele-rehab" element={<ProtectedRoute roles={['doctor']}><TeleRehabDashboardPage portal="doctor" /></ProtectedRoute>} />
       <Route path="/doctor/consultation/:appointmentId" element={<ProtectedRoute roles={['doctor']}><DoctorConsultationPage /></ProtectedRoute>} />
       <Route path="/doctor/profile" element={<ProtectedRoute roles={['doctor']}><DoctorProfile /></ProtectedRoute>} />
       <Route path="/doctor/availability" element={<ProtectedRoute roles={['doctor']}><Navigate to="/doctor/clinic-availability" replace /></ProtectedRoute>} />
@@ -354,6 +357,7 @@ export default function App() {
       <Route path="/clinic-portal/documents" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><DocumentsPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/appointments" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicPortalAppointments /></ProtectedRoute>} />
       <Route path="/clinic-portal/consultation-rooms" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicConsultationRoomsPage /></ProtectedRoute>} />
+      <Route path="/clinic-portal/tele-rehab" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><TeleRehabDashboardPage portal="clinic" /></ProtectedRoute>} />
       <Route path="/clinic-portal/consultation/:appointmentId" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicConsultationPage /></ProtectedRoute>} />
       <Route path="/clinic-portal/patients" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicPortalPatients /></ProtectedRoute>} />
       <Route path="/clinic-portal/patients/:patientKey" element={<ProtectedRoute roles={['clinic', 'clinic_staff']}><ClinicPatientDetailPage /></ProtectedRoute>} />
@@ -444,6 +448,7 @@ export default function App() {
       <Route path="/admin/invoice-settings" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminInvoiceSettings /></ProtectedRoute>} />
       <Route path="/admin/billing" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminBillingPage /></ProtectedRoute>} />
       <Route path="/admin/zoom" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminZoomMeetings /></ProtectedRoute>} />
+      <Route path="/admin/tele-rehab" element={<ProtectedRoute roles={['admin', 'super_admin']}><TeleRehabDashboardPage portal="admin" /></ProtectedRoute>} />
       <Route path="/admin/wallet" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminWallet /></ProtectedRoute>} />
       <Route path="/admin/search" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminAdvancedSearchPage /></ProtectedRoute>} />
       <Route path="/admin/calendar" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminCalendarPage /></ProtectedRoute>} />

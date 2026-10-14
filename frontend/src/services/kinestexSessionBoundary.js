@@ -127,8 +127,22 @@ export function patientFriendlyKinesteXError(eventType, eventData) {
       ''
   ).toLowerCase();
 
+  const aboutCamera = /camera|device|frame|video|getusermedia/.test(raw);
+  if (
+    aboutCamera &&
+    (raw.includes('not supported') ||
+      raw.includes('unsupported') ||
+      raw.includes('no camera') ||
+      raw.includes('devicenotfound') ||
+      raw.includes('device not found'))
+  ) {
+    return 'This device does not have a supported camera for AI monitoring. You can still mark the exercise complete manually.';
+  }
+  if (aboutCamera && (raw.includes('empty') || raw.includes('no frame') || raw.includes('no video'))) {
+    return 'The camera did not produce a video frame. Close other apps using the camera and try again.';
+  }
   if (eventType === 'error_occurred' || raw.includes('camera')) {
-    if (raw.includes('camera') || raw.includes('permission') || raw.includes('not allowed')) {
+    if (raw.includes('camera') || raw.includes('permission') || raw.includes('not allowed') || raw.includes('denied')) {
       return 'Camera access is required for AI monitoring. Please allow camera access and try again.';
     }
     return 'AI monitoring could not start. Please try again in a supported browser with a working camera.';
@@ -136,7 +150,38 @@ export function patientFriendlyKinesteXError(eventType, eventData) {
   return 'AI monitoring stopped unexpectedly. You can try again or mark the exercise complete manually.';
 }
 
+/**
+ * Host can start the KinesteX camera iframe only in a secure context with getUserMedia.
+ * Does not open the camera itself (the pose provider requests permission).
+ */
+export function cameraCaptureSupported(
+  nav = typeof navigator !== 'undefined' ? navigator : undefined,
+  isSecure = typeof window !== 'undefined' ? window.isSecureContext !== false : true
+) {
+  if (!isSecure) return false;
+  const media = nav && nav.mediaDevices;
+  return !!(media && typeof media.getUserMedia === 'function');
+}
+
 const LAUNCH_SECRET_FIELDS = ['key', 'api_key', 'apiKey', 'secret', 'token', 'access_token', 'authorization'];
+
+/**
+ * KinesteX workout session ids are positive integers (session/{id} and workout-sessions/{id}).
+ * Non-numeric values are not opened in the 3D replay route.
+ */
+export function isKinesteXReplaySessionId(value) {
+  const id = String(value ?? '').trim();
+  return /^[1-9][0-9]{0,11}$/.test(id);
+}
+
+/** Player compares style with === "light" / "dark". An object is not a theme name. */
+export function kinesteXStyleName(style, fallback = 'light') {
+  if (typeof style === 'string' && style.trim()) return style.trim();
+  if (style && typeof style === 'object' && typeof style.style === 'string' && style.style.trim()) {
+    return style.style.trim();
+  }
+  return fallback;
+}
 
 /**
  * Browser postMessage for a KinesteX iframe. Uses the server-minted session id.
@@ -157,18 +202,26 @@ export function buildKinesteXLaunchPostData(sdk, extras = {}) {
     userId,
     ...(extras && typeof extras === 'object' ? extras : {}),
   };
-  if (sdk.style && typeof sdk.style === 'object') payload.style = sdk.style;
+  const styleName = kinesteXStyleName(sdk.style, '');
+  if (styleName) payload.style = styleName;
   if (Array.isArray(sdk.customWorkoutExercises) && sdk.customWorkoutExercises.length) {
     payload.customWorkoutExercises = sdk.customWorkoutExercises;
   }
   if (sdk.shouldSendStats !== undefined) payload.shouldSendStats = sdk.shouldSendStats !== false;
-  if (sdk.customParameters && typeof sdk.customParameters === 'object') {
-    const custom = { ...sdk.customParameters };
-    LAUNCH_SECRET_FIELDS.forEach((field) => {
-      delete custom[field];
-    });
-    payload.customParameters = custom;
-  }
+  if (sdk.motionDataEnabled !== undefined) payload.motionDataEnabled = sdk.motionDataEnabled !== false;
+  if (sdk.motionTrackingEnabled !== undefined) payload.motionTrackingEnabled = sdk.motionTrackingEnabled !== false;
+
+  const custom = sdk.customParameters && typeof sdk.customParameters === 'object'
+    ? { ...sdk.customParameters }
+    : {};
+  if (payload.shouldSendStats !== undefined) custom.shouldSendStats = payload.shouldSendStats;
+  if (payload.motionDataEnabled !== undefined) custom.motionDataEnabled = payload.motionDataEnabled;
+  if (payload.motionTrackingEnabled !== undefined) custom.motionTrackingEnabled = payload.motionTrackingEnabled;
+  if (payload.videoFit) custom.videoFit = payload.videoFit;
+  LAUNCH_SECRET_FIELDS.forEach((field) => {
+    delete custom[field];
+  });
+  if (Object.keys(custom).length) payload.customParameters = custom;
   LAUNCH_SECRET_FIELDS.forEach((field) => {
     delete payload[field];
   });

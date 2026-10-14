@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Navigate, Link } from 'react-router-dom';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Navigate, Link, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import FaIcon from '../../components/FaIcon';
 import GlassModal, { GlassModalBody, GlassModalFooter, GlassModalHeader } from '../../components/GlassModal';
@@ -11,8 +11,11 @@ import useClinicPortal from '../../hooks/useClinicPortal';
 import toast from 'react-hot-toast';
 import { showAiReadyBadge } from '../../components/exercise/KinesteXMappingFields';
 import KinesteXAiPerformancePanel from '../../components/exercise/KinesteXAiPerformancePanel';
+import { usePrivacyBadges } from '../../hooks/usePrivacyBadges';
+import PrivacyClaimBadges from '../../components/privacy/PrivacyClaimBadges';
 
 const EMPTY_ITEM = {
+  id: null,
   exercise_id: '',
   sets: 3,
   reps: '10',
@@ -55,6 +58,7 @@ function ProgressBar({ percent = 0 }) {
 
 export default function DoctorPrescriptions() {
   const { user } = useAuth();
+  const assignmentPrivacyBadges = usePrivacyBadges('assignment');
   const isClinic = user?.role_slug === 'clinic' || user?.role_slug === 'clinic_staff';
   const {
     clinicId,
@@ -73,6 +77,10 @@ export default function DoctorPrescriptions() {
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [searchParams, setSearchParams] = useSearchParams();
+  const editFromQuery = searchParams.get('edit');
+  const editHandled = useRef(null);
 
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -135,21 +143,22 @@ export default function DoctorPrescriptions() {
       .catch(() => setKinestexOn(false));
   }, [isClinic, clinicId]);
 
-  if (isClinic && !portalBoot && (!isAdminMode || !can('exercises.manage'))) {
-    return <Navigate to="/clinic-portal" replace />;
-  }
-
   const openCreate = () => {
     setEditingId(null);
+    setFieldErrors({});
     setForm(emptyForm());
     setModalOpen(true);
   };
 
   const openEdit = async (rx) => {
     setDetailLoading(true);
+    setFieldErrors({});
     try {
       const res = await exercisePrescriptions.get(rx.id);
       const data = res.data || {};
+      const activeRows = (data.exercises || []).filter(
+        (ex) => ex.is_active !== false && Number(ex.is_active) !== 0
+      );
       setEditingId(rx.id);
       setForm({
         patient_id: String(data.patient_id || ''),
@@ -163,8 +172,9 @@ export default function DoctorPrescriptions() {
         is_protocol: data.is_protocol != null ? !!Number(data.is_protocol) : true,
         publish_status: data.publish_status || 'draft',
         protocol_goals: data.protocol_goals || '',
-        exercises: (data.exercises || []).map((ex) => ({
-          exercise_id: String(ex.exercise_id),
+        exercises: (activeRows.length ? activeRows : [{ ...EMPTY_ITEM }]).map((ex) => ({
+          id: ex.id || null,
+          exercise_id: ex.exercise_id ? String(ex.exercise_id) : '',
           sets: ex.sets ?? 3,
           reps: ex.reps || '10',
           hold_seconds: ex.hold_seconds ?? '',
@@ -178,7 +188,7 @@ export default function DoctorPrescriptions() {
           therapist_notes: ex.therapist_notes || '',
           progression_rules: ex.progression_rules || '',
           ai_monitoring_enabled: !!ex.ai_monitoring_enabled,
-        })) || [{ ...EMPTY_ITEM }],
+        })),
       });
       setModalOpen(true);
     } catch (e) {
@@ -187,6 +197,22 @@ export default function DoctorPrescriptions() {
       setDetailLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!editFromQuery || loading) return;
+    if (editHandled.current === editFromQuery) return;
+    editHandled.current = editFromQuery;
+    const next = new URLSearchParams(searchParams);
+    next.delete('edit');
+    setSearchParams(next, { replace: true });
+    openEdit({ id: Number(editFromQuery) });
+    // openEdit is stable enough for a one-shot deep link after the list loads.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editFromQuery, loading]);
+
+  if (isClinic && !portalBoot && (!isAdminMode || !can('exercises.manage'))) {
+    return <Navigate to="/clinic-portal" replace />;
+  }
 
   const openDetail = async (rx) => {
     setDetailLoading(true);
@@ -202,6 +228,16 @@ export default function DoctorPrescriptions() {
 
   const addExercise = () => setForm((f) => ({ ...f, exercises: [...f.exercises, { ...EMPTY_ITEM }] }));
   const removeExercise = (idx) => setForm((f) => ({ ...f, exercises: f.exercises.filter((_, i) => i !== idx) }));
+  const moveExercise = (idx, dir) => {
+    setForm((f) => {
+      const next = [...f.exercises];
+      const target = idx + dir;
+      if (target < 0 || target >= next.length) return f;
+      const [row] = next.splice(idx, 1);
+      next.splice(target, 0, row);
+      return { ...f, exercises: next };
+    });
+  };
 
   const updateExercise = (idx, field, value) => {
     setForm((f) => {
@@ -227,6 +263,7 @@ export default function DoctorPrescriptions() {
     items
       .filter((x) => x.exercise_id)
       .map((x) => ({
+        id: x.id ? parseInt(x.id, 10) : undefined,
         exercise_id: parseInt(x.exercise_id, 10),
         sets: parseInt(x.sets, 10) || 3,
         reps: String(x.reps),
@@ -245,15 +282,29 @@ export default function DoctorPrescriptions() {
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!form.patient_id || !form.title.trim()) {
-      toast.error('Patient and title required');
+    const nextErrors = {};
+    if (!form.patient_id) nextErrors.patient_id = 'Patient is required';
+    if (!form.title.trim()) nextErrors.title = 'Title is required';
+    if (!form.start_date) nextErrors.start_date = 'Start date is required';
+    if (form.end_date && form.start_date && form.end_date < form.start_date) {
+      nextErrors.end_date = 'End date must be on or after the start date';
+    }
+    const chosen = form.exercises.filter((x) => x.exercise_id);
+    if (!chosen.length) nextErrors.exercises = 'Add at least one exercise';
+    form.exercises.forEach((x, idx) => {
+      if (!x.exercise_id) return;
+      if (!String(x.reps || '').trim()) nextErrors[`exercises.${idx}.reps`] = 'Reps is required';
+      if (x.sets !== '' && x.sets != null && Number(x.sets) < 1) {
+        nextErrors[`exercises.${idx}.sets`] = 'Sets must be at least 1';
+      }
+    });
+    if (Object.keys(nextErrors).length) {
+      setFieldErrors(nextErrors);
+      toast.error('Check the highlighted fields');
       return;
     }
+    setFieldErrors({});
     const validEx = mapExercises(form.exercises);
-    if (!validEx.length) {
-      toast.error('Add at least one exercise');
-      return;
-    }
     setSaving(true);
     const payload = {
       patient_id: parseInt(form.patient_id, 10),
@@ -280,24 +331,26 @@ export default function DoctorPrescriptions() {
       }
       setModalOpen(false);
       setEditingId(null);
+      setFieldErrors({});
       setForm(emptyForm());
       load();
     } catch (err) {
-      toast.error(err.message);
+      if (err.errors && typeof err.errors === 'object') setFieldErrors(err.errors);
+      toast.error(err.message || 'Could not save the plan');
     } finally {
       setSaving(false);
     }
   };
 
   const cancelPlan = async (rx) => {
-    if (!window.confirm(`Cancel plan "${rx.title}"?`)) return;
+    if (!window.confirm(`Deactivate "${rx.title}"? The patient will stop seeing it. Completed sessions stay on record.`)) return;
     try {
       await exercisePrescriptions.cancel(rx.id);
-      toast.success('Plan cancelled');
+      toast.success('Plan deactivated');
       load();
       if (detail?.id === rx.id) setDetail(null);
     } catch (e) {
-      toast.error(e.message);
+      toast.error(e.message || 'Could not deactivate the plan');
     }
   };
 
@@ -409,9 +462,9 @@ export default function DoctorPrescriptions() {
                       Publish
                     </button>
                   )}
-                  {rx.status === 'active' && (
+                  {rx.status !== 'cancelled' && (
                     <button type="button" className="text-xs text-rose-600 font-medium px-2" onClick={() => cancelPlan(rx)}>
-                      Cancel
+                      Deactivate
                     </button>
                   )}
                 </div>
@@ -485,8 +538,11 @@ export default function DoctorPrescriptions() {
 
               <div>
                 <p className="text-sm font-semibold text-slate-800 mb-2">Assigned exercises</p>
+                {(detail.exercises || []).some((ex) => ex.is_active === false || Number(ex.is_active) === 0) && (
+                  <p className="text-xs text-slate-500 mb-2">Removed exercises stay in session history.</p>
+                )}
                 <ul className="space-y-2">
-                  {(detail.exercises || []).map((ex) => (
+                  {(detail.exercises || []).filter((ex) => ex.is_active !== false && Number(ex.is_active) !== 0).map((ex) => (
                     <li key={ex.id} className="flex items-start gap-3 rounded-xl border border-slate-100 bg-white px-3 py-2.5">
                       <FaIcon icon="fa-dumbbell" className="text-teal-600 mt-0.5" />
                       <div className="min-w-0 flex-1">
@@ -503,6 +559,7 @@ export default function DoctorPrescriptions() {
                               ? ' · AI available'
                               : ''}
                         </p>
+                        <PrivacyClaimBadges badges={assignmentPrivacyBadges} variant="card" className="mt-2" />
                         {ex.today_log && (
                           <p className="text-[11px] mt-1 text-emerald-700 capitalize">Today: {ex.today_log.status}{ex.today_log.pain_level ? ` · pain ${ex.today_log.pain_level}/10` : ''}</p>
                         )}
@@ -566,9 +623,12 @@ export default function DoctorPrescriptions() {
             <div>
               <label className="text-sm font-medium text-slate-700 mb-1.5 block">Patient *</label>
               <select
-                className="input-field w-full"
+                className={`input-field w-full ${fieldErrors.patient_id ? 'border-rose-400' : ''}`}
                 value={form.patient_id}
-                onChange={(e) => setForm({ ...form, patient_id: e.target.value })}
+                onChange={(e) => {
+                  setFieldErrors((err) => ({ ...err, patient_id: undefined }));
+                  setForm({ ...form, patient_id: e.target.value });
+                }}
                 required
                 disabled={!!editingId}
               >
@@ -577,10 +637,12 @@ export default function DoctorPrescriptions() {
                   <option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>
                 ))}
               </select>
+              {fieldErrors.patient_id && <p className="text-xs text-rose-600 mt-1">{fieldErrors.patient_id}</p>}
             </div>
             <div>
               <label className="text-sm font-medium text-slate-700 mb-1.5 block">Plan title *</label>
-              <input className="input-field w-full" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required placeholder="e.g. Week 2 — knee strengthening" />
+              <input className={`input-field w-full ${fieldErrors.title ? 'border-rose-400' : ''}`} value={form.title} onChange={(e) => { setFieldErrors((err) => ({ ...err, title: undefined })); setForm({ ...form, title: e.target.value }); }} required placeholder="e.g. Week 2 — knee strengthening" />
+              {fieldErrors.title && <p className="text-xs text-rose-600 mt-1">{fieldErrors.title}</p>}
               <label className="flex items-center gap-2 text-sm text-slate-700">
                 <input type="checkbox" checked={Boolean(form.is_protocol)} onChange={(e) => setForm({ ...form, is_protocol: e.target.checked })} />
                 Treatment protocol (sync to patient portal)
@@ -600,11 +662,13 @@ export default function DoctorPrescriptions() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="text-sm font-medium text-slate-700 mb-1.5 block">Start</label>
-                <input type="date" className="input-field w-full" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
+                <input type="date" className={`input-field w-full ${fieldErrors.start_date ? 'border-rose-400' : ''}`} value={form.start_date} onChange={(e) => { setFieldErrors((err) => ({ ...err, start_date: undefined })); setForm({ ...form, start_date: e.target.value }); }} required />
+                {fieldErrors.start_date && <p className="text-xs text-rose-600 mt-1">{fieldErrors.start_date}</p>}
               </div>
               <div>
                 <label className="text-sm font-medium text-slate-700 mb-1.5 block">End</label>
-                <input type="date" className="input-field w-full" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
+                <input type="date" className={`input-field w-full ${fieldErrors.end_date ? 'border-rose-400' : ''}`} value={form.end_date} onChange={(e) => { setFieldErrors((err) => ({ ...err, end_date: undefined })); setForm({ ...form, end_date: e.target.value }); }} />
+                {fieldErrors.end_date && <p className="text-xs text-rose-600 mt-1">{fieldErrors.end_date}</p>}
               </div>
               <div>
                 <label className="text-sm font-medium text-slate-700 mb-1.5 block">Week #</label>
@@ -625,9 +689,17 @@ export default function DoctorPrescriptions() {
                 <h3 className="font-semibold text-slate-800">Exercises</h3>
                 <button type="button" onClick={addExercise} className="text-sm text-primary-600 font-semibold">+ Add</button>
               </div>
+              {fieldErrors.exercises && <p className="text-xs text-rose-600 mb-2">{fieldErrors.exercises}</p>}
               <div className="space-y-3">
                 {form.exercises.map((item, idx) => (
-                  <div key={idx} className="p-4 rounded-xl bg-slate-50/90 border border-slate-100 space-y-3">
+                  <div key={item.id || `new-${idx}`} className="p-4 rounded-xl bg-slate-50/90 border border-slate-100 space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Exercise {idx + 1}</p>
+                      <div className="flex gap-2">
+                        <button type="button" className="text-xs font-semibold text-slate-600 disabled:opacity-40" disabled={idx === 0} onClick={() => moveExercise(idx, -1)}>Up</button>
+                        <button type="button" className="text-xs font-semibold text-slate-600 disabled:opacity-40" disabled={idx === form.exercises.length - 1} onClick={() => moveExercise(idx, 1)}>Down</button>
+                      </div>
+                    </div>
                     <select className="input-field w-full" value={item.exercise_id} onChange={(e) => updateExercise(idx, 'exercise_id', e.target.value)}>
                       <option value="">Select exercise</option>
                       {exerciseList.map((ex) => (
@@ -635,8 +707,8 @@ export default function DoctorPrescriptions() {
                       ))}
                     </select>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      <input className="input-field" type="number" min={1} placeholder="Sets" value={item.sets} onChange={(e) => updateExercise(idx, 'sets', e.target.value)} />
-                      <input className="input-field" placeholder="Reps" value={item.reps} onChange={(e) => updateExercise(idx, 'reps', e.target.value)} />
+                      <input className={`input-field ${fieldErrors[`exercises.${idx}.sets`] ? 'border-rose-400' : ''}`} type="number" min={1} placeholder="Sets" value={item.sets} onChange={(e) => updateExercise(idx, 'sets', e.target.value)} />
+                      <input className={`input-field ${fieldErrors[`exercises.${idx}.reps`] ? 'border-rose-400' : ''}`} placeholder="Reps" value={item.reps} onChange={(e) => updateExercise(idx, 'reps', e.target.value)} />
                       <input className="input-field" type="number" min={0} placeholder="Hold (sec)" value={item.hold_seconds} onChange={(e) => updateExercise(idx, 'hold_seconds', e.target.value)} />
                       <input className="input-field" type="number" min={0} placeholder="Rest (sec)" value={item.rest_seconds} onChange={(e) => updateExercise(idx, 'rest_seconds', e.target.value)} />
                     </div>
@@ -675,6 +747,9 @@ export default function DoctorPrescriptions() {
                     )}
                     <input className="input-field w-full" placeholder="Special instructions / precautions for patient" value={item.special_instructions} onChange={(e) => updateExercise(idx, 'special_instructions', e.target.value)} />
                     <input className="input-field w-full" placeholder="Progression rules (e.g. increase reps after 1 week)" value={item.progression_rules || ''} onChange={(e) => updateExercise(idx, 'progression_rules', e.target.value)} />
+                    {(fieldErrors[`exercises.${idx}.sets`] || fieldErrors[`exercises.${idx}.reps`]) && (
+                      <p className="text-xs text-rose-600">{fieldErrors[`exercises.${idx}.sets`] || fieldErrors[`exercises.${idx}.reps`]}</p>
+                    )}
                     {form.exercises.length > 1 && (
                       <button type="button" onClick={() => removeExercise(idx)} className="text-xs text-rose-600 font-semibold">Remove</button>
                     )}

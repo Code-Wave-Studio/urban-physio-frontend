@@ -4,14 +4,18 @@ import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import FaIcon from '../../components/FaIcon';
 import MediaUrlOrUpload from '../../components/admin/MediaUrlOrUpload';
 import { CmsField, CmsListEditor, CmsPanel } from '../../components/admin/CmsFormKit';
+import TestimonialItemsEditor from '../../components/admin/TestimonialItemsEditor';
+import { stripBlankTestimonialMedia, testimonialMediaError } from '../../utils/testimonialMedia';
 import CommunityPreviewEditor from '../../components/admin/CommunityPreviewEditor';
 import PainMapEditor from '../../components/admin/PainMapEditor';
 import RecoveryRoadmapEditor from '../../components/admin/RecoveryRoadmapEditor';
 import CareEcosystemEditor from '../../components/admin/CareEcosystemEditor';
 import EnrollmentEditor from '../../components/admin/EnrollmentEditor';
 import SectionVisibilityToggle from '../../components/admin/SectionVisibilityToggle';
-import { admin, uploadCmsImage } from '../../services/api';
-import { TELEPHYSIO_DEFAULTS, mergeTelePhysioSections } from '../../constants/telephysioDefaults';
+import PrivacyBadgeSettingsPanel from '../../components/admin/PrivacyBadgeSettingsPanel';
+import { admin, uploadCmsImage, uploadCmsVideo } from '../../services/api';
+import { TELEPHYSIO_DEFAULTS, TELE_REHAB_PAGE_NAME_DEFAULT, mergeTelePhysioSections } from '../../constants/telephysioDefaults';
+import { invalidateTeleRehabPageName } from '../../hooks/useTeleRehabPageName';
 import { isSectionOn } from '../../constants/sectionVisibility';
 import toast from 'react-hot-toast';
 
@@ -66,9 +70,26 @@ export default function AdminTelePhysio() {
 
   const save = async (e) => {
     e.preventDefault();
+    const pageNameInput = String(form.sections.page_name || '').trim();
+    if (pageNameInput.length < 2 || pageNameInput.length > 80 || /[<>]|https?:\/\/|[\\/]/.test(pageNameInput)) {
+      toast.error('Enter a page name of 2–80 characters without HTML or a URL');
+      return;
+    }
+    const mediaError = testimonialMediaError(form.sections?.testimonials);
+    if (mediaError) {
+      toast.error(mediaError);
+      return;
+    }
+    const payload = {
+      ...form,
+      sections: {
+        ...form.sections,
+        testimonials: stripBlankTestimonialMedia(form.sections?.testimonials),
+      },
+    };
     setSaving(true);
     try {
-      const saved = await admin.updateTelePhysioSettings(form);
+      const saved = await admin.updateTelePhysioSettings(payload);
       const d = saved?.data && typeof saved.data === 'object' ? saved.data : null;
       if (d?.sections) {
         setForm({
@@ -80,7 +101,8 @@ export default function AdminTelePhysio() {
           sections: mergeTelePhysioSections(d.sections),
         });
       }
-      toast.success('TelePhysio by Myoreset page published');
+      toast.success(`${(d?.page_name || d?.sections?.page_name || form.sections.page_name || TELE_REHAB_PAGE_NAME_DEFAULT).trim()} page published`);
+      invalidateTeleRehabPageName();
     } catch (err) {
       toast.error(err.message || 'Save failed');
     } finally {
@@ -93,13 +115,14 @@ export default function AdminTelePhysio() {
       <AdminDashboardLayout>
         <div className="glass-card p-12 text-center text-slate-500">
           <FaIcon icon="fa-spinner" className="fa-spin text-2xl mb-2" />
-          Loading TelePhysio by Myoreset page…
+          Loading Tele-Rehab page…
         </div>
       </AdminDashboardLayout>
     );
   }
 
   const s = form.sections;
+  const pageName = String(s.page_name || TELE_REHAB_PAGE_NAME_DEFAULT).trim() || TELE_REHAB_PAGE_NAME_DEFAULT;
 
   return (
     <AdminDashboardLayout>
@@ -107,7 +130,7 @@ export default function AdminTelePhysio() {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-teal-700 mb-1">Website CMS</p>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">TelePhysio by Myoreset</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">{pageName}</h1>
             <p className="text-sm text-slate-600 mt-1">
               Online consultation and remote rehabilitation.{' '}
               <Link to="/telephysio" target="_blank" className="text-teal-700 font-semibold hover:underline">
@@ -130,6 +153,24 @@ export default function AdminTelePhysio() {
       </div>
 
       <form onSubmit={save} className="max-w-5xl space-y-6">
+        <CmsPanel title="Page name" icon="fa-tag">
+          <CmsField
+            label="Canonical display name"
+            hint="Headings, buttons, reviews, the browser title, meta description, Open Graph, and Twitter text on this page use this name. The address stays /telephysio."
+          >
+            <input
+              className="input-field"
+              value={s.page_name || ''}
+              maxLength={80}
+              required
+              aria-label="Canonical display name"
+              onChange={(e) => setSection('page_name', e.target.value)}
+            />
+          </CmsField>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            TelePhysio, TeleRehab, Tele-Physio, Tele-Rehab, and TelePhysio by Myoreset in this page&apos;s copy are shown publicly as <span className="font-semibold text-slate-700">{pageName}</span>.
+          </p>
+        </CmsPanel>
         <div
           className="flex gap-2 overflow-x-auto pb-3 mb-5 -mx-1 px-1"
           role="tablist"
@@ -243,6 +284,8 @@ export default function AdminTelePhysio() {
                 />
               </CmsField>
             </CmsPanel>
+
+            <PrivacyBadgeSettingsPanel />
 
             <CmsPanel title="Trust Bar Strip" icon="fa-shield-halved">
               <CmsListEditor
@@ -667,16 +710,18 @@ export default function AdminTelePhysio() {
                   onChange={(e) => setSection('testimonials_subheading', e.target.value)}
                 />
               </CmsField>
-              <CmsListEditor
+              <TestimonialItemsEditor
                 items={s.testimonials || []}
                 onChange={(v) => setSection('testimonials', v)}
-                addLabel="Add testimonial"
-                fields={[
-                  { key: 'name', label: 'Patient name' },
-                  { key: 'condition', label: 'Condition / Recovery type' },
-                  { key: 'location', label: 'City / Location' },
-                  { key: 'quote', label: 'Testimonial quote', type: 'textarea' },
-                ]}
+                quoteKey="quote"
+                quoteLabel="Testimonial quote"
+                placeKey="location"
+                placeLabel="City / location"
+                extraFields={[{ key: 'condition', label: 'Condition / recovery type' }]}
+                uploadImage={uploadCmsImage}
+                uploadVideo={uploadCmsVideo}
+                pageLabel={s.page_name || TELE_REHAB_PAGE_NAME_DEFAULT}
+                accent="teal"
               />
             </CmsPanel>
 
@@ -735,7 +780,7 @@ export default function AdminTelePhysio() {
                   className="input-field"
                   value={form.seo_title || ''}
                   onChange={(e) => set('seo_title', e.target.value)}
-                  placeholder="TelePhysio by Myoreset | Online Physiotherapy Consultation"
+                  placeholder={`${TELE_REHAB_PAGE_NAME_DEFAULT} | Online Physiotherapy Consultation`}
                 />
               </CmsField>
               <CmsField label="Meta Description">
