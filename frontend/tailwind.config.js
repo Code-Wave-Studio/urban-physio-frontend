@@ -17,6 +17,20 @@ export default {
           900: '#7c2d12',
           950: '#431407',
         },
+        /* Same logo-blue scale as --logo-* in index.css (sampled #0062AD). */
+        logo: {
+          50: 'rgb(var(--logo-50) / <alpha-value>)',
+          100: 'rgb(var(--logo-100) / <alpha-value>)',
+          200: 'rgb(var(--logo-200) / <alpha-value>)',
+          300: 'rgb(var(--logo-300) / <alpha-value>)',
+          400: 'rgb(var(--logo-400) / <alpha-value>)',
+          500: 'rgb(var(--logo-500) / <alpha-value>)',
+          600: 'rgb(var(--logo-600) / <alpha-value>)',
+          700: 'rgb(var(--logo-700) / <alpha-value>)',
+          800: 'rgb(var(--logo-800) / <alpha-value>)',
+          900: 'rgb(var(--logo-900) / <alpha-value>)',
+          950: 'rgb(var(--logo-950) / <alpha-value>)',
+        },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

@@ -74,8 +74,8 @@ function CommunityVisual({ desktopUrl, tabletUrl, alt }) {
 
 export default function CommunityPreviewSection({ sections = {}, accent = 'orange' }) {
   const isTeal = accent === 'teal';
-  const accentText = isTeal ? 'text-teal-600' : 'text-primary-600';
-  const bar = isTeal ? 'bg-teal-500' : 'bg-primary-500';
+  const accentText = isTeal ? 'text-logo-800' : 'text-primary-600';
+  const bar = isTeal ? 'bg-logo-600' : 'bg-primary-500';
 
   const socials = useMemo(() => visibleSocials(sections.community_socials), [sections.community_socials]);
   const desktopUrl = sanitizeCmsImageUrl(communityImageValue(sections.community_image_desktop));

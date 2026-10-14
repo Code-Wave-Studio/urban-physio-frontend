@@ -24,13 +24,13 @@ const THEMES = {
   tele: {
     defaults: TELE_ROADMAP_DEFAULTS,
     section: 'roadmap-theme-tele',
-    pin: 'bg-gradient-to-br from-teal-700 via-teal-900 to-slate-950',
-    label: 'text-teal-100/85',
-    intro: 'text-teal-50/90',
-    phaseTitle: 'text-teal-200',
-    specIcon: 'border-white/30 bg-white/10 text-white',
-    specMuted: 'text-teal-50/80',
-    live: 'text-teal-100',
+    pin: 'tele-band',
+    label: 'text-white',
+    intro: 'text-white/95',
+    phaseTitle: 'text-white',
+    specIcon: 'border-white/40 bg-white/15 text-white',
+    specMuted: 'text-white/90',
+    live: 'text-white',
   },
 };
 
