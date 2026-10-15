@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import FaIcon from '../components/FaIcon';
@@ -17,6 +17,7 @@ import {
   treatments,
   conditions,
   homePhysio,
+  serviceCatalogue,
 } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocation } from '../contexts/LocationContext';
@@ -38,6 +39,7 @@ import BookingScheduleStep, {
 import BookingChiefComplaintStep from '../components/booking/BookingChiefComplaintStep';
 import BookingPersonalDetailsStep from '../components/booking/BookingPersonalDetailsStep';
 import { POLICY_LAST_UPDATED } from '../constants/policyPages';
+import { filterBookableSlots } from '../components/serviceCatalogue/serviceCatalogueModel';
 import {
   matchPainTypeLabel,
   matchHomeConditionLabel,
@@ -129,6 +131,8 @@ export default function BookAppointmentWizard() {
       searchParams.get('mode')
     ),
   }));
+  const urlConsultationType = resolveBookingConsultationType(searchParams.get('type'), searchParams.get('mode'));
+  const consultationType = form.consultation_type || urlConsultationType;
   const [doctorList, setDoctorList] = useState([]);
   const [clinicList, setClinicList] = useState([]);
   const [clinicDoctors, setClinicDoctors] = useState([]);
@@ -162,6 +166,13 @@ export default function BookAppointmentWizard() {
   const [onlineStateId, setOnlineStateId] = useState('');
   const [indianStates, setIndianStates] = useState([]);
 
+  const catalogueLead = Boolean(searchParams.get('service') || searchParams.get('plan'));
+  const catalogueRequestId = useRef(
+    catalogueLead
+      ? (globalThis.crypto?.randomUUID?.() || `cat${Date.now()}`).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 80)
+      : ''
+  );
+  const submitLock = useRef(false);
   const prefillSlotTime = searchParams.get('start_time') || searchParams.get('slot') || searchParams.get('time') || '';
   const prefillDate = searchParams.get('date') || '';
   const prefillPackageId = searchParams.get('package_id') || '';
@@ -172,7 +183,7 @@ export default function BookAppointmentWizard() {
   const preselectedDoctorFromQuery = searchParams.get('doctor_id');
   const [homePhysioTier, setHomePhysioTier] = useState(() => readHomePhysioTier(searchParams.get('tier')));
   const [homePhysioTierLabel, setHomePhysioTierLabel] = useState('');
-  const lockedClinic = Boolean(preselectedClinicId && form.consultation_type === 'clinic');
+  const lockedClinic = Boolean(preselectedClinicId && consultationType === 'clinic');
   const lockedDoctor = Boolean(doctorIdParam || preselectedDoctorFromQuery);
 
   const patch = (fields) =>
@@ -186,13 +197,13 @@ export default function BookAppointmentWizard() {
   }, [selectedDoctor]);
 
   const doctorsForType = useMemo(() => {
-    if (!form.consultation_type) return doctorList;
+    if (!consultationType) return doctorList;
     return doctorList.filter((d) => {
       const enabled = d.enabled_services;
       if (!enabled?.length) return true;
-      return enabled.includes(form.consultation_type);
+      return enabled.includes(consultationType);
     });
-  }, [doctorList, form.consultation_type]);
+  }, [doctorList, consultationType]);
   const totalFee = () => {
     if (isEmergency && emergencyCtx?.fees?.total != null) {
       return Number(emergencyCtx.fees.total);
@@ -203,18 +214,18 @@ export default function BookAppointmentWizard() {
     }
     if (!selectedDoctor) return 0;
     const base =
-      form.consultation_type === 'online'
+      consultationType === 'online'
         ? selectedDoctor.online_fee
-        : form.consultation_type === 'home_visit'
+        : consultationType === 'home_visit'
           ? selectedDoctor.home_visit_fee
           : selectedDoctor.consultation_fee;
     return Number(base) * (form.number_of_sessions || 1);
   };
 
   const resolvedPaymentOption = () => {
-    if (form.consultation_type === 'online') return 'full_online';
-    if (form.consultation_type === 'clinic') return form.payment_option || 'pay_at_clinic';
-    if (form.consultation_type === 'home_visit') return form.payment_option || 'partial_50';
+    if (consultationType === 'online') return 'full_online';
+    if (consultationType === 'clinic') return form.payment_option || 'pay_at_clinic';
+    if (consultationType === 'home_visit') return form.payment_option || 'partial_50';
     return form.payment_option || 'full_online';
   };
 
@@ -247,21 +258,21 @@ export default function BookAppointmentWizard() {
 
   useEffect(() => {
     // Auto-default payment option when service changes
-    if (form.consultation_type === 'clinic' && !form.payment_option) {
+    if (consultationType === 'clinic' && !form.payment_option) {
       patch({ payment_option: 'pay_at_clinic' });
     }
-    if (form.consultation_type === 'home_visit' && !form.payment_option) {
+    if (consultationType === 'home_visit' && !form.payment_option) {
       patch({ payment_option: 'partial_50' });
     }
-    if (form.consultation_type === 'online' && form.payment_option) {
+    if (consultationType === 'online' && form.payment_option) {
       patch({ payment_option: '' });
     }
-    if (form.consultation_type !== 'home_visit') {
+    if (consultationType !== 'home_visit') {
       setMapOpen(false);
       patch({ map_latitude: null, map_longitude: null });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.consultation_type]);
+  }, [consultationType]);
 
   const selectedClinic = clinicList.find((c) => String(c.id) === String(form.clinic_id));
   const clinicMapUrl = selectedClinic
@@ -276,7 +287,7 @@ export default function BookAppointmentWizard() {
       const ctx = JSON.parse(raw);
       setEmergencyCtx(ctx);
       patch({
-        consultation_type: ctx.emergency_type || form.consultation_type,
+        consultation_type: ctx.emergency_type || consultationType,
         full_name: ctx.full_name || '',
         mobile: ctx.mobile || '',
         email: ctx.email || '',
@@ -299,7 +310,7 @@ export default function BookAppointmentWizard() {
   }, [isEmergency, doctorIdParam]);
 
   useEffect(() => {
-    if (form.consultation_type === 'online') {
+    if (consultationType === 'online') {
       booking
         .onlineStates({ consultation_type: 'online' })
         .then((res) => setIndianStates(res.data || []))
@@ -307,7 +318,7 @@ export default function BookAppointmentWizard() {
     } else {
       location.states().then((res) => setIndianStates(res.data || [])).catch(() => {});
     }
-  }, [form.consultation_type]);
+  }, [consultationType]);
 
   useEffect(() => {
     if (!form.doctor_id) {
@@ -316,7 +327,7 @@ export default function BookAppointmentWizard() {
       return;
     }
     booking
-      .doctorPackages(form.doctor_id, { consultation_type: form.consultation_type || undefined })
+      .doctorPackages(form.doctor_id, { consultation_type: consultationType || undefined })
       .then((res) => {
         const data = res?.data ?? res;
         setAdminPackages(data?.admin_packages || []);
@@ -326,19 +337,19 @@ export default function BookAppointmentWizard() {
         setAdminPackages([]);
         setDoctorPackages([]);
       });
-  }, [form.doctor_id, form.consultation_type]);
+  }, [form.doctor_id, consultationType]);
 
   useEffect(() => {
-    if (!selectedDoctorPackage || !form.consultation_type) return;
+    if (!selectedDoctorPackage || !consultationType) return;
     const pkgType = selectedDoctorPackage.consultation_type || 'any';
-    if (pkgType !== 'any' && pkgType !== form.consultation_type) {
+    if (pkgType !== 'any' && pkgType !== consultationType) {
       setPackageId(SINGLE_PACKAGE_ID);
       setSelectedDoctorPackage(null);
       setScheduleSessions([{ date: '', time: '' }]);
       patch({ number_of_sessions: 1, package_label: 'Single Visit', doctor_package_id: '', treatment_package_id: '' });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.consultation_type]);
+  }, [consultationType]);
 
   useEffect(() => {
     if (prefillTreatmentPackageId && adminPackages.length) {
@@ -471,13 +482,13 @@ export default function BookAppointmentWizard() {
     setDoctorsLoading(true);
     try {
       const params = {
-        consultation_type: form.consultation_type || undefined,
+        consultation_type: consultationType || undefined,
         search: providerSearch || undefined,
         sort: sortBy,
         specialization,
         limit: 40,
       };
-      if (form.consultation_type === 'online') {
+      if (consultationType === 'online') {
         if (onlineStateId) params.state_id = onlineStateId;
       } else {
         if (coords?.lat != null) {
@@ -494,7 +505,7 @@ export default function BookAppointmentWizard() {
         const fallback = await doctors.list({ verified: 1, city_id: city.id });
         docs = fallback.data || [];
       }
-      if (clins.length === 0 && city?.id && form.consultation_type === 'clinic') {
+      if (clins.length === 0 && city?.id && consultationType === 'clinic') {
         const clinRes = await clinics.list({ city_id: city.id });
         clins = clinRes.data || [];
       }
@@ -503,7 +514,7 @@ export default function BookAppointmentWizard() {
       setDoctorList(docs);
       setClinicList(clins);
 
-      if (form.doctor_id && !lockedDoctor && form.consultation_type !== 'clinic') {
+      if (form.doctor_id && !lockedDoctor && consultationType !== 'clinic') {
         const inList = docs.some((d) => String(d.id) === String(form.doctor_id));
         if (!inList) {
           patch({ doctor_id: '' });
@@ -516,7 +527,7 @@ export default function BookAppointmentWizard() {
     } finally {
       setDoctorsLoading(false);
     }
-  }, [coords, city, form.consultation_type, form.doctor_id, lockedDoctor, selectedDoctor, providerSearch, sortBy, specialization, onlineStateId]);
+  }, [coords, city, consultationType, form.doctor_id, lockedDoctor, selectedDoctor, providerSearch, sortBy, specialization, onlineStateId]);
 
   useEffect(() => {
     loadProvidersForLocation();
@@ -611,6 +622,36 @@ export default function BookAppointmentWizard() {
   }, [searchParams, painTypes]);
 
   useEffect(() => {
+    const slug = searchParams.get('service') || searchParams.get('plan');
+    if (!slug) return undefined;
+    let cancelled = false;
+    const cataloguePage = resolveBookingConsultationType(searchParams.get('type'), searchParams.get('mode')) === 'home_visit'
+      ? 'home_physiotherapy'
+      : 'telerehab';
+    serviceCatalogue
+      .public(cataloguePage)
+      .then((res) => {
+        if (cancelled) return;
+        const item = (res.data?.items || []).find((row) => row.slug === slug);
+        if (!item) return;
+        setPrefillLabel(item.title);
+        const resolvedType = resolveBookingConsultationType(searchParams.get('type'), searchParams.get('mode'));
+        patch((current) => ({
+          ...current,
+          consultation_type: current.consultation_type || resolvedType,
+          pain_description: current.pain_description || item.benefit || item.title,
+          pain_type:
+            current.pain_type ||
+            (painTypes.includes(item.bookingPainType) ? item.bookingPainType : current.pain_type),
+        }));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams, painTypes]);
+
+  useEffect(() => {
     const conditionSlug = searchParams.get('condition');
     if (!conditionSlug) return;
     conditions
@@ -652,23 +693,23 @@ export default function BookAppointmentWizard() {
   }, [user]);
 
   useEffect(() => {
-    if (form.consultation_type === 'clinic' && form.clinic_id) {
+    if (consultationType === 'clinic' && form.clinic_id) {
       booking.clinicDoctors(form.clinic_id).then((res) => setClinicDoctors(res.data || []));
     }
-  }, [form.clinic_id, form.consultation_type]);
+  }, [form.clinic_id, consultationType]);
 
   useEffect(() => {
-    if (form.doctor_id && form.consultation_type === 'clinic') {
+    if (form.doctor_id && consultationType === 'clinic') {
       booking.doctorClinics(form.doctor_id).then((res) => {
         if (res.data?.length) setClinicList(res.data);
       });
     }
-  }, [form.doctor_id, form.consultation_type]);
+  }, [form.doctor_id, consultationType]);
 
   const loadSlotsForDate = useCallback(
     (date) => {
       if (!date) return;
-      if (form.consultation_type === 'clinic') {
+      if (consultationType === 'clinic') {
         if (!form.clinic_id) return;
       } else if (!form.doctor_id) {
         return;
@@ -676,40 +717,40 @@ export default function BookAppointmentWizard() {
       if (slotsCache[date]) return;
       setSlotsLoadingDate(date);
       const req =
-        form.consultation_type === 'clinic'
+        consultationType === 'clinic'
           ? form.doctor_id
             ? booking.slotsForClinic(form.doctor_id, form.clinic_id, date)
             : booking.slots(null, date, form.clinic_id)
           : booking.slots(form.doctor_id, date);
       req
         .then((res) => {
-          setSlotsCache((prev) => ({ ...prev, [date]: res.data || [] }));
+          setSlotsCache((prev) => ({ ...prev, [date]: filterBookableSlots(res.data || [], date, catalogueLead) }));
         })
         .catch(() => {
           setSlotsCache((prev) => ({ ...prev, [date]: [] }));
         })
         .finally(() => setSlotsLoadingDate(''));
     },
-    [form.doctor_id, form.clinic_id, form.consultation_type, slotsCache]
+    [form.doctor_id, form.clinic_id, consultationType, slotsCache, catalogueLead]
   );
 
   const loadSlots = useCallback(() => {
     if (!form.appointment_date) return;
-    if (form.consultation_type === 'clinic') {
+    if (consultationType === 'clinic') {
       if (!form.clinic_id) return;
     } else if (!form.doctor_id) {
       return;
     }
     setSlotsLoading(true);
     const req =
-      form.consultation_type === 'clinic'
+      consultationType === 'clinic'
         ? (form.doctor_id
             ? booking.slotsForClinic(form.doctor_id, form.clinic_id, form.appointment_date)
             : booking.slots(null, form.appointment_date, form.clinic_id))
         : booking.slots(form.doctor_id, form.appointment_date);
     req
       .then((res) => {
-        let items = res.data || [];
+        let items = filterBookableSlots(res.data || [], form.appointment_date, catalogueLead);
         if (isEmergency && items.length === 0) {
           const now = new Date();
           const mins = now.getMinutes();
@@ -738,19 +779,19 @@ export default function BookAppointmentWizard() {
         }
       })
       .finally(() => setSlotsLoading(false));
-  }, [form.doctor_id, form.clinic_id, form.consultation_type, form.appointment_date, isEmergency]);
+  }, [form.doctor_id, form.clinic_id, consultationType, form.appointment_date, isEmergency, catalogueLead]);
 
   const loadAvailableDates = useCallback(() => {
     if (step !== 2) return;
-    if (!form.consultation_type) return;
-    if (form.consultation_type === 'clinic') {
+    if (!consultationType) return;
+    if (consultationType === 'clinic') {
       if (!form.clinic_id) return;
     } else if (!form.doctor_id) {
       return;
     }
     setAvailableDatesLoading(true);
     const params =
-      form.consultation_type === 'clinic'
+      consultationType === 'clinic'
         ? {
             ...(form.doctor_id ? { doctor_id: form.doctor_id } : {}),
             clinic_id: form.clinic_id,
@@ -767,7 +808,7 @@ export default function BookAppointmentWizard() {
       .then((res) => setAvailableDates(res.data || []))
       .catch(() => setAvailableDates([]))
       .finally(() => setAvailableDatesLoading(false));
-  }, [step, form.consultation_type, form.doctor_id, form.clinic_id, form.appointment_date]);
+  }, [step, consultationType, form.doctor_id, form.clinic_id, form.appointment_date]);
 
   useEffect(() => {
     if (isEmergency && !form.appointment_date) {
@@ -829,21 +870,24 @@ export default function BookAppointmentWizard() {
   };
 
   const validateStep = (s) => {
-    if (s === 0 && !form.consultation_type) {
+    if (s === 0 && !consultationType) {
       toast.error('Select a service type');
       return false;
     }
+    if (s === 0 && form.consultation_type !== consultationType) {
+      patch({ consultation_type: consultationType });
+    }
     if (s === 1) {
-      if (form.consultation_type !== 'online' && !doctorIdParam && !city && !coords) {
+      if (consultationType !== 'online' && !doctorIdParam && !city && !coords) {
         toast.error('Please select your location first');
         setShowSelector(true);
         return false;
       }
-      if (form.consultation_type === 'clinic' && !form.clinic_id) {
+      if (consultationType === 'clinic' && !form.clinic_id) {
         toast.error('Select a clinic');
         return false;
       }
-      if (form.consultation_type !== 'clinic') {
+      if (consultationType !== 'clinic') {
         if (!form.doctor_id && !selectedDoctor) {
           toast.error('Select a doctor');
           return false;
@@ -894,13 +938,13 @@ export default function BookAppointmentWizard() {
           return false;
         }
       }
-      if (form.consultation_type === 'online') {
+      if (consultationType === 'online') {
         if (!form.device_type || !form.internet_quality || !form.preferred_language) {
           toast.error('Complete online consultation details');
           return false;
         }
       }
-      if (form.consultation_type === 'home_visit') {
+      if (consultationType === 'home_visit') {
         const hasEmergencyAddress = isEmergency && emergencyCtx?.full_address?.trim();
         if (!hasEmergencyAddress && (!form.full_address || !form.pincode || !form.city || !form.patient_condition)) {
           toast.error('Complete home visit address details');
@@ -930,7 +974,7 @@ export default function BookAppointmentWizard() {
   const back = () => setStep((s) => Math.max(s - 1, 0));
 
   const openLocationMap = () => {
-    if (form.consultation_type !== 'home_visit') return;
+    if (consultationType !== 'home_visit') return;
     setMapOpen(true);
   };
 
@@ -940,7 +984,7 @@ export default function BookAppointmentWizard() {
     trackEvent(
       ANALYTICS_EVENTS.BOOKING_COMPLETE,
       {
-        booking_type: form.consultation_type || undefined,
+        booking_type: consultationType || undefined,
         payment_required: !!paid,
         source: isEmergency ? 'emergency' : 'standard',
       },
@@ -950,7 +994,7 @@ export default function BookAppointmentWizard() {
 
   const handleMapConfirm = ({ lat, lng }) => {
     patch({ map_latitude: lat, map_longitude: lng });
-    if (form.consultation_type !== 'home_visit') {
+    if (consultationType !== 'home_visit') {
       toast.success('Location saved');
       return;
     }
@@ -972,12 +1016,12 @@ export default function BookAppointmentWizard() {
 
   const slotStillAvailable = async () => {
     const res =
-      form.consultation_type === 'clinic'
+      consultationType === 'clinic'
         ? (form.doctor_id
             ? await booking.slotsForClinic(form.doctor_id, form.clinic_id, form.appointment_date)
             : await booking.slots(null, form.appointment_date, form.clinic_id))
         : await booking.slots(form.doctor_id, form.appointment_date);
-    const slots = res.data || [];
+    const slots = filterBookableSlots(res.data || [], form.appointment_date, catalogueLead);
     return slots.some((s) => s.time === form.start_time);
   };
 
@@ -1000,6 +1044,7 @@ export default function BookAppointmentWizard() {
   const policiesOk = allPoliciesAccepted(policyAcceptance);
 
   const handleBookAndPay = async () => {
+    if (submitLock.current || submitting) return;
     if (!policiesOk) {
       toast.error('Please accept all policies before payment');
       return;
@@ -1011,12 +1056,14 @@ export default function BookAppointmentWizard() {
       return;
     }
 
+    submitLock.current = true;
     setSubmitting(true);
     try {
       const resolvedDoctorId =
-        form.consultation_type === 'clinic' && !form.doctor_id ? null : Number(form.doctor_id);
+        consultationType === 'clinic' && !form.doctor_id ? null : Number(form.doctor_id);
       const payload = {
         ...form,
+        consultation_type: consultationType,
         ...(resolvedDoctorId ? { doctor_id: resolvedDoctorId } : {}),
         clinic_id: form.clinic_id ? Number(form.clinic_id) : null,
         age: Number(form.age),
@@ -1028,7 +1075,7 @@ export default function BookAppointmentWizard() {
         accepted_policies: Object.keys(policyAcceptance).filter((k) => policyAcceptance[k]),
         policies_version: POLICY_LAST_UPDATED,
         schedule_sessions: buildSchedulePayload(packageId, scheduleSessions),
-        ...(form.consultation_type === 'home_visit' && form.map_latitude != null
+        ...(consultationType === 'home_visit' && form.map_latitude != null
           ? {
               map_latitude: Number(form.map_latitude),
               map_longitude: Number(form.map_longitude),
@@ -1040,8 +1087,16 @@ export default function BookAppointmentWizard() {
         ...(selectedDoctorPackage?.package_source === 'doctor' && form.doctor_package_id
           ? { doctor_package_id: Number(form.doctor_package_id) }
           : {}),
-        ...(form.consultation_type === 'home_visit' && homePhysioTier
+        ...(consultationType === 'home_visit' && homePhysioTier
           ? { home_physio_tier: homePhysioTier }
+          : {}),
+        ...(catalogueRequestId.current
+          ? {
+              catalogue_item_slug: searchParams.get('service') || searchParams.get('plan') || '',
+              catalogue_request_id: catalogueRequestId.current,
+              catalogue_pay: searchParams.get('pay') || '',
+              catalogue_package: searchParams.get('package') || '',
+            }
           : {}),
         ...(isEmergency && emergencyCtx
           ? {
@@ -1116,6 +1171,7 @@ export default function BookAppointmentWizard() {
         Object.values(err.errors).forEach((m) => toast.error(m));
       }
     } finally {
+      submitLock.current = false;
       setSubmitting(false);
     }
   };
@@ -1176,13 +1232,13 @@ export default function BookAppointmentWizard() {
                     type="button"
                     onClick={() => patch({ consultation_type: s.id })}
                     className={`flex items-start gap-4 p-4 sm:p-5 rounded-xl border-2 text-left transition ${
-                      form.consultation_type === s.id
+                      consultationType === s.id
                         ? 'border-primary-500 bg-primary-50/90 ring-1 ring-primary-200'
                         : 'border-slate-200 bg-white/80 hover:border-primary-200 hover:bg-white'
                     }`}
                   >
                     <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
-                      form.consultation_type === s.id ? 'bg-primary-600 text-white' : 'bg-primary-100 text-primary-600'
+                      consultationType === s.id ? 'bg-primary-600 text-white' : 'bg-primary-100 text-primary-600'
                     }`}>
                       <FaIcon icon={s.icon} className="text-lg" />
                     </div>
@@ -1193,7 +1249,7 @@ export default function BookAppointmentWizard() {
                   </button>
                 ))}
               </div>
-              {form.consultation_type === 'home_visit' && homePhysioTier && (
+              {consultationType === 'home_visit' && homePhysioTier && (
                 <p className="text-sm text-slate-600">
                   Preferred physiotherapist tier:{' '}
                   <strong>{homePhysioTierLabel || homePhysioTier}</strong>
@@ -1206,7 +1262,7 @@ export default function BookAppointmentWizard() {
             <BookingProviderSelectStep
               form={form}
               patch={patch}
-              consultationType={form.consultation_type}
+              consultationType={consultationType}
               city={city}
               coords={coords}
               onSelectLocation={() => setShowSelector(true)}
@@ -1261,7 +1317,7 @@ export default function BookAppointmentWizard() {
             <BookingPersonalDetailsStep
               form={form}
               patch={patch}
-              consultationType={form.consultation_type}
+              consultationType={consultationType}
               sessions={sessions}
               homeConditions={homeConditions}
               onOpenMap={openLocationMap}
@@ -1282,9 +1338,9 @@ export default function BookAppointmentWizard() {
               <div className="bg-white/40 rounded-xl p-4 space-y-2 text-sm">
                 <p>
                   <span className="text-slate-500">Service:</span>{' '}
-                  <strong className="capitalize">{form.consultation_type?.replace('_', ' ')}</strong>
+                  <strong className="capitalize">{consultationType?.replace('_', ' ')}</strong>
                 </p>
-                {form.consultation_type === 'home_visit' && homePhysioTier && (
+                {consultationType === 'home_visit' && homePhysioTier && (
                   <p>
                     <span className="text-slate-500">Physiotherapist tier:</span>{' '}
                     <strong>{homePhysioTierLabel || homePhysioTier}</strong>
@@ -1297,7 +1353,7 @@ export default function BookAppointmentWizard() {
                   <span className="text-slate-500">Pain:</span> {form.pain_type}
                   {form.pain_duration ? ` · ${form.pain_duration}` : ''}
                 </p>
-                {form.consultation_type === 'clinic' && selectedClinic && (
+                {consultationType === 'clinic' && selectedClinic && (
                   <p>
                     <span className="text-slate-500">Clinic:</span> {selectedClinic.name}
                     {selectedClinic.address ? ` — ${selectedClinic.address}` : ''}
@@ -1342,18 +1398,18 @@ export default function BookAppointmentWizard() {
                       if (opt === 'partial_50') return round2(total * 0.5);
                       return round2(total);
                     })()}
-                    consultationType={form.consultation_type || 'all'}
+                    consultationType={consultationType || 'all'}
                     onApplied={setAppliedCoupon}
                     onClear={() => setAppliedCoupon(null)}
                     className="mt-4"
                   />
                 )}
 
-                {(form.consultation_type === 'clinic' || form.consultation_type === 'home_visit') && (
+                {(consultationType === 'clinic' || consultationType === 'home_visit') && (
                   <div className="pt-3 mt-3 border-t border-white/60">
                     <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">Payment method</p>
 
-                    {form.consultation_type === 'clinic' && (
+                    {consultationType === 'clinic' && (
                       <div className="grid sm:grid-cols-2 gap-2">
                         <button
                           type="button"
@@ -1382,7 +1438,7 @@ export default function BookAppointmentWizard() {
                       </div>
                     )}
 
-                    {form.consultation_type === 'home_visit' && (
+                    {consultationType === 'home_visit' && (
                       <div className="grid sm:grid-cols-2 gap-2">
                         <button
                           type="button"
@@ -1489,7 +1545,7 @@ export default function BookAppointmentWizard() {
         </div>
       </div>
 
-      {form.consultation_type === 'home_visit' && (
+      {consultationType === 'home_visit' && (
         <LocationMapModal
           open={mapOpen}
           onClose={() => setMapOpen(false)}

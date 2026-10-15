@@ -37,6 +37,7 @@ import { isEnrolEnabled } from '../constants/enrollmentDefaults';
 import { isSectionOn } from '../constants/sectionVisibility';
 import { usePrivacyBadges } from '../hooks/usePrivacyBadges';
 import PrivacyClaimBadges from '../components/privacy/PrivacyClaimBadges';
+import TeleRehabServiceBlock from '../components/serviceCatalogue/TeleRehabServiceBlock';
 
 function pageContent(raw) {
   const sections = mergeTelePhysioSections(raw?.sections || {});
@@ -294,6 +295,8 @@ export default function TelePhysioPage() {
       </section>
       </>
       )}
+
+      <TeleRehabServiceBlock />
 
       <OrgLogosSection />
 

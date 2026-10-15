@@ -46,7 +46,9 @@ export const ADMIN_NAV = [
   { to: '/admin/about', label: 'About Us', icon: 'fa-building', section: 'content' },
   { to: '/admin/publishing', label: 'Publishing & History', icon: 'fa-clock-rotate-left', section: 'content' },
   { to: '/admin/home-physio', label: 'Home Physiotherapy', icon: 'fa-house-medical', section: 'content' },
+  { to: '/admin/home-physio-services', label: 'Home Services', icon: 'fa-hand-holding-medical', section: 'content' },
   { to: '/admin/telephysio', label: 'TelePhysio by Myoreset', icon: 'fa-video', section: 'content' },
+  { to: '/admin/service-pages', label: 'Service Pages', icon: 'fa-layer-group', section: 'content' },
   { to: '/admin/physiotherapists', label: 'Our Physiotherapists', icon: 'fa-user-doctor', section: 'content' },
   { to: '/admin/org-logos', label: 'Organisation logos', icon: 'fa-building', section: 'content' },
 

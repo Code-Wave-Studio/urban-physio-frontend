@@ -105,6 +105,7 @@ import CareersPage from './pages/CareersPage';
 import AboutPage from './pages/AboutPage';
 import HomePhysiotherapyPage from './pages/HomePhysiotherapyPage';
 import TelePhysioPage from './pages/TelePhysioPage';
+import { TeleRehabAlias } from './components/serviceCatalogue/TeleRehabServiceBlock';
 import OffersPage from './pages/OffersPage';
 import ContactPage from './pages/ContactPage';
 import CancellationHelpPage from './pages/CancellationHelpPage';
@@ -150,6 +151,8 @@ const AdminPhysioFeed = lazyWithRetry(() => import('./pages/admin/AdminPhysioFee
 const AdminAbout = lazyWithRetry(() => import('./pages/admin/AdminAbout'));
 const AdminHomePhysio = lazyWithRetry(() => import('./pages/admin/AdminHomePhysio'));
 const AdminTelePhysio = lazyWithRetry(() => import('./pages/admin/AdminTelePhysio'));
+const AdminServicePages = lazyWithRetry(() => import('./pages/admin/AdminServicePages'));
+const AdminHomePhysioServices = lazyWithRetry(() => import('./pages/admin/AdminServicePages').then((mod) => ({ default: mod.AdminHomePhysioServices })));
 const AdminKinesteX = lazyWithRetry(() => import('./pages/admin/AdminKinesteX'));
 const AdminOffers = lazyWithRetry(() => import('./pages/admin/AdminOffers'));
 const AdminOffersSubmissionReview = lazyWithRetry(() => import('./pages/admin/AdminOffersSubmissionReview'));
@@ -314,6 +317,7 @@ export default function App() {
       <Route path="/about" element={<AboutPage />} />
       <Route path="/home-physiotherapy" element={<HomePhysiotherapyPage />} />
       <Route path="/telephysio" element={<TelePhysioPage />} />
+      <Route path="/telerehab" element={<TeleRehabAlias />} />
       <Route path="/offers" element={<OffersPage />} />
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/cancellation-help" element={<CancellationHelpPage />} />
@@ -422,7 +426,9 @@ export default function App() {
       <Route path="/admin/physiofeed" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminPhysioFeed /></ProtectedRoute>} />
       <Route path="/admin/about" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminAbout /></ProtectedRoute>} />
       <Route path="/admin/home-physio" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminHomePhysio /></ProtectedRoute>} />
+      <Route path="/admin/home-physio-services" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminHomePhysioServices /></ProtectedRoute>} />
       <Route path="/admin/telephysio" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminTelePhysio /></ProtectedRoute>} />
+      <Route path="/admin/service-pages" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminServicePages /></ProtectedRoute>} />
       <Route path="/admin/kinestex" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminKinesteX /></ProtectedRoute>} />
       <Route path="/admin/physiotherapists" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminPhysioTeam /></ProtectedRoute>} />
       <Route path="/admin/org-logos" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminOrgLogos /></ProtectedRoute>} />

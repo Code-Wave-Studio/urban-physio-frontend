@@ -178,6 +178,9 @@ export default function AdminHomePhysio() {
               </Link>
             </p>
           </div>
+          <Link to="/admin/home-physio-services" className="btn-outline text-sm shrink-0 inline-flex items-center gap-2">
+            <FaIcon icon="fa-layer-group" /> Services
+          </Link>
           <Link to="/home-physiotherapy" target="_blank" className="btn-outline text-sm shrink-0 inline-flex items-center gap-2">
             <FaIcon icon="fa-arrow-up-right-from-square" />
             Preview live page

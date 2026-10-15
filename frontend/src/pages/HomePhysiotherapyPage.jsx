@@ -13,6 +13,7 @@ import PainSelectionSection from '../components/home/PainSelectionSection';
 import RecoveryRoadmapSection from '../components/roadmap/RecoveryRoadmapSection';
 import CareEcosystemSection from '../components/ecosystem/CareEcosystemSection';
 import PhysioTeamSection from '../components/physioTeam/PhysioTeamSection';
+import HomePhysioServiceBlock from '../components/serviceCatalogue/HomePhysioServiceBlock';
 import OrgLogosSection from '../components/orgLogos/OrgLogosSection';
 import EnrollmentSection from '../components/enrollment/EnrollmentSection';
 import { homePhysio } from '../services/api';
@@ -299,6 +300,8 @@ export default function HomePhysiotherapyPage() {
       {isRoadmapEnabled(s) && <RecoveryRoadmapSection theme="home" sections={s} />}
 
       {isEcosystemEnabled(s) && <CareEcosystemSection theme="home" sections={s} />}
+
+      <HomePhysioServiceBlock />
 
       <PhysioTeamSection />
 

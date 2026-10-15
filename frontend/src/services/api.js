@@ -574,6 +574,16 @@ export const admin = {
   updateHomePhysioSettings: (data) => api.put('/admin/home-physio-settings', data),
   telephysioSettings: () => api.get('/admin/telephysio-settings'),
   updateTelePhysioSettings: (data) => api.put('/admin/telephysio-settings', data),
+  serviceCatalogue: (page = 'telerehab') => api.get('/admin/service-catalogue', { params: { page } }),
+  createServiceItem: (data) => api.post('/admin/service-catalogue/items', data),
+  updateServiceItem: (id, data) => api.put(`/admin/service-catalogue/items/${id}`, data),
+  deleteServiceItem: (id, page = 'telerehab') => api.delete(`/admin/service-catalogue/items/${id}`, { params: { page } }),
+  createServiceSection: (data) => api.post('/admin/service-catalogue/sections', data),
+  updateServiceSection: (id, data) => api.put(`/admin/service-catalogue/sections/${id}`, data),
+  createServiceChip: (data) => api.post('/admin/service-catalogue/chips', data),
+  updateServiceChip: (id, data) => api.put(`/admin/service-catalogue/chips/${id}`, data),
+  updateServiceOption: (id, data) => api.put(`/admin/service-catalogue/options/${id}`, data),
+  updateServicePage: (data) => api.put('/admin/service-catalogue/page', data),
   kinestexSettings: () => api.get('/admin/kinestex-settings'),
   updateKinesteXSettings: (data) => api.put('/admin/kinestex-settings', data),
   kinestexBulkExerciseMap: (data) => api.post('/admin/kinestex-exercise-map', data),
@@ -1104,6 +1114,10 @@ export const homePhysio = {
 
 export const telephysio = {
   settings: () => freshCmsGet('/telephysio/settings'),
+};
+
+export const serviceCatalogue = {
+  public: (pageKey) => api.get(`/service-catalogue/${pageKey}`),
 };
 
 /** Tele-Rehab dashboard. Server scopes every row to the signed-in user. */
