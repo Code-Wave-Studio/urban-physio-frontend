@@ -294,6 +294,7 @@ export default function HomePhysiotherapyPage() {
             copyDefaults: HOME_PAIN_MAP_DEFAULTS,
             className: 'pain-map-section hp-pain-map',
           })}
+          fitContent
         />
       )}
 

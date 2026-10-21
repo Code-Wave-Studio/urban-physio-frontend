@@ -399,6 +399,8 @@ export default function PainSelectionSection({
   buildBookUrl = defaultBookUrl,
   resolveKnowMore = defaultKnowMore,
   className = '',
+  /** Size to the figure and card. Avoids the viewport-tall gap under short content. */
+  fitContent = false,
 }) {
   const isControlled = painPointsProp != null;
   const [painPoints, setPainPoints] = useState(isControlled ? painPointsProp : PAIN_POINTS);
@@ -480,14 +482,18 @@ export default function PainSelectionSection({
 
   return (
     <section
-      className={`relative mb-12 px-4 py-8 sm:mb-16 sm:px-6 sm:py-10 lg:mb-24 lg:flex lg:h-[80vh] lg:min-h-[520px] lg:max-h-[920px] lg:flex-col lg:overflow-hidden lg:px-12 lg:py-14 ${className}`}
+      className={`relative px-4 pt-8 sm:px-6 sm:pt-10 lg:flex lg:flex-col lg:px-12 lg:pt-14 ${
+        fitContent
+          ? 'mb-0 overflow-x-clip pb-3 sm:pb-4 lg:h-auto lg:min-h-0 lg:pb-5'
+          : 'mb-12 pb-8 sm:mb-16 sm:pb-10 lg:mb-24 lg:h-[80vh] lg:min-h-[520px] lg:max-h-[920px] lg:overflow-hidden lg:pb-14'
+      } ${className}`}
       aria-labelledby={headingId}
     >
       <div className={`pointer-events-none absolute inset-0 bg-gradient-to-b ${theme.bgGradient}`} />
       <div className={`pointer-events-none absolute -right-20 top-0 h-48 w-48 rounded-full ${theme.blob} blur-3xl`} />
       <div className={`pointer-events-none absolute -left-16 bottom-0 h-40 w-40 rounded-full ${theme.blob2} blur-3xl`} />
 
-      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col lg:h-full lg:min-h-0">
+      <div className={`relative z-10 mx-auto flex w-full max-w-7xl flex-col ${fitContent ? '' : 'lg:h-full lg:min-h-0'}`}>
         <div className="shrink-0 text-center lg:hidden">
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500 sm:text-xs">
             {copy.eyebrow}
@@ -531,7 +537,7 @@ export default function PainSelectionSection({
         </div>
 
         {/* Main layout — natural flow on mobile, 3-col on desktop */}
-        <div className="mt-4 flex flex-col gap-4 sm:mt-5 sm:gap-5 lg:mt-0 lg:min-h-0 lg:flex-1 lg:grid lg:grid-cols-12 lg:items-stretch lg:gap-5 xl:gap-8">
+        <div className={`mt-4 flex flex-col gap-4 sm:mt-5 sm:gap-5 lg:mt-0 lg:grid lg:grid-cols-12 lg:items-stretch lg:gap-5 xl:gap-8 ${fitContent ? '' : 'lg:min-h-0 lg:flex-1'}`}>
           {/* Left copy — desktop only */}
           <div className="hidden min-h-0 flex-col justify-center lg:col-span-3 lg:flex">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">{copy.eyebrow}</p>
