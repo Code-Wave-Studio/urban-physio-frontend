@@ -101,6 +101,97 @@ export async function onKinesteXSessionCompleted(result, persistFn) {
   return persistFn(result);
 }
 
+/**
+ * POST /kinestex/session/result returns { success, message, data: { session, duplicate, created } }.
+ * Accept an already-unwrapped { session } payload too. Success requires a stored session id.
+ */
+export function unwrapKinesteXPersistResponse(body) {
+  if (!body || typeof body !== 'object') {
+    const err = new Error('The AI session result was not stored.');
+    err.status = 500;
+    throw err;
+  }
+  if (body.success === false) {
+    const err = new Error(body.message || 'Could not save the AI session result.');
+    err.status = 422;
+    throw err;
+  }
+  const payload = body.success === true && body.data && typeof body.data === 'object' ? body.data : body;
+  const session = payload.session;
+  const sessionId = Number(session?.id);
+  if (!session || typeof session !== 'object' || !Number.isInteger(sessionId) || sessionId < 1) {
+    const err = new Error('The AI session result was not stored.');
+    err.status = 500;
+    throw err;
+  }
+  return {
+    session,
+    duplicate: payload.duplicate === true,
+    created: payload.created === true,
+  };
+}
+
+/**
+ * Completion-card state. The workout result is saved only after the API returns a session id.
+ * KinesteX movement upload is a later step and does not keep the primary action in a loading state.
+ */
+export function kinestexCompletionView({
+  saveState = 'idle',
+  lifecycle = 'active',
+  motionSaveState = 'idle',
+  hasSession = false,
+} = {}) {
+  const motionPending = !['complete', 'failed', 'timed_out'].includes(motionSaveState);
+  if ((saveState === 'saving' || saveState === 'idle') && !hasSession) {
+    return {
+      phase: 'saving',
+      title: 'Saving workout…',
+      claimSaved: false,
+      canClose: false,
+      buttonLabel: null,
+      motionPending,
+    };
+  }
+  if (saveState === 'save_failed' && !hasSession) {
+    return {
+      phase: 'failed',
+      title: 'Could not save AI session',
+      claimSaved: false,
+      canClose: true,
+      buttonLabel: 'Try again',
+      motionPending,
+    };
+  }
+  if (hasSession && lifecycle === 'completed') {
+    return {
+      phase: 'saved',
+      title: 'AI Workout Complete',
+      claimSaved: true,
+      canClose: true,
+      buttonLabel: 'Done',
+      motionPending,
+    };
+  }
+  if (hasSession) {
+    return {
+      phase: 'saved',
+      title: lifecycle === 'cancelled' ? 'Session Ended' : 'AI Monitoring Unavailable',
+      claimSaved: true,
+      canClose: true,
+      buttonLabel: 'Close',
+      motionPending: false,
+    };
+  }
+  return {
+    phase: 'hidden',
+    title: '',
+    claimSaved: false,
+    canClose: false,
+    buttonLabel: null,
+    motionPending,
+  };
+}
+
 export function newClientSessionId() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
@@ -231,6 +322,10 @@ export function buildKinesteXLaunchPostData(sdk, extras = {}) {
 export function patientFriendlySaveError(err) {
   const status = err?.status;
   const msg = String(err?.message || '');
+  const code = String(err?.code || '');
+  if (code === 'ECONNABORTED' || /timeout/i.test(code) || /timeout/i.test(msg)) {
+    return 'Saving the workout timed out. Your completed result is still here — use Try again.';
+  }
   if (status === 401) return 'Please sign in again to save this AI session.';
   if (status === 403) return 'This AI session could not be saved for your account.';
   if (status === 413) return 'The AI session result was too large to save. Please try the exercise again.';

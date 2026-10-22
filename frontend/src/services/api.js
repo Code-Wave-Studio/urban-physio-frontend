@@ -1138,7 +1138,7 @@ export const kinestex = {
   /** Patient-only: validate eligibility and return official SDK Custom Workout init payload. Optional appointment_id scopes a consultation start. */
   prepareSession: (data) => api.post('/kinestex/session/prepare', data),
   /** Patient-only: persist Phase 4 session result envelope */
-  saveSessionResult: (data) => api.post('/kinestex/session/result', data),
+  saveSessionResult: (data) => api.post('/kinestex/session/result', data, { timeout: 20000 }),
   /** Patient: paginated own AI history (JWT identity). Doctor/clinic: scoped list. Never send patient_id from the browser for patients. */
   listSessions: (params) => api.get('/kinestex/sessions', { params }),
   getSession: (id) => api.get(`/kinestex/sessions/${id}`),

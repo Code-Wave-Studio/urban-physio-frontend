@@ -9,8 +9,11 @@ import {
   isKinesteXReplaySessionId,
   kinesteXStyleName,
   mapCompletionStatus,
+  kinestexCompletionView,
   onKinesteXSessionCompleted,
   patientFriendlyKinesteXError,
+  patientFriendlySaveError,
+  unwrapKinesteXPersistResponse,
   validateKinesteXSessionResult,
   newClientSessionId,
 } from './kinestexSessionBoundary.js';
@@ -219,6 +222,70 @@ check('numeric kinestex session id is replayable', isKinesteXReplaySessionId('18
 check('non-numeric provider id is not a replay route', isKinesteXReplaySessionId('ksx-sess-1') === false);
 check('empty provider id is not a replay route', isKinesteXReplaySessionId('') === false);
 check('malformed sdk does not throw', buildKinesteXLaunchPostData('not-an-object') === null);
+
+const wrapped = unwrapKinesteXPersistResponse({
+  success: true,
+  message: 'AI session saved',
+  data: {
+    session: { id: 41, metrics: { repetitions: 10, calories: 1.59, accuracy: 95 } },
+    duplicate: false,
+    created: true,
+  },
+});
+check('unwrap reads session from the API data envelope', wrapped.session.id === 41 && wrapped.session.metrics.repetitions === 10);
+check('unwrap marks a new row as created', wrapped.created === true && wrapped.duplicate === false);
+
+const already = unwrapKinesteXPersistResponse({
+  session: { id: 41, metrics: { repetitions: 10 } },
+  duplicate: true,
+  created: false,
+});
+check('unwrap accepts an already unwrapped session', already.duplicate === true && already.session.id === 41);
+
+let rejectedEmpty = false;
+try {
+  unwrapKinesteXPersistResponse({ success: true, message: 'AI session saved', data: {} });
+} catch (err) {
+  rejectedEmpty = err.message.includes('not stored');
+}
+check('unwrap rejects a success body with no session id', rejectedEmpty);
+
+let rejectedFalse = false;
+try {
+  unwrapKinesteXPersistResponse({ success: false, message: 'Forbidden' });
+} catch (err) {
+  rejectedFalse = err.message === 'Forbidden';
+}
+check('unwrap rejects success false', rejectedFalse);
+
+const savingView = kinestexCompletionView({ saveState: 'saving', lifecycle: 'completed', hasSession: false });
+check('saving view does not claim the workout is saved', savingView.phase === 'saving' && savingView.claimSaved === false && savingView.canClose === false);
+check('saving view title asks to wait', savingView.title === 'Saving workout…');
+
+const savedWhileMotion = kinestexCompletionView({
+  saveState: 'saved',
+  lifecycle: 'completed',
+  motionSaveState: 'uploading',
+  hasSession: true,
+});
+check('saved view can close while KinesteX motion is still uploading', savedWhileMotion.claimSaved === true && savedWhileMotion.canClose === true && savedWhileMotion.buttonLabel === 'Done');
+check('motion upload stays marked pending after the result is stored', savedWhileMotion.motionPending === true);
+
+const failedView = kinestexCompletionView({ saveState: 'save_failed', lifecycle: 'completed', hasSession: false });
+check('failed view keeps retry and does not claim a save', failedView.phase === 'failed' && failedView.buttonLabel === 'Try again' && failedView.claimSaved === false);
+
+const savedWithoutMotion = kinestexCompletionView({
+  saveState: 'saved',
+  lifecycle: 'completed',
+  motionSaveState: 'failed',
+  hasSession: true,
+});
+check('KinesteX motion failure does not undo a stored result', savedWithoutMotion.claimSaved === true && savedWithoutMotion.motionPending === false && savedWithoutMotion.buttonLabel === 'Done');
+
+check(
+  'timeout save error keeps the result for retry',
+  /Try again/i.test(patientFriendlySaveError({ code: 'ECONNABORTED', message: 'timeout of 20000ms exceeded' }))
+);
 
 check('display uses the zone, not a hardcoded seven-hour offset', pacificClock.includes('02:18'));
 check('already-zoned value is not shifted twice', parseStoredUtcDate('2026-10-14T09:18:00Z')?.getTime() === utcMs);

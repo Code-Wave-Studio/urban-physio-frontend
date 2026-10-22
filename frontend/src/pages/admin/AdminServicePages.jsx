@@ -2,8 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import FaIcon from '../../components/FaIcon';
-import { admin } from '../../services/api';
+import { admin, uploadCmsImage } from '../../services/api';
+import MediaUrlOrUpload from '../../components/admin/MediaUrlOrUpload';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import toast from 'react-hot-toast';
+import { bookingUrlError, isSafeBookingUrl } from '../../components/serviceCatalogue/serviceCatalogueModel';
 
 const TABS = [
   { id: 'items', label: 'Items' },
@@ -29,6 +32,11 @@ const EMPTY_ITEM = {
   offer_price: '',
   unit_label: 'per session',
   booking_pain_type: 'Other',
+  disclaimer: '',
+  booking_url: '',
+  gallery_urls: '',
+  image_url: '',
+  image_alt: '',
   chip_ids: [],
   often_booked_with: [],
   included: '',
@@ -47,6 +55,10 @@ const EMPTY_ITEM = {
 
 function lines(value) {
   return String(value || '').split('\n').map((line) => line.trim()).filter(Boolean);
+}
+
+function slugifyTitle(value) {
+  return String(value || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
 function Field({ label, children }) {
@@ -87,6 +99,7 @@ export default function AdminServicePages({
   const [errors, setErrors] = useState({});
   const [warnings, setWarnings] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
   const load = () => {
     admin.serviceCatalogue(pageKey)
@@ -101,7 +114,16 @@ export default function AdminServicePages({
     const regular = item.regular_price === '' ? null : Number(item.regular_price);
     const offer = item.offer_price === '' ? null : Number(item.offer_price);
     const show = offer != null && regular != null && offer < regular;
-    return { title: item.title || 'Service title', benefit: item.benefit || 'Benefit', price: show ? offer : regular, regular, show };
+    return {
+      title: item.title || 'Service title',
+      benefit: item.benefit || 'Benefit',
+      price: show ? offer : regular,
+      regular,
+      show,
+      image: item.image_url ? (resolveMediaUrl(item.image_url) || item.image_url) : '',
+      badge: item.badge || '',
+      duration: item.duration_label || '',
+    };
   }, [item]);
 
   function editItem(row) {
@@ -124,6 +146,10 @@ export default function AdminServicePages({
       offer_price: row.offerPrice ?? '',
       unit_label: row.unitLabel || '',
       booking_pain_type: row.bookingPainType || '',
+      booking_url: row.bookingUrl || '',
+      gallery_urls: Array.isArray(row.gallery) ? row.gallery.join('\n') : '',
+      image_url: row.imageUrl || '',
+      image_alt: row.imageAlt || '',
       chip_ids: row.chipIds || [],
       often_booked_with: row.oftenBookedWith || [],
       included: (row.included || []).join('\n'),
@@ -160,11 +186,18 @@ export default function AdminServicePages({
 
   async function saveItem(event) {
     event.preventDefault();
+    if (saving) return; // prevent accidental duplicate submissions
     setSaving(true);
     setErrors({});
+    setWarnings([]);
+    const isPlan = item.item_type === 'plan';
     const payload = {
       ...item,
       page_key: pageKey,
+      // Blank slug → backend generates a unique one from the title.
+      slug: String(item.slug || '').trim(),
+      image_url: String(item.image_url || '').trim(),
+      image_alt: String(item.image_alt || '').trim() || String(item.title || '').trim(),
       included: lines(item.included),
       good_fit: lines(item.good_fit),
       see_doctor: lines(item.see_doctor),
@@ -172,14 +205,51 @@ export default function AdminServicePages({
       offer_price: item.offer_price === '' ? null : Number(item.offer_price),
       plan_regular_price: item.plan_regular_price === '' ? null : Number(item.plan_regular_price),
       plan_offer_price: item.plan_offer_price === '' ? null : Number(item.plan_offer_price),
+      // Phases / eligibility questions are plan-only. Never send the form's
+      // blank plan placeholders with a service — they caused the spurious
+      // "Each question needs text" error on service saves.
+      phases: isPlan ? item.phases : [],
+      questions: isPlan ? item.questions : [],
     };
+    const localErrors = {};
+    const imageUrl = String(item.image_url || '').trim();
+    if (imageUrl && !isSafeBookingUrl(imageUrl)) {
+      localErrors.image_url = 'Image must be an http(s) URL or a site path';
+    }
+    if (String(item.image_alt || '').trim().length > 255) {
+      localErrors.image_alt = 'Alt text must be 255 characters or fewer';
+    }
+    if (pageKey === 'home_physiotherapy') {
+      const bookingMessage = bookingUrlError(item.booking_url);
+      if (bookingMessage) localErrors.booking_url = bookingMessage;
+      const galleryLines = lines(item.gallery_urls);
+      if (galleryLines.length > 8) {
+        localErrors.gallery_urls = 'A service can have at most 8 additional images';
+      } else if (galleryLines.some((url) => !isSafeBookingUrl(url))) {
+        localErrors.gallery_urls = 'Each additional image must be an http(s) URL or a site path';
+      }
+      payload.booking_url = String(item.booking_url || '').trim();
+      payload.gallery_urls = galleryLines;
+    } else {
+      delete payload.booking_url;
+      delete payload.gallery_urls;
+    }
+    delete payload.gallery;
+    if (Object.keys(localErrors).length) {
+      setErrors(localErrors);
+      toast.error('Check the form fields');
+      setSaving(false);
+      return;
+    }
     try {
       const res = item.id ? await admin.updateServiceItem(item.id, payload) : await admin.createServiceItem(payload);
-      setWarnings(res.data?.warnings || []);
-      toast.success('Service saved');
+      const nextWarnings = res.data?.warnings || res.warnings || [];
+      if (nextWarnings.length) toast(nextWarnings.join(' '), { icon: '⚠️' });
+      toast.success(item.id ? 'Service updated' : 'Service added');
       setItem(null);
       load();
     } catch (err) {
+      // Keep the form (and everything typed into it) open on failure.
       setErrors(err.errors || {});
       toast.error(err.message || 'Could not save');
     } finally {
@@ -188,13 +258,20 @@ export default function AdminServicePages({
   }
 
   async function removeItem(row) {
-    if (!window.confirm(`Hide “${row.title}” from Tele-Rehab?`)) return;
+    // Soft delete on the server: the record (and any booking history that
+    // references it) is retained, it simply leaves the public catalogue.
+    if (!window.confirm(`Delete “${row.title}”?\n\nIt will be removed from ${heading} and hidden on the live page. Past bookings are not affected. This cannot be undone from here.`)) return;
+    if (deletingId) return;
+    setDeletingId(row.id);
     try {
       await admin.deleteServiceItem(row.id, pageKey);
-      toast.success('Service hidden');
+      toast.success(`“${row.title}” deleted`);
+      if (item?.id === row.id) setItem(null);
       load();
     } catch (err) {
-      toast.error(err.message || 'Could not hide the service');
+      toast.error(err.message || 'Could not delete the service');
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -221,25 +298,47 @@ export default function AdminServicePages({
 
       {tab === 'items' && !item ? (
         <div>
-          <button type="button" className="mb-3 rounded-lg bg-[#376299] px-3 py-2 text-sm font-semibold text-white" onClick={() => editItem(null)}>Add service or plan</button>
+          <button type="button" className="mb-3 rounded-lg bg-[#376299] px-3 py-2 text-sm font-semibold text-white" onClick={() => editItem(null)}>+ Add new service</button>
           <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
             <table className="min-w-full text-left text-sm">
               <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-                <tr><th className="px-3 py-2">Title</th><th className="px-3 py-2">Type</th><th className="px-3 py-2">Delivery</th><th className="px-3 py-2">Status</th><th className="px-3 py-2" /></tr>
+                <tr><th className="px-3 py-2">Service</th><th className="px-3 py-2">Type</th><th className="px-3 py-2">Delivery</th><th className="px-3 py-2">Price</th><th className="px-3 py-2">Status</th><th className="px-3 py-2"><span className="sr-only">Actions</span></th></tr>
               </thead>
               <tbody>
-                {data.items.map((row) => (
-                  <tr key={row.id} className="border-t border-slate-100">
-                    <td className="px-3 py-2 font-medium">{row.title}</td>
-                    <td className="px-3 py-2">{row.type}</td>
-                    <td className="px-3 py-2">{row.deliveryMode}</td>
-                    <td className="px-3 py-2">{row.status}</td>
-                    <td className="px-3 py-2 text-right">
-                      <button type="button" className="mr-2 text-[#376299]" onClick={() => editItem(row)}>Edit</button>
-                      <button type="button" className="text-rose-700" onClick={() => removeItem(row)}>Hide</button>
-                    </td>
-                  </tr>
-                ))}
+                {data.items.length === 0 ? (
+                  <tr><td colSpan={6} className="px-3 py-10 text-center text-slate-500">No services yet. Use “Add new service” to create the first card.</td></tr>
+                ) : data.items.map((row) => {
+                  const section = data.sections.find((entry) => entry.id === row.sectionId);
+                  const thumb = row.imageUrl ? (resolveMediaUrl(row.imageUrl) || row.imageUrl) : '';
+                  return (
+                    <tr key={row.id} className="border-t border-slate-100">
+                      <td className="px-3 py-2">
+                        <span className="flex items-center gap-3">
+                          <span className="flex h-11 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[#2a4d79] to-[#5b86c2] text-white">
+                            {thumb ? <img src={thumb} alt="" className="h-full w-full object-cover" loading="lazy" /> : <FaIcon icon="fa-video" className="text-xs" />}
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block truncate font-medium">{row.title}</span>
+                            <span className="block truncate text-xs text-slate-500">{section?.title || row.benefit || ''}</span>
+                          </span>
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 capitalize">{row.type}</td>
+                      <td className="px-3 py-2 capitalize">{row.deliveryMode}</td>
+                      <td className="px-3 py-2 whitespace-nowrap">
+                        {row.price?.display != null ? <>₹{Number(row.price.display).toLocaleString('en-IN')}{row.price?.showOffer ? <span className="ml-1 text-xs text-slate-400 line-through">₹{Number(row.price.regular).toLocaleString('en-IN')}</span> : null}</> : '—'}
+                      </td>
+                      <td className="px-3 py-2">
+                        <span className="capitalize">{row.status}</span>
+                        {row.isVisible === false ? <span className="block text-xs text-slate-400">Hidden</span> : null}
+                      </td>
+                      <td className="px-3 py-2 text-right whitespace-nowrap">
+                        <button type="button" className="mr-3 font-semibold text-[#376299]" onClick={() => editItem(row)}>Edit</button>
+                        <button type="button" disabled={deletingId === row.id} className="font-semibold text-rose-700 disabled:opacity-50" onClick={() => removeItem(row)}>{deletingId === row.id ? 'Deleting…' : 'Delete'}</button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -249,6 +348,10 @@ export default function AdminServicePages({
       {tab === 'items' && item ? (
         <form onSubmit={saveItem} className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
           <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-base font-bold text-slate-900">{item.id ? `Edit service — ${item.title || 'Untitled'}` : 'Add new service'}</h2>
+              {item.id ? <span className="text-xs text-slate-400">#{item.id}</span> : null}
+            </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Type">
                 <select className={inputClass} value={item.item_type} onChange={(event) => setItem({ ...item, item_type: event.target.value })}>
@@ -258,9 +361,17 @@ export default function AdminServicePages({
               </Field>
               <Field label="Delivery">
                 <select className={inputClass} value={item.delivery_mode} onChange={(event) => setItem({ ...item, delivery_mode: event.target.value })}>
-                  <option value="online">Online</option>
-                  <option value="both">Both</option>
-                  <option value="home">Home</option>
+                  {pageKey === 'home_physiotherapy' ? (
+                    <>
+                      <option value="home">Home</option>
+                      <option value="both">Both</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="online">Online</option>
+                      <option value="both">Both</option>
+                    </>
+                  )}
                 </select>
               </Field>
               <Field label="Title (60)"><input className={inputClass} maxLength={60} value={item.title} onChange={(event) => setItem({ ...item, title: event.target.value })} /></Field>
@@ -277,17 +388,81 @@ export default function AdminServicePages({
                 </select>
               </Field>
               <Field label="Booking pain type"><input className={inputClass} value={item.booking_pain_type} onChange={(event) => setItem({ ...item, booking_pain_type: event.target.value })} /></Field>
+              {pageKey === 'home_physiotherapy' ? (
+                <div className="sm:col-span-2 space-y-3">
+                  <Field label="Booking URL">
+                    <input
+                      className={inputClass}
+                      value={item.booking_url || ''}
+                      placeholder={'/book?type=home_visit&service={slug}'}
+                      spellCheck={false}
+                      autoComplete="off"
+                      inputMode="url"
+                      onChange={(event) => setItem({ ...item, booking_url: event.target.value })}
+                    />
+                    <span className="mt-1 block text-xs font-normal text-slate-500">
+                      Optional destination for this card&apos;s Book now button. Use a site path such as /book?type=home_visit&amp;service={'{slug}'} or an http(s) URL. Leave blank to use the page booking options. {'{slug}'}, {'{service}'}, and {'{pain}'} are filled in for the visitor.
+                    </span>
+                  </Field>
+                  <Field label="Additional image URLs">
+                    <textarea
+                      className={`${inputClass} min-h-[88px]`}
+                      value={item.gallery_urls || ''}
+                      placeholder={'https://example.com/session-room.jpg'}
+                      spellCheck={false}
+                      onChange={(event) => setItem({ ...item, gallery_urls: event.target.value })}
+                    />
+                    <span className="mt-1 block text-xs font-normal text-slate-500">
+                      Optional. One image per line, up to 8. These appear with the thumbnail when a visitor opens the service. Leave blank to show only the thumbnail.
+                    </span>
+                  </Field>
+                </div>
+              ) : null}
               <Field label="Badge (20)"><input className={inputClass} maxLength={20} value={item.badge} onChange={(event) => setItem({ ...item, badge: event.target.value })} /></Field>
+              <Field label="Slug (auto-generated if blank)">
+                <input className={inputClass} value={item.slug || ''} placeholder={slugifyTitle(item.title) || 'back-pain'} onChange={(event) => setItem({ ...item, slug: event.target.value })} />
+                <span className="mt-1 block text-xs font-normal text-slate-500">{item.id ? 'Changing this changes the public URL.' : 'Leave blank to generate it from the title. Duplicates get a unique suffix.'}</span>
+              </Field>
+              <Field label="Thumbnail alt text (optional)">
+                <input className={inputClass} maxLength={255} value={item.image_alt || ''} placeholder={item.title || 'Service thumbnail'} onChange={(event) => setItem({ ...item, image_alt: event.target.value })} />
+              </Field>
+              <div className="sm:col-span-2">
+                <Field label="Disclaimer">
+                  <textarea
+                    className={`${inputClass} min-h-[72px]`}
+                    value={item.disclaimer || ''}
+                    onChange={(event) => setItem({ ...item, disclaimer: event.target.value })}
+                  />
+                  <span className="mt-1 block text-xs font-normal text-slate-500">
+                    Shown when a visitor opens the service. Required for cupping, hijama, and chiropractic.
+                  </span>
+                </Field>
+              </div>
             </div>
+            <MediaUrlOrUpload
+              label="Thumbnail image"
+              hint="Shown on the service card (admin list and live page). Uploads go to the existing CMS image library; saving without a new file keeps the current image."
+              recommendedSize="800 × 600 px (4:3 ratio)"
+              aspectRatio="4/3"
+              devicePreview="4:3"
+              accent="primary"
+              icon="fa-image"
+              urlValue={item.image_url || ''}
+              onUrlChange={(value) => setItem({ ...item, image_url: value })}
+              onUpload={uploadCmsImage}
+              accept="image/jpeg,image/png,image/webp"
+              maxMb={4}
+              preview="image"
+            />
             {errors && Object.keys(errors).length > 0 ? (
-              <ul className="rounded-lg bg-rose-50 p-3 text-sm text-rose-800">{Object.entries(errors).map(([key, message]) => <li key={key}>{message}</li>)}</ul>
+              <ul className="rounded-lg bg-rose-50 p-3 text-sm text-rose-800" role="alert">{Object.entries(errors).map(([key, message]) => <li key={key}><strong className="capitalize">{key.replace(/_/g, ' ')}:</strong> {message}</li>)}</ul>
             ) : null}
             {warnings.length > 0 ? <ul className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">{warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul> : null}
             {item.item_type === 'service' ? (
               <div className="grid gap-3 sm:grid-cols-3">
-                <Field label="Duration"><input className={inputClass} value={item.duration_label} onChange={(event) => setItem({ ...item, duration_label: event.target.value })} /></Field>
-                <Field label="Regular price"><input className={inputClass} inputMode="numeric" value={item.regular_price} onChange={(event) => setItem({ ...item, regular_price: event.target.value })} /></Field>
-                <Field label="Offer price"><input className={inputClass} inputMode="numeric" value={item.offer_price} onChange={(event) => setItem({ ...item, offer_price: event.target.value })} /></Field>
+                <Field label="Duration"><input className={inputClass} placeholder="e.g. 60 mins" value={item.duration_label} onChange={(event) => setItem({ ...item, duration_label: event.target.value })} /></Field>
+                <Field label="Regular price (₹)"><input className={inputClass} inputMode="numeric" placeholder="1200" value={item.regular_price} onChange={(event) => setItem({ ...item, regular_price: event.target.value })} /></Field>
+                <Field label="Offer price (₹)"><input className={inputClass} inputMode="numeric" placeholder="999" value={item.offer_price} onChange={(event) => setItem({ ...item, offer_price: event.target.value })} /></Field>
               </div>
             ) : (
               <div className="space-y-3">
@@ -343,18 +518,23 @@ export default function AdminServicePages({
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!item.ai_guided} onChange={(event) => setItem({ ...item, ai_guided: event.target.checked })} /> AI-guided tag</label>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={item.is_visible !== false} onChange={(event) => setItem({ ...item, is_visible: event.target.checked })} /> Visible</label>
             <div className="flex gap-2">
-              <button type="submit" disabled={saving} className="rounded-lg bg-[#376299] px-4 py-2 text-sm font-semibold text-white">{saving ? 'Saving…' : 'Save'}</button>
+              <button type="submit" disabled={saving} className="rounded-lg bg-[#376299] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{saving ? 'Saving…' : item.id ? 'Save changes' : 'Save service'}</button>
               <button type="button" className="rounded-lg border px-4 py-2 text-sm" onClick={() => setItem(null)}>Cancel</button>
             </div>
           </div>
           <aside className="h-fit rounded-xl border border-slate-200 bg-white p-4">
             <p className="text-xs font-semibold uppercase text-slate-500">Card preview</p>
             <div className="mt-3 overflow-hidden rounded-xl border">
-              <div className="flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-[#2a4d79] to-[#5b86c2] text-white"><FaIcon icon="fa-video" /></div>
+              <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-gradient-to-br from-[#2a4d79] to-[#5b86c2] text-white">
+                {preview.image ? <img src={preview.image} alt="" className="h-full w-full object-cover" /> : <FaIcon icon="fa-video" />}
+                {preview.badge ? <span className="absolute left-2 top-2 rounded-full bg-white/95 px-2 py-0.5 text-[11px] font-semibold text-slate-800">{preview.badge}</span> : null}
+              </div>
               <div className="p-3">
                 <p className="font-semibold">{preview.title}</p>
                 <p className="text-sm text-slate-500">{preview.benefit}</p>
-                <p className="mt-2 text-lg font-bold">{preview.price != null ? `₹${preview.price.toLocaleString('en-IN')}` : 'Fee confirmed when you book'}</p>
+                {preview.duration ? <p className="text-xs text-slate-400">{preview.duration}</p> : null}
+                <p className="mt-2 text-lg font-bold">{preview.price != null && !Number.isNaN(preview.price) ? `₹${preview.price.toLocaleString('en-IN')}` : 'Fee confirmed when you book'}{preview.show ? <span className="ml-2 text-sm font-normal text-slate-400 line-through">₹{preview.regular.toLocaleString('en-IN')}</span> : null}</p>
+                <span className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-[10px] bg-[#376299] px-3 py-2 text-sm font-semibold text-white">Book now</span>
                 {preview.show ? <p className="text-xs text-[#c9483b]">You save ₹{(preview.regular - preview.price).toLocaleString('en-IN')}</p> : null}
               </div>
             </div>

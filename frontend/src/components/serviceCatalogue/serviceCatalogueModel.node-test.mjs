@@ -5,8 +5,12 @@ import {
   activePrice,
   applyChipFilter,
   chipInterest,
+  bookingDestinationNote,
+  bookingUrlError,
   fillBookingTemplate,
   filterBookableSlots,
+  isSafeBookingUrl,
+  resolveServiceBookingUrl,
   orderChipsForVisit,
   phaseBarSegments,
   planSavings,
@@ -170,6 +174,36 @@ const kept = filterBookableSlots(
 );
 check('catalogue booking removes the near slot only', kept.length === 1 && kept[0].time === '16:00');
 check('other bookings keep every slot', filterBookableSlots([{ time: '13:00' }], '2026-10-15', false, soon).length === 1);
+
+check('relative booking urls are allowed', isSafeBookingUrl('/book?type=home_visit&service={slug}'));
+check('https booking urls are allowed', isSafeBookingUrl('https://calendly.com/urban-physio'));
+check('http booking urls are allowed', isSafeBookingUrl('http://localhost/theurbanphysio/book'));
+check('javascript booking urls are rejected', !isSafeBookingUrl('javascript:alert(1)') && !isSafeBookingUrl(' JavaScript:alert(1)'));
+check('data and protocol-relative urls are rejected', !isSafeBookingUrl('data:text/html,hi') && !isSafeBookingUrl('//evil.example/phish'));
+check('credential urls are rejected', !isSafeBookingUrl('https://user:pass@example.com/book'));
+check('blank booking url has no error', bookingUrlError('  ') === '');
+check('unsafe booking url explains the rule', bookingUrlError('javascript:alert(1)').includes('http'));
+
+const service = {
+  slug: 'back-neck-pain-relief',
+  title: 'Back & Neck Pain Relief',
+  bookingPainType: 'Back Pain',
+  deliveryMode: 'home',
+  bookingUrl: '/book?service={slug}',
+};
+const resolved = resolveServiceBookingUrl(service, { pain: 'Back Pain' }, { origin: 'http://localhost', base: '/theurbanphysio' });
+check('service booking url keeps its slug and adds the visit type', resolved.startsWith('/book?') && resolved.includes('service=back-neck-pain-relief') && resolved.includes('type=home_visit') && resolved.includes('pain_type=Back+Pain'));
+check('a bare book path receives the service slug', resolveServiceBookingUrl({ ...service, bookingUrl: '/book' }, {}, { base: '/theurbanphysio' }).includes('service=back-neck-pain-relief'));
+check('same-origin absolute book links stay inside the app', resolveServiceBookingUrl(
+  { ...service, bookingUrl: 'http://localhost/theurbanphysio/book' },
+  {},
+  { origin: 'http://localhost', base: '/theurbanphysio' }
+).startsWith('/book?'));
+check('external booking links are left intact', resolveServiceBookingUrl({ ...service, bookingUrl: 'https://calendly.com/urban' }) === 'https://calendly.com/urban');
+check('unsafe stored booking links are ignored', resolveServiceBookingUrl({ ...service, bookingUrl: 'javascript:alert(1)' }) === '');
+check('missing booking links fall back to the default flow', resolveServiceBookingUrl({ ...service, bookingUrl: '' }) === '');
+check('internal booking note stays on site', bookingDestinationNote('/book?service=back') === 'Continues to booking on The Urban Physio');
+check('external booking note names the host', bookingDestinationNote('https://www.calendly.com/urban') === 'Opens calendly.com');
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

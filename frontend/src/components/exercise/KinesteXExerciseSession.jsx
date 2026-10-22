@@ -9,10 +9,12 @@ import {
   kinesteXStyleName,
   buildKinesteXSessionResult,
   cameraCaptureSupported,
+  kinestexCompletionView,
   newClientSessionId,
   onKinesteXSessionCompleted,
   patientFriendlyKinesteXError,
   patientFriendlySaveError,
+  unwrapKinesteXPersistResponse,
 } from '../../services/kinestexSessionBoundary';
 import { kinestex } from '../../services/api';
 import { ANALYTICS_EVENTS, trackEvent } from '../../utils/analytics';
@@ -43,6 +45,7 @@ export default function KinesteXExerciseSession({
   const bestStatusRef = useRef(null);
   const notifiedRef = useRef({ completed: false, failed: false, cancelled: false });
   const saveStateRef = useRef('idle');
+  const persistedIdRef = useRef(null);
   const clientSessionIdRef = useRef(newClientSessionId());
   const startedAtRef = useRef(new Date().toISOString());
   const eventsRef = useRef({});
@@ -53,6 +56,7 @@ export default function KinesteXExerciseSession({
   const [saveError, setSaveError] = useState('');
   const [lastResult, setLastResult] = useState(null);
   const [persisted, setPersisted] = useState(null);
+  const [syncWarning, setSyncWarning] = useState('');
   const [motionSaveState, setMotionSaveState] = useState('idle'); // idle | uploading | complete | failed | timed_out
   const [coachMuted, setCoachMuted] = useState(false);
   const [showMacNote, setShowMacNote] = useState(true);
@@ -147,13 +151,23 @@ export default function KinesteXExerciseSession({
     }
     setSaveError('');
     onKinesteXSessionCompleted(next.result, (payload) => kinestex.saveSessionResult(payload))
-      .then((saved) => {
+      .then((body) => {
+        const saved = unwrapKinesteXPersistResponse(body);
+        persistedIdRef.current = saved.session.id;
         setPersisted(saved);
+        setSyncWarning('');
         saveStateRef.current = 'saved';
         setSaveState('saved');
         finish(next.kind, { ...next.result, persisted: saved });
       })
       .catch((err) => {
+        // A later merge uses the same client_session_id. Keep the row that already saved.
+        if (persistedIdRef.current) {
+          setSyncWarning(patientFriendlySaveError(err));
+          saveStateRef.current = 'saved';
+          setSaveState('saved');
+          return;
+        }
         saveStateRef.current = 'save_failed';
         setSaveState('save_failed');
         setSaveError(patientFriendlySaveError(err));
@@ -221,9 +235,9 @@ export default function KinesteXExerciseSession({
   );
 
   const retrySave = useCallback(() => {
-    if (!lastResult) return;
-    persistInFlightRef.current = false;
-    persistResult(lastResult, lastResult.status === 'failed' ? 'failed' : lastResult.status === 'cancelled' ? 'cancelled' : 'completed');
+    if (!lastResult || persistInFlightRef.current) return;
+    const kind = lastResult.status === 'failed' ? 'failed' : lastResult.status === 'cancelled' ? 'cancelled' : 'completed';
+    persistResult(lastResult, kind);
   }, [lastResult, persistResult]);
 
   const toggleCoachSpeech = useCallback(() => {
@@ -472,6 +486,13 @@ export default function KinesteXExerciseSession({
     );
   }
 
+  const completionView = kinestexCompletionView({
+    saveState,
+    lifecycle,
+    motionSaveState,
+    hasSession: Number(persisted?.session?.id) > 0,
+  });
+
   return createPortal(
     <div
       className="kinestex-session-overlay"
@@ -567,26 +588,26 @@ export default function KinesteXExerciseSession({
       {showResultCard && (
         <div className={`kinestex-session-result${keepSdkMounted ? ' is-overlay' : ''}`}>
           <div className="bg-white rounded-2xl p-5 sm:p-6 max-w-xl w-full text-center shadow-xl max-h-full overflow-y-auto min-w-0">
-            {saveState === 'saving' && (
+            {completionView.phase === 'saving' && (
               <>
                 <div className="w-14 h-14 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center mx-auto mb-3">
                   <FaIcon icon="fa-spinner" className="text-xl animate-spin" />
                 </div>
-                <h2 className="text-xl font-bold text-slate-900">Saving session…</h2>
+                <h2 className="text-xl font-bold text-slate-900">{completionView.title}</h2>
                 <p className="text-sm text-slate-600 mt-2">
-                  Please wait while we store your AI-Guided Exercise result.
+                  Please wait while we store your workout result.
                 </p>
               </>
             )}
 
-            {saveState === 'saved' && lifecycle === 'completed' && (
+            {completionView.claimSaved && lifecycle === 'completed' && (
               <>
                 <div className="w-14 h-14 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center mx-auto mb-3">
                   <FaIcon icon="fa-check" className="text-xl" />
                 </div>
-                <h2 className="text-xl font-bold text-slate-900">AI Workout Complete</h2>
+                <h2 className="text-xl font-bold text-slate-900">{completionView.title}</h2>
                 <p className="text-sm text-slate-600 mt-2">
-                  Your AI Personal Trainer session was saved. Review objective performance below — this is not a medical diagnosis.
+                  Your workout result was saved. Review objective performance below — this is not a medical diagnosis.
                 </p>
                 <div className="mt-4 text-left">
                   {persisted?.session?.movement_analysis?.available && persisted?.session ? (
@@ -612,21 +633,29 @@ export default function KinesteXExerciseSession({
                       It is not a clinical assessment.
                     </p>
                   )}
-                  {motionSaveState === 'uploading' || motionSaveState === 'idle' ? (
+                  {completionView.motionPending ? (
                     <p className="text-[11px] text-slate-500 mt-2">
-                      Saving movement recording to KinesteX…
+                      KinesteX is still saving the movement recording. If Retry appears on the workout screen, use it — this result is already stored. Closing does not delete it.
                     </p>
                   ) : null}
                   {motionSaveState === 'failed' && (
                     <p className="text-[11px] text-amber-800 mt-2 rounded-lg bg-amber-50 px-3 py-2">
-                      Movement recording could not be saved for this session. Performance metrics were still stored.
+                      The movement recording was not stored by KinesteX. The workout result on this page was still saved.
                     </p>
                   )}
                   {motionSaveState === 'timed_out' && (
                     <p className="text-[11px] text-amber-800 mt-2 rounded-lg bg-amber-50 px-3 py-2">
-                      Movement recording did not finish uploading. Performance metrics were still stored. Replay is available only if KinesteX saved the session.
+                      The movement recording did not finish uploading. The workout result on this page was still saved. Replay is available only after KinesteX stores the recording.
                     </p>
                   )}
+                  {syncWarning ? (
+                    <div className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-[11px] text-amber-900">
+                      <p>{syncWarning}</p>
+                      <button type="button" className="btn-outline mt-2 min-h-9 w-full text-xs" onClick={retrySave}>
+                        Try again
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
                 <p className="text-xs text-slate-400 mt-3">
                   You can still use Mark Complete on your rehab plan if needed.
@@ -634,12 +663,9 @@ export default function KinesteXExerciseSession({
                 <button
                   type="button"
                   className="btn-primary mt-5 w-full min-h-10"
-                  onClick={() => {
-                    if (motionPending) setCloseRequested(true);
-                    else onClose?.();
-                  }}
+                  onClick={() => onClose?.()}
                 >
-                  {motionPending || closeRequested ? 'Saving movement…' : 'Done'}
+                  {completionView.buttonLabel}
                 </button>
               </>
             )}
@@ -666,7 +692,7 @@ export default function KinesteXExerciseSession({
               </>
             )}
 
-            {saveState === 'save_failed' && (
+            {completionView.phase === 'failed' && (
               <>
                 <h2 className="text-lg font-bold text-slate-900">Could not save AI session</h2>
                 <p className="text-sm text-slate-600 mt-2">

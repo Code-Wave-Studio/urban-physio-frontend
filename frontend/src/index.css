@@ -517,10 +517,18 @@
 
   /* Keep the iframe in layout while motion uploads. visibility:hidden throttles
      the provider frame and drops the skeletal recording. */
+  /* The provider's own "Couldn't save your workout" Retry lives inside the iframe.
+     The host card must not capture those clicks. */
   .kinestex-session-result.is-overlay {
     position: absolute;
     inset: 0;
     z-index: 4;
+    pointer-events: none;
+    background: transparent;
+  }
+
+  .kinestex-session-result.is-overlay > * {
+    pointer-events: auto;
   }
 
   .kinestex-session-stage > div {

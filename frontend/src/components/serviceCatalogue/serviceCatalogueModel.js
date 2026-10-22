@@ -229,6 +229,111 @@ export function sourceChipFromVisit(chips, searchParams) {
   return match?.key || '';
 }
 
+const BLOCKED_BOOKING_SCHEME = /^(javascript|data|vbscript|file|blob|about):/i;
+
+/** Site-relative paths and http(s) URLs. Rejects scriptable and protocol-relative links. */
+export function isSafeBookingUrl(value) {
+  const href = String(value || '').trim();
+  if (!href || href.length > 500) return false;
+  if (/[\u0000-\u001F\u007F]/.test(href) || /\s/.test(href)) return false;
+  if (href.includes('\\') || href.startsWith('//')) return false;
+  if (BLOCKED_BOOKING_SCHEME.test(href)) return false;
+  if (href.startsWith('/')) return true;
+  let url;
+  try {
+    url = new URL(href);
+  } catch {
+    return false;
+  }
+  if (url.username || url.password) return false;
+  return url.protocol === 'http:' || url.protocol === 'https:';
+}
+
+export function bookingUrlError(value) {
+  const href = String(value || '').trim();
+  if (!href) return '';
+  if (href.length > 500) return 'Booking URL must be 500 characters or fewer';
+  if (!isSafeBookingUrl(href)) return 'Use a site path starting with / or an http(s) URL';
+  return '';
+}
+
+function stripAppBase(path, base) {
+  const hashAt = path.indexOf('#');
+  const hash = hashAt === -1 ? '' : path.slice(hashAt);
+  const withoutHash = hashAt === -1 ? path : path.slice(0, hashAt);
+  const queryAt = withoutHash.indexOf('?');
+  const pathname = queryAt === -1 ? withoutHash : withoutHash.slice(0, queryAt);
+  const search = queryAt === -1 ? '' : withoutHash.slice(queryAt);
+  const normalizedBase = String(base || '').replace(/\/+$/, '');
+  let next = pathname;
+  if (normalizedBase && normalizedBase !== '/' && (pathname === normalizedBase || pathname.startsWith(`${normalizedBase}/`))) {
+    next = pathname.slice(normalizedBase.length) || '/';
+    if (!next.startsWith('/')) next = `/${next}`;
+  }
+  return `${next}${search}${hash}`;
+}
+
+function enrichInternalBookingPath(path, item, extra) {
+  const hashAt = path.indexOf('#');
+  const hash = hashAt === -1 ? '' : path.slice(hashAt);
+  const withoutHash = hashAt === -1 ? path : path.slice(0, hashAt);
+  const queryAt = withoutHash.indexOf('?');
+  const pathname = queryAt === -1 ? withoutHash : withoutHash.slice(0, queryAt);
+  const normalized = pathname.replace(/\/+$/, '') || '/';
+  if (normalized !== '/book' && !normalized.endsWith('/book')) return path;
+  const params = new URLSearchParams(queryAt === -1 ? '' : withoutHash.slice(queryAt + 1));
+  if (!params.get('service') && item?.slug) params.set('service', item.slug);
+  const pain = extra.pain || item?.bookingPainType || '';
+  if (!params.get('pain_type') && pain) params.set('pain_type', pain);
+  if (!params.get('type')) params.set('type', item?.deliveryMode === 'online' ? 'online' : 'home_visit');
+  if (!params.get('mode')) params.set('mode', item?.deliveryMode === 'online' ? 'telephysio' : 'home-visit');
+  const query = params.toString();
+  return `${pathname}${query ? `?${query}` : ''}${hash}`;
+}
+
+/**
+ * Resolved destination for a service's own booking URL.
+ * Empty when the service should use the page's default booking options.
+ */
+export function resolveServiceBookingUrl(item, extra = {}, options = {}) {
+  const raw = String(item?.bookingUrl || '').trim();
+  if (!raw || !isSafeBookingUrl(raw)) return '';
+  const filled = fillBookingTemplate(raw, bookingContext(item, extra));
+  if (!isSafeBookingUrl(filled)) return '';
+  const origin = options.origin || '';
+  let kind = 'external';
+  let path = filled;
+  if (filled.startsWith('/')) {
+    kind = 'internal';
+  } else if (origin) {
+    try {
+      const url = new URL(filled);
+      if (url.origin === new URL(origin).origin) {
+        kind = 'internal';
+        path = `${url.pathname}${url.search}${url.hash}`;
+      }
+    } catch {
+      return '';
+    }
+  }
+  if (kind === 'internal') {
+    return enrichInternalBookingPath(stripAppBase(path, options.base || ''), item, extra);
+  }
+  return filled;
+}
+
+export function bookingDestinationNote(href) {
+  const value = String(href || '');
+  if (!value) return '';
+  if (value.startsWith('/')) return 'Continues to booking on The Urban Physio';
+  try {
+    const host = new URL(value).hostname.replace(/^www\./, '');
+    return host ? `Opens ${host}` : '';
+  } catch {
+    return '';
+  }
+}
+
 export function fillBookingTemplate(template, ctx) {
   const url = String(template || '').replace(
     /\{(service|slug|section|chip|price|package|pay|treatment|pain|plan)\}/g,

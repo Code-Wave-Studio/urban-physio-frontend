@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import FaIcon from '../FaIcon';
 import { serviceCatalogue } from '../../services/api';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import { useContact } from '../../contexts/ContactContext';
 import { whatsappChatUrl } from '../../utils/whatsapp';
 import { ANALYTICS_EVENTS, trackEvent } from '../../utils/analytics';
 import {
   applyChipFilter,
   bookingContext,
+  bookingDestinationNote,
   chipInterest,
   fillBookingTemplate,
   formatInr,
@@ -16,8 +19,10 @@ import {
   rankQuickPicks,
   readViewHistory,
   rememberView,
+  resolveServiceBookingUrl,
   sourceChipFromVisit,
   subtitleForPick,
+  isSafeBookingUrl,
 } from './serviceCatalogueModel';
 import './serviceCatalogue.css';
 
@@ -49,6 +54,183 @@ function iconFor(item) {
   return ICONS[item.slug] || 'fa-house-medical';
 }
 
+function imageSrc(item) {
+  return item?.imageUrl ? (resolveMediaUrl(item.imageUrl) || item.imageUrl) : '';
+}
+
+function serviceImages(item) {
+  const rows = [];
+  const push = (url, alt) => {
+    const raw = String(url || '').trim();
+    if (!isSafeBookingUrl(raw)) return;
+    const src = resolveMediaUrl(raw) || raw;
+    if (!src || rows.some((row) => row.src === src)) return;
+    rows.push({ src, alt: alt || item?.title || 'Service image' });
+  };
+  push(item?.imageUrl, item?.imageAlt || item?.title);
+  (Array.isArray(item?.gallery) ? item.gallery : []).forEach((url) => push(url, item?.imageAlt || item?.title));
+  return rows;
+}
+
+function ServiceImageGallery({ item }) {
+  const images = serviceImages(item);
+  const [index, setIndex] = useState(0);
+  const [failed, setFailed] = useState({});
+  useEffect(() => {
+    setIndex(0);
+    setFailed({});
+  }, [item?.id]);
+  const visible = images.filter((image) => !failed[image.src]);
+  if (visible.length === 0) {
+    return (
+      <div className="svc-sheet-hero" aria-hidden="true">
+        <FaIcon icon={iconFor(item)} />
+      </div>
+    );
+  }
+  const safeIndex = Math.min(index, visible.length - 1);
+  const current = visible[safeIndex];
+  const markFailed = () => setFailed((prev) => ({ ...prev, [current.src]: true }));
+  if (visible.length === 1) {
+    return (
+      <div className="svc-sheet-hero">
+        <img src={current.src} alt={current.alt} onError={markFailed} />
+      </div>
+    );
+  }
+  return (
+    <div>
+      <div className="svc-sheet-hero">
+        <img src={current.src} alt={`${current.alt} (${safeIndex + 1} of ${visible.length})`} onError={markFailed} />
+        <button
+          type="button"
+          className="svc-sheet-nav prev"
+          aria-label="Previous image"
+          onClick={() => setIndex((value) => (value - 1 + visible.length) % visible.length)}
+        >
+          <FaIcon icon="fa-chevron-left" />
+        </button>
+        <button
+          type="button"
+          className="svc-sheet-nav next"
+          aria-label="Next image"
+          onClick={() => setIndex((value) => (value + 1) % visible.length)}
+        >
+          <FaIcon icon="fa-chevron-right" />
+        </button>
+      </div>
+      <div className="svc-sheet-thumbs" aria-label="Service images">
+        {visible.map((image, imageIndex) => (
+          <button
+            key={image.src}
+            type="button"
+            aria-label={`Show image ${imageIndex + 1}`}
+            aria-current={imageIndex === safeIndex ? 'true' : undefined}
+            onClick={() => setIndex(imageIndex)}
+          >
+            <img src={image.src} alt="" onError={() => setFailed((prev) => ({ ...prev, [image.src]: true }))} />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ServiceDetailDrawer({ detail, chips, bookLabel, canBook, note, panelRef, onClose, onBook, onChip }) {
+  const meta = [detail.durationLabel, detail.rating != null ? `★ ${Number(detail.rating).toFixed(1)}` : '', 'At your home'].filter(Boolean);
+  return (
+    <div className="svc-sheet-backdrop" onClick={onClose}>
+      <div
+        ref={panelRef}
+        id="home-svc-drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="home-svc-title"
+        aria-describedby="home-svc-summary"
+        className="svc-sheet"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="svc-sheet-head">
+          <span className="svc-sheet-handle" aria-hidden="true" />
+          <div className="mb-2 flex items-start justify-between gap-3">
+            <h2 id="home-svc-title" className="text-xl font-bold">{detail.title}</h2>
+            <button type="button" className="svc-sheet-close" onClick={onClose} aria-label="Close service details">×</button>
+          </div>
+        </div>
+        <div id="home-svc-summary" className="svc-sheet-body">
+          <ServiceImageGallery item={detail} />
+          <div className="mt-3 flex flex-wrap gap-2">
+            {detail.badge ? <span className="rounded-full bg-[#e8eef6] px-2 py-0.5 text-[11px] font-semibold text-[#1d1d1f]">{detail.badge}</span> : null}
+            {detail.price?.showOffer ? <span className="rounded-full bg-[#ff6f61] px-2 py-0.5 text-[11px] font-semibold text-white">{detail.price.percent}% off</span> : null}
+            {detail.aiGuided ? <span className="rounded-full bg-[#e8e8ed] px-2 py-0.5 text-[11px] font-semibold">AI-guided</span> : null}
+          </div>
+          {detail.benefit ? <p className="mt-3 text-sm text-[#6e6e73]">{detail.benefit}</p> : null}
+          {meta.length ? <p className="mt-2 text-xs text-[#6e6e73]">{meta.join(' · ')}</p> : null}
+          {detail.price?.display != null ? (
+            <p className="svc-accent mt-4 bg-[#f3f7fc] p-3">
+              <span className="text-2xl font-bold">{formatInr(detail.price.display)}</span>
+              {detail.price.showOffer ? <span className="ml-2 text-sm text-[#6e6e73] line-through">{formatInr(detail.price.regular)}</span> : null}
+              {detail.unitLabel ? <span className="mt-1 block text-xs text-[#6e6e73]">{detail.unitLabel}</span> : null}
+              {detail.price.showOffer ? <span className="mt-2 inline-flex rounded-full bg-[#fff1ef] px-2 py-0.5 text-xs font-semibold text-[#c9483b]">You save {formatInr(detail.price.save)}</span> : null}
+            </p>
+          ) : (
+            <p className="mt-4 text-sm text-[#6e6e73]">Fee confirmed when you book</p>
+          )}
+          {detail.clinicalNote ? <p className="mt-4 text-sm">{detail.clinicalNote}</p> : null}
+          {detail.included?.length ? (
+            <div className="mt-4">
+              <h3 className="text-sm font-semibold">What&apos;s included</h3>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">{detail.included.map((line) => <li key={line}>{line}</li>)}</ul>
+            </div>
+          ) : null}
+          {detail.goodFit?.length ? (
+            <div className="mt-4">
+              <h3 className="text-sm font-semibold">A good fit when</h3>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">{detail.goodFit.map((line) => <li key={line}>{line}</li>)}</ul>
+            </div>
+          ) : null}
+          {detail.seeDoctor?.length ? (
+            <div className="mt-4">
+              <h3 className="text-sm font-semibold">See a doctor first if</h3>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">{detail.seeDoctor.map((line) => <li key={line}>{line}</li>)}</ul>
+            </div>
+          ) : null}
+          {detail.chipKeys?.length ? (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {detail.chipKeys.map((key) => {
+                const chip = (chips || []).find((row) => row.key === key);
+                if (!chip) return null;
+                return (
+                  <button key={key} type="button" className="svc-chip px-2 py-1 text-xs" onClick={() => onChip(key)}>
+                    {chip.label}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+          {detail.disclaimer ? <p className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-950">{detail.disclaimer}</p> : null}
+        </div>
+        <div className="svc-sheet-foot">
+          {note ? <p className="mb-2 text-center text-xs text-[#6e6e73]">{note}</p> : null}
+          <button
+            type="button"
+            className="svc-btn inline-flex w-full items-center justify-center gap-2 px-3 py-3 text-sm font-semibold"
+            disabled={!canBook}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              onBook();
+            }}
+          >
+            <FaIcon icon="fa-calendar" /> {bookLabel}
+          </button>
+          {!canBook ? <p className="mt-2 text-center text-xs text-[#6e6e73]">Booking is not available for this service yet.</p> : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function HomePhysioServiceBlock() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -68,6 +250,7 @@ export default function HomePhysioServiceBlock() {
   const sourceChip = useRef('');
   const openedSlug = useRef('');
   const panelRef = useRef(null);
+  const sheetRef = useRef(null);
   const returnFocus = useRef(null);
 
   useEffect(() => {
@@ -214,16 +397,22 @@ export default function HomePhysioServiceBlock() {
   }, [visibleSections]);
 
   useEffect(() => {
-    if (!detail || !panelRef.current) return undefined;
-    const node = panelRef.current;
+    if (!detail && !sheet) return undefined;
+    const node = sheet ? sheetRef.current : panelRef.current;
+    if (!node) return undefined;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const focusable = () => [...node.querySelectorAll('button, a, input, select, textarea, [tabindex]:not([tabindex="-1"])')];
     focusable()[0]?.focus();
     const onKey = (event) => {
       if (event.key === 'Escape') {
-        if (sheet) setSheet(null);
-        else closeDetail();
+        event.preventDefault();
+        if (sheet) {
+          setSheet(null);
+          if (!detail) returnFocus.current?.focus?.();
+        } else {
+          closeDetail();
+        }
         return;
       }
       if (event.key !== 'Tab') return;
@@ -244,6 +433,8 @@ export default function HomePhysioServiceBlock() {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener('keydown', onKey);
     };
+    // closeDetail reads the latest search params from the render that opened the dialog.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detail, sheet]);
 
   function chooseChip(key) {
@@ -276,13 +467,24 @@ export default function HomePhysioServiceBlock() {
     if (bookNow) startBooking(item, 'detail');
   }
 
-  function closeDetail() {
+  function closeDetail(options = {}) {
     const closed = detail;
     openedSlug.current = '';
     setDetail(null);
     setSheet(null);
     const params = new URLSearchParams(searchParams);
     params.delete('service');
+    if (Object.prototype.hasOwnProperty.call(options, 'chipKey')) {
+      const next = selectedChip === options.chipKey ? '' : options.chipKey;
+      setSelectedChip(next);
+      if (next) params.set('chip', next);
+      else params.delete('chip');
+      trackEvent(ANALYTICS_EVENTS.CHIP_SELECT, {
+        chip_id: next || 'cleared',
+        chip_label: next || 'cleared',
+        section: 'home-physio-services',
+      });
+    }
     setSearchParams(params, { replace: true });
     if (closed && window.matchMedia('(max-width: 720px)').matches) setSticky(closed);
     returnFocus.current?.focus?.();
@@ -309,7 +511,7 @@ export default function HomePhysioServiceBlock() {
         if (!option.isVisible) return false;
         if (option.key === 'whatsapp') return Boolean(option.whatsappNumber);
         if (option.key === 'call') return Boolean(option.phone);
-        return Boolean(option.hrefTemplate);
+        return Boolean(option.hrefTemplate) && isSafeBookingUrl(option.hrefTemplate);
       })
       .sort((a, b) => a.sortOrder - b.sortOrder);
   }
@@ -327,8 +529,31 @@ export default function HomePhysioServiceBlock() {
     return fillBookingTemplate(option.hrefTemplate, ctx);
   }
 
+  function bookingHrefAllowed(href, option) {
+    const value = String(href || '').trim();
+    if (option?.key === 'call') return /^tel:\+?[0-9]{8,15}$/.test(value);
+    if (option?.key === 'whatsapp') return value.startsWith('https://wa.me/') || value.startsWith('https://api.whatsapp.com/');
+    return isSafeBookingUrl(value);
+  }
+
+  function followBookingHref(href, option) {
+    const value = String(href || '').trim();
+    if (!bookingHrefAllowed(value, option)) return false;
+    if (option?.key === 'whatsapp' || option?.openInNewTab) {
+      window.open(value, '_blank', 'noopener');
+      return true;
+    }
+    if (value.startsWith('/')) {
+      navigate(value);
+      return true;
+    }
+    window.location.assign(value);
+    return true;
+  }
+
   function goOption(option, item, extra, source) {
     const href = optionHref(option, item, extra);
+    if (!bookingHrefAllowed(href, option)) return;
     trackEvent(ANALYTICS_EVENTS.CTA_CLICK, {
       cta_id: option.key,
       cta_label: option.label,
@@ -339,12 +564,10 @@ export default function HomePhysioServiceBlock() {
       chip_id: extra.chip || '',
       destination: href.startsWith('/') ? href.split('?')[0] : 'external',
     });
-    if (href.startsWith('/')) {
-      navigate(href);
-      return;
-    }
-    if (option.openInNewTab || option.key === 'whatsapp') window.open(href, '_blank', 'noopener');
-    else window.location.assign(href);
+    openedSlug.current = item?.slug || 'booking';
+    setDetail(null);
+    setSheet(null);
+    followBookingHref(href, option);
   }
 
   function startBooking(item, source = 'card', extra = {}) {
@@ -370,6 +593,55 @@ export default function HomePhysioServiceBlock() {
       return;
     }
     setSheet({ item, extra: context, source });
+  }
+
+  function bookingExtra(item, extra = {}) {
+    return {
+      chip: selectedChip || item.primaryChipKey || '',
+      pain: item.bookingPainType || '',
+      ...extra,
+    };
+  }
+
+  function directBookingHref(item, extra = {}) {
+    return resolveServiceBookingUrl(item, bookingExtra(item, extra), {
+      origin: window.location.origin,
+      base: import.meta.env.BASE_URL || '/',
+    });
+  }
+
+  function bookService(item, source = 'card', extra = {}) {
+    const context = bookingExtra(item, extra);
+    const href = resolveServiceBookingUrl(item, context, {
+      origin: window.location.origin,
+      base: import.meta.env.BASE_URL || '/',
+    });
+    if (href) {
+      trackEvent(ANALYTICS_EVENTS.BOOKING_START, {
+        item_id: item.slug,
+        item_name: item.title,
+        service_type: 'home_physiotherapy',
+        section: item.sectionSlug,
+        source,
+        booking_type: 'home_visit',
+      });
+      trackEvent(ANALYTICS_EVENTS.CTA_CLICK, {
+        cta_id: 'book_now',
+        cta_label: data?.blocks?.bookNowLabel || 'Book now',
+        cta_location: source,
+        item_id: item.slug,
+        item_name: item.title,
+        section: item.sectionSlug,
+        destination: href.startsWith('/') ? href.split('?')[0] : 'external',
+      });
+      if (!bookingHrefAllowed(href)) return;
+      openedSlug.current = item.slug || 'booking';
+      setDetail(null);
+      setSheet(null);
+      followBookingHref(href);
+      return;
+    }
+    if (optionList(item).length > 0) startBooking(item, source, context);
   }
 
   function setLayout(section, mode) {
@@ -430,7 +702,7 @@ export default function HomePhysioServiceBlock() {
                   onClick={() => openDetail(item, false)}
                 >
                   <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#e8e8ed] text-[#376299]">
-                    {item.imageUrl ? <img src={item.imageUrl} alt="" className="h-full w-full object-cover" /> : <FaIcon icon={iconFor(item)} />}
+                    {item.imageUrl ? <img src={imageSrc(item)} alt="" className="h-full w-full object-cover" loading="lazy" onError={(e) => { e.currentTarget.style.display = 'none'; }} /> : <FaIcon icon={iconFor(item)} />}
                   </span>
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-semibold">{item.title}</span>
@@ -490,19 +762,32 @@ export default function HomePhysioServiceBlock() {
                     ) : null}
                   </div>
                   <div className={layout === 'grid' ? 'svc-grid' : 'svc-carousel pb-2'}>
-                    {shown.map((item) => (
-                      <article key={item.id} className="svc-card svc-rise flex h-full min-w-0 flex-col overflow-hidden">
+                    {shown.map((item) => {
+                      const cardCanBook = Boolean(directBookingHref(item)) || optionList(item).length > 0;
+                      return (
+                      <article
+                        key={item.id}
+                        className="svc-card svc-rise flex h-full min-w-0 flex-col overflow-hidden"
+                        onClick={(event) => {
+                          if (event.target.closest('[data-svc-book], button, a')) return;
+                          returnFocus.current = event.currentTarget;
+                          openDetail(item, false);
+                        }}
+                      >
                         <button
                           type="button"
-                          className="block w-full text-left"
+                          className="flex w-full flex-1 flex-col text-left"
+                          aria-haspopup="dialog"
+                          aria-controls="home-svc-drawer"
                           onClick={(event) => {
+                            event.stopPropagation();
                             returnFocus.current = event.currentTarget;
                             openDetail(item, false);
                           }}
                         >
                           <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-[#2a4d79] to-[#5b86c2] text-white">
                             {item.imageUrl ? (
-                              <img src={item.imageUrl} alt={item.imageAlt || item.title} className="h-full w-full object-cover" />
+                              <img src={imageSrc(item)} alt={item.imageAlt || item.title} className="h-full w-full object-cover" loading="lazy" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                             ) : (
                               <span className="flex h-full items-center justify-center text-4xl opacity-90">
                                 <FaIcon icon={iconFor(item)} />
@@ -535,22 +820,26 @@ export default function HomePhysioServiceBlock() {
                             ) : null}
                           </div>
                         </button>
-                        {optionList(item).length > 0 ? (
-                          <div className="mt-auto p-4">
-                            <button
-                              type="button"
-                              className="svc-btn inline-flex w-full items-center justify-center gap-2 px-3 py-2.5 text-sm font-semibold"
-                              onClick={(event) => {
-                                returnFocus.current = event.currentTarget;
-                                startBooking(item, 'card');
-                              }}
-                            >
-                              <FaIcon icon="fa-calendar" /> {bookLabel}
-                            </button>
-                          </div>
-                        ) : null}
+                        <div className="mt-auto p-4" data-svc-book onClick={(event) => event.stopPropagation()}>
+                          <button
+                            type="button"
+                            className="svc-btn inline-flex w-full items-center justify-center gap-2 px-3 py-2.5 text-sm font-semibold"
+                            disabled={!cardCanBook}
+                            aria-label={cardCanBook ? `${bookLabel} for ${item.title}` : `Booking is not available for ${item.title}`}
+                            onClick={(event) => {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              returnFocus.current = event.currentTarget;
+                              bookService(item, 'card');
+                            }}
+                          >
+                            <FaIcon icon="fa-calendar" /> {bookLabel}
+                          </button>
+                          {!cardCanBook ? <p className="mt-2 text-center text-xs text-[#6e6e73]">Booking is not available for this service yet.</p> : null}
+                        </div>
                       </article>
-                    ))}
+                      );
+                    })}
                     {section.showHelpCard && !selectedChip ? (
                       <aside className="svc-help flex h-full flex-col justify-center p-5 text-center">
                         <h3 className="text-base font-semibold">Not sure what you need?</h3>
@@ -580,75 +869,36 @@ export default function HomePhysioServiceBlock() {
         ) : null}
       </div>
 
-      {detail ? (
-        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 md:items-stretch md:justify-end" onClick={closeDetail}>
-          <div
-            ref={panelRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="home-svc-title"
-            className="max-h-[92vh] w-full overflow-y-auto rounded-t-2xl bg-white p-5 md:h-full md:max-h-none md:w-[460px] md:rounded-none"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="mb-3 flex items-start justify-between gap-3">
-              <h2 id="home-svc-title" className="text-xl font-bold">{detail.title}</h2>
-              <button type="button" className="svc-chip px-2 py-1" onClick={closeDetail} aria-label="Close">×</button>
-            </div>
-            <div className="mb-4 flex aspect-video items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[#2a4d79] to-[#5b86c2] text-4xl text-white">
-              {detail.imageUrl ? <img src={detail.imageUrl} alt={detail.imageAlt || detail.title} className="h-full w-full object-cover" /> : <FaIcon icon={iconFor(detail)} />}
-            </div>
-            <p className="text-sm text-[#6e6e73]">{detail.benefit}</p>
-            <p className="mt-2 text-xs text-[#6e6e73]">
-              {[detail.durationLabel, detail.rating != null ? `★ ${Number(detail.rating).toFixed(1)}` : '', 'At your home'].filter(Boolean).join(' · ')}
-            </p>
-            {detail.price?.display != null ? (
-              <p className="svc-accent mt-4 bg-[#f3f7fc] p-3">
-                <span className="text-2xl font-bold">{formatInr(detail.price.display)}</span>
-                {detail.price.showOffer ? <span className="ml-2 text-sm text-[#6e6e73] line-through">{formatInr(detail.price.regular)}</span> : null}
-                {detail.unitLabel ? <span className="mt-1 block text-xs text-[#6e6e73]">{detail.unitLabel}</span> : null}
-              </p>
-            ) : null}
-            {detail.included?.length ? (
-              <div className="mt-4">
-                <h3 className="text-sm font-semibold">What&apos;s included</h3>
-                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">{detail.included.map((line) => <li key={line}>{line}</li>)}</ul>
-              </div>
-            ) : null}
-            {detail.chipKeys?.length ? (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {detail.chipKeys.map((key) => {
-                  const chip = (data.chips || []).find((row) => row.key === key);
-                  if (!chip) return null;
-                  return (
-                    <button key={key} type="button" className="svc-chip px-2 py-1 text-xs" onClick={() => { closeDetail(); chooseChip(key); }}>
-                      {chip.label}
-                    </button>
-                  );
-                })}
-              </div>
-            ) : null}
-            {detail.disclaimer ? <p className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-950">{detail.disclaimer}</p> : null}
-            {optionList(detail).length > 0 ? (
-              <div className="sticky bottom-0 mt-5 bg-white pt-3">
-                <button type="button" className="svc-btn w-full px-3 py-3 text-sm font-semibold" onClick={() => startBooking(detail, 'detail')}>
-                  {bookLabel}
-                </button>
-              </div>
-            ) : null}
-          </div>
-        </div>
+      {detail ? createPortal(
+        <ServiceDetailDrawer
+          key={detail.id}
+          detail={detail}
+          chips={data.chips}
+          bookLabel={bookLabel}
+          canBook={Boolean(directBookingHref(detail)) || optionList(detail).length > 0}
+          note={bookingDestinationNote(directBookingHref(detail))}
+          panelRef={panelRef}
+          onClose={closeDetail}
+          onBook={() => bookService(detail, 'detail')}
+          onChip={(key) => closeDetail({ chipKey: key })}
+        />,
+        document.body
       ) : null}
 
-      {sheet ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center" onClick={() => setSheet(null)}>
+      {sheet ? createPortal(
+        <div className="fixed inset-0 z-[9990] flex items-end justify-center bg-black/40 sm:items-center" onClick={() => setSheet(null)}>
           <div
+            ref={sheetRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="home-book-title"
             className="w-full max-w-[420px] rounded-t-2xl bg-white p-4 sm:rounded-2xl"
             onClick={(event) => event.stopPropagation()}
           >
-            <h2 id="home-book-title" className="text-lg font-bold">How would you like to book?</h2>
+            <div className="flex items-start justify-between gap-3">
+              <h2 id="home-book-title" className="text-lg font-bold">How would you like to book?</h2>
+              <button type="button" className="svc-sheet-close" aria-label="Close booking options" onClick={() => { setSheet(null); if (!detail) returnFocus.current?.focus?.(); }}>×</button>
+            </div>
             <p className="mt-1 text-sm text-[#6e6e73]">
               {sheet.item.title}
               {sheet.item.price?.display != null ? ` · from ${formatInr(sheet.item.price.display)} ${sheet.item.unitLabel || ''}`.trim() : ''}
@@ -676,7 +926,8 @@ export default function HomePhysioServiceBlock() {
               <FaIcon icon="fa-lock" /> Payments are only made through The Urban Physio
             </p>
           </div>
-        </div>
+        </div>,
+        document.body
       ) : null}
 
       {sticky && !detail ? (
@@ -685,7 +936,7 @@ export default function HomePhysioServiceBlock() {
             <p className="truncate text-sm font-semibold">{sticky.title}</p>
             <p className="text-xs text-white/70">{sticky.price?.display != null ? `${formatInr(sticky.price.display)} ${sticky.unitLabel || ''}` : 'At your home'}</p>
           </div>
-          <button type="button" className="rounded-xl bg-[#ff6f61] px-3 py-2 text-sm font-semibold" onClick={() => startBooking(sticky, 'sticky_bar')}>
+          <button type="button" className="rounded-xl bg-[#ff6f61] px-3 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:bg-white/30" disabled={!(directBookingHref(sticky) || optionList(sticky).length > 0)} onClick={() => bookService(sticky, 'sticky_bar')}>
             {bookLabel}
           </button>
           <button type="button" className="px-1 text-lg" aria-label="Dismiss" onClick={() => setSticky(null)}>×</button>
