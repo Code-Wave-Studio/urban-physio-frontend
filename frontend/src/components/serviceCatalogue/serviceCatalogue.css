@@ -147,6 +147,12 @@
   cursor: not-allowed;
 }
 
+/* Mobile service booking bar. Above the call / WhatsApp / scroll rail (z-index 9976), below sheets. */
+.svc-mobile-bookbar {
+  z-index: 9978;
+  bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+}
+
 .svc-sheet-backdrop {
   position: fixed;
   inset: 0;

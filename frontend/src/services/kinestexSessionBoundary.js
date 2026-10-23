@@ -23,6 +23,8 @@ export function buildKinesteXSessionResult({
   const data = eventData && typeof eventData === 'object' ? eventData : {};
   const appointmentRaw = Number(context.appointment_id);
   const appointmentId = Number.isInteger(appointmentRaw) && appointmentRaw > 0 ? appointmentRaw : null;
+  const enrolmentRaw = Number(context.plan?.enrolment_id ?? context.enrolment_id);
+  const enrolmentId = Number.isInteger(enrolmentRaw) && enrolmentRaw > 0 ? enrolmentRaw : null;
   // SDK sometimes nests fields under data / value.
   const sessionId =
     data.session_id ??
@@ -44,6 +46,7 @@ export function buildKinesteXSessionResult({
     kinestex_exercise_id: context.kinestex_exercise_id ?? null,
     client_session_id: clientSessionId || null,
     appointment_id: appointmentId,
+    ...(enrolmentId ? { enrolment_id: enrolmentId } : {}),
     // Never invent a KinesteX session id
     provider_session_id: sessionId || null,
     cancellation_reason: typeof data.reason === 'string' ? data.reason : null,
@@ -52,6 +55,7 @@ export function buildKinesteXSessionResult({
     workout_overview: collected.workout_overview || null,
     finished_workout: collected.finished_workout || null,
     workout_completed: collected.workout_completed || null,
+    workout_progress: collected.workout_progress || null,
     workout_session_saved: collected.workout_session_saved || null,
     session_save_complete: collected.session_save_complete || null,
     motion_upload_error: collected.motion_upload_error || null,
@@ -59,6 +63,13 @@ export function buildKinesteXSessionResult({
     last_event: { type: eventType, data },
     raw_events: collected,
   };
+}
+
+/** exit_type from a workout_ended postMessage, whether it sits on the message or under data. */
+export function kinestexEndedExit(eventData) {
+  const data = eventData && typeof eventData === 'object' ? eventData : {};
+  const nested = data.data && typeof data.data === 'object' && !Array.isArray(data.data) ? data.data : {};
+  return String(data.exit_type ?? nested.exit_type ?? '').trim().toLowerCase();
 }
 
 export function mapCompletionStatus(eventType) {
@@ -69,6 +80,8 @@ export function mapCompletionStatus(eventType) {
     case 'workout_session_saved':
     case 'session_save_complete':
       return 'completed';
+    case 'workout_ended':
+      return 'cancelled';
     case 'exit_kinestex':
     case 'workout_exit_request':
       return 'cancelled';

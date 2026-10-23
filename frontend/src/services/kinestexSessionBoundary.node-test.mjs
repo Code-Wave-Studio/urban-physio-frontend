@@ -8,6 +8,7 @@ import {
   cameraCaptureSupported,
   isKinesteXReplaySessionId,
   kinesteXStyleName,
+  kinestexEndedExit,
   mapCompletionStatus,
   kinestexCompletionView,
   onKinesteXSessionCompleted,
@@ -54,9 +55,30 @@ check('keeps client_session_id', result.client_session_id === clientId);
 check('omits appointment when context has none', result.appointment_id === null);
 check('does not invent extra metric fields', !('repetitions' in result) && !('score' in result));
   check('preserves workout_overview', result.workout_overview?.calories === 4);
-  check('map exit cancelled', mapCompletionStatus('exit_kinestex') === 'cancelled');
-  check('map error failed', mapCompletionStatus('error_occurred') === 'failed');
-  check('map session_save_complete completed', mapCompletionStatus('session_save_complete') === 'completed');
+check('map exit cancelled', mapCompletionStatus('exit_kinestex') === 'cancelled');
+check('map error failed', mapCompletionStatus('error_occurred') === 'failed');
+check('map session_save_complete completed', mapCompletionStatus('session_save_complete') === 'completed');
+
+const ended = buildKinesteXSessionResult({
+  eventType: 'workout_ended',
+  eventData: { type: 'workout_ended', data: { exit_type: 'complete', id: 'workout-1' } },
+  context: {
+    prescription_id: 9,
+    item_id: 3,
+    exercise_id: 7,
+    plan: { enrolment_id: 15, plan_title: 'ACL' },
+  },
+  collected: {
+    workout_progress: { completed_reps_count: 12, calories_burned: 4.5 },
+  },
+  clientSessionId: clientId,
+  statusOverride: 'completed',
+});
+check('workout_ended complete stays completed', ended.status === 'completed' && ended.completion_event === 'workout_ended');
+check('workout_ended keeps progress for the save', ended.workout_progress?.completed_reps_count === 12);
+check('workout_ended keeps the plan enrolment', ended.enrolment_id === 15);
+check('nested exit_type is read', kinestexEndedExit({ data: { exit_type: 'complete' } }) === 'complete');
+check('abandoned workout_ended is not a completion status', mapCompletionStatus('workout_ended') === 'cancelled');
 
   const withMotion = buildKinesteXSessionResult({
     eventType: 'session_save_complete',

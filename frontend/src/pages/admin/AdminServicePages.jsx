@@ -550,25 +550,73 @@ export default function AdminServicePages({
   );
 }
 
+function sectionUseCount(section, items) {
+  const listed = section.items?.length || 0;
+  const linked = (items || []).filter((item) => item.sectionId === section.id).length;
+  return Math.max(listed, linked);
+}
+
+function chipUseCount(chip, items) {
+  const ids = new Set(chip.itemIds || []);
+  (items || []).forEach((item) => {
+    const keys = item.chipKeys || [];
+    if (item.primaryChipKey === chip.key || keys.includes(chip.key)) ids.add(item.id);
+  });
+  return ids.size;
+}
+
 function SectionEditor({ data, onSaved, pageKey }) {
   const [row, setRow] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+  function openSection(section) {
+    setRow({
+      ...section,
+      allowed_types: section.allowedTypes,
+      is_visible: section.isVisible,
+      sort_order: section.sortOrder,
+    });
+  }
   async function save(event) {
     event.preventDefault();
     const payload = { ...row, page_key: pageKey };
     try {
       if (row.id) await admin.updateServiceSection(row.id, payload);
       else await admin.createServiceSection(payload);
-      toast.success('Section saved');
+      toast.success(row.id ? 'Section updated' : 'Section added');
       setRow(null);
       onSaved();
     } catch (err) {
       toast.error(err.errors?.title || err.message || 'Could not save the section');
     }
   }
+  async function removeSection(section) {
+    const count = sectionUseCount(section, data.items);
+    if (count > 0) {
+      const noun = count === 1 ? '1 service' : `${count} services`;
+      const message = `“${section.title}” still has ${noun}. Move or delete those services before deleting this section.`;
+      window.alert(message);
+      toast.error(message);
+      return;
+    }
+    if (!window.confirm(`Delete “${section.title}”?\n\nThis empty section will be removed from the catalogue. Services are not changed. This cannot be undone from here.`)) return;
+    if (deletingId) return;
+    setDeletingId(section.id);
+    try {
+      await admin.deleteServiceSection(section.id, pageKey);
+      toast.success(`“${section.title}” deleted`);
+      if (row?.id === section.id) setRow(null);
+      onSaved();
+    } catch (err) {
+      toast.error(err.message || 'Could not delete the section');
+    } finally {
+      setDeletingId(null);
+    }
+  }
   if (row) {
     return (
       <form onSubmit={save} className="max-w-xl space-y-3 rounded-xl border bg-white p-4">
-        <Field label="Title"><input className={inputClass} value={row.title} onChange={(event) => setRow({ ...row, title: event.target.value })} /></Field>
+        <h2 className="text-base font-bold text-slate-900">{row.id ? 'Edit section' : 'Add section'}</h2>
+        <Field label="Title"><input className={inputClass} value={row.title} onChange={(event) => setRow({ ...row, title: event.target.value })} required /></Field>
         <Field label="Subtitle"><input className={inputClass} value={row.subtitle || ''} onChange={(event) => setRow({ ...row, subtitle: event.target.value })} /></Field>
         <Field label="Small label"><input className={inputClass} value={row.kicker || ''} onChange={(event) => setRow({ ...row, kicker: event.target.value })} /></Field>
         <Field label="Layout">
@@ -577,7 +625,10 @@ function SectionEditor({ data, onSaved, pageKey }) {
             <option value="grid">Grid</option>
           </select>
         </Field>
-        <button className="rounded-lg bg-[#376299] px-3 py-2 text-sm font-semibold text-white" type="submit">Save section</button>
+        <div className="flex flex-wrap gap-2">
+          <button className="rounded-lg bg-[#376299] px-3 py-2 text-sm font-semibold text-white" type="submit">{row.id ? 'Save changes' : 'Save section'}</button>
+          <button type="button" className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700" onClick={() => setRow(null)}>Cancel</button>
+        </div>
       </form>
     );
   }
@@ -585,10 +636,14 @@ function SectionEditor({ data, onSaved, pageKey }) {
     <div className="space-y-2">
       <button type="button" className="rounded-lg bg-[#376299] px-3 py-2 text-sm font-semibold text-white" onClick={() => setRow({ title: '', subtitle: '', kicker: '', layout: pageKey === 'home_physiotherapy' ? 'grid' : 'carousel', allowed_types: pageKey === 'home_physiotherapy' ? 'service' : 'both', status: 'published', is_visible: true, sort_order: data.sections.length })}>Add section</button>
       {data.sections.map((section) => (
-        <button key={section.id} type="button" className="flex w-full items-center justify-between rounded-xl border bg-white px-3 py-3 text-left" onClick={() => setRow({ ...section, allowed_types: section.allowedTypes, is_visible: section.isVisible, sort_order: section.sortOrder })}>
-          <span>{section.title}</span>
-          <span className="text-xs text-slate-500">{section.items.length} items</span>
-        </button>
+        <div key={section.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-white px-3 py-3">
+          <span className="min-w-0 font-medium text-slate-900">{section.title}</span>
+          <span className="ml-auto flex shrink-0 items-center gap-3">
+            <span className="text-xs text-slate-500">{section.items.length} items</span>
+            <button type="button" className="font-semibold text-[#376299]" aria-label={`Edit ${section.title}`} onClick={() => openSection(section)}>Edit</button>
+            <button type="button" disabled={deletingId === section.id} className="font-semibold text-rose-700 disabled:opacity-50" aria-label={`Delete ${section.title}`} onClick={() => removeSection(section)}>{deletingId === section.id ? 'Deleting…' : 'Delete'}</button>
+          </span>
+        </div>
       ))}
     </div>
   );
@@ -596,23 +651,57 @@ function SectionEditor({ data, onSaved, pageKey }) {
 
 function ChipEditor({ data, onSaved, pageKey }) {
   const [row, setRow] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+  function openChip(chip) {
+    setRow({
+      ...chip,
+      chip_key: chip.key,
+      is_pinned: chip.pinned,
+      is_visible: chip.isVisible,
+      item_ids: chip.itemIds || [],
+    });
+  }
   async function save(event) {
     event.preventDefault();
-    const payload = { ...row, page_key: pageKey };
+    const payload = { ...row, page_key: pageKey, item_ids: row.item_ids || row.itemIds || [] };
     try {
       if (row.id) await admin.updateServiceChip(row.id, payload);
       else await admin.createServiceChip(payload);
-      toast.success('Chip saved');
+      toast.success(row.id ? 'Chip updated' : 'Chip added');
       setRow(null);
       onSaved();
     } catch (err) {
       toast.error(err.errors?.label || err.message || 'Could not save the chip');
     }
   }
+  async function removeChip(chip) {
+    const count = chipUseCount(chip, data.items);
+    if (count > 0) {
+      const noun = count === 1 ? '1 service' : `${count} services`;
+      const message = `“${chip.label}” is still used by ${noun}. Unassign it from those services before deleting this chip.`;
+      window.alert(message);
+      toast.error(message);
+      return;
+    }
+    if (!window.confirm(`Delete “${chip.label}”?\n\nThis chip will be removed from the catalogue. Services that do not use it stay as they are. This cannot be undone from here.`)) return;
+    if (deletingId) return;
+    setDeletingId(chip.id);
+    try {
+      await admin.deleteServiceChip(chip.id, pageKey);
+      toast.success(`“${chip.label}” deleted`);
+      if (row?.id === chip.id) setRow(null);
+      onSaved();
+    } catch (err) {
+      toast.error(err.message || 'Could not delete the chip');
+    } finally {
+      setDeletingId(null);
+    }
+  }
   if (row) {
     return (
       <form onSubmit={save} className="max-w-xl space-y-3 rounded-xl border bg-white p-4">
-        <Field label="Label"><input className={inputClass} value={row.label} onChange={(event) => setRow({ ...row, label: event.target.value })} /></Field>
+        <h2 className="text-base font-bold text-slate-900">{row.id ? 'Edit chip' : 'Add chip'}</h2>
+        <Field label="Label"><input className={inputClass} value={row.label} onChange={(event) => setRow({ ...row, label: event.target.value })} required /></Field>
         <Field label="Key"><input className={inputClass} value={row.chip_key || row.key || ''} onChange={(event) => setRow({ ...row, chip_key: event.target.value })} /></Field>
         <Field label="Keywords"><input className={inputClass} value={row.keywords || ''} onChange={(event) => setRow({ ...row, keywords: event.target.value })} /></Field>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!row.is_pinned || !!row.pinned} onChange={(event) => setRow({ ...row, is_pinned: event.target.checked })} /> Pinned</label>
@@ -631,7 +720,10 @@ function ChipEditor({ data, onSaved, pageKey }) {
             );
           })}
         </div>
-        <button className="rounded-lg bg-[#376299] px-3 py-2 text-sm font-semibold text-white" type="submit">Save chip</button>
+        <div className="flex flex-wrap gap-2">
+          <button className="rounded-lg bg-[#376299] px-3 py-2 text-sm font-semibold text-white" type="submit">{row.id ? 'Save changes' : 'Save chip'}</button>
+          <button type="button" className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700" onClick={() => setRow(null)}>Cancel</button>
+        </div>
       </form>
     );
   }
@@ -639,10 +731,16 @@ function ChipEditor({ data, onSaved, pageKey }) {
     <div className="space-y-2">
       <button type="button" className="rounded-lg bg-[#376299] px-3 py-2 text-sm font-semibold text-white" onClick={() => setRow({ label: '', chip_key: '', keywords: '', is_pinned: false, is_visible: true, item_ids: [] })}>Add chip</button>
       {data.chips.map((chip) => (
-        <button key={chip.id} type="button" className="block w-full rounded-xl border bg-white px-3 py-3 text-left" onClick={() => setRow({ ...chip, chip_key: chip.key, is_pinned: chip.pinned, is_visible: chip.isVisible, item_ids: chip.itemIds })}>
-          <span className="font-medium">{chip.label}</span>
-          {chip.warning ? <span className="mt-1 block text-xs text-amber-700">{chip.warning}</span> : null}
-        </button>
+        <div key={chip.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-white px-3 py-3">
+          <div className="min-w-0">
+            <span className="font-medium text-slate-900">{chip.label}</span>
+            {chip.warning ? <span className="mt-1 block text-xs text-amber-700">{chip.warning}</span> : null}
+          </div>
+          <span className="ml-auto flex shrink-0 items-center gap-3">
+            <button type="button" className="font-semibold text-[#376299]" aria-label={`Edit ${chip.label}`} onClick={() => openChip(chip)}>Edit</button>
+            <button type="button" disabled={deletingId === chip.id} className="font-semibold text-rose-700 disabled:opacity-50" aria-label={`Delete ${chip.label}`} onClick={() => removeChip(chip)}>{deletingId === chip.id ? 'Deleting…' : 'Delete'}</button>
+          </span>
+        </div>
       ))}
     </div>
   );

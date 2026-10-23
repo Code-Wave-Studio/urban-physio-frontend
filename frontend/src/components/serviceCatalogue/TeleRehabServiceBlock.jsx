@@ -2,9 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import FaIcon from '../FaIcon';
 import { serviceCatalogue } from '../../services/api';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import { useContact } from '../../contexts/ContactContext';
 import { whatsappChatUrl } from '../../utils/whatsapp';
 import { ANALYTICS_EVENTS, trackEvent } from '../../utils/analytics';
+import { setMobileBookbarVisible } from '../../utils/floatingActionsBus';
 import {
   applyChipFilter,
   bookingContext,
@@ -21,9 +23,34 @@ import {
   subtitleForPick,
   LAYOUT_KEY_PREFIX,
 } from './serviceCatalogueModel';
+import BookingChoiceDialog from './BookingChoiceDialog';
 import './serviceCatalogue.css';
 
 const PHASE_CLASS = ['svc-phase-0', 'svc-phase-1', 'svc-phase-2', 'svc-phase-3'];
+
+function DetailThumbnail({ item }) {
+  const [failed, setFailed] = useState(false);
+  const src = failed ? '' : mediaSrc(item);
+  useEffect(() => {
+    setFailed(false);
+  }, [item?.id, item?.imageUrl]);
+  return (
+    <div className="relative aspect-video max-h-[220px] w-full shrink-0 overflow-hidden bg-gradient-to-br from-[#2a4d79] to-[#5b86c2] text-white sm:max-h-[280px]">
+      {src ? (
+        <img
+          src={src}
+          alt={item.imageAlt || item.title || ''}
+          className="h-full w-full object-cover"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center" aria-hidden="true">
+          <FaIcon icon={item?.type === 'plan' ? 'fa-route' : 'fa-video'} className="text-4xl opacity-90" />
+        </div>
+      )}
+    </div>
+  );
+}
 
 function pairsFor(item) {
   return item.oftenBookedWith?.length ? item.oftenBookedWith : item.bookingPairs || [];
@@ -34,13 +61,23 @@ function priceLine(item) {
   return item.price;
 }
 
+function mediaSrc(item) {
+  if (!item?.imageUrl) return '';
+  return resolveMediaUrl(item.imageUrl) || item.imageUrl;
+}
+
 function ImageFrame({ item, ratio }) {
+  const [failed, setFailed] = useState(false);
+  const src = failed ? '' : mediaSrc(item);
+  useEffect(() => {
+    setFailed(false);
+  }, [item?.id, item?.imageUrl]);
   return (
     <div className={`relative overflow-hidden bg-slate-100 ${ratio}`}>
-      {item.imageUrl ? (
-        <img src={item.imageUrl} alt={item.imageAlt || item.title} className="h-full w-full object-cover" />
+      {src ? (
+        <img src={src} alt={item.imageAlt || item.title} className="h-full w-full object-cover" onError={() => setFailed(true)} />
       ) : (
-        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#2a4d79] to-[#5b86c2] text-white">
+        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#2a4d79] to-[#5b86c2] text-white" aria-hidden="true">
           <FaIcon icon={item.type === 'plan' ? 'fa-route' : 'fa-video'} className="text-3xl opacity-90" />
         </div>
       )}
@@ -169,6 +206,12 @@ export default function TeleRehabServiceBlock() {
   const openedSlug = useRef('');
   const panelRef = useRef(null);
   const chipRow = useRef(null);
+
+  useEffect(() => {
+    const visible = Boolean(sticky) && !detail && !sheet;
+    setMobileBookbarVisible(visible, 'tele-services');
+    return () => setMobileBookbarVisible(false, 'tele-services');
+  }, [sticky, detail, sheet]);
 
   useEffect(() => {
     let cancelled = false;
@@ -481,7 +524,7 @@ export default function TeleRehabServiceBlock() {
                   }}
                 >
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#e8e8ed]">
-                    {item.imageUrl ? <img src={item.imageUrl} alt="" className="h-full w-full object-cover" /> : <FaIcon icon="fa-video" />}
+                    {mediaSrc(item) ? <img src={mediaSrc(item)} alt="" className="h-full w-full object-cover" /> : <FaIcon icon="fa-video" />}
                   </span>
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-semibold">
@@ -571,15 +614,17 @@ export default function TeleRehabServiceBlock() {
       </div>
 
       {detail ? (
-        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 md:items-stretch md:justify-end" onClick={closeDetail}>
+        <div className="fixed inset-0 z-[9985] flex items-end justify-center bg-black/40 md:items-stretch md:justify-end" onClick={closeDetail}>
           <div
             ref={panelRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="svc-detail-title"
-            className="max-h-[92vh] w-full overflow-y-auto bg-white p-5 md:h-full md:max-h-none md:w-[460px]"
+            className="flex max-h-[92vh] w-full flex-col overflow-y-auto bg-white md:h-full md:max-h-none md:w-[460px]"
             onClick={(event) => event.stopPropagation()}
           >
+            <DetailThumbnail item={detail} />
+            <div className="p-5">
             <div className="mb-3 flex items-start justify-between gap-3">
               <h2 id="svc-detail-title" className="text-xl font-bold">{detail.title}</h2>
               <button type="button" className="svc-chip px-2 py-1" onClick={closeDetail} aria-label="Close">×</button>
@@ -669,33 +714,23 @@ export default function TeleRehabServiceBlock() {
             {eligibility && !detail.questions?.length ? (
               <p className="mt-3 text-sm text-[#6e6e73]">This plan is not open for booking until a physiotherapist adds the eligibility questions.</p>
             ) : null}
+            </div>
           </div>
         </div>
       ) : null}
 
       {sheet ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 md:items-center" onClick={() => setSheet(null)}>
-          <div role="dialog" aria-modal="true" aria-labelledby="svc-book-title" className="w-full max-w-md rounded-t-2xl bg-white p-5 md:rounded-2xl" onClick={(event) => event.stopPropagation()}>
-            <h2 id="svc-book-title" className="text-lg font-bold">How would you like to book?</h2>
-            <p className="mt-1 text-sm text-[#6e6e73]">{sheet.item.title}{sheet.item.price?.display != null ? ` · from ${formatInr(sheet.item.price.display)}` : ''}</p>
-            <div className="mt-4 space-y-2">
-              {optionList().map((option) => (
-                <button key={option.key} type="button" className="svc-card flex w-full items-center justify-between px-3 py-3 text-left" onClick={() => goOption(option, sheet.item, sheet.extra)}>
-                  <span>
-                    <span className="block text-sm font-semibold">{option.label}</span>
-                    {option.subLabel ? <span className="block text-xs text-[#6e6e73]">{option.subLabel}</span> : null}
-                  </span>
-                  <FaIcon icon="fa-chevron-right" />
-                </button>
-              ))}
-            </div>
-            <p className="mt-4 text-xs text-[#6e6e73]">Payments are only made through The Urban Physio.</p>
-          </div>
-        </div>
+        <BookingChoiceDialog
+          titleId="svc-book-title"
+          item={sheet.item}
+          options={optionList()}
+          onClose={() => setSheet(null)}
+          onChoose={(option) => goOption(option, sheet.item, sheet.extra)}
+        />
       ) : null}
 
-      {sticky ? (
-        <div className="fixed inset-x-3 bottom-3 z-30 flex items-center justify-between gap-3 rounded-2xl bg-[#1d1d1f] px-4 py-3 text-white md:hidden">
+      {sticky && !detail && !sheet ? (
+        <div className="svc-mobile-bookbar fixed inset-x-3 bottom-3 flex items-center justify-between gap-3 rounded-2xl bg-[#1d1d1f] px-4 py-3 text-white shadow-xl md:hidden">
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold">{sticky.title}</p>
             <p className="text-xs text-white/80">{sticky.price?.display != null ? formatInr(sticky.price.display) : 'Fee confirmed when you book'}</p>

@@ -4006,6 +4006,16 @@
   /* Fixed floating actions — WhatsApp (left), scroll to top (right) */
   :root {
     --home-mobile-fab-size: 3.25rem;
+    --fab-edge-offset: max(1.25rem, env(safe-area-inset-bottom, 0px));
+    /* Raised while the mobile service booking bar is on screen. */
+    --mobile-bookbar-clearance: 0px;
+  }
+
+  @media (max-width: 767px) {
+    body[data-mobile-bookbar='1'] {
+      --mobile-bookbar-clearance: 4.75rem;
+      padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+    }
   }
 
   @media (min-width: 640px) and (max-width: 767px) {
@@ -4016,7 +4026,7 @@
 
   .floating-actions {
     @apply fixed z-[9975] pointer-events-none;
-    bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--fab-edge-offset) + var(--mobile-bookbar-clearance));
     left: 0;
     right: 0;
   }
@@ -4041,7 +4051,7 @@
 
   .fab-whatsapp {
     @apply left-4 sm:left-6 text-white border-emerald-400/40;
-    bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--fab-edge-offset) + var(--mobile-bookbar-clearance));
     background: linear-gradient(145deg, #25d366 0%, #128c7e 100%);
     box-shadow:
       0 10px 28px -6px rgb(37 211 102 / 0.55),
@@ -4079,7 +4089,7 @@
 
   .fab-scroll-top {
     @apply right-4 sm:right-6 text-primary-700 bg-white/95 backdrop-blur-md border-white/80;
-    bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--fab-edge-offset) + var(--mobile-bookbar-clearance));
     box-shadow: 0 10px 28px -8px rgb(249 115 22 / 0.35);
     opacity: 0;
     visibility: hidden;
@@ -4109,7 +4119,8 @@
     @apply pointer-events-none fixed z-[9976] flex flex-col items-start gap-2.5;
     left: 1rem;
     right: auto;
-    bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--fab-edge-offset) + var(--mobile-bookbar-clearance));
+    transition: bottom 0.28s ease;
   }
 
   @media (min-width: 640px) {
@@ -4356,6 +4367,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     .fab,
+    .fab-rail,
     .fab-rail-btn,
     .fab-rail-label,
     .fab-book-menu,

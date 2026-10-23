@@ -7,6 +7,7 @@ import { resolveMediaUrl } from '../../utils/mediaUrl';
 import { useContact } from '../../contexts/ContactContext';
 import { whatsappChatUrl } from '../../utils/whatsapp';
 import { ANALYTICS_EVENTS, trackEvent } from '../../utils/analytics';
+import { setMobileBookbarVisible } from '../../utils/floatingActionsBus';
 import {
   applyChipFilter,
   bookingContext,
@@ -24,10 +25,16 @@ import {
   subtitleForPick,
   isSafeBookingUrl,
 } from './serviceCatalogueModel';
+import BookingChoiceDialog from './BookingChoiceDialog';
 import './serviceCatalogue.css';
 
 const VIEW_KEY = 'tup_recent_services';
 const LAYOUT_KEY = 'tup_layout_';
+const BOOKING_CHOICE_LABELS = {
+  book: 'Book Video Session',
+  whatsapp: 'Book via WhatsApp',
+  call: 'Call us',
+};
 const ICONS = {
   'back-neck-pain-relief': 'fa-bars-staggered',
   'post-surgery-rehab': 'fa-shield-halved',
@@ -254,6 +261,12 @@ export default function HomePhysioServiceBlock() {
   const returnFocus = useRef(null);
 
   useEffect(() => {
+    const visible = Boolean(sticky) && !detail;
+    setMobileBookbarVisible(visible, 'home-services');
+    return () => setMobileBookbarVisible(false, 'home-services');
+  }, [sticky, detail]);
+
+  useEffect(() => {
     let cancelled = false;
     serviceCatalogue
       .public('home_physiotherapy')
@@ -403,7 +416,7 @@ export default function HomePhysioServiceBlock() {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const focusable = () => [...node.querySelectorAll('button, a, input, select, textarea, [tabindex]:not([tabindex="-1"])')];
-    focusable()[0]?.focus();
+    focusable()[0]?.focus({ preventScroll: true });
     const onKey = (event) => {
       if (event.key === 'Escape') {
         event.preventDefault();
@@ -518,6 +531,14 @@ export default function HomePhysioServiceBlock() {
 
   function optionHref(option, item, extra) {
     const ctx = bookingContext(item, extra);
+    const overrideHref = item?.optionOverrides?.[option.key]?.href;
+    if (option.key === 'book' && !overrideHref) {
+      const direct = resolveServiceBookingUrl(item, extra, {
+        origin: window.location.origin,
+        base: import.meta.env.BASE_URL || '/',
+      });
+      if (direct) return direct;
+    }
     if (option.key === 'call' && option.phone) return `tel:${String(option.phone).replace(/[^\d+]/g, '')}`;
     if (option.key === 'whatsapp' && option.whatsappNumber) {
       const message = String(option.whatsappMessage || 'Hi, I want to book {service} at home.').replace(
@@ -588,10 +609,6 @@ export default function HomePhysioServiceBlock() {
       booking_type: 'home_visit',
     });
     if (options.length === 0) return;
-    if (options.length === 1) {
-      goOption(options[0], item, context, source);
-      return;
-    }
     setSheet({ item, extra: context, source });
   }
 
@@ -612,6 +629,10 @@ export default function HomePhysioServiceBlock() {
 
   function bookService(item, source = 'card', extra = {}) {
     const context = bookingExtra(item, extra);
+    if (optionList(item).length > 0) {
+      startBooking(item, source, context);
+      return;
+    }
     const href = resolveServiceBookingUrl(item, context, {
       origin: window.location.origin,
       base: import.meta.env.BASE_URL || '/',
@@ -885,53 +906,24 @@ export default function HomePhysioServiceBlock() {
         document.body
       ) : null}
 
-      {sheet ? createPortal(
-        <div className="fixed inset-0 z-[9990] flex items-end justify-center bg-black/40 sm:items-center" onClick={() => setSheet(null)}>
-          <div
-            ref={sheetRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="home-book-title"
-            className="w-full max-w-[420px] rounded-t-2xl bg-white p-4 sm:rounded-2xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <h2 id="home-book-title" className="text-lg font-bold">How would you like to book?</h2>
-              <button type="button" className="svc-sheet-close" aria-label="Close booking options" onClick={() => { setSheet(null); if (!detail) returnFocus.current?.focus?.(); }}>×</button>
-            </div>
-            <p className="mt-1 text-sm text-[#6e6e73]">
-              {sheet.item.title}
-              {sheet.item.price?.display != null ? ` · from ${formatInr(sheet.item.price.display)} ${sheet.item.unitLabel || ''}`.trim() : ''}
-            </p>
-            <div className="mt-3 space-y-2">
-              {optionList(sheet.item).map((option) => (
-                <button
-                  key={option.key}
-                  type="button"
-                  className="flex w-full items-center gap-3 rounded-xl border border-[#e5e5ea] px-3 py-3 text-left hover:bg-[#f3f7fc]"
-                  onClick={() => goOption(option, sheet.item, sheet.extra, sheet.source)}
-                >
-                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#e8eef6] text-[#376299]">
-                    <FaIcon icon={option.icon || 'fa-arrow-right'} />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold">{option.label}</span>
-                    {option.subLabel ? <span className="block text-xs text-[#6e6e73]">{option.subLabel}</span> : null}
-                  </span>
-                  <FaIcon icon="fa-chevron-right" className="text-xs text-[#6e6e73]" />
-                </button>
-              ))}
-            </div>
-            <p className="mt-3 flex items-center gap-2 text-xs text-[#6e6e73]">
-              <FaIcon icon="fa-lock" /> Payments are only made through The Urban Physio
-            </p>
-          </div>
-        </div>,
-        document.body
+      {sheet ? (
+        <BookingChoiceDialog
+          ref={sheetRef}
+          titleId="home-book-title"
+          item={sheet.item}
+          options={optionList(sheet.item).map((option) => (
+            BOOKING_CHOICE_LABELS[option.key] ? { ...option, label: BOOKING_CHOICE_LABELS[option.key] } : option
+          ))}
+          onClose={() => {
+            setSheet(null);
+            if (!detail) returnFocus.current?.focus?.({ preventScroll: true });
+          }}
+          onChoose={(option) => goOption(option, sheet.item, sheet.extra, sheet.source)}
+        />
       ) : null}
 
       {sticky && !detail ? (
-        <div className="fixed inset-x-3 bottom-3 z-30 flex items-center gap-3 rounded-2xl bg-[#1d1d1f] p-3 text-white shadow-xl md:hidden">
+        <div className="svc-mobile-bookbar fixed inset-x-3 bottom-3 flex items-center gap-3 rounded-2xl bg-[#1d1d1f] p-3 text-white shadow-xl md:hidden">
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">{sticky.title}</p>
             <p className="text-xs text-white/70">{sticky.price?.display != null ? `${formatInr(sticky.price.display)} ${sticky.unitLabel || ''}` : 'At your home'}</p>

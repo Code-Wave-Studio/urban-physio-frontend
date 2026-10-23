@@ -10,6 +10,7 @@ import {
   buildKinesteXSessionResult,
   cameraCaptureSupported,
   kinestexCompletionView,
+  kinestexEndedExit,
   newClientSessionId,
   onKinesteXSessionCompleted,
   patientFriendlyKinesteXError,
@@ -303,6 +304,25 @@ export default function KinesteXExerciseSession({
           beginMotionGrace();
           emitBoundary(type, payload, 'completed');
           break;
+        case 'workout_ended': {
+          const exitType = kinestexEndedExit(payload);
+          const finishedEarlier = bestStatusRef.current === 'completed'
+            || !!(
+              eventsRef.current.workout_overview
+              || eventsRef.current.finished_workout
+              || eventsRef.current.workout_completed
+              || eventsRef.current.workout_session_saved
+            );
+          const finished = exitType === 'complete' || exitType === 'outro' || finishedEarlier;
+          if (finished) {
+            setLifecycle('completed');
+            beginMotionGrace();
+            emitBoundary(type, payload, 'completed');
+          } else {
+            emitBoundary(type, payload, 'cancelled');
+          }
+          break;
+        }
         case 'motion_upload_progress':
           setMotionSaveState((s) => (s === 'complete' || s === 'failed' ? s : 'uploading'));
           break;
