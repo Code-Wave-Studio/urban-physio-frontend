@@ -18,10 +18,27 @@ const TOOLBAR = [
   ['clean'],
 ];
 
+const NOTE_TOOLBAR = [
+  [{ header: [1, 2, 3, false] }],
+  ['bold', 'italic'],
+  [{ color: [] }, { background: [] }],
+  [{ list: 'ordered' }, { list: 'bullet' }],
+  ['clean'],
+];
+
+const FULL_FORMATS = [
+  'header', 'size', 'bold', 'italic', 'underline', 'strike', 'color', 'background',
+  'list', 'bullet', 'indent', 'align', 'blockquote', 'code-block', 'link', 'image',
+];
+
+const NOTE_FORMATS = ['header', 'bold', 'italic', 'color', 'background', 'list'];
+
 /**
  * WYSIWYG editor for CMS — headings, formatting, lists, links, images, tables.
+ * variant="note" is the compact toolbar used on service notes.
  */
-export default function RichTextEditor({ value, onChange, placeholder = 'Write content…', minHeight = 220 }) {
+export default function RichTextEditor({ value, onChange, placeholder = 'Write content…', minHeight = 220, variant = 'full' }) {
+  const compact = variant === 'note';
   const quillRef = useRef(null);
 
   const imageHandler = useCallback(() => {
@@ -61,36 +78,22 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Write c
   }, []);
 
   const modules = useMemo(
-    () => ({
-      toolbar: {
-        container: TOOLBAR,
-        handlers: { image: imageHandler },
-      },
-    }),
-    [imageHandler]
+    () => (compact
+      ? { toolbar: NOTE_TOOLBAR }
+      : {
+        toolbar: {
+          container: TOOLBAR,
+          handlers: { image: imageHandler },
+        },
+      }),
+    [compact, imageHandler]
   );
 
-  const formats = [
-    'header',
-    'size',
-    'bold',
-    'italic',
-    'underline',
-    'strike',
-    'color',
-    'background',
-    'list',
-    'bullet',
-    'indent',
-    'align',
-    'blockquote',
-    'code-block',
-    'link',
-    'image',
-  ];
+  const formats = compact ? NOTE_FORMATS : FULL_FORMATS;
 
   return (
-    <div className="rich-text-editor rounded-xl border border-slate-200 overflow-hidden bg-white">
+    <div className={`rich-text-editor rounded-xl border border-slate-200 overflow-hidden bg-white${compact ? ' rich-text-editor--note' : ''}`}>
+      {compact ? null : (
       <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-b border-slate-100 bg-slate-50/80">
         <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mr-1">Tools</span>
         <button
@@ -102,6 +105,7 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Write c
           Insert table
         </button>
       </div>
+      )}
       <ReactQuill
         ref={quillRef}
         theme="snow"

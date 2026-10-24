@@ -200,19 +200,18 @@ export default function HomePhysiotherapyPage() {
 
       {showHero && (
       <>
-      <section className="relative overflow-hidden bg-gradient-to-br from-orange-600 via-primary-700 to-primary-950 text-white lg:max-h-[95vh] flex flex-col justify-center">
-        <div className="absolute inset-0 hp-hero-grid pointer-events-none" aria-hidden />
+      <section className="care-hero relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16 relative w-full">
-          <div className="grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] gap-8 lg:gap-14 items-center">
+          <div className="grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] gap-8 lg:gap-14 items-center">
             <div>
-              <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider bg-white/15 border border-white/20 px-3 py-1.5 rounded-full mb-4">
+              <p className="care-kicker">
                 <FaIcon icon="fa-house-medical" />
                 PhysioAtHome
               </p>
-              <h1 className="text-[1.75rem] sm:text-4xl md:text-5xl font-bold tracking-tight leading-[1.15]">
+              <h1 className="care-hero-title">
                 {data.hero_title}
               </h1>
-              <p className="mt-4 text-primary-100 text-[15px] md:text-lg leading-relaxed max-w-xl">
+              <p className="care-hero-lead">
                 {data.hero_subtitle}
               </p>
               {(showHeroBook || (showHeroCall && callHref)) && (
@@ -221,7 +220,7 @@ export default function HomePhysiotherapyPage() {
                 <CtaLink
                   to={s.hero_cta_link}
                   ctaId="hp_hero_book"
-                  className="btn-primary !bg-white !text-primary-700 hover:!bg-orange-50 shadow-lg w-full sm:w-auto"
+                  className="care-btn care-btn-primary w-full sm:w-auto"
                 >
                   {s.hero_cta_label}
                 </CtaLink>
@@ -230,7 +229,7 @@ export default function HomePhysiotherapyPage() {
                 <a
                   href={callHref}
                   onClick={() => trackCta({ id: 'hp_hero_call', label: s.hero_call_label || 'Call Now', href: callHref })}
-                  className="btn-primary !bg-white !text-primary-700 hover:!bg-orange-50 shadow-lg booking-cta-shadow inline-flex items-center justify-center gap-2 min-h-11 px-6 w-full sm:w-auto"
+                  className="care-btn care-btn-secondary w-full sm:w-auto"
                 >
                   <FaIcon icon="fa-phone" />
                   {s.hero_call_label || 'Call Now'}
@@ -238,21 +237,20 @@ export default function HomePhysiotherapyPage() {
                 )}
               </div>
               )}
-              <ul className="mt-8 grid sm:grid-cols-2 gap-2.5">
+              <ul className="mt-6 grid sm:grid-cols-2 gap-2.5">
                 {(s.trust_signals || []).map((item) => (
-                  <li key={item} className="flex items-start gap-2 text-sm text-white/90">
-                    <FaIcon icon="fa-circle-check" className="text-emerald-300 mt-0.5 shrink-0" />
+                  <li key={item} className="flex items-start gap-2 text-sm text-slate-700">
+                    <span className="care-check"><FaIcon icon="fa-check" /></span>
                     <span>{item}</span>
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="relative">
-              <div className="hp-hero-photo rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/25 aspect-[4/3] max-h-[420px]">
+            <div className="care-hero-stage">
+              <div className="care-hero-photo">
                 <img
                   src={heroImage}
                   alt="Hospital-trained physiotherapist providing a home physiotherapy session"
-                  className="w-full h-full object-cover"
                 />
               </div>
             </div>
@@ -260,15 +258,12 @@ export default function HomePhysiotherapyPage() {
         </div>
       </section>
 
-      <section className="bg-white border-b border-orange-100" aria-label="Trust signals">
+      <section className="bg-white border-b border-slate-200" aria-label="Trust signals">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-5">
           <ul className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2.5 md:gap-3">
             {(s.trust_bar || []).map((item) => (
-              <li
-                key={item.label}
-                className="flex items-center gap-2.5 rounded-2xl bg-orange-50/80 border border-orange-100/80 px-3 py-2.5 min-w-0"
-              >
-                <span className="shrink-0 w-9 h-9 rounded-xl bg-white text-primary-600 flex items-center justify-center shadow-sm">
+              <li key={item.label} className="care-trust-chip">
+                <span className="care-trust-icon">
                   <FaIcon icon={item.icon || 'fa-circle-check'} className="text-sm" />
                 </span>
                 <span className="text-xs sm:text-sm font-semibold text-slate-800 leading-snug">
@@ -370,7 +365,7 @@ export default function HomePhysiotherapyPage() {
         </div>
       </section>
 
-      <section className="bg-gradient-to-b from-orange-50/70 via-white to-white">
+      <section className="bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-pad">
           <SectionHead eyebrow="Outcomes" heading={s.why_heading} intro={s.why_intro} />
           <div className="grid md:grid-cols-3 gap-4 md:gap-5">
@@ -555,7 +550,7 @@ export default function HomePhysiotherapyPage() {
         </div>
       </section>
 
-      <section className="bg-orange-50/50">
+      <section className="bg-[#f6f8fb]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-pad">
           <SectionHead eyebrow="Clinical coverage" heading={s.conditions_heading} />
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -705,7 +700,7 @@ export default function HomePhysiotherapyPage() {
         )}
       </section>
 
-      <section className="bg-orange-50/60">
+      <section className="bg-[#f6f8fb]">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 section-pad">
           <SectionHead heading={s.faq_heading} />
           <div className="space-y-3">
@@ -728,16 +723,15 @@ export default function HomePhysiotherapyPage() {
       )}
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 md:pb-14">
-        <div className="relative overflow-hidden rounded-2xl md:rounded-3xl text-white text-center">
-          <div className="absolute inset-0 bg-gradient-to-r from-orange-600 via-primary-600 to-primary-800" />
-          <div className="relative px-6 py-10 sm:py-12">
+        <div className="care-close">
+          <div>
             <h2 className="text-2xl sm:text-3xl font-bold">{s.hero_cta_label}</h2>
-            <p className="mt-3 text-primary-100 max-w-xl mx-auto text-sm sm:text-base">{s.fit_reassurance}</p>
+            <p className="mt-3 max-w-xl mx-auto text-sm sm:text-base">{s.fit_reassurance}</p>
             <div className="mt-6">
               <CtaLink
                 to={s.hero_cta_link}
                 ctaId="hp_final_book"
-                className="btn-primary !bg-white !text-primary-700 hover:!bg-orange-50"
+                className="care-btn care-btn-primary"
               >
                 {s.hero_cta_label}
               </CtaLink>

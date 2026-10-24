@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import FaIcon from '../../components/FaIcon';
 import { admin, uploadCmsImage } from '../../services/api';
 import MediaUrlOrUpload from '../../components/admin/MediaUrlOrUpload';
+import RichTextEditor from '../../components/admin/RichTextEditor';
 import { resolveMediaUrl } from '../../utils/mediaUrl';
 import toast from 'react-hot-toast';
-import { bookingUrlError, isSafeBookingUrl } from '../../components/serviceCatalogue/serviceCatalogueModel';
+import { bookingUrlError, isSafeBookingUrl, isWhatsappBookingUrl } from '../../components/serviceCatalogue/serviceCatalogueModel';
 
 const TABS = [
   { id: 'items', label: 'Items' },
@@ -32,6 +33,7 @@ const EMPTY_ITEM = {
   offer_price: '',
   unit_label: 'per session',
   booking_pain_type: 'Other',
+  note_html: '',
   disclaimer: '',
   booking_url: '',
   gallery_urls: '',
@@ -93,7 +95,9 @@ export default function AdminServicePages({
   viewLabel = 'View Tele-Rehab',
   deliveryDefault = 'online',
 }) {
-  const [tab, setTab] = useState('items');
+  const [searchParams] = useSearchParams();
+  const requestedTab = searchParams.get('tab');
+  const [tab, setTab] = useState(TABS.some((entry) => entry.id === requestedTab) ? requestedTab : 'items');
   const [data, setData] = useState(null);
   const [item, setItem] = useState(null);
   const [errors, setErrors] = useState({});
@@ -146,6 +150,7 @@ export default function AdminServicePages({
       offer_price: row.offerPrice ?? '',
       unit_label: row.unitLabel || '',
       booking_pain_type: row.bookingPainType || '',
+      note_html: row.noteHtml || '',
       booking_url: row.bookingUrl || '',
       gallery_urls: Array.isArray(row.gallery) ? row.gallery.join('\n') : '',
       image_url: row.imageUrl || '',
@@ -426,6 +431,19 @@ export default function AdminServicePages({
               <Field label="Thumbnail alt text (optional)">
                 <input className={inputClass} maxLength={255} value={item.image_alt || ''} placeholder={item.title || 'Service thumbnail'} onChange={(event) => setItem({ ...item, image_alt: event.target.value })} />
               </Field>
+              <div className="sm:col-span-2">
+                <p className="mb-1 text-sm font-medium text-slate-700">Note</p>
+                <RichTextEditor
+                  variant="note"
+                  minHeight={140}
+                  value={item.note_html || ''}
+                  onChange={(html) => setItem({ ...item, note_html: html })}
+                  placeholder="Instructions for this service…"
+                />
+                <p className="mt-1 text-xs text-slate-500">
+                  Shown above the disclaimer when a visitor opens the service. Bold, headings, lists, and colours are saved with this service.
+                </p>
+              </div>
               <div className="sm:col-span-2">
                 <Field label="Disclaimer">
                   <textarea
@@ -746,51 +764,172 @@ function ChipEditor({ data, onSaved, pageKey }) {
   );
 }
 
+const OPTION_TOKENS = '{slug}, {service}, {pain}, {package}, {plan}, {treatment}, and {pay}';
+
+function optionSummary(option) {
+  if (option.key === 'book') return option.hrefTemplate || 'Booking link not set';
+  if (option.key === 'whatsapp') {
+    if (isWhatsappBookingUrl(option.hrefTemplate)) return option.hrefTemplate;
+    return option.whatsappNumber || 'Uses the site WhatsApp number';
+  }
+  if (option.key === 'call') return option.phone || 'Uses the site phone number';
+  return option.hrefTemplate || option.phone || option.whatsappNumber || 'Uses the site contact number';
+}
+
+function whatsappDraftValue(option) {
+  if (isWhatsappBookingUrl(option.hrefTemplate)) return option.hrefTemplate;
+  return option.whatsappNumber || '';
+}
+
+function optionSaveError(row) {
+  if (!String(row.label || '').trim()) return 'Label is required';
+  if (row.key === 'book') {
+    const href = String(row.hrefTemplate || '').trim();
+    if (!href) return 'The booking link is required';
+    const urlError = bookingUrlError(href);
+    if (urlError) return urlError;
+    if (isWhatsappBookingUrl(href)) return 'Use a booking page path. Put WhatsApp links on Book via WhatsApp.';
+  }
+  if (row.key === 'whatsapp') {
+    const draft = String(row.whatsappDraft ?? '').trim();
+    if (!draft) return '';
+    if (/^https?:\/\//i.test(draft) || draft.startsWith('/')) {
+      if (!isSafeBookingUrl(draft) || !isWhatsappBookingUrl(draft)) return 'Use a wa.me or api.whatsapp.com link, or a phone number';
+    } else if (!/^\+?[0-9]{8,15}$/.test(draft.replace(/[\s()-]/g, ''))) {
+      return 'Enter a WhatsApp number or a WhatsApp link';
+    }
+  }
+  if (row.key === 'call') {
+    const phone = String(row.phone || '').replace(/\s+/g, '');
+    if (phone && !/^\+?[0-9]{8,15}$/.test(phone)) return 'Enter a callable number';
+  }
+  return '';
+}
+
 function OptionEditor({ data, onSaved, pageKey }) {
   const [row, setRow] = useState(null);
+  const [error, setError] = useState('');
+  const options = Array.isArray(data?.options) ? data.options : [];
+
+  function openOption(option) {
+    setError('');
+    setRow({ ...option, whatsappDraft: whatsappDraftValue(option) });
+  }
+
   async function save(event) {
     event.preventDefault();
+    const message = optionSaveError(row);
+    if (message) {
+      setError(message);
+      return;
+    }
+    let hrefTemplate = row.hrefTemplate || '';
+    let whatsappNumber = row.whatsappNumber || '';
+    if (row.key === 'whatsapp') {
+      const draft = String(row.whatsappDraft || '').trim();
+      if (!draft) {
+        whatsappNumber = '';
+        if (isWhatsappBookingUrl(hrefTemplate)) hrefTemplate = '';
+      } else if (/^https?:\/\//i.test(draft)) {
+        hrefTemplate = draft;
+        whatsappNumber = '';
+      } else {
+        whatsappNumber = draft.replace(/[^\d]/g, '');
+        if (isWhatsappBookingUrl(hrefTemplate)) hrefTemplate = '';
+      }
+    }
     try {
       await admin.updateServiceOption(row.id, {
         page_key: pageKey,
         label: row.label,
         sub_label: row.subLabel,
-        href_template: row.hrefTemplate,
+        href_template: hrefTemplate,
         phone: row.phone || '',
-        whatsapp_number: row.whatsappNumber || '',
+        whatsapp_number: whatsappNumber,
         whatsapp_message: row.whatsappMessage || '',
         is_visible: row.isVisible,
         icon: row.icon,
+        sort_order: row.sortOrder,
       });
       toast.success('Booking option saved');
       setRow(null);
       onSaved();
     } catch (err) {
-      toast.error(err.errors?.href_template || err.errors?.label || err.message || 'Could not save');
+      setError(err.errors?.href_template || err.errors?.whatsapp_number || err.errors?.phone || err.errors?.label || err.message || 'Could not save');
     }
   }
+
   if (row) {
     return (
       <form onSubmit={save} className="max-w-xl space-y-3 rounded-xl border bg-white p-4">
         <Field label="Label"><input className={inputClass} value={row.label} onChange={(event) => setRow({ ...row, label: event.target.value })} /></Field>
         <Field label="Sub-label"><input className={inputClass} value={row.subLabel || ''} onChange={(event) => setRow({ ...row, subLabel: event.target.value })} /></Field>
-        <Field label="Link"><input className={inputClass} value={row.hrefTemplate || ''} onChange={(event) => setRow({ ...row, hrefTemplate: event.target.value })} /></Field>
-        <Field label="Phone"><input className={inputClass} value={row.phone || ''} onChange={(event) => setRow({ ...row, phone: event.target.value })} /></Field>
-        <Field label="WhatsApp number"><input className={inputClass} value={row.whatsappNumber || ''} onChange={(event) => setRow({ ...row, whatsappNumber: event.target.value })} /></Field>
-        <button className="rounded-lg bg-[#376299] px-3 py-2 text-sm font-semibold text-white" type="submit">Save option</button>
+        {row.key === 'book' ? (
+          <Field label="Booking URL">
+            <input className={inputClass} value={row.hrefTemplate || ''} onChange={(event) => setRow({ ...row, hrefTemplate: event.target.value })} />
+            <span className="mt-1 block text-xs text-slate-500">Site path or https link. {OPTION_TOKENS} are filled in for the visitor.</span>
+          </Field>
+        ) : null}
+        {row.key === 'whatsapp' ? (
+          <Field label="WhatsApp number or link">
+            <input className={inputClass} value={row.whatsappDraft || ''} onChange={(event) => setRow({ ...row, whatsappDraft: event.target.value })} placeholder="918448945434 or https://wa.me/918448945434" />
+            <span className="mt-1 block text-xs text-slate-500">A number opens WhatsApp with the service name. A wa.me link is used as entered, with the same placeholders.</span>
+          </Field>
+        ) : null}
+        {row.key === 'call' ? (
+          <Field label="Phone number">
+            <input className={inputClass} value={row.phone || ''} onChange={(event) => setRow({ ...row, phone: event.target.value })} placeholder="+918448945434" />
+          </Field>
+        ) : null}
+        {row.key !== 'book' && row.key !== 'whatsapp' && row.key !== 'call' ? (
+          <>
+            <Field label="Link"><input className={inputClass} value={row.hrefTemplate || ''} onChange={(event) => setRow({ ...row, hrefTemplate: event.target.value })} /></Field>
+            <Field label="Phone"><input className={inputClass} value={row.phone || ''} onChange={(event) => setRow({ ...row, phone: event.target.value })} /></Field>
+            <Field label="WhatsApp number"><input className={inputClass} value={row.whatsappNumber || ''} onChange={(event) => setRow({ ...row, whatsappNumber: event.target.value })} /></Field>
+          </>
+        ) : null}
+        {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+        <div className="flex gap-2">
+          <button className="rounded-lg bg-[#376299] px-3 py-2 text-sm font-semibold text-white" type="submit">Save option</button>
+          <button className="rounded-lg border px-3 py-2 text-sm" type="button" onClick={() => setRow(null)}>Cancel</button>
+        </div>
       </form>
     );
   }
   return (
     <div className="space-y-2">
-      {data.options.map((option) => (
-        <button key={option.id} type="button" className="block w-full rounded-xl border bg-white px-3 py-3 text-left" onClick={() => setRow(option)}>
+      <p className="text-sm text-slate-500">
+        {pageKey === 'home_physiotherapy'
+          ? 'These three choices appear in the Home Physiotherapy booking popup.'
+          : 'These choices appear in the Tele-Rehab booking popup.'}{' '}
+        Leave a number blank to use the page contact details.
+      </p>
+      {options.length === 0 ? <p className="rounded-xl border bg-white px-3 py-3 text-sm text-slate-500">Booking options are not available for this page yet.</p> : null}
+      {options.map((option) => (
+        <button key={option.id} type="button" className="block w-full rounded-xl border bg-white px-3 py-3 text-left" onClick={() => openOption(option)}>
           <span className="font-medium">{option.label}</span>
-          <span className="mt-1 block text-xs text-slate-500">{option.hrefTemplate || option.phone || option.whatsappNumber || 'Uses the site contact number'}</span>
+          <span className="mt-1 block text-xs text-slate-500">{optionSummary(option)}</span>
         </button>
       ))}
     </div>
   );
+}
+
+export function HomeBookingOptionsPanel() {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState('');
+  const load = () => {
+    admin.serviceCatalogue('home_physiotherapy')
+      .then((res) => {
+        setData(res.data);
+        setError('');
+      })
+      .catch((err) => setError(err.message || 'Could not load booking options'));
+  };
+  useEffect(() => { load(); }, []);
+  if (error) return <p className="text-sm text-rose-700">{error}</p>;
+  if (!data) return <p className="text-sm text-slate-500">Loading booking options…</p>;
+  return <OptionEditor data={data} onSaved={load} pageKey="home_physiotherapy" />;
 }
 
 function PageEditor({ data, onSaved, pageKey }) {

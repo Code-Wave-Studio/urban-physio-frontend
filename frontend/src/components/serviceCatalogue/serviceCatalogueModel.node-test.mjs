@@ -5,8 +5,10 @@ import {
   activePrice,
   applyChipFilter,
   chipInterest,
+  bookingChoiceSummary,
   bookingDestinationNote,
   bookingUrlError,
+  buildHomeBookingChoices,
   fillBookingTemplate,
   filterBookableSlots,
   isSafeBookingUrl,
@@ -202,6 +204,86 @@ check('same-origin absolute book links stay inside the app', resolveServiceBooki
 check('external booking links are left intact', resolveServiceBookingUrl({ ...service, bookingUrl: 'https://calendly.com/urban' }) === 'https://calendly.com/urban');
 check('unsafe stored booking links are ignored', resolveServiceBookingUrl({ ...service, bookingUrl: 'javascript:alert(1)' }) === '');
 check('missing booking links fall back to the default flow', resolveServiceBookingUrl({ ...service, bookingUrl: '' }) === '');
+check('choice summary uses the service name and starting price', bookingChoiceSummary({ title: 'ACL Rehab', price: { display: 599 } }) === 'ACL Rehab · from ₹599');
+check('choice summary omits a missing price', bookingChoiceSummary({ title: 'Knee Pain Therapy', price: { display: null } }) === 'Knee Pain Therapy');
+
+const waBooking = 'https://api.whatsapp.com/send/?phone=918448945434&text=Hi%2C+I+want+to+book+a+physiotherapy+home+visit&type=phone_number&app_absent=0';
+const acl = {
+  slug: 'acl-reconstruction-rehab',
+  title: 'ACL Reconstruction Rehab',
+  sectionSlug: 'recover-after-surgery-injury',
+  bookingPainType: 'Back Pain',
+  deliveryMode: 'home',
+  price: { display: 999 },
+  bookingUrl: waBooking,
+};
+const aclChoices = buildHomeBookingChoices(acl, {
+  options: [],
+  supportPhone: '+918448945434',
+  defaultWhatsapp: '918448945434',
+  extra: { pain: 'Back Pain' },
+  origin: 'http://localhost',
+  base: '/theurbanphysio',
+});
+const aclByKey = Object.fromEntries(aclChoices.map((choice) => [choice.key, choice]));
+check('a whatsapp-only service still offers all three choices', ['book', 'whatsapp', 'call'].every((key) => aclByKey[key]?.label));
+check('video session opens the home visit booking flow for that service', aclByKey.book?.href?.includes('/book?') && aclByKey.book.href.includes('type=home_visit') && aclByKey.book.href.includes('service=acl-reconstruction-rehab') && !aclByKey.book.href.includes('whatsapp'));
+check('whatsapp choice keeps the service booking link when no option is configured', aclByKey.whatsapp?.href === waBooking);
+check('call choice uses the clinic phone', aclByKey.call?.href === 'tel:+918448945434');
+check('choice labels match the booking popup', aclByKey.book.label === 'Book Video Session' && aclByKey.whatsapp.label === 'Book via WhatsApp' && aclByKey.call.label === 'Call us');
+
+const configured = buildHomeBookingChoices(acl, {
+  options: [
+    { key: 'book', label: 'Book Video Session', hrefTemplate: '/book?type=home_visit&mode=home-visit&service={slug}&pain_type={pain}&package={package}', isVisible: true, sortOrder: 0 },
+    { key: 'whatsapp', label: 'Book via WhatsApp', whatsappNumber: '919811122233', whatsappMessage: 'Book {service}', isVisible: true, sortOrder: 1 },
+    { key: 'call', label: 'Call us', phone: '+919800011122', isVisible: true, sortOrder: 2 },
+  ],
+  supportPhone: '+918448945434',
+  defaultWhatsapp: '918448945434',
+});
+const configuredByKey = Object.fromEntries(configured.map((choice) => [choice.key, choice]));
+check('configured video template is filled for the service', configuredByKey.book?.href?.includes('service=acl-reconstruction-rehab') && configuredByKey.book.href.includes('type=home_visit') && !configuredByKey.book.href.includes('whatsapp'));
+check('configured whatsapp number overrides the card link', configuredByKey.whatsapp?.href?.startsWith('https://wa.me/919811122233') && decodeURIComponent(configuredByKey.whatsapp.href).includes('ACL Reconstruction Rehab'));
+check('configured call number overrides the clinic phone', configuredByKey.call?.href === 'tel:+919800011122');
+check('a saved booking label is shown', configuredByKey.book?.label === 'Book Video Session');
+const renamed = buildHomeBookingChoices(acl, { options: [{ key: 'book', label: 'Start a video visit', hrefTemplate: '/book?type=home_visit&service={slug}', isVisible: true }] });
+check('an edited booking label replaces the default', renamed.find((choice) => choice.key === 'book')?.label === 'Start a video visit');
+
+const waLink = buildHomeBookingChoices(acl, {
+  options: [{ key: 'whatsapp', hrefTemplate: 'https://wa.me/917777766666?text={service}', whatsappNumber: '919811122233', isVisible: true }],
+  supportPhone: '+918448945434',
+});
+check('a configured whatsapp link is used', (() => {
+  const href = waLink.find((choice) => choice.key === 'whatsapp')?.href || '';
+  return href.startsWith('https://wa.me/917777766666') && decodeURIComponent(href.replace(/\+/g, ' ')).includes('ACL Reconstruction Rehab');
+})());
+
+const invalid = buildHomeBookingChoices(
+  { ...acl, bookingUrl: '' },
+  {
+    options: [
+      { key: 'book', hrefTemplate: 'javascript:alert(1)', isVisible: true },
+      { key: 'whatsapp', whatsappNumber: 'abc', isVisible: true },
+      { key: 'call', phone: '12', isVisible: true },
+    ],
+    supportPhone: '+918448945434',
+    defaultWhatsapp: '918448945434',
+  }
+);
+const invalidByKey = Object.fromEntries(invalid.map((choice) => [choice.key, choice]));
+check('an invalid video template falls back to the home visit flow', invalidByKey.book?.href?.includes('type=home_visit') && invalidByKey.book.href.includes('service=acl-reconstruction-rehab'));
+check('an invalid whatsapp number falls back to the site number', invalidByKey.whatsapp?.href?.startsWith('https://wa.me/918448945434'));
+check('an invalid call number falls back to the clinic phone', invalidByKey.call?.href === 'tel:+918448945434');
+
+const internal = buildHomeBookingChoices(
+  { ...acl, bookingUrl: '/book?type=home_visit&mode=home-visit&service={slug}' },
+  { options: [], supportPhone: '+918448945434', defaultWhatsapp: '918448945434', origin: 'http://localhost', base: '/' }
+);
+const internalBook = internal.find((choice) => choice.key === 'book');
+const internalWa = internal.find((choice) => choice.key === 'whatsapp');
+check('an internal booking url stays on video session', internalBook?.href?.includes('service=acl-reconstruction-rehab') && internalBook.href.includes('type=home_visit'));
+check('whatsapp still names the service when the booking url is internal', internalWa?.href?.startsWith('https://wa.me/918448945434') && decodeURIComponent(internalWa.href).includes('ACL Reconstruction Rehab'));
+
 check('internal booking note stays on site', bookingDestinationNote('/book?service=back') === 'Continues to booking on The Urban Physio');
 check('external booking note names the host', bookingDestinationNote('https://www.calendly.com/urban') === 'Opens calendly.com');
 

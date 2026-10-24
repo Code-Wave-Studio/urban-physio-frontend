@@ -101,14 +101,14 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
             onClick={onClose}
           />
 
-          {/* Container — Desktop Pop-up Modal / Mobile Bottom Sheet */}
-          <div className="fixed inset-0 z-[125] flex items-end md:items-center justify-center p-2 sm:p-4 md:p-6 pointer-events-none overflow-hidden">
+          {/* Full-screen sheet on phones. Centered modal from the md breakpoint up. */}
+          <div className="fixed inset-0 z-[125] flex items-stretch md:items-center justify-center p-0 md:p-6 pointer-events-none overflow-hidden">
             <motion.div
               ref={sheetRef}
               role="dialog"
               aria-modal="true"
               aria-labelledby="clinic-sheet-title"
-              className="pointer-events-auto w-full md:max-w-3xl lg:max-w-4xl max-h-[calc(100dvh-2.5rem)] md:max-h-[min(calc(100dvh-3.5rem),740px)] flex flex-col bg-white rounded-t-[2rem] md:rounded-[2.25rem] shadow-2xl shadow-slate-950/30 border border-slate-200/90 overflow-hidden"
+              className="pointer-events-auto w-full h-[100dvh] max-h-[100dvh] md:h-auto md:max-w-3xl lg:max-w-4xl md:max-h-[min(calc(100dvh-3rem),740px)] flex flex-col bg-white rounded-none md:rounded-[2.25rem] shadow-2xl shadow-slate-950/30 md:border md:border-slate-200/90 overflow-hidden"
               initial={{ y: '100%', opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
@@ -122,15 +122,14 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
               onDragEnd={handleDragEnd}
             >
               
-              <div
-                className="shrink-0 pt-2.5 pb-1 md:hidden cursor-grab active:cursor-grabbing touch-none bg-white"
-                onPointerDown={(e) => dragControls.start(e)}
-              >
-                <div className="w-12 h-1.5 rounded-full bg-slate-300 mx-auto" />
-              </div>
-
               {/* Desktop & Mobile Header Banner (Matching Doctor Popup style) */}
               <div className="relative h-40 md:h-48 shrink-0 bg-slate-900 overflow-hidden">
+                <div
+                  className="absolute top-2 left-0 right-0 z-20 flex justify-center md:hidden cursor-grab active:cursor-grabbing touch-none"
+                  onPointerDown={(e) => dragControls.start(e)}
+                >
+                  <div className="w-12 h-1.5 rounded-full bg-white/80" />
+                </div>
                 {cover ? (
                   <ClinicCoverImage src={cover} alt={c.name} variant="sheet" eager />
                 ) : (
@@ -360,7 +359,7 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
               </div>
 
               {/* Fixed Desktop & Mobile Footer Bar (Matching Doctor Popup CTA layout) */}
-              <div className="shrink-0 z-20 border-t border-slate-200/90 bg-white px-4 md:px-6 py-3 shadow-[0_-8px_30px_rgba(15,23,42,0.08)] flex items-center justify-between gap-3">
+              <div className="shrink-0 z-20 border-t border-slate-200/90 bg-white px-4 md:px-6 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(15,23,42,0.08)] flex items-center justify-between gap-3">
                 {/* Left: Save Action Button */}
                 <div className="flex items-center gap-2">
                   <SaveClinicButton clinic={c} onNavigate={onClose} compact />
@@ -390,7 +389,7 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
                 {/* Right: Primary Book Appointment CTA */}
                 {!isOfflineOrClosed ? (
                   <Link
-                    to={bookClinicUrl(c)}
+                    to={bookClinicUrl(c.id)}
                     onClick={() => onClose()}
                     className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-bold text-xs md:text-sm shadow-md shadow-teal-900/20 active:scale-95 transition"
                   >

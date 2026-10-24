@@ -4,6 +4,8 @@
  * Discounts are calculated from regular and offer prices.
  */
 
+import { whatsappChatUrl } from '../../utils/whatsapp.js';
+
 export const CATALOGUE_LEAD_MINUTES = 120;
 export const VIEW_HISTORY_KEY = 'tup_svc_views_telerehab';
 export const LAYOUT_KEY_PREFIX = 'tup_svc_layout_';
@@ -230,6 +232,152 @@ export function sourceChipFromVisit(chips, searchParams) {
 }
 
 const BLOCKED_BOOKING_SCHEME = /^(javascript|data|vbscript|file|blob|about):/i;
+
+/** Home visit booking path used when a service has no internal booking link of its own. */
+export const HOME_VISIT_BOOK_TEMPLATE =
+  '/book?type=home_visit&mode=home-visit&service={slug}&pain_type={pain}&package={package}';
+
+const HOME_CHOICE_LABELS = {
+  book: 'Book Video Session',
+  whatsapp: 'Book via WhatsApp',
+  call: 'Call us',
+};
+
+export function isWhatsappBookingUrl(href) {
+  const value = String(href || '').trim();
+  if (!value) return false;
+  try {
+    const host = new URL(value, 'https://placeholder.local').hostname.replace(/^www\./, '').toLowerCase();
+    return host === 'wa.me' || host === 'api.whatsapp.com' || host === 'whatsapp.com' || host.endsWith('.whatsapp.com');
+  } catch {
+    return false;
+  }
+}
+
+export function bookingChoiceSummary(item) {
+  const title = item?.title || '';
+  const price = item?.price?.display;
+  if (price == null || price === '') return title;
+  return `${title} · from ${formatInr(price)}`;
+}
+
+function dialablePhone(value) {
+  const digits = String(value || '').replace(/[^\d+]/g, '');
+  return /^\+?[0-9]{8,15}$/.test(digits) ? digits : '';
+}
+
+/**
+ * The three “How would you like to book?” choices for one Home Physiotherapy service.
+ * Page booking options win when they are set. A card’s own non-WhatsApp booking URL
+ * still opens Book Video Session. Missing or invalid values fall back to the
+ * home-visit flow, the card’s WhatsApp link, and the clinic phone.
+ */
+export function buildHomeBookingChoices(item, config = {}) {
+  const extra = config.extra || {};
+  const overrides = item?.optionOverrides && typeof item.optionOverrides === 'object' ? item.optionOverrides : {};
+  const configured = Array.isArray(config.options) ? config.options : [];
+  const byKey = {};
+  configured.forEach((option) => {
+    if (option?.key) byKey[option.key] = option;
+  });
+  const direct = resolveServiceBookingUrl(item, extra, {
+    origin: config.origin || '',
+    base: config.base || '/',
+  });
+  const directIsWhatsapp = isWhatsappBookingUrl(direct);
+  const ctx = bookingContext(item, extra);
+
+  function merged(key, fallback) {
+    const option = byKey[key] || {};
+    const override = overrides[key] || {};
+    const configuredRow = Boolean(option.key);
+    const visible = override.isVisible === false ? false : (configuredRow ? option.isVisible !== false : true);
+    return {
+      key,
+      label: String(option.label || '').trim() || HOME_CHOICE_LABELS[key] || fallback.label || '',
+      hrefTemplate: override.href || option.hrefTemplate || fallback.hrefTemplate || '',
+      whatsappNumber: override.whatsappNumber || option.whatsappNumber || config.defaultWhatsapp || config.contactWhatsapp || '',
+      whatsappMessage: override.whatsappMessage || option.whatsappMessage || fallback.whatsappMessage || '',
+      phone: override.phone || option.phone || config.supportPhone || config.contactPhone || '',
+      isVisible: visible,
+      sortOrder: Number.isFinite(Number(option.sortOrder)) && configuredRow ? Number(option.sortOrder) : fallback.sortOrder,
+    };
+  }
+
+  const book = merged('book', { hrefTemplate: HOME_VISIT_BOOK_TEMPLATE, sortOrder: 0 });
+  const whatsapp = merged('whatsapp', {
+    whatsappMessage: 'Hi, I want to book {service} at home.',
+    sortOrder: 1,
+  });
+  const call = merged('call', { sortOrder: 2 });
+
+  function safeBookTemplate(value) {
+    const template = String(value || '').trim();
+    if (!template || !isSafeBookingUrl(template) || isWhatsappBookingUrl(template)) return '';
+    const filled = fillBookingTemplate(template, ctx);
+    return isSafeBookingUrl(filled) && !isWhatsappBookingUrl(filled) ? filled : '';
+  }
+
+  function bookHref() {
+    const overrideHref = safeBookTemplate(overrides.book?.href);
+    if (overrideHref) return overrideHref;
+    if (direct && !directIsWhatsapp) return direct;
+    return safeBookTemplate(book.hrefTemplate) || fillBookingTemplate(HOME_VISIT_BOOK_TEMPLATE, ctx);
+  }
+
+  function whatsappMessage() {
+    return String(whatsapp.whatsappMessage || 'Hi, I want to book {service} at home.').replace(
+      /\{(service|slug|section|chip|price|package|pay|treatment|pain|plan)\}/g,
+      (_, key) => ctx[key] ?? ''
+    );
+  }
+
+  function whatsappFromNumber(value) {
+    const number = dialablePhone(value);
+    return number ? whatsappChatUrl(number, whatsappMessage()) || '' : '';
+  }
+
+  function whatsappHref() {
+    const templates = [overrides.whatsapp?.href, byKey.whatsapp?.hrefTemplate];
+    for (const template of templates) {
+      const filled = String(template || '').trim() ? fillBookingTemplate(String(template).trim(), ctx) : '';
+      if (filled && isSafeBookingUrl(filled) && isWhatsappBookingUrl(filled)) return filled;
+    }
+    const configuredNumber = whatsappFromNumber(overrides.whatsapp?.whatsappNumber || byKey.whatsapp?.whatsappNumber);
+    if (configuredNumber) return configuredNumber;
+    if (directIsWhatsapp) return direct;
+    return whatsappFromNumber(config.defaultWhatsapp) || whatsappFromNumber(config.contactWhatsapp);
+  }
+
+  function callHref() {
+    const candidates = [overrides.call?.phone, byKey.call?.phone, config.supportPhone, config.contactPhone];
+    for (const candidate of candidates) {
+      const phone = dialablePhone(candidate);
+      if (phone) return `tel:${phone}`;
+    }
+    return '';
+  }
+
+  const standard = [
+    { ...book, href: bookHref(), openInNewTab: false },
+    { ...whatsapp, href: whatsappHref(), openInNewTab: true },
+    { ...call, href: callHref(), openInNewTab: false },
+  ];
+  const extras = configured
+    .filter((option) => option?.key && !HOME_CHOICE_LABELS[option.key])
+    .map((option) => ({
+      ...option,
+      href: fillBookingTemplate(option.hrefTemplate, ctx),
+      openInNewTab: Boolean(option.openInNewTab),
+      isVisible: option.isVisible !== false,
+      sortOrder: Number(option.sortOrder) || 10,
+    }))
+    .filter((option) => option.href && isSafeBookingUrl(option.href));
+
+  return [...standard, ...extras]
+    .filter((choice) => choice.isVisible && choice.href)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+}
 
 /** Site-relative paths and http(s) URLs. Rejects scriptable and protocol-relative links. */
 export function isSafeBookingUrl(value) {

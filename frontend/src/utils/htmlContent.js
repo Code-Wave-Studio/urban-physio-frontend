@@ -30,7 +30,7 @@ const TAG_ATTRS = {
   td: new Set(['colspan', 'rowspan']),
   th: new Set(['colspan', 'rowspan', 'scope']),
   ol: new Set(['start', 'type']),
-  li: new Set(['value']),
+  li: new Set(['value', 'data-list']),
   font: new Set(['color', 'size']),
   audio: new Set(['src', 'controls', 'preload']),
   video: new Set(['src', 'controls', 'preload', 'poster', 'width', 'height']),

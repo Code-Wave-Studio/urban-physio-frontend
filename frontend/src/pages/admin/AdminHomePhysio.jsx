@@ -13,6 +13,7 @@ import CareEcosystemEditor from '../../components/admin/CareEcosystemEditor';
 import EnrollmentEditor from '../../components/admin/EnrollmentEditor';
 import SectionVisibilityToggle from '../../components/admin/SectionVisibilityToggle';
 import { admin, uploadCmsImage, uploadCmsVideo } from '../../services/api';
+import { HomeBookingOptionsPanel } from './AdminServicePages';
 import { HOME_PHYSIO_DEFAULTS, mergeHomePhysioSections } from '../../constants/homePhysioDefaults';
 import { isSectionOn } from '../../constants/sectionVisibility';
 import {
@@ -51,6 +52,7 @@ const TABS = [
   { id: 'ecosystem', label: 'Care ecosystem', icon: 'fa-layer-group' },
   { id: 'enrol', label: 'How to enrol', icon: 'fa-hexagon' },
   { id: 'book', label: 'Tiers & booking', icon: 'fa-user-doctor' },
+  { id: 'options', label: 'Booking options', icon: 'fa-calendar-check' },
   { id: 'price', label: 'Pricing & areas', icon: 'fa-tag' },
   { id: 'voice', label: 'Reviews & FAQ', icon: 'fa-comments' },
   { id: 'community', label: 'Social & portal', icon: 'fa-share-nodes' },
@@ -223,6 +225,8 @@ export default function AdminHomePhysio() {
           })}
         </div>
 
+        {tab !== 'options' ? (
+        <>
         {tab === 'hero' && (
           <div className="space-y-5" role="tabpanel">
             <SectionVisibilityToggle
@@ -723,7 +727,14 @@ export default function AdminHomePhysio() {
             </button>
           </div>
         </div>
+        </>
+        ) : null}
       </form>
+      {tab === 'options' ? (
+        <div className="max-w-xl" role="tabpanel">
+          <HomeBookingOptionsPanel />
+        </div>
+      ) : null}
     </AdminDashboardLayout>
   );
 }

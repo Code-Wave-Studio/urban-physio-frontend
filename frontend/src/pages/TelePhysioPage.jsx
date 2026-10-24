@@ -195,29 +195,28 @@ export default function TelePhysioPage() {
       <Navbar />
       {showHero && (
       <>
-      <section className="tele-band relative overflow-hidden lg:max-h-[95vh] flex flex-col justify-center">
-        <div className="tele-band-glow absolute inset-0 pointer-events-none" aria-hidden />
+      <section className="care-hero relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16 relative w-full">
-          <div className="grid lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] gap-8 lg:gap-14 items-center">
+          <div className="grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] gap-8 lg:gap-14 items-center">
             <div className="min-w-0">
-              <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider bg-white/15 border border-white/20 px-3.5 py-1.5 rounded-full mb-4 backdrop-blur-xs">
-                <FaIcon icon="fa-video" className="text-white" />
+              <div className="care-kicker">
+                <FaIcon icon="fa-video" />
                 <span>{s.hero_badge || pageName}</span>
               </div>
-              <h1 className="text-[1.85rem] sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-[1.15]">
+              <h1 className="care-hero-title">
                 {data.hero_title || TELEPHYSIO_DEFAULTS.hero_title}
               </h1>
-              <p className="mt-4 text-white text-[15px] sm:text-base md:text-lg leading-relaxed max-w-xl">
+              <p className="care-hero-lead">
                 {data.hero_subtitle || TELEPHYSIO_DEFAULTS.hero_subtitle}
               </p>
 
-              <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5">
+              <div className="mt-7 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <Link
                   to={s.hero_cta_link || bookTelePhysioUrl()}
                   onClick={() => trackCta({ id: 'tele_hero_book', label: s.hero_cta_label || `Book a ${pageName} Session`, href: s.hero_cta_link || bookTelePhysioUrl() })}
-                  className="btn-primary tele-btn-book font-bold py-3 px-6 text-center rounded-xl transition-all active:scale-[0.98]"
+                  className="care-btn care-btn-primary w-full sm:w-auto"
                 >
-                  <FaIcon icon="fa-video" className="mr-2 text-white" />
+                  <FaIcon icon="fa-video" />
                   {s.hero_cta_label || `Book a ${pageName} Session`}
                 </Link>
                 <a
@@ -225,46 +224,43 @@ export default function TelePhysioPage() {
                   onClick={() => trackCta({ id: 'tele_hero_whatsapp', label: s.secondary_cta_label || 'Talk to a Physiotherapist', href: whatsappHref })}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 border border-white/30 hover:bg-white/10 text-white font-semibold py-3 px-5 rounded-xl transition-all text-center"
+                  className="care-btn care-btn-secondary w-full sm:w-auto"
                 >
-                  <FaIcon icon="fa-whatsapp" className="text-white text-lg" />
+                  <FaIcon icon="fa-whatsapp" className="text-lg" />
                   <span>{s.secondary_cta_label || 'Talk to a Physiotherapist'}</span>
                 </a>
               </div>
 
-              <ul className="mt-8 grid sm:grid-cols-2 gap-3 pt-6 border-t border-white/15">
+              <ul className="mt-6 grid sm:grid-cols-2 gap-2.5">
                 {(s.trust_signals || []).map((item) => (
-                  <li key={item} className="flex items-center gap-2.5 text-sm text-white/95">
-                    <span className="tele-tick">
+                  <li key={item} className="flex items-start gap-2 text-sm text-slate-700">
+                    <span className="care-check">
                       <FaIcon icon="fa-check" />
                     </span>
-                    <span className="font-medium">{item}</span>
+                    <span>{item}</span>
                   </li>
                 ))}
               </ul>
-              <PrivacyClaimBadges badges={heroPrivacyBadges} variant="hero" className="mt-6" />
+              <PrivacyClaimBadges badges={heroPrivacyBadges} variant="card" className="mt-6" />
             </div>
 
-            
-            <div className="relative">
-              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/25 aspect-[4/3] max-h-[440px] bg-slate-900">
+            <div className="care-hero-stage">
+              <div className="care-hero-photo relative">
                 <img
                   src={heroImage}
                   alt={`${pageName} online video consultation with a qualified physiotherapist`}
-                  className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
-                <div className="absolute bottom-4 left-4 right-4 p-3.5 bg-white/90 backdrop-blur-md rounded-xl text-slate-900 flex items-center justify-between shadow-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-logo-600 text-white flex items-center justify-center font-bold text-base">
+                <div className="absolute bottom-3 left-3 right-3 p-2.5 bg-white/95 backdrop-blur-md rounded-xl text-slate-900 flex flex-wrap items-center gap-2 shadow-lg">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-9 h-9 rounded-lg bg-logo-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
                       <FaIcon icon="fa-stethoscope" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-xs font-bold text-slate-900 leading-tight">Live 1-on-1 Video Session</p>
                       <p className="text-[11px] text-slate-600">Secure & Encrypted Telehealth</p>
                     </div>
                   </div>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-full">
+                  <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-full">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                     Clinician Online
                   </span>
@@ -280,7 +276,7 @@ export default function TelePhysioPage() {
             {(s.trust_bar || []).map((item, idx) => (
               <div
                 key={idx}
-                className="flex items-center gap-2.5 p-2 rounded-lg bg-white border border-logo-100"
+                className="care-trust-chip"
               >
                 <div className="tele-icon-header flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm">
                   <FaIcon icon={item.icon || 'fa-check'} />
@@ -822,21 +818,22 @@ export default function TelePhysioPage() {
       </section>
       )}
       {showPricing && (
-      <section className="tele-band py-14 sm:py-20 relative overflow-hidden">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+      <section className="py-14 sm:py-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="care-close">
           <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
             {s.final_heading || 'Ready to Start Your Recovery?'}
           </h2>
-          <p className="mt-3 text-sm sm:text-lg text-white max-w-xl mx-auto leading-relaxed">
+          <p className="mt-3 text-sm sm:text-lg max-w-xl mx-auto leading-relaxed">
             {s.final_subheading || 'Get expert physiotherapy guidance from the comfort of your home.'}
           </p>
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5">
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
               to={s.final_primary_cta_link || bookTelePhysioUrl()}
               onClick={() => trackCta({ id: 'tele_final_book', label: s.final_primary_cta_label || `Book a ${pageName} Session`, href: s.final_primary_cta_link || bookTelePhysioUrl() })}
-              className="btn-primary tele-btn-book w-full sm:w-auto font-bold py-3.5 px-8 rounded-xl transition-all active:scale-[0.98]"
+              className="care-btn care-btn-primary w-full sm:w-auto"
             >
-              <FaIcon icon="fa-video" className="mr-2 text-white" />
+              <FaIcon icon="fa-video" />
               {s.final_primary_cta_label || `Book a ${pageName} Session`}
             </Link>
             <a
@@ -844,11 +841,12 @@ export default function TelePhysioPage() {
               onClick={() => trackCta({ id: 'tele_final_whatsapp', label: s.final_secondary_cta_label || 'Talk to Us', href: whatsappHref })}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 border border-white/30 hover:bg-white/10 text-white font-semibold py-3.5 px-6 rounded-xl transition-all w-full sm:w-auto"
+              className="care-btn care-btn-secondary w-full sm:w-auto"
             >
-              <FaIcon icon="fa-whatsapp" className="text-white text-lg" />
+              <FaIcon icon="fa-whatsapp" className="text-lg" />
               <span>{s.final_secondary_cta_label || 'Talk to Us'}</span>
             </a>
+          </div>
           </div>
         </div>
       </section>

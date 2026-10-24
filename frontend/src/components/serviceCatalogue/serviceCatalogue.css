@@ -147,16 +147,98 @@
   cursor: not-allowed;
 }
 
-/* Mobile service booking bar. Above the call / WhatsApp / scroll rail (z-index 9976), below sheets. */
+/* Mobile service booking bar. Above the call / WhatsApp / scroll rail (z-index 9976), below the detail drawers. */
 .svc-mobile-bookbar {
   z-index: 9978;
   bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
 }
 
+/* Tele-Rehab sticky card: title and price on the left, Book now centered in the leftover space, close on the right. */
+.svc-tele-bookbar {
+  display: grid;
+  grid-template-columns: minmax(0, max-content) minmax(max-content, 1fr) 2.75rem;
+  align-items: center;
+  column-gap: 0.5rem;
+  min-height: 4.25rem;
+  padding: 0.625rem 0.375rem 0.625rem 1rem;
+  overflow: hidden;
+}
+
+.svc-tele-bookbar-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.125rem;
+}
+
+.svc-tele-bookbar-title,
+.svc-tele-bookbar-price {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.25;
+}
+
+.svc-tele-bookbar-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.svc-tele-bookbar-price {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.svc-tele-bookbar-cta {
+  justify-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0 0.875rem;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  line-height: 1;
+}
+
+.svc-tele-bookbar-close {
+  justify-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 1.375rem;
+  line-height: 1;
+}
+
+@media (max-width: 380px) {
+  .svc-tele-bookbar {
+    column-gap: 0.375rem;
+    padding-left: 0.75rem;
+  }
+
+  .svc-tele-bookbar-cta {
+    padding: 0 0.75rem;
+  }
+}
+
+/* Detail drawers sit on document.body, above the rail and the booking bar, below the booking dialog (z-index 9990). */
+.svc-detail-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 9988;
+}
+
 .svc-sheet-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 9980;
+  z-index: 9988;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -195,6 +277,17 @@
 
 .svc-sheet-head {
   padding: 8px 16px 0;
+  touch-action: none;
+}
+
+.svc-sheet.is-settled,
+.svc-detail-panel.is-settled {
+  animation: none;
+}
+
+.svc-sheet.is-pulling,
+.svc-detail-panel.is-pulling {
+  user-select: none;
 }
 
 .svc-sheet-handle {
@@ -231,6 +324,16 @@
   border-top: 1px solid var(--svc-line);
   background: #fff;
   padding: 12px 16px 16px;
+  touch-action: none;
+}
+
+.svc-detail-panel {
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
+[data-sheet-chrome] {
+  touch-action: none;
 }
 
 .svc-sheet-hero {
@@ -319,6 +422,50 @@
   .svc-sheet-head { padding: 8px 24px 0; }
   .svc-sheet-body { padding: 16px 24px 8px; }
   .svc-sheet-foot { padding: 14px 24px 18px; }
+}
+
+.svc-note {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #1d1d1f;
+  overflow-wrap: anywhere;
+}
+
+.svc-note > :first-child { margin-top: 0; }
+
+.svc-note p { margin: 0.35rem 0; }
+
+.svc-note h1,
+.svc-note h2,
+.svc-note h3,
+.svc-note h4 {
+  margin: 0.6rem 0 0.25rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.svc-note h1 { font-size: 1.25rem; }
+.svc-note h2 { font-size: 1.1rem; }
+.svc-note h3,
+.svc-note h4 { font-size: 1rem; }
+
+.svc-note ul,
+.svc-note ol {
+  margin: 0.35rem 0;
+  padding-left: 1.25rem;
+}
+
+.svc-note ul { list-style: disc; }
+.svc-note ol { list-style: decimal; }
+.svc-note li { margin: 0.15rem 0; }
+.svc-note li[data-list="bullet"] { list-style: disc; }
+.svc-note li[data-list="ordered"] { list-style: decimal; }
+.svc-note .ql-ui { display: none; }
+
+.svc-note a {
+  color: var(--svc-blue);
+  text-decoration: underline;
 }
 
 @media (prefers-reduced-motion: reduce) {

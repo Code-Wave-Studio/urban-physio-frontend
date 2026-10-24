@@ -8,33 +8,27 @@ import { useContact } from '../../contexts/ContactContext';
 import { whatsappChatUrl } from '../../utils/whatsapp';
 import { ANALYTICS_EVENTS, trackEvent } from '../../utils/analytics';
 import { setMobileBookbarVisible } from '../../utils/floatingActionsBus';
+import ServiceNote from './ServiceNote';
 import {
   applyChipFilter,
-  bookingContext,
-  bookingDestinationNote,
+  buildHomeBookingChoices,
   chipInterest,
-  fillBookingTemplate,
   formatInr,
   homeQuickPickCopy,
+  isSafeBookingUrl,
   orderChipsForVisit,
   rankQuickPicks,
   readViewHistory,
   rememberView,
-  resolveServiceBookingUrl,
   sourceChipFromVisit,
   subtitleForPick,
-  isSafeBookingUrl,
 } from './serviceCatalogueModel';
 import BookingChoiceDialog from './BookingChoiceDialog';
+import { useSheetSwipeClose } from './useSheetSwipeClose';
 import './serviceCatalogue.css';
 
 const VIEW_KEY = 'tup_recent_services';
 const LAYOUT_KEY = 'tup_layout_';
-const BOOKING_CHOICE_LABELS = {
-  book: 'Book Video Session',
-  whatsapp: 'Book via WhatsApp',
-  call: 'Call us',
-};
 const ICONS = {
   'back-neck-pain-relief': 'fa-bars-staggered',
   'post-surgery-rehab': 'fa-shield-halved',
@@ -144,6 +138,11 @@ function ServiceImageGallery({ item }) {
 }
 
 function ServiceDetailDrawer({ detail, chips, bookLabel, canBook, note, panelRef, onClose, onBook, onChip }) {
+  useSheetSwipeClose(panelRef, {
+    enabled: true,
+    onClose,
+    scrollSelector: '.svc-sheet-body',
+  });
   const meta = [detail.durationLabel, detail.rating != null ? `★ ${Number(detail.rating).toFixed(1)}` : '', 'At your home'].filter(Boolean);
   return (
     <div className="svc-sheet-backdrop" onClick={onClose}>
@@ -157,7 +156,7 @@ function ServiceDetailDrawer({ detail, chips, bookLabel, canBook, note, panelRef
         className="svc-sheet"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="svc-sheet-head">
+        <div className="svc-sheet-head" data-sheet-chrome="">
           <span className="svc-sheet-handle" aria-hidden="true" />
           <div className="mb-2 flex items-start justify-between gap-3">
             <h2 id="home-svc-title" className="text-xl font-bold">{detail.title}</h2>
@@ -215,9 +214,10 @@ function ServiceDetailDrawer({ detail, chips, bookLabel, canBook, note, panelRef
               })}
             </div>
           ) : null}
+          <ServiceNote html={detail.noteHtml} />
           {detail.disclaimer ? <p className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-950">{detail.disclaimer}</p> : null}
         </div>
-        <div className="svc-sheet-foot">
+        <div className="svc-sheet-foot" data-sheet-chrome="">
           {note ? <p className="mb-2 text-center text-xs text-[#6e6e73]">{note}</p> : null}
           <button
             type="button"
@@ -503,51 +503,17 @@ export default function HomePhysioServiceBlock() {
     returnFocus.current?.focus?.();
   }
 
-  function optionList(item) {
-    const overrides = item?.optionOverrides || {};
-    return (data?.options || [])
-      .map((option) => {
-        const override = overrides[option.key] || {};
-        const next = {
-          ...option,
-          label: override.label || option.label,
-          subLabel: override.subLabel || option.subLabel,
-          hrefTemplate: override.href || option.hrefTemplate,
-          whatsappNumber: override.whatsappNumber || option.whatsappNumber || whatsapp || '',
-          whatsappMessage: override.whatsappMessage || option.whatsappMessage,
-          phone: override.phone || option.phone || phone || '',
-          isVisible: override.isVisible === false ? false : option.isVisible,
-        };
-        return next;
-      })
-      .filter((option) => {
-        if (!option.isVisible) return false;
-        if (option.key === 'whatsapp') return Boolean(option.whatsappNumber);
-        if (option.key === 'call') return Boolean(option.phone);
-        return Boolean(option.hrefTemplate) && isSafeBookingUrl(option.hrefTemplate);
-      })
-      .sort((a, b) => a.sortOrder - b.sortOrder);
-  }
-
-  function optionHref(option, item, extra) {
-    const ctx = bookingContext(item, extra);
-    const overrideHref = item?.optionOverrides?.[option.key]?.href;
-    if (option.key === 'book' && !overrideHref) {
-      const direct = resolveServiceBookingUrl(item, extra, {
-        origin: window.location.origin,
-        base: import.meta.env.BASE_URL || '/',
-      });
-      if (direct) return direct;
-    }
-    if (option.key === 'call' && option.phone) return `tel:${String(option.phone).replace(/[^\d+]/g, '')}`;
-    if (option.key === 'whatsapp' && option.whatsappNumber) {
-      const message = String(option.whatsappMessage || 'Hi, I want to book {service} at home.').replace(
-        /\{(service|slug|section|chip|price|package|pay|treatment|pain|plan)\}/g,
-        (_, key) => ctx[key] ?? ''
-      );
-      return whatsappChatUrl(option.whatsappNumber, message) || '#';
-    }
-    return fillBookingTemplate(option.hrefTemplate, ctx);
+  function bookingChoices(item, extra = {}) {
+    return buildHomeBookingChoices(item, {
+      options: data?.options || [],
+      supportPhone: data?.supportPhone || '',
+      defaultWhatsapp: data?.defaultWhatsapp || '',
+      contactPhone: phone || '',
+      contactWhatsapp: whatsapp || '',
+      extra,
+      origin: window.location.origin,
+      base: import.meta.env.BASE_URL || '/',
+    });
   }
 
   function bookingHrefAllowed(href, option) {
@@ -573,7 +539,7 @@ export default function HomePhysioServiceBlock() {
   }
 
   function goOption(option, item, extra, source) {
-    const href = optionHref(option, item, extra);
+    const href = option.href;
     if (!bookingHrefAllowed(href, option)) return;
     trackEvent(ANALYTICS_EVENTS.CTA_CLICK, {
       cta_id: option.key,
@@ -592,14 +558,14 @@ export default function HomePhysioServiceBlock() {
   }
 
   function startBooking(item, source = 'card', extra = {}) {
-    const options = optionList(item);
     const packageRow = (item.packages || []).find((row) => String(row.id) === String(extra.packageId || packageId));
     const context = {
       ...extra,
       package: packageRow ? String(packageRow.sessions) : extra.package || '',
-      chip: selectedChip || item.primaryChipKey || '',
-      pain: item.bookingPainType || '',
+      chip: extra.chip || selectedChip || item.primaryChipKey || '',
+      pain: extra.pain || item.bookingPainType || '',
     };
+    const options = bookingChoices(item, context);
     trackEvent(ANALYTICS_EVENTS.BOOKING_START, {
       item_id: item.slug,
       item_name: item.title,
@@ -609,7 +575,7 @@ export default function HomePhysioServiceBlock() {
       booking_type: 'home_visit',
     });
     if (options.length === 0) return;
-    setSheet({ item, extra: context, source });
+    setSheet({ item, extra: context, source, options });
   }
 
   function bookingExtra(item, extra = {}) {
@@ -620,49 +586,8 @@ export default function HomePhysioServiceBlock() {
     };
   }
 
-  function directBookingHref(item, extra = {}) {
-    return resolveServiceBookingUrl(item, bookingExtra(item, extra), {
-      origin: window.location.origin,
-      base: import.meta.env.BASE_URL || '/',
-    });
-  }
-
   function bookService(item, source = 'card', extra = {}) {
-    const context = bookingExtra(item, extra);
-    if (optionList(item).length > 0) {
-      startBooking(item, source, context);
-      return;
-    }
-    const href = resolveServiceBookingUrl(item, context, {
-      origin: window.location.origin,
-      base: import.meta.env.BASE_URL || '/',
-    });
-    if (href) {
-      trackEvent(ANALYTICS_EVENTS.BOOKING_START, {
-        item_id: item.slug,
-        item_name: item.title,
-        service_type: 'home_physiotherapy',
-        section: item.sectionSlug,
-        source,
-        booking_type: 'home_visit',
-      });
-      trackEvent(ANALYTICS_EVENTS.CTA_CLICK, {
-        cta_id: 'book_now',
-        cta_label: data?.blocks?.bookNowLabel || 'Book now',
-        cta_location: source,
-        item_id: item.slug,
-        item_name: item.title,
-        section: item.sectionSlug,
-        destination: href.startsWith('/') ? href.split('?')[0] : 'external',
-      });
-      if (!bookingHrefAllowed(href)) return;
-      openedSlug.current = item.slug || 'booking';
-      setDetail(null);
-      setSheet(null);
-      followBookingHref(href);
-      return;
-    }
-    if (optionList(item).length > 0) startBooking(item, source, context);
+    startBooking(item, source, bookingExtra(item, extra));
   }
 
   function setLayout(section, mode) {
@@ -784,7 +709,7 @@ export default function HomePhysioServiceBlock() {
                   </div>
                   <div className={layout === 'grid' ? 'svc-grid' : 'svc-carousel pb-2'}>
                     {shown.map((item) => {
-                      const cardCanBook = Boolean(directBookingHref(item)) || optionList(item).length > 0;
+                      const cardCanBook = bookingChoices(item, bookingExtra(item)).length > 0;
                       return (
                       <article
                         key={item.id}
@@ -896,8 +821,8 @@ export default function HomePhysioServiceBlock() {
           detail={detail}
           chips={data.chips}
           bookLabel={bookLabel}
-          canBook={Boolean(directBookingHref(detail)) || optionList(detail).length > 0}
-          note={bookingDestinationNote(directBookingHref(detail))}
+          canBook={bookingChoices(detail, bookingExtra(detail)).length > 0}
+          note=""
           panelRef={panelRef}
           onClose={closeDetail}
           onBook={() => bookService(detail, 'detail')}
@@ -911,9 +836,7 @@ export default function HomePhysioServiceBlock() {
           ref={sheetRef}
           titleId="home-book-title"
           item={sheet.item}
-          options={optionList(sheet.item).map((option) => (
-            BOOKING_CHOICE_LABELS[option.key] ? { ...option, label: BOOKING_CHOICE_LABELS[option.key] } : option
-          ))}
+          options={sheet.options || []}
           onClose={() => {
             setSheet(null);
             if (!detail) returnFocus.current?.focus?.({ preventScroll: true });
@@ -928,7 +851,7 @@ export default function HomePhysioServiceBlock() {
             <p className="truncate text-sm font-semibold">{sticky.title}</p>
             <p className="text-xs text-white/70">{sticky.price?.display != null ? `${formatInr(sticky.price.display)} ${sticky.unitLabel || ''}` : 'At your home'}</p>
           </div>
-          <button type="button" className="rounded-xl bg-[#ff6f61] px-3 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:bg-white/30" disabled={!(directBookingHref(sticky) || optionList(sticky).length > 0)} onClick={() => bookService(sticky, 'sticky_bar')}>
+          <button type="button" className="rounded-xl bg-[#ff6f61] px-3 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:bg-white/30" disabled={bookingChoices(sticky, bookingExtra(sticky)).length === 0} onClick={() => bookService(sticky, 'sticky_bar')}>
             {bookLabel}
           </button>
           <button type="button" className="px-1 text-lg" aria-label="Dismiss" onClick={() => setSticky(null)}>×</button>

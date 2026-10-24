@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import FaIcon from '../FaIcon';
-import { formatInr } from './serviceCatalogueModel';
+import { bookingChoiceSummary } from './serviceCatalogueModel';
 
 /**
  * “How would you like to book?” choice dialog.
@@ -34,8 +34,7 @@ const BookingChoiceDialog = forwardRef(function BookingChoiceDialog(
     panelRef.current?.focus?.({ preventScroll: true });
   }, []);
 
-  const price = item?.price?.display;
-  const summary = price != null ? `${item?.title || ''} · from ${formatInr(price)}` : item?.title || '';
+  const summary = bookingChoiceSummary(item);
 
   return createPortal(
     <div

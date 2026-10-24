@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import FaIcon from '../FaIcon';
 import { serviceCatalogue } from '../../services/api';
@@ -7,6 +8,7 @@ import { useContact } from '../../contexts/ContactContext';
 import { whatsappChatUrl } from '../../utils/whatsapp';
 import { ANALYTICS_EVENTS, trackEvent } from '../../utils/analytics';
 import { setMobileBookbarVisible } from '../../utils/floatingActionsBus';
+import ServiceNote from './ServiceNote';
 import {
   applyChipFilter,
   bookingContext,
@@ -24,6 +26,7 @@ import {
   LAYOUT_KEY_PREFIX,
 } from './serviceCatalogueModel';
 import BookingChoiceDialog from './BookingChoiceDialog';
+import { useSheetSwipeClose } from './useSheetSwipeClose';
 import './serviceCatalogue.css';
 
 const PHASE_CLASS = ['svc-phase-0', 'svc-phase-1', 'svc-phase-2', 'svc-phase-3'];
@@ -296,6 +299,8 @@ export default function TeleRehabServiceBlock() {
   useEffect(() => {
     if (!detail || !panelRef.current) return undefined;
     const node = panelRef.current;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     const focusable = node.querySelectorAll('button, a, input, select, textarea, [tabindex]:not([tabindex="-1"])');
     focusable[0]?.focus();
     const onKey = (event) => {
@@ -315,7 +320,10 @@ export default function TeleRehabServiceBlock() {
       }
     };
     document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', onKey);
+    };
   }, [detail, sheet, eligibility]);
 
   useEffect(() => {
@@ -453,6 +461,11 @@ export default function TeleRehabServiceBlock() {
     }
     setEligibility({ step: next, outcome: '' });
   }
+
+  useSheetSwipeClose(panelRef, {
+    enabled: Boolean(detail),
+    onClose: closeDetail,
+  });
 
   if (error) {
     return <section className="svc-cat px-4 py-8 text-sm text-[#6e6e73]">{error}</section>;
@@ -613,14 +626,14 @@ export default function TeleRehabServiceBlock() {
         ) : null}
       </div>
 
-      {detail ? (
-        <div className="fixed inset-0 z-[9985] flex items-end justify-center bg-black/40 md:items-stretch md:justify-end" onClick={closeDetail}>
+      {detail ? createPortal(
+        <div className="svc-detail-layer flex items-end justify-center bg-black/40 md:items-stretch md:justify-end" onClick={closeDetail}>
           <div
             ref={panelRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="svc-detail-title"
-            className="flex max-h-[92vh] w-full flex-col overflow-y-auto bg-white md:h-full md:max-h-none md:w-[460px]"
+            className="svc-detail-panel flex max-h-[92vh] w-full flex-col overflow-y-auto bg-white md:h-full md:max-h-none md:w-[460px]"
             onClick={(event) => event.stopPropagation()}
           >
             <DetailThumbnail item={detail} />
@@ -686,9 +699,10 @@ export default function TeleRehabServiceBlock() {
                 <ul className="list-disc pl-5 text-[#6e6e73]">{blocks.needs.map((line) => <li key={line}>{line}</li>)}</ul>
               </div>
             ) : null}
+            <ServiceNote html={detail.noteHtml} />
             {detail.disclaimer ? <p className="svc-accent mt-4 pl-3 text-xs text-[#6e6e73]">{detail.disclaimer}</p> : null}
             <p className="mt-4 text-xs text-[#6e6e73]">Payment uses your physiotherapist&apos;s online fee in the booking form. Catalogue prices are the listed package amounts.</p>
-            <div className="sticky bottom-0 mt-4 bg-white py-3">
+            <div className="sticky bottom-0 mt-4 bg-white py-3" data-sheet-chrome="">
               {detail.type === 'plan' ? (
                 <button type="button" className="svc-btn w-full py-3 text-sm font-semibold" onClick={() => setEligibility({ step: 0, outcome: '' })}>
                   {startLabel}{detail.price?.display != null && payMode === 'full' ? ` · ${formatInr(detail.price.display)}` : ''}
@@ -716,7 +730,8 @@ export default function TeleRehabServiceBlock() {
             ) : null}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       ) : null}
 
       {sheet ? (
@@ -730,15 +745,15 @@ export default function TeleRehabServiceBlock() {
       ) : null}
 
       {sticky && !detail && !sheet ? (
-        <div className="svc-mobile-bookbar fixed inset-x-3 bottom-3 flex items-center justify-between gap-3 rounded-2xl bg-[#1d1d1f] px-4 py-3 text-white shadow-xl md:hidden">
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">{sticky.title}</p>
-            <p className="text-xs text-white/80">{sticky.price?.display != null ? formatInr(sticky.price.display) : 'Fee confirmed when you book'}</p>
+        <div className="svc-mobile-bookbar svc-tele-bookbar fixed inset-x-3 bottom-3 rounded-2xl bg-[#1d1d1f] text-white shadow-xl md:hidden">
+          <div className="svc-tele-bookbar-copy">
+            <p className="svc-tele-bookbar-title">{sticky.title}</p>
+            <p className="svc-tele-bookbar-price">{sticky.price?.display != null ? formatInr(sticky.price.display) : 'Fee confirmed when you book'}</p>
           </div>
-          <button type="button" className="svc-btn shrink-0 px-3 py-2 text-sm" onClick={() => openDetail(sticky, true)}>
+          <button type="button" className="svc-btn svc-tele-bookbar-cta" onClick={() => openDetail(sticky, true)}>
             {sticky.type === 'plan' ? startLabel : bookLabel}
           </button>
-          <button type="button" className="text-white" aria-label="Dismiss" onClick={() => setSticky(null)}>×</button>
+          <button type="button" className="svc-tele-bookbar-close" aria-label="Dismiss" onClick={() => setSticky(null)}>×</button>
         </div>
       ) : null}
 
