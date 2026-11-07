@@ -59,13 +59,10 @@ export default function ExerciseBottomSheet({
     <AnimatePresence>
       {open && (
         <div
-          className="fixed inset-0 z-[11000] flex flex-col justify-end md:justify-center md:items-center"
-          style={{
-            paddingTop: 'max(0.5rem, env(safe-area-inset-top, 0px))',
-            paddingRight: 'max(0.5rem, env(safe-area-inset-right, 0px))',
-            paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0px))',
-            paddingLeft: 'max(0.5rem, env(safe-area-inset-left, 0px))',
-          }}
+          /* Phones: sheet sits flush to the left, right and bottom edges (like the doctor sheet); only the top keeps a gap.
+             Tablet/desktop: centred card with breathing room on every side. */
+          className="fixed inset-0 z-[11000] flex flex-col justify-end md:justify-center md:items-center md:p-6"
+          style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top, 0px))' }}
           role="dialog"
           aria-modal="true"
           aria-label={title || 'Dialog'}
@@ -89,9 +86,9 @@ export default function ExerciseBottomSheet({
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 16, opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className={`relative z-10 w-full min-w-0 max-w-full bg-white rounded-t-3xl md:rounded-3xl shadow-2xl border border-slate-200/80 flex flex-col overflow-hidden transition-all duration-200 md:max-w-xl max-h-[calc(100dvh-1.25rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] md:max-h-[min(calc(100dvh-3.5rem),840px)] ${
+            className={`relative z-10 w-full min-w-0 max-w-full bg-white rounded-t-[1.75rem] md:rounded-3xl shadow-2xl border border-slate-200/80 border-b-0 md:border-b flex flex-col overflow-hidden transition-all duration-200 md:max-w-xl max-h-[calc(100dvh-0.5rem-env(safe-area-inset-top,0px))] md:max-h-[min(calc(100dvh-3.5rem),840px)] ${
               isExpanded
-                ? 'h-[calc(100dvh-1.25rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))]'
+                ? 'h-[calc(100dvh-0.5rem-env(safe-area-inset-top,0px))]'
                 : maxHeight
             } ${className}`}
           >
