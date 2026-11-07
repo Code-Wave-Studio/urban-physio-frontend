@@ -7,20 +7,24 @@ import BadgeList from '../platform/BadgeList';
 import PartnerClinicBadge from '../PartnerClinicBadge';
 import DoctorAvatar from '../DoctorAvatar';
 import ClinicQuickActions from './ClinicQuickActions';
-import ClinicMiniStats from './ClinicMiniStats';
 import ClinicSocialLinks from './ClinicSocialLinks';
-import ClinicStatusBadge from './ClinicStatusBadge';
 import ClinicTodaySlotsRow from './ClinicTodaySlotsRow';
-import SaveClinicButton from './SaveClinicButton';
+import ClinicCoverImage from './ClinicCoverImage';
+import { PreviewChip } from '../preview/PreviewModalShell';
 import useBodyScrollLock from '../../hooks/useBodyScrollLock';
 import { useClinicPreview } from '../../hooks/useClinicPreview';
 import { showPartnerClinicBadge } from '../../utils/clinicBadges';
 import { clinicProfileUrl, doctorProfileUrl } from '../../utils/profileUrls';
-import { bookClinicUrl } from '../../utils/bookUrl';
-import ClinicCoverImage from './ClinicCoverImage';
 import { resolveMediaUrl } from '../../utils/mediaUrl';
 import { setFloatingActionsHidden } from '../../utils/floatingActionsBus';
-import { formatOpeningHoursRows, resolveClinicHours, getTodayDayKey } from '../../utils/clinicProfileUtils';
+import { clinicMapsUrl } from '../../utils/locationHelpers';
+import {
+  formatOpeningHoursRows,
+  resolveClinicHours,
+  getTodayDayKey,
+  todayOpenStatus,
+  clinicTagGroups,
+} from '../../utils/clinicProfileUtils';
 
 function stopNav(e) {
   e.stopPropagation();
@@ -30,14 +34,11 @@ function clinicCover(clinic) {
   return resolveMediaUrl(clinic.cover_image) || resolveMediaUrl(clinic.logo) || null;
 }
 
-function locationLine(c) {
-  const parts = [];
-  if (c.address) parts.push(c.address);
-  const cityState = [c.city_name, c.state_name].filter(Boolean).join(', ');
-  if (cityState) parts.push(cityState);
-  return parts.join(' · ') || c.city_name || 'India';
-}
-
+/**
+ * Phone clinic preview — same size, layout and styling as the doctor preview sheet
+ * (DoctorBottomSheet): 90% height, banner with logo + name, chip row, sections, quick-action bar.
+ * Tablet & desktop use ClinicPreviewModal instead.
+ */
 export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose }) {
   const { clinic, loading } = useClinicPreview(initialClinic, open);
   const c = clinic || initialClinic;
@@ -63,13 +64,16 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
   const hours = resolveClinicHours(c);
   const hoursRows = formatOpeningHoursRows(hours).slice(0, 7);
   const todayKey = getTodayDayKey();
+  const isOpenNow = todayOpenStatus(hours, new Date(), Boolean(Number(c.is_closed ?? 0))).open;
   const doctors = c.doctors || [];
-  const services = c.services_list?.length ? c.services_list : [];
-  const facilities = c.facilities_list?.length ? c.facilities_list : [];
-  const combined = [...services, ...facilities].slice(0, 12);
+  const tagGroups = clinicTagGroups(c);
   const cover = clinicCover(c);
   const doctorCount = c.statistics?.doctor_count ?? c.doctor_count ?? doctors.length;
   const logoUrl = resolveMediaUrl(c.logo);
+  const rating = Number(c.rating_avg ?? c.statistics?.avg_rating) || 0;
+  const reviewCount = Number(c.rating_count ?? c.statistics?.rating_count) || 0;
+  const patients = Number(c.statistics?.patients_treated) || 0;
+  const about = c.description?.trim();
 
   const isOfflineOrClosed = Boolean(
     c.is_closed || (c.profile_public !== undefined && Number(c.profile_public) === 0)
@@ -83,17 +87,16 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
     y.set(0);
   };
 
-  const mapUrl = c.map_url || (c.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${c.name}, ${c.address}`)}` : null);
+  const mapUrl = clinicMapsUrl(c);
 
   const sheet = (
     <AnimatePresence>
       {open && (
         <>
-          
           <motion.button
             type="button"
             aria-label="Close clinic preview"
-            className="fixed inset-0 z-[120] bg-slate-950/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[120] bg-slate-900/50 backdrop-blur-[2px]"
             style={{ opacity: backdropOpacity }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -101,314 +104,268 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
             onClick={onClose}
           />
 
-          {/* Full-screen sheet on phones. Centered modal from the md breakpoint up. */}
-          <div className="fixed inset-0 z-[125] flex items-stretch md:items-center justify-center p-0 md:p-6 pointer-events-none overflow-hidden">
-            <motion.div
-              ref={sheetRef}
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="clinic-sheet-title"
-              className="pointer-events-auto w-full h-[100dvh] max-h-[100dvh] md:h-auto md:max-w-3xl lg:max-w-4xl md:max-h-[min(calc(100dvh-3rem),740px)] flex flex-col bg-white rounded-none md:rounded-[2.25rem] shadow-2xl shadow-slate-950/30 md:border md:border-slate-200/90 overflow-hidden"
-              initial={{ y: '100%', opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: '100%', opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 360, damping: 34 }}
-              drag="y"
-              dragControls={dragControls}
-              dragListener={false}
-              dragConstraints={{ top: 0, bottom: 320 }}
-              dragElastic={{ top: 0, bottom: 0.12 }}
-              style={{ y }}
-              onDragEnd={handleDragEnd}
-            >
-              
-              {/* Desktop & Mobile Header Banner (Matching Doctor Popup style) */}
-              <div className="relative h-40 md:h-48 shrink-0 bg-slate-900 overflow-hidden">
-                <div
-                  className="absolute top-2 left-0 right-0 z-20 flex justify-center md:hidden cursor-grab active:cursor-grabbing touch-none"
-                  onPointerDown={(e) => dragControls.start(e)}
-                >
-                  <div className="w-12 h-1.5 rounded-full bg-white/80" />
-                </div>
+          <motion.div
+            ref={sheetRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="clinic-sheet-title"
+            className="fixed inset-x-0 bottom-0 z-[125] flex flex-col h-[min(90dvh,calc(100dvh-5rem))]"
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', stiffness: 380, damping: 36 }}
+            drag="y"
+            dragControls={dragControls}
+            dragListener={false}
+            dragConstraints={{ top: 0, bottom: 320 }}
+            dragElastic={{ top: 0, bottom: 0.12 }}
+            style={{ y }}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="flex flex-col h-full bg-white rounded-t-[1.75rem] shadow-2xl shadow-slate-900/20 border border-slate-200/80 border-b-0 overflow-hidden pb-[env(safe-area-inset-bottom)]">
+              <div
+                className="shrink-0 pt-2 pb-1 cursor-grab active:cursor-grabbing touch-none"
+                onPointerDown={(e) => dragControls.start(e)}
+              >
+                <div className="w-10 h-1 rounded-full bg-slate-300 mx-auto" />
+              </div>
+
+              <div className="relative h-36 sm:h-40 shrink-0 overflow-hidden bg-slate-900">
                 {cover ? (
                   <ClinicCoverImage src={cover} alt={c.name} variant="sheet" eager />
                 ) : (
-                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 via-teal-700 to-slate-900 flex items-center justify-center text-emerald-200/40">
-                    <FaIcon icon="fa-hospital" className="text-6xl" />
-                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 via-teal-700 to-slate-900" />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/45 to-transparent" />
-
-                
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/75 via-slate-900/25 to-transparent" />
                 <button
                   type="button"
                   onClick={onClose}
-                  className="absolute top-3.5 right-3.5 w-9 h-9 rounded-full bg-slate-950/60 hover:bg-slate-900 text-white flex items-center justify-center border border-white/20 shadow-md backdrop-blur-md transition active:scale-95 z-10"
+                  className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center border border-white/20"
                   aria-label="Close"
                 >
-                  <FaIcon icon="fa-xmark" className="text-sm" />
+                  <FaIcon icon="fa-xmark" />
                 </button>
-
-                
-                <div className="absolute bottom-3.5 left-4 right-4 z-10 flex items-end gap-3.5">
-                  <div className="shrink-0 ring-2 ring-white/90 shadow-xl rounded-2xl overflow-hidden bg-white w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
+                <div className="absolute bottom-3 left-4 right-4 flex items-end gap-3">
+                  <div className="shrink-0 ring-2 ring-white/90 shadow-lg rounded-2xl overflow-hidden bg-white w-16 h-16 sm:w-[4.5rem] sm:h-[4.5rem] flex items-center justify-center">
                     {logoUrl ? (
-                      <img src={logoUrl} alt={c.name} className="w-full h-full object-contain p-1.5" />
+                      <img src={logoUrl} alt="" className="w-full h-full object-contain p-1.5" />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white text-2xl font-bold">
+                      <span className="w-full h-full bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white text-2xl font-bold">
                         {c.name ? c.name.charAt(0) : 'C'}
-                      </div>
+                      </span>
                     )}
                   </div>
-
                   <div className="min-w-0 flex-1 pb-0.5">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      {showPartnerClinicBadge(c) && <PartnerClinicBadge />}
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-300 bg-slate-900/70 px-2 py-0.5 rounded-md backdrop-blur-xs">
-                        Physiotherapy Clinic
-                      </span>
-                    </div>
-                    <h2 id="clinic-sheet-title" className="text-xl md:text-2xl font-bold text-white leading-tight drop-shadow-sm line-clamp-1">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-200 mb-0.5">
+                      Physiotherapy clinic
+                    </p>
+                    <h2 id="clinic-sheet-title" className="text-lg sm:text-xl font-bold text-white leading-tight line-clamp-2">
                       {c.name}
                     </h2>
-                    <p className="text-slate-200 text-xs md:text-sm mt-0.5 line-clamp-1 flex items-center gap-1.5 opacity-95">
-                      <FaIcon icon="fa-location-dot" className="text-emerald-400 shrink-0 text-xs" />
-                      <span>{locationLine(c)}</span>
+                    <p className="text-white/85 text-xs mt-0.5 line-clamp-1">
+                      {[c.city_name, c.state_name].filter(Boolean).join(', ') || 'India'}
                     </p>
                   </div>
                 </div>
               </div>
 
-              
-              <div className="shrink-0 px-4 md:px-6 py-2.5 border-b border-slate-100 bg-slate-50/80 flex flex-wrap items-center justify-between gap-2.5">
+              <div className="shrink-0 px-4 py-3 border-b border-slate-100 space-y-2.5 bg-white/95">
                 <div className="flex flex-wrap items-center gap-2">
-                  <ClinicStatusBadge hours={hours} />
-                  {doctorCount > 0 && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white text-slate-700 text-xs font-medium border border-slate-200/90 shadow-xs">
-                      <FaIcon icon="fa-user-doctor" className="text-teal-600 text-xs" />
-                      {doctorCount} doctor{doctorCount !== 1 ? 's' : ''}
-                    </span>
+                  {showPartnerClinicBadge(c) && <PartnerClinicBadge className="!rounded-full !py-1.5" />}
+                  {rating > 0 ? (
+                    <PreviewChip tone="amber">
+                      <FaIcon icon="fa-star" className="text-amber-500" />
+                      {rating.toFixed(1)}
+                      <span className="font-normal opacity-80">({reviewCount.toLocaleString('en-IN')})</span>
+                    </PreviewChip>
+                  ) : (
+                    <PreviewChip>New on platform</PreviewChip>
                   )}
-                  <BadgeList badges={c.badges} compact className="!mt-0" />
+                  {doctorCount > 0 && (
+                    <PreviewChip tone="sky">
+                      <FaIcon icon="fa-user-doctor" />
+                      {doctorCount} physio{doctorCount !== 1 ? 's' : ''}
+                    </PreviewChip>
+                  )}
+                  {patients > 0 && (
+                    <PreviewChip>
+                      <FaIcon icon="fa-users" />
+                      {patients.toLocaleString('en-IN')}+ patients
+                    </PreviewChip>
+                  )}
+                  {isOfflineOrClosed || !isOpenNow ? (
+                    <PreviewChip tone="slate">Closed now</PreviewChip>
+                  ) : (
+                    <PreviewChip tone="emerald">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Open now
+                    </PreviewChip>
+                  )}
                 </div>
-                <ClinicSocialLinks clinic={c} />
+                {c.badges?.length > 0 && <BadgeList badges={c.badges} compact className="!mt-0" />}
               </div>
 
-              {/* Scrollable Content Body — Optimized 2-Column Desktop Grid */}
-              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 md:px-6 py-4">
+              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 space-y-5">
                 {loading && (
-                  <p className="text-xs text-slate-500 flex items-center gap-2 mb-3">
-                    <FaIcon icon="fa-spinner" className="fa-spin text-emerald-500" />
-                    Loading latest schedule…
+                  <p className="text-xs text-slate-500 flex items-center gap-2">
+                    <FaIcon icon="fa-spinner" className="fa-spin text-primary-500" />
+                    Loading details…
                   </p>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
+                {isOfflineOrClosed ? (
+                  <div className="rounded-xl bg-rose-50 border border-rose-100 px-3 py-2.5 flex items-start gap-2.5 text-rose-800">
+                    <FaIcon icon="fa-circle-exclamation" className="text-rose-600 mt-0.5 shrink-0" />
+                    <p className="text-xs leading-relaxed">
+                      This clinic isn&apos;t taking new bookings right now. Check its hours below or browse other clinics.
+                    </p>
+                  </div>
+                ) : (
+                  <section>
+                    <h3 className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2 flex items-center gap-2">
+                      <FaIcon icon="fa-calendar-day" />
+                      Today&apos;s availability
+                    </h3>
+                    <ClinicTodaySlotsRow clinicId={c.id} variant="modal" />
+                  </section>
+                )}
 
-                  <div className="md:col-span-7 space-y-4">
-                    
-                    <div className="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-xs">
-                      <ClinicMiniStats clinic={c} hideDoctorCount />
+                {(c.address || c.phone || c.email) && (
+                  <section>
+                    <h3 className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2 flex items-center gap-2">
+                      <FaIcon icon="fa-location-dot" />
+                      Address & contact
+                    </h3>
+                    <div className="rounded-xl bg-slate-50/90 border border-slate-100 px-3 py-2.5 text-sm text-slate-700 space-y-2">
+                      {c.address && <p className="leading-relaxed">{c.address}</p>}
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
+                        {c.phone && (
+                          <a href={`tel:${c.phone}`} onClick={stopNav} className="text-primary-700 font-semibold flex items-center gap-1.5">
+                            <FaIcon icon="fa-phone" />
+                            {c.phone}
+                          </a>
+                        )}
+                        {c.email && (
+                          <a href={`mailto:${c.email}`} onClick={stopNav} className="text-slate-600 flex items-center gap-1.5 min-w-0">
+                            <FaIcon icon="fa-envelope" />
+                            <span className="truncate">{c.email}</span>
+                          </a>
+                        )}
+                        {mapUrl && (
+                          <a href={mapUrl} target="_blank" rel="noopener noreferrer" onClick={stopNav} className="text-primary-700 font-semibold flex items-center gap-1.5">
+                            <FaIcon icon="fa-diamond-turn-right" />
+                            Directions
+                          </a>
+                        )}
+                      </div>
                     </div>
+                  </section>
+                )}
 
-                    
-                    {isOfflineOrClosed ? (
-                      <div className="rounded-2xl bg-rose-50 border border-rose-200/80 p-3.5 flex items-start gap-3 text-rose-800">
-                        <FaIcon icon="fa-circle-exclamation" className="text-rose-600 mt-0.5 shrink-0 text-base" />
-                        <div>
-                          <p className="text-xs font-bold uppercase tracking-wider text-rose-900">Clinic Offline / Closed Today</p>
-                          <p className="text-xs text-rose-700 mt-0.5 leading-relaxed">
-                            This clinic is currently unavailable for new bookings. Check back during active operating hours or explore open doctors.
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <section>
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
-                          <FaIcon icon="fa-calendar-day" className="text-teal-600" />
-                          Today&apos;s Availability
-                        </h3>
-                        <ClinicTodaySlotsRow clinicId={c.id} variant="modal" />
-                      </section>
-                    )}
-
-                    
-                    <section>
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
-                        <FaIcon icon="fa-location-dot" className="text-teal-600" />
-                        Address & Contact
-                      </h3>
-                      <div className="text-xs md:text-sm text-slate-700 space-y-2 rounded-2xl border border-slate-200/80 bg-slate-50/60 p-3.5">
-                        {c.address && <p className="font-medium text-slate-800 leading-relaxed">{c.address}</p>}
-                        <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-200/60 text-xs">
-                          {c.phone && (
-                            <a href={`tel:${c.phone}`} onClick={stopNav} className="text-teal-700 hover:text-teal-800 font-semibold flex items-center gap-1.5">
-                              <FaIcon icon="fa-phone" />
-                              {c.phone}
-                            </a>
-                          )}
-                          {c.email && (
-                            <a href={`mailto:${c.email}`} onClick={stopNav} className="text-slate-600 hover:text-slate-900 flex items-center gap-1.5">
-                              <FaIcon icon="fa-envelope" />
-                              {c.email}
-                            </a>
-                          )}
-                          {mapUrl && (
-                            <a href={mapUrl} target="_blank" rel="noopener noreferrer" onClick={stopNav} className="text-emerald-700 font-semibold flex items-center gap-1.5 ml-auto">
-                              <FaIcon icon="fa-diamond-turn-right" />
-                              Directions
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    </section>
-
-                    
-                    {doctors.length > 0 && (
-                      <section>
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
-                          <FaIcon icon="fa-user-doctor" className="text-teal-600" />
-                          Associated Physiotherapists ({doctors.length})
-                        </h3>
-                        <ul className="space-y-2">
-                          {doctors.slice(0, 4).map((doc) => (
-                            <li key={doc.id}>
-                              <Link
-                                to={doctorProfileUrl(doc)}
-                                onClick={(e) => {
-                                  stopNav(e);
-                                  onClose();
-                                }}
-                                className="flex items-center gap-3 rounded-2xl border border-slate-200/80 p-2.5 hover:border-teal-300 hover:bg-teal-50/40 transition group"
-                              >
-                                <DoctorAvatar doctor={doc} size="sm" />
-                                <div className="min-w-0 flex-1">
-                                  <p className="font-semibold text-xs md:text-sm text-slate-900 group-hover:text-teal-700 truncate">
-                                    Dr. {doc.first_name} {doc.last_name}
-                                  </p>
-                                  <p className="text-xs text-slate-500 truncate">{doc.specialization || 'Physiotherapist'}</p>
-                                </div>
-                                <FaIcon icon="fa-chevron-right" className="text-xs text-slate-400 group-hover:text-teal-600" />
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      </section>
-                    )}
-                  </div>
-
-
-                  <div className="md:col-span-5 space-y-4">
-                    
-                    {hoursRows.length > 0 && (
-                      <section>
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
-                          <FaIcon icon="fa-clock" className="text-teal-600" />
-                          Operating Hours
-                        </h3>
-                        <ul className="rounded-2xl border border-slate-200/80 overflow-hidden divide-y divide-slate-100 text-xs">
-                          {hoursRows.map((row) => (
-                            <li
-                              key={row.key}
-                              className={`flex justify-between gap-2 px-3 py-2 ${
-                                row.key === todayKey ? 'bg-teal-50/80 font-semibold text-teal-900' : 'bg-white'
-                              }`}
-                            >
-                              <span>{row.label}</span>
-                              <span className={row.closed ? 'text-slate-400 font-normal' : 'text-slate-700 font-medium'}>
-                                {row.text}
+                {doctors.length > 0 && (
+                  <section>
+                    <h3 className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2 flex items-center gap-2">
+                      <FaIcon icon="fa-user-doctor" />
+                      Physiotherapists ({doctors.length})
+                    </h3>
+                    <ul className="space-y-2">
+                      {doctors.slice(0, 4).map((doc) => (
+                        <li key={doc.id}>
+                          <Link
+                            to={doctorProfileUrl(doc)}
+                            onClick={(e) => {
+                              stopNav(e);
+                              onClose();
+                            }}
+                            className="flex items-center gap-2.5 rounded-xl bg-slate-50/90 border border-slate-100 px-3 py-2.5 active:scale-[0.99] transition"
+                          >
+                            <DoctorAvatar doctor={doc} size="sm" />
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-sm font-semibold text-slate-900 truncate">
+                                Dr. {doc.first_name} {doc.last_name}
                               </span>
-                            </li>
-                          ))}
-                        </ul>
-                      </section>
-                    )}
-
-                    
-                    {combined.length > 0 && (
-                      <section>
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
-                          <FaIcon icon="fa-kit-medical" className="text-teal-600" />
-                          Services & Facilities
-                        </h3>
-                        <div className="flex flex-wrap gap-1.5">
-                          {combined.map((item) => (
-                            <span
-                              key={item}
-                              className="px-2.5 py-1 rounded-full bg-teal-50 text-teal-800 text-xs font-medium border border-teal-100/80"
-                            >
-                              {item}
+                              <span className="block text-xs text-slate-500 truncate">{doc.specialization || 'Physiotherapist'}</span>
                             </span>
-                          ))}
-                        </div>
-                      </section>
-                    )}
+                            <FaIcon icon="fa-chevron-right" className="text-xs text-slate-400" />
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
 
-                    
-                    {c.description?.trim() && (
-                      <section>
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
-                          <FaIcon icon="fa-circle-info" className="text-teal-600" />
-                          About Clinic
-                        </h3>
-                        <p className="text-xs md:text-sm text-slate-600 leading-relaxed line-clamp-6">{c.description}</p>
-                      </section>
-                    )}
-                  </div>
-                </div>
-              </div>
+                {hoursRows.length > 0 && (
+                  <section>
+                    <h3 className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2 flex items-center gap-2">
+                      <FaIcon icon="fa-clock" />
+                      Opening hours
+                    </h3>
+                    <ul className="rounded-xl border border-slate-100 overflow-hidden divide-y divide-slate-100 text-xs">
+                      {hoursRows.map((row) => (
+                        <li
+                          key={row.key}
+                          className={`flex justify-between gap-2 px-3 py-2 ${
+                            row.key === todayKey ? 'bg-primary-50/70 font-semibold text-slate-900' : 'bg-slate-50/60 text-slate-700'
+                          }`}
+                        >
+                          <span>{row.label}</span>
+                          <span className={row.closed ? 'text-slate-400 font-normal' : 'font-medium'}>{row.text}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
 
-              {/* Fixed Desktop & Mobile Footer Bar (Matching Doctor Popup CTA layout) */}
-              <div className="shrink-0 z-20 border-t border-slate-200/90 bg-white px-4 md:px-6 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(15,23,42,0.08)] flex items-center justify-between gap-3">
-                {/* Left: Save Action Button */}
-                <div className="flex items-center gap-2">
-                  <SaveClinicButton clinic={c} onNavigate={onClose} compact />
-                  {mapUrl && (
-                    <a
-                      href={mapUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={stopNav}
-                      className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200/80 transition"
-                    >
-                      <FaIcon icon="fa-diamond-turn-right" className="text-emerald-600" />
-                      Directions
-                    </a>
-                  )}
-                </div>
+                {tagGroups.map((group) => (
+                  <section key={group.key}>
+                    <h3 className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2 flex items-center gap-2">
+                      <FaIcon icon={group.icon} />
+                      {group.title}
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {group.items.map((item) => (
+                        <PreviewChip key={item}>{item}</PreviewChip>
+                      ))}
+                    </div>
+                  </section>
+                ))}
 
-                {/* Center: View Full Profile Link */}
+                {about && (
+                  <section>
+                    <h3 className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2 flex items-center gap-2">
+                      <FaIcon icon="fa-circle-info" />
+                      About
+                    </h3>
+                    <p className="text-sm text-slate-600 leading-relaxed line-clamp-5">{about}</p>
+                  </section>
+                )}
+
+                <ClinicSocialLinks clinic={c} />
+
+                {c.distance_km != null && (
+                  <PreviewChip tone="sky">
+                    <FaIcon icon="fa-route" />
+                    {Number(c.distance_km).toFixed(1)} km from you
+                  </PreviewChip>
+                )}
+
                 <Link
                   to={clinicProfileUrl(c)}
-                  onClick={() => onClose()}
-                  className="text-xs md:text-sm font-semibold text-teal-700 hover:text-teal-800 px-3 py-2 rounded-xl hover:bg-teal-50/60 transition flex items-center gap-1"
+                  onClick={(e) => {
+                    stopNav(e);
+                    onClose();
+                  }}
+                  className="block text-center text-sm font-semibold text-primary-700 py-2"
                 >
                   View full profile →
                 </Link>
-
-                {/* Right: Primary Book Appointment CTA */}
-                {!isOfflineOrClosed ? (
-                  <Link
-                    to={bookClinicUrl(c.id)}
-                    onClick={() => onClose()}
-                    className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-bold text-xs md:text-sm shadow-md shadow-teal-900/20 active:scale-95 transition"
-                  >
-                    <FaIcon icon="fa-calendar-check" className="text-xs" />
-                    Book Appointment
-                  </Link>
-                ) : (
-                  <button
-                    type="button"
-                    disabled
-                    className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 text-slate-400 font-semibold text-xs cursor-not-allowed border border-slate-200"
-                  >
-                    <FaIcon icon="fa-lock" className="text-xs" />
-                    Currently Closed
-                  </button>
-                )}
               </div>
-            </motion.div>
-          </div>
+
+              <div className="shrink-0 z-20 border-t border-slate-100 bg-white px-3 sm:px-4 pt-3 pb-2 shadow-[0_-8px_30px_rgba(15,23,42,0.08)]">
+                <ClinicQuickActions clinic={c} onNavigate={onClose} variant="sheet" className="!pb-0" />
+              </div>
+            </div>
+          </motion.div>
         </>
       )}
     </AnimatePresence>

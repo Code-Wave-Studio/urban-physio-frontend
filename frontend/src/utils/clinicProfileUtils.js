@@ -361,3 +361,48 @@ export function isValidHttpUrl(url) {
   const u = url.trim();
   return u.startsWith('http://') || u.startsWith('https://');
 }
+
+function clinicTagList(listValue, rawValue) {
+  if (Array.isArray(listValue) && listValue.length) return listValue.map(String).filter(Boolean);
+  if (Array.isArray(rawValue)) return rawValue.map(String).filter(Boolean);
+  if (typeof rawValue === 'string' && rawValue.trim()) {
+    try {
+      const parsed = JSON.parse(rawValue);
+      if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean);
+    } catch {
+      /* plain comma-separated text */
+    }
+    return parseTagInput(rawValue);
+  }
+  return [];
+}
+
+/**
+ * Services, equipment and facilities as separate groups, so previews and drawers can show each
+ * in its own section instead of one mixed chip list.
+ */
+export function clinicTagGroups(clinic, limit = 12) {
+  if (!clinic) return [];
+  return [
+    {
+      key: 'services',
+      title: 'Services',
+      icon: 'fa-hand-holding-medical',
+      items: clinicTagList(clinic.services_list, clinic.services),
+    },
+    {
+      key: 'equipment',
+      title: 'Equipment & modalities',
+      icon: 'fa-dumbbell',
+      items: clinicTagList(clinic.equipment_list, clinic.equipment_modalities),
+    },
+    {
+      key: 'facilities',
+      title: 'Facilities',
+      icon: 'fa-building-circle-check',
+      items: clinicTagList(clinic.facilities_list, clinic.facilities),
+    },
+  ]
+    .map((g) => ({ ...g, items: [...new Set(g.items)].slice(0, limit) }))
+    .filter((g) => g.items.length > 0);
+}

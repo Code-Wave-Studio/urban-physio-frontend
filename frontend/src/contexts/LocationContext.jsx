@@ -59,6 +59,20 @@ function resolveCityFromPayload(data, cityOverride = null) {
   return data?.city || data?.service_city || cityOverride || null;
 }
 
+/** Nearest-first list plus any extra providers from the city list, without duplicates. */
+function mergeProvidersById(primary, extra) {
+  const out = Array.isArray(primary) ? [...primary] : [];
+  const seen = new Set(out.map((p) => String(p?.id)));
+  for (const p of Array.isArray(extra) ? extra : []) {
+    const key = String(p?.id);
+    if (p && !seen.has(key)) {
+      seen.add(key);
+      out.push(p);
+    }
+  }
+  return out;
+}
+
 async function fetchProvidersForCity(cityId, coords = null) {
   try {
     const params = { city_id: cityId };
@@ -243,8 +257,24 @@ export function LocationProvider({ children }) {
 
         const data = res?.data ?? res;
         const displayCity = resolveCityFromPayload(data);
+
+        // GPS lookups only return providers that have a map pin. Add everyone listed in the
+        // detected city so clinics and physios without coordinates still show up there.
+        const listCityId = data?.service_city?.id || displayCity?.id;
+        let cityPayload = null;
+        if (listCityId) {
+          cityPayload = await fetchProvidersForCity(listCityId, { lat, lng }).catch(() => null);
+          if (epoch !== locationEpoch.current) return;
+        }
+        const doctorsMerged = mergeProvidersById(data?.doctors, cityPayload?.doctors);
+        const clinicsMerged = mergeProvidersById(data?.clinics, cityPayload?.clinics);
+
         const merged = {
           ...data,
+          doctors: doctorsMerged,
+          clinics: clinicsMerged,
+          has_nearby_providers:
+            Boolean(data?.has_nearby_providers) || doctorsMerged.length > 0 || clinicsMerged.length > 0,
           city: displayCity,
           coords: data?.coords ?? { lat, lng },
         };
