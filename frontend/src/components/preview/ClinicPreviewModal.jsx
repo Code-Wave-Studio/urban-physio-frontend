@@ -11,7 +11,7 @@ import ClinicTodaySlotsRow from '../clinic/ClinicTodaySlotsRow';
 import PreviewModalShell, { PreviewChip, PreviewSection } from './PreviewModalShell';
 import { useClinicPreview } from '../../hooks/useClinicPreview';
 import { showPartnerClinicBadge } from '../../utils/clinicBadges';
-import { formatOpeningHoursRows, resolveClinicHours, getTodayDayKey } from '../../utils/clinicProfileUtils';
+import { formatOpeningHoursRows, resolveClinicHours, getTodayDayKey, clinicTagGroups } from '../../utils/clinicProfileUtils';
 import { clinicProfileUrl, doctorProfileUrl } from '../../utils/profileUrls';
 import { clinicMapsUrl } from '../../utils/locationHelpers';
 import ClinicCoverImage from '../clinic/ClinicCoverImage';
@@ -44,9 +44,7 @@ export default function ClinicPreviewModal({ clinic: initialClinic, open, onClos
   const hoursRows = formatOpeningHoursRows(hours).slice(0, 7);
   const todayKey = getTodayDayKey();
   const doctors = c.doctors || [];
-  const services = c.services_list?.length ? c.services_list : [];
-  const facilities = c.facilities_list?.length ? c.facilities_list : [];
-  const combined = [...services, ...facilities].slice(0, 12);
+  const tagGroups = clinicTagGroups(c);
   const cover = clinicCover(c);
   const mapUrl = clinicMapsUrl(c);
 
@@ -213,17 +211,17 @@ export default function ClinicPreviewModal({ clinic: initialClinic, open, onClos
         </PreviewSection>
       )}
 
-      {combined.length > 0 && (
-        <PreviewSection title="Services & facilities" icon="fa-hand-holding-medical">
+      {tagGroups.map((group) => (
+        <PreviewSection key={group.key} title={group.title} icon={group.icon}>
           <div className="flex flex-wrap gap-1.5">
-            {combined.map((item) => (
+            {group.items.map((item) => (
               <PreviewChip key={item} tone="emerald">
                 {item}
               </PreviewChip>
             ))}
           </div>
         </PreviewSection>
-      )}
+      ))}
 
       {c.description?.trim() && (
         <PreviewSection title="About" icon="fa-hospital">
