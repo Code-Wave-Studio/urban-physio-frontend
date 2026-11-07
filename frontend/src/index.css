@@ -3208,22 +3208,67 @@
   }
 
   /* Homepage promo banner — responsive aspect ratios */
+  /* Homepage banners: swipeable, rounded like the hero slider. Images: 828×420 mobile, 1920×480 desktop. */
   .home-promo-banner-shell {
     @apply w-full;
+    border-radius: 20px;
+    overflow: hidden;
+    background: #E2E8F0;
+    box-shadow: 0 18px 40px -28px rgba(16, 24, 40, 0.55);
+    transform: translateZ(0); /* keeps rounded corners clipping in Safari */
   }
 
   .home-promo-banner-track {
-    aspect-ratio: 828 / 420;
-    min-height: 160px;
-    max-height: 52vw;
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
   }
+  .home-promo-banner-track::-webkit-scrollbar { display: none; }
+
+  .home-promo-slide {
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    aspect-ratio: 828 / 420;
+  }
+  .home-promo-slide-inner { display: block; width: 100%; height: 100%; -webkit-tap-highlight-color: transparent; }
+  .home-promo-img { display: block; width: 100%; height: 100%; object-fit: cover; user-select: none; -webkit-user-drag: none; }
 
   @media (min-width: 768px) {
-    .home-promo-banner-track {
-      aspect-ratio: 1920 / 480;
-      max-height: 320px;
-    }
+    .home-promo-banner-shell { border-radius: 28px; }
+    .home-promo-slide { aspect-ratio: 1920 / 480; }
   }
+
+  /* Arrows: desktop only, appear on hover */
+  .home-promo-arrow {
+    display: none;
+    position: absolute; top: 50%; z-index: 3;
+    width: 40px; height: 40px; margin-top: -20px; border-radius: 9999px;
+    align-items: center; justify-content: center; font-size: 14px;
+    background: rgba(255, 255, 255, 0.92); color: #1E3F6B;
+    box-shadow: 0 6px 18px -8px rgba(16, 24, 40, 0.5);
+    opacity: 0; transition: opacity 0.2s, transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s, color 0.2s;
+  }
+  .home-promo-arrow--prev { left: 14px; }
+  .home-promo-arrow--next { right: 14px; }
+  @media (hover: hover) and (min-width: 768px) {
+    .home-promo-arrow { display: flex; }
+    .home-promo-banner-shell:hover .home-promo-arrow, .home-promo-arrow:focus-visible { opacity: 1; }
+    .home-promo-arrow:hover { background: #376299; color: #fff; transform: scale(1.06); }
+  }
+  .home-promo-arrow:focus-visible { outline: 2px solid #376299; outline-offset: 2px; }
+
+  /* Dots sit below the banner so they never cover the artwork */
+  .home-promo-dots { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
+  .home-promo-dots button {
+    width: 7px; height: 7px; padding: 0; border: 0; border-radius: 9999px;
+    background: #C9D2E0; transition: width 0.3s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s;
+  }
+  .home-promo-dots button.is-active { width: 22px; background: #376299; }
+  .home-promo-dots button:focus-visible { outline: 2px solid #376299; outline-offset: 2px; }
 
   .glass-hero-panel {
     @apply bg-white/10 backdrop-blur-2xl border border-white/25 rounded-3xl shadow-2xl;

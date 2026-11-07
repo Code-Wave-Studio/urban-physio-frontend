@@ -78,7 +78,7 @@ export default function StatsCounter() {
   }, [hasAnimated]);
 
   return (
-    <section ref={sectionRef} className="relative -mt-4 md:-mt-6 z-10 max-w-6xl mx-auto px-3 md:px-4">
+    <section ref={sectionRef} className="relative mt-6 md:mt-8 z-10 max-w-6xl mx-auto px-3 md:px-4">
       <div className="glass-strong rounded-xl md:rounded-2xl p-4 md:p-8 grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
         {STATS.map((s) => (
           <StatItem key={s.label} stat={s} started={inView} />
