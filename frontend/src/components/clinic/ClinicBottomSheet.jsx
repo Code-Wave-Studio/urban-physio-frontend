@@ -156,9 +156,8 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
                     )}
                   </div>
                   <div className="min-w-0 flex-1 pb-0.5">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-200 mb-0.5 flex items-center gap-2">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-200 mb-0.5">
                       Physiotherapy clinic
-                      {showPartnerClinicBadge(c) && <PartnerClinicBadge />}
                     </p>
                     <h2 id="clinic-sheet-title" className="text-lg sm:text-xl font-bold text-white leading-tight line-clamp-2">
                       {c.name}
@@ -172,6 +171,7 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
 
               <div className="shrink-0 px-4 py-3 border-b border-slate-100 space-y-2.5 bg-white/95">
                 <div className="flex flex-wrap items-center gap-2">
+                  {showPartnerClinicBadge(c) && <PartnerClinicBadge className="!rounded-full !py-1.5" />}
                   {rating > 0 ? (
                     <PreviewChip tone="amber">
                       <FaIcon icon="fa-star" className="text-amber-500" />
