@@ -14,7 +14,10 @@ import PackagesSection from '../components/home/PackagesSection';
 import PhysioFeedSection from '../components/home/PhysioFeedSection';
 import HomePromoBanner from '../components/home/HomePromoBanner';
 import HeroShortcuts from '../components/home/HeroShortcuts';
+import HeroSlider from '../components/home/HeroSlider';
+import HeroSocialProof from '../components/home/HeroSocialProof';
 import GlobalSearch from '../components/GlobalSearch';
+import { DEFAULT_HERO_CONFIG, HERO_CONFIG_KEY, parseHeroConfig } from '../constants/heroConfig';
 import { useLocation } from '../contexts/LocationContext';
 import { treatments, conditions, home } from '../services/api';
 import { SITE_FAQS } from '../constants/supportPages';
@@ -39,14 +42,16 @@ const STEPS = [
 const HERO_FEATURES_DEFAULT = [
   { label: 'BPT/MPT qualified', icon: 'fa-circle-check' },
   { label: 'From ₹999 a session', icon: 'fa-circle-check' },
-  { label: 'Same-gender physio on request', icon: 'fa-circle-check' },
+  { label: 'Male/Female physios', icon: 'fa-circle-check' },
+  { label: 'Switch home ⇄ online', icon: 'fa-circle-check' },
 ];
 
+// Headline fields show on desktop only, beside the slider (the slides carry the headline on phones).
 const HERO_DEFAULTS = {
-  badge_text: 'Same-day appointments in Noida',
-  title_prefix: 'Physiotherapy,',
-  title_highlight: 'close to home.',
-  subtitle: 'At home, in clinic or online. Verified physiotherapists with same-day slots.',
+  badge_text: '',
+  title_prefix: 'Book a physio',
+  title_highlight: 'in minutes.',
+  subtitle: 'At home, in clinic or online across Noida.',
   popular_tags: ['Back pain', 'Knee pain', 'Neck pain'],
   feature_pills: HERO_FEATURES_DEFAULT,
 };
@@ -86,9 +91,9 @@ export default function Home() {
   } = useLocation();
   const [treatmentList, setTreatmentList] = useState([]);
   const [conditionList, setConditionList] = useState([]);
-  const [heroImgSrc, setHeroImgSrc] = useState('');
   const [sectionImages, setSectionImages] = useState(emptySectionImages);
   const [hero, setHero] = useState(HERO_DEFAULTS);
+  const [heroConfig, setHeroConfig] = useState(DEFAULT_HERO_CONFIG);
   const [promoBanner, setPromoBanner] = useState({ enabled: false, slides: [] });
   const [testimonials, setTestimonials] = useState(TESTIMONIALS);
   const [showTestimonials, setShowTestimonials] = useState(true);
@@ -112,8 +117,7 @@ export default function Home() {
         if (d.section_images && typeof d.section_images === 'object') {
           const merged = { ...emptySectionImages(), ...d.section_images };
           setSectionImages(merged);
-          const heroFromApi = resolveMediaUrl(merged.hero) || merged.hero;
-          setHeroImgSrc(heroFromApi || '');
+          setHeroConfig(parseHeroConfig(merged[HERO_CONFIG_KEY]));
         }
       })
       .catch(() => {});
@@ -202,104 +206,78 @@ export default function Home() {
       <div className="mesh-blob w-80 h-80 bg-primary-500 bottom-1/3 -left-40 animate-float hidden md:block opacity-15" />
 
       
-      {/* Hero — mobile-first, minimal, light. Text + actions + image, staggered entrance.
-          Brand: Trust Blue #376299, Coral #FF6F61. Motion respects prefers-reduced-motion. */}
-      <section className="tup-hero relative overflow-hidden bg-white">
-        <div className="tup-hero-glow tup-hero-glow--blue" aria-hidden="true" />
-        <div className="tup-hero-glow tup-hero-glow--coral" aria-hidden="true" />
+      {/* Hero — mobile-first. Phone: slider, search, buttons, proof, quick links.
+          Desktop: headline + actions on the left, larger slider on the right.
+          Brand: Trust Blue #376299. Motion respects prefers-reduced-motion. */}
+      <section className="tup-hero relative">
+        <div className="relative z-[1] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-6 sm:pt-6 lg:pt-10 lg:pb-10">
+          <div className="tup-hero-grid">
+            <div className="tup-hero-media tup-zoom" style={{ '--d': '60ms' }}>
+              <HeroSlider slides={heroConfig.slides} />
+            </div>
 
-        <div className="relative z-[1] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 pb-5 sm:pt-8 lg:pt-16 lg:pb-16">
-          <div className="grid lg:grid-cols-[1.05fr_1fr] gap-6 lg:gap-12 items-center">
-            <div className="min-w-0">
-              {hero.badge_text && (
-                <p className="tup-rise inline-flex items-center gap-2 rounded-full bg-[#EEF3FA] px-3 py-1.5 text-[12.5px] sm:text-[13px] font-semibold text-[#2B4F80]" style={{ '--d': '0ms' }}>
-                  <span className="relative flex w-2 h-2" aria-hidden="true">
-                    <span className="absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-60 motion-safe:animate-ping" />
-                    <span className="relative inline-flex w-2 h-2 rounded-full bg-emerald-500" />
-                  </span>
-                  {hero.badge_text}
-                </p>
+            <div className="tup-hero-actions min-w-0">
+              {(hero.title_prefix || hero.title_highlight || hero.subtitle) && (
+                <div className="tup-hero-heading">
+                  {(hero.title_prefix || hero.title_highlight) && (
+                    <p className="tup-rise tup-hero-title" style={{ '--d': '120ms' }}>
+                      {hero.title_prefix}
+                      {hero.title_highlight && <span>{hero.title_highlight}</span>}
+                    </p>
+                  )}
+                  {hero.subtitle && (
+                    <p className="tup-rise tup-hero-sub" style={{ '--d': '180ms' }}>
+                      {hero.subtitle}
+                    </p>
+                  )}
+                </div>
               )}
 
-              <h1 className="tup-rise mt-3 lg:mt-5 text-[34px] sm:text-[46px] lg:text-[56px] font-bold leading-[1.08] tracking-[-0.03em] text-[#0F1E36]" style={{ '--d': '80ms' }}>
-                {hero.title_prefix}
-                {hero.title_highlight && (
-                  <>
-                    <br />
-                    <span className="inline-block bg-gradient-to-r from-[#376299] via-[#6A63B8] to-[#FF6F61] bg-clip-text text-transparent pb-1">
-                      {hero.title_highlight}
-                    </span>
-                  </>
-                )}
-              </h1>
-
-              {hero.subtitle && (
-                <p className="tup-rise mt-2 lg:mt-4 text-[15px] lg:text-lg leading-relaxed text-slate-600 max-w-[520px]" style={{ '--d': '160ms' }}>
-                  {hero.subtitle}
-                </p>
-              )}
-
-              <div className="tup-rise mt-4 lg:mt-7 max-w-[560px]" style={{ '--d': '240ms' }}>
+              <div className="tup-rise tup-hero-search" style={{ '--d': '240ms' }}>
                 <GlobalSearch variant="hero" popularTags={hero.popular_tags} showPopular={false} />
               </div>
 
-              <div className="tup-rise mt-3 grid grid-cols-2 gap-2.5 max-w-[560px]" style={{ '--d': '320ms' }}>
-                <Link
-                  to="/book"
-                  className="tup-btn min-w-0 inline-flex items-center justify-center gap-2 h-12 rounded-full text-sm sm:text-[15px] font-semibold whitespace-nowrap text-white bg-[#376299] hover:bg-[#2D5384] shadow-[0_8px_20px_-8px_rgba(55,98,153,0.65)]"
-                >
-                  <FaIcon icon="fa-calendar-check" className="text-[13px] shrink-0" />
-                  Book appointment
+              <div className="tup-rise tup-hero-ctas" style={{ '--d': '300ms' }}>
+                <Link to={heroConfig.primary_button.link || '/book'} className="tup-btn tup-btn--primary">
+                  <FaIcon icon="fa-calendar-check" className="shrink-0" />
+                  <span className="truncate">{heroConfig.primary_button.label || 'Book now'}</span>
                 </Link>
-                <Link
-                  to="/doctors"
-                  className="tup-btn min-w-0 inline-flex items-center justify-center gap-2 h-12 rounded-full text-sm sm:text-[15px] font-semibold whitespace-nowrap text-[#2B4F80] bg-[#E8EFF8] hover:bg-[#DCE6F4]"
-                >
-                  <FaIcon icon="fa-user-doctor" className="text-[13px] shrink-0" />
-                  Find a physio
+                <Link to={heroConfig.secondary_button.link || '/doctors'} className="tup-btn tup-btn--tonal">
+                  <FaIcon icon="fa-user-doctor" className="shrink-0" />
+                  <span className="truncate">{heroConfig.secondary_button.label || 'Find a physio'}</span>
                 </Link>
               </div>
 
+              <div className="tup-rise" style={{ '--d': '360ms' }}>
+                <HeroSocialProof rating={heroConfig.rating} patients={heroConfig.patients} />
+              </div>
+
               {hero.feature_pills?.length > 0 && (
-                <ul className="tup-rise mt-3.5 lg:mt-5 flex flex-wrap gap-x-4 gap-y-1.5 text-[12.5px] sm:text-[13px] font-medium text-slate-600" style={{ '--d': '400ms' }}>
+                <ul className="tup-rise tup-hero-points" style={{ '--d': '420ms' }}>
                   {hero.feature_pills.map((t) => (
-                    <li key={t.label} className="inline-flex items-center gap-1.5">
-                      <FaIcon icon={t.icon || 'fa-circle-check'} className="text-[12px] text-emerald-500" />
+                    <li key={t.label}>
+                      <FaIcon icon={t.icon || 'fa-circle-check'} />
                       {t.label}
                     </li>
                   ))}
                 </ul>
               )}
             </div>
-
-            {heroImgSrc && (
-              <div className="tup-zoom min-w-0" style={{ '--d': '220ms' }}>
-                <div className="tup-hero-media relative overflow-hidden rounded-[22px] lg:rounded-[28px] bg-slate-100 shadow-[0_24px_48px_-20px_rgba(15,30,54,0.35)] ring-1 ring-slate-900/5">
-                  <img
-                    src={heroImgSrc}
-                    alt="Physiotherapist with a patient at home"
-                    className="w-full aspect-[2/1] object-cover"
-                    fetchpriority="high"
-                    onError={() => setHeroImgSrc('')}
-                  />
-                </div>
-              </div>
-            )}
           </div>
-        </div>
 
-        <div className="relative z-[1] pb-4 sm:pb-6">
-          <HeroShortcuts />
+          <div className="tup-hero-tiles">
+            <HeroShortcuts />
+          </div>
         </div>
       </section>
 
+      <PainSelectionSection />
+
       {showPromoBanner ? (
-        <HomePromoBanner slides={promoBanner.slides} className="pt-4 pb-2 sm:pt-6 sm:pb-4 bg-slate-50" />
+        <HomePromoBanner slides={promoBanner.slides} className="pt-2 pb-2 sm:pt-4 sm:pb-4" />
       ) : (
         <EmergencyCareSection />
       )}
-
-      <PainSelectionSection />
 
       <StatsCounter />
 
