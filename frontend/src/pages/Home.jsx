@@ -274,7 +274,7 @@ export default function Home() {
       <PainSelectionSection />
 
       {showPromoBanner ? (
-        <HomePromoBanner slides={promoBanner.slides} className="pt-2 pb-2 sm:pt-4 sm:pb-4" />
+        <HomePromoBanner slides={promoBanner.slides} className="-mt-6 sm:-mt-8 lg:-mt-14" />
       ) : (
         <EmergencyCareSection />
       )}
