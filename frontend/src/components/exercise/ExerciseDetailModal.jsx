@@ -31,7 +31,7 @@ export default function ExerciseDetailModal({ exercise, onClose, privacyBadges =
       subtitle={exercise ? `${exercise.body_area || 'exercise'} · ${exercise.difficulty || 'beginner'}` : ''}
       headerGradient={exercise ? AREA_GRADIENT[exercise.body_area] || AREA_GRADIENT.general : ''}
       icon="fa-dumbbell"
-      maxHeight="max-h-[92dvh]"
+      maxHeight="h-[min(90dvh,calc(100dvh-5rem))] md:h-auto"
       footer={
         exercise ? (
           <>
@@ -58,7 +58,7 @@ export default function ExerciseDetailModal({ exercise, onClose, privacyBadges =
       {exercise && (
         <div className="space-y-5">
           {hasMedia && (
-            <div key={`media-${exercise.id || exercise.slug || exercise.name}`} className="w-full shrink-0 exercise-detail-media">
+            <div key={`media-${exercise.id || exercise.slug || exercise.name}`} className="w-full shrink-0">
               <ExerciseMediaDisplay
                 exercise={exercise}
                 title={exercise.name}

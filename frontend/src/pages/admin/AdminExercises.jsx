@@ -243,8 +243,8 @@ export default function AdminExercises() {
               preview="none"
             />
             <MediaUrlOrUpload
-              label="Demo GIF / image (URL or upload)"
-              hint="Animated GIF or still image for the exercise"
+              label="Thumbnail / demo image (URL or upload)"
+              hint="Cover image for the exercise card and video. With no video, this image is the demonstration. Use the video's shape: 16:9 for normal YouTube, 9:16 for Shorts."
               icon="fa-image"
               urlValue={form.image_url}
               onUrlChange={(v) => setForm({ ...form, image_url: v })}

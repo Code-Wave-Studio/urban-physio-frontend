@@ -91,6 +91,9 @@ export function parseMediaSource(exerciseOrUrl) {
   const { rawUrl, fallbackImageUrl } = pickRawMediaUrl(exerciseOrUrl);
   if (!rawUrl && !fallbackImageUrl) return empty;
 
+  // Admin-set image doubles as the cover for YouTube videos (falls back to YouTube's own frame).
+  const customThumb = fallbackImageUrl ? resolveMediaUrl(fallbackImageUrl) || fallbackImageUrl : null;
+
   const sourceMode = typeof exerciseOrUrl === 'object' && exerciseOrUrl
     ? (exerciseOrUrl.video_source || exerciseOrUrl.video_type || exerciseOrUrl.source_type || 'auto')
     : 'auto';
@@ -115,8 +118,9 @@ export function parseMediaSource(exerciseOrUrl) {
         type: 'youtube',
         url: rawUrl,
         embedUrl: buildYoutubeEmbedUrl(videoId),
-        thumbnailUrl: youtubeThumbnailUrl(videoId),
+        thumbnailUrl: customThumb || youtubeThumbnailUrl(videoId),
         videoId,
+        isShort: /\/shorts\//i.test(rawUrl),
         rawUrl,
         sourceMode: 'youtube',
       };
@@ -130,8 +134,9 @@ export function parseMediaSource(exerciseOrUrl) {
         type: 'youtube',
         url: rawUrl,
         embedUrl: buildYoutubeEmbedUrl(videoId),
-        thumbnailUrl: youtubeThumbnailUrl(videoId),
+        thumbnailUrl: customThumb || youtubeThumbnailUrl(videoId),
         videoId,
+        isShort: /\/shorts\//i.test(rawUrl),
         rawUrl,
         sourceMode: 'youtube',
       };
