@@ -7178,6 +7178,16 @@ html {
   .tup-hero-points { font-size: 14px; }
 }
 @media (max-width: 359px) { .tup-hero-points { grid-template-columns: 1fr; } }
+@media (max-width: 420px) {
+  .tup-proof { gap: 10px; flex-wrap: nowrap; }
+  .tup-proof-item { gap: 8px; }
+  .tup-proof-g, .tup-proof-avatars > * { width: 28px; height: 28px; font-size: 12px; }
+  .tup-proof-avatars > * { margin-left: -8px; }
+  .tup-proof-num { font-size: 15px; gap: 4px; }
+  .tup-proof-stars { font-size: 10.5px; letter-spacing: 0; }
+  .tup-proof-label { font-size: 12px; }
+  .tup-proof-divider { height: 28px; }
+}
 
 /* Quick-link tiles: 4×2 on phones, one row of 8 in a soft panel on desktop */
 .tup-hero-tiles { margin-top: 22px; }
