@@ -75,6 +75,14 @@ function ClinicRow({ clinic, onApprove, onReject, onEdit, onDelete, onManageDoct
                 Inactive
               </span>
             )}
+            {!(clinic.latitude && clinic.longitude) && (
+              <span
+                className="text-xs px-2 py-0.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200"
+                title="Without a GPS pin the clinic has no distance in “near me” results and its map is approximate. Set it in Edit → Optional GPS pin."
+              >
+                No GPS pin
+              </span>
+            )}
           </div>
           <p className="text-sm text-slate-600 mt-1 line-clamp-2">{clinic.address}</p>
           <p className="text-xs text-slate-500 mt-2 flex flex-wrap gap-x-3 gap-y-1">

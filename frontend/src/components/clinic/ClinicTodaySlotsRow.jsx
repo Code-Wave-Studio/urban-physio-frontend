@@ -3,8 +3,10 @@ import FaIcon from '../FaIcon';
 import { booking } from '../../services/api';
 import { formatSlotLabel } from '../../utils/bookingScheduleUtils';
 
+/** Today's date in the visitor's own timezone (toISOString() is UTC, a day behind before 5:30 am IST). */
 function todayIso() {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 /**

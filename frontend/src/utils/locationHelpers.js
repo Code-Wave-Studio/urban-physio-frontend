@@ -97,6 +97,19 @@ export function clinicMapsUrl(clinic) {
   return q ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}` : null;
 }
 
+/**
+ * Embeddable map for a clinic: exact pin when GPS is set, otherwise Google's best match for
+ * name + address (short maps.app.goo.gl links cannot be embedded).
+ */
+export function clinicMapEmbedUrl(clinic) {
+  if (!clinic) return null;
+  if (clinic.latitude && clinic.longitude) {
+    return `https://maps.google.com/maps?q=${clinic.latitude},${clinic.longitude}&z=15&output=embed`;
+  }
+  const q = [clinic.name, clinic.address, clinic.city_name, clinic.state_name].filter(Boolean).join(', ');
+  return q ? `https://maps.google.com/maps?q=${encodeURIComponent(q)}&z=15&output=embed` : null;
+}
+
 export function doctorMapsUrl(doctor) {
   if (!doctor) return null;
   if (doctor.google_maps_url?.trim()) return doctor.google_maps_url.trim();
