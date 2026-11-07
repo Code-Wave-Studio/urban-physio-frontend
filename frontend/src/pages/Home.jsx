@@ -13,6 +13,7 @@ import ExercisesSection from '../components/home/ExercisesSection';
 import PackagesSection from '../components/home/PackagesSection';
 import PhysioFeedSection from '../components/home/PhysioFeedSection';
 import HomePromoBanner from '../components/home/HomePromoBanner';
+import HeroShortcuts from '../components/home/HeroShortcuts';
 import GlobalSearch from '../components/GlobalSearch';
 import { useLocation } from '../contexts/LocationContext';
 import { treatments, conditions, home } from '../services/api';
@@ -36,18 +37,16 @@ const STEPS = [
 ];
 
 const HERO_FEATURES_DEFAULT = [
-  { label: 'Online Meet', icon: 'fa-video' },
-  { label: 'Clinic Visit', icon: 'fa-hospital' },
-  { label: 'Home Care', icon: 'fa-house-medical' },
-  { label: 'Rehab Plans', icon: 'fa-notes-medical' },
+  { label: 'BPT/MPT qualified', icon: 'fa-circle-check' },
+  { label: 'From ₹999 a session', icon: 'fa-circle-check' },
+  { label: 'Same-gender physio on request', icon: 'fa-circle-check' },
 ];
 
 const HERO_DEFAULTS = {
-  badge_text: '#1 Physio Platform in India',
-  title_prefix: 'Heal Faster with',
-  title_highlight: 'Premium Care',
-  subtitle:
-    'Access trusted physiotherapists nationwide — online sessions, partner clinics, and home treatments in one place.',
+  badge_text: 'Same-day appointments in Noida',
+  title_prefix: 'Physiotherapy,',
+  title_highlight: 'close to home.',
+  subtitle: 'At home, in clinic or online. Verified physiotherapists with same-day slots.',
   popular_tags: ['Back pain', 'Knee pain', 'Neck pain'],
   feature_pills: HERO_FEATURES_DEFAULT,
 };
@@ -72,9 +71,6 @@ function toYoutubeEmbed(url = '') {
 }
 
 const HOME_FAQS = SITE_FAQS.slice(0, 6);
-
-const HERO_PATTERN =
-  "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4z'/%3E%3C/g%3E%3C/svg%3E\")";
 
 export default function Home() {
   const {
@@ -206,118 +202,90 @@ export default function Home() {
       <div className="mesh-blob w-80 h-80 bg-primary-500 bottom-1/3 -left-40 animate-float hidden md:block opacity-15" />
 
       
-      <section className="relative bg-gradient-to-br from-orange-600 via-primary-700 to-primary-950 text-white py-10 pb-16 md:py-20 md:pb-24 overflow-hidden">
-        <div className="absolute inset-0 opacity-30 pointer-events-none" style={{ backgroundImage: HERO_PATTERN }} />
+      {/* Hero — mobile-first, minimal, light. Text + actions + image, staggered entrance.
+          Brand: Trust Blue #376299, Coral #FF6F61. Motion respects prefers-reduced-motion. */}
+      <section className="tup-hero relative overflow-hidden bg-white">
+        <div className="tup-hero-glow tup-hero-glow--blue" aria-hidden="true" />
+        <div className="tup-hero-glow tup-hero-glow--coral" aria-hidden="true" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-[1] w-full">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-14 items-center w-full">
-            <div className="animate-slide-up text-center md:text-left">
-              <span className="inline-flex items-center gap-2 glass-dark px-3.5 py-1.5 rounded-full text-xs md:text-sm font-medium mb-4 md:mb-6">
-                <FaIcon icon="fa-heart-pulse" className="text-orange-300 text-sm" />
-                {hero.badge_text}
-              </span>
-              <h1 className="text-3xl sm:text-4xl lg:text-[3.35rem] font-bold leading-[1.1] tracking-tight text-white">
-                {hero.title_prefix}{' '}
-                <span className="text-orange-200">{hero.title_highlight}</span>
-              </h1>
-              <p className="mt-4 md:mt-6 text-sm md:text-lg text-primary-100/90 max-w-xl leading-relaxed mx-auto md:mx-0">
-                {hero.subtitle}
-              </p>
-
-              <div className="mt-6 md:mt-8">
-                <GlobalSearch variant="hero" popularTags={hero.popular_tags} />
-              </div>
-
-              <div className="mt-5 flex flex-wrap justify-center md:justify-start gap-2 md:gap-3">
-                {hero.feature_pills.map((t) => (
-                  <span
-                    key={t.label}
-                    className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-white/90 glass-dark rounded-full px-3 py-1.5"
-                  >
-                    <FaIcon icon={t.icon} className="text-orange-300 text-[10px]" />
-                    {t.label}
+        <div className="relative z-[1] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 pb-5 sm:pt-8 lg:pt-16 lg:pb-16">
+          <div className="grid lg:grid-cols-[1.05fr_1fr] gap-6 lg:gap-12 items-center">
+            <div className="min-w-0">
+              {hero.badge_text && (
+                <p className="tup-rise inline-flex items-center gap-2 rounded-full bg-[#EEF3FA] px-3 py-1.5 text-[12.5px] sm:text-[13px] font-semibold text-[#2B4F80]" style={{ '--d': '0ms' }}>
+                  <span className="relative flex w-2 h-2" aria-hidden="true">
+                    <span className="absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-60 motion-safe:animate-ping" />
+                    <span className="relative inline-flex w-2 h-2 rounded-full bg-emerald-500" />
                   </span>
-                ))}
-              </div>
-
-              {heroImgSrc && (
-                <div className="md:hidden mt-6 flex justify-center">
-                  <img
-                    src={heroImgSrc}
-                    alt="Professional physiotherapy care"
-                    className="max-h-44 w-full max-w-sm object-cover rounded-2xl shadow-2xl"
-                    onError={() => setHeroImgSrc('')}
-                  />
-                </div>
+                  {hero.badge_text}
+                </p>
               )}
 
-              <div className="mt-6 md:mt-9 grid grid-cols-3 gap-2.5 sm:gap-3 max-w-xl mx-auto md:mx-0 w-full">
-                <Link
-                  to="/doctors"
-                  className="min-w-0 inline-flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-3.5 sm:py-4 md:py-3.5 min-h-[3.25rem] sm:min-h-0 rounded-2xl text-xs sm:text-sm md:text-base font-bold text-primary-800 bg-white shadow-[0_6px_20px_-4px_rgba(0,0,0,0.35)] border border-white/90 ring-2 ring-white/30 hover:bg-orange-50 hover:shadow-[0_10px_28px_-4px_rgba(0,0,0,0.4)] active:scale-[0.98] transition-all duration-200"
-                >
-                  <FaIcon icon="fa-user-doctor" className="text-base sm:text-lg text-primary-600 shrink-0" />
-                  <span className="leading-tight text-center break-words min-w-0">Find Doctor</span>
-                </Link>
-                <Link
-                  to="/clinics"
-                  className="min-w-0 inline-flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-3.5 sm:py-4 md:py-3.5 min-h-[3.25rem] sm:min-h-0 rounded-2xl text-xs sm:text-sm md:text-base font-bold text-primary-800 bg-white shadow-[0_6px_20px_-4px_rgba(0,0,0,0.35)] border border-white/90 ring-2 ring-white/30 hover:bg-orange-50 hover:shadow-[0_10px_28px_-4px_rgba(0,0,0,0.4)] active:scale-[0.98] transition-all duration-200"
-                >
-                  <FaIcon icon="fa-hospital" className="text-base sm:text-lg text-primary-600 shrink-0" />
-                  <span className="leading-tight text-center break-words min-w-0">Find Clinic</span>
-                </Link>
+              <h1 className="tup-rise mt-3 lg:mt-5 text-[34px] sm:text-[46px] lg:text-[56px] font-bold leading-[1.08] tracking-[-0.03em] text-[#0F1E36]" style={{ '--d': '80ms' }}>
+                {hero.title_prefix}
+                <br />
+                <span className="inline-block bg-gradient-to-r from-[#376299] via-[#6A63B8] to-[#FF6F61] bg-clip-text text-transparent pb-1">
+                  {hero.title_highlight}
+                </span>
+              </h1>
+
+              {hero.subtitle && (
+                <p className="tup-rise mt-2 lg:mt-4 text-[15px] lg:text-lg leading-relaxed text-slate-600 max-w-[520px]" style={{ '--d': '160ms' }}>
+                  {hero.subtitle}
+                </p>
+              )}
+
+              <div className="tup-rise mt-4 lg:mt-7 max-w-[560px]" style={{ '--d': '240ms' }}>
+                <GlobalSearch variant="hero" popularTags={hero.popular_tags} showPopular={false} />
+              </div>
+
+              <div className="tup-rise mt-3 grid grid-cols-2 gap-2.5 max-w-[560px]" style={{ '--d': '320ms' }}>
                 <Link
                   to="/book"
-                  className="min-w-0 inline-flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-3.5 sm:py-4 md:py-3.5 min-h-[3.25rem] sm:min-h-0 rounded-2xl text-xs sm:text-sm md:text-base font-bold text-white bg-gradient-to-br from-orange-400 via-orange-500 to-primary-600 shadow-[0_8px_24px_-4px_rgba(234,88,12,0.55)] ring-2 ring-orange-200/50 hover:from-orange-300 hover:via-orange-400 hover:to-primary-500 hover:shadow-[0_12px_32px_-4px_rgba(234,88,12,0.6)] active:scale-[0.98] transition-all duration-200"
+                  className="tup-btn min-w-0 inline-flex items-center justify-center gap-2 h-12 rounded-full text-sm sm:text-[15px] font-semibold whitespace-nowrap text-white bg-[#376299] hover:bg-[#2D5384] shadow-[0_8px_20px_-8px_rgba(55,98,153,0.65)]"
                 >
-                  <FaIcon icon="fa-calendar-check" className="text-base sm:text-lg shrink-0" />
-                  <span className="leading-tight text-center break-words min-w-0">Book Appointment</span>
+                  <FaIcon icon="fa-calendar-check" className="text-[13px] shrink-0" />
+                  Book appointment
+                </Link>
+                <Link
+                  to="/doctors"
+                  className="tup-btn min-w-0 inline-flex items-center justify-center gap-2 h-12 rounded-full text-sm sm:text-[15px] font-semibold whitespace-nowrap text-[#2B4F80] bg-[#E8EFF8] hover:bg-[#DCE6F4]"
+                >
+                  <FaIcon icon="fa-user-doctor" className="text-[13px] shrink-0" />
+                  Find a physio
                 </Link>
               </div>
+
+              {hero.feature_pills?.length > 0 && (
+                <ul className="tup-rise mt-3.5 lg:mt-5 flex flex-wrap gap-x-4 gap-y-1.5 text-[12.5px] sm:text-[13px] font-medium text-slate-600" style={{ '--d': '400ms' }}>
+                  {hero.feature_pills.map((t) => (
+                    <li key={t.label} className="inline-flex items-center gap-1.5">
+                      <FaIcon icon={t.icon || 'fa-circle-check'} className="text-[12px] text-emerald-500" />
+                      {t.label}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
-            <div className="hidden md:flex items-center justify-center animate-fade-in h-full" style={{ animationDelay: '0.2s' }}>
-              <div className="relative w-full max-h-[520px] flex items-center justify-center">
-                <div className="absolute -inset-6 bg-white/10 rounded-full blur-3xl" />
-                {heroImgSrc ? (
+            {heroImgSrc && (
+              <div className="tup-zoom min-w-0" style={{ '--d': '220ms' }}>
+                <div className="tup-hero-media relative overflow-hidden rounded-[22px] lg:rounded-[28px] bg-slate-100 shadow-[0_24px_48px_-20px_rgba(15,30,54,0.35)] ring-1 ring-slate-900/5">
                   <img
                     src={heroImgSrc}
-                    alt="Professional physiotherapy care"
-                    className="relative w-full max-w-md lg:max-w-lg max-h-[500px] object-cover rounded-3xl shadow-2xl animate-float"
+                    alt="Physiotherapist with a patient at home"
+                    className="w-full aspect-[2/1] object-cover"
+                    fetchpriority="high"
                     onError={() => setHeroImgSrc('')}
                   />
-                ) : (
-                <div className="glass-hero-panel p-8 relative w-full max-w-md">
-                  <div className="space-y-4 relative">
-                    <div className="glass-dark rounded-2xl p-5 flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center">
-                        <FaIcon icon="fa-stethoscope" className="text-2xl text-orange-200" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-white">Expert Physiotherapists</p>
-                        <p className="text-primary-200 text-sm">Sports · Ortho · Neuro · Spine</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      {hero.feature_pills.map((t) => (
-                        <div key={t.label} className="glass-dark rounded-xl p-4 text-center">
-                          <FaIcon icon={t.icon} className="text-xl text-orange-200 mb-2" />
-                          <p className="text-white font-medium text-sm">{t.label}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
                 </div>
-                )}
               </div>
-            </div>
+            )}
           </div>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 hidden sm:block pointer-events-none">
-          <svg viewBox="0 0 1440 80" fill="none" className="w-full h-8 md:h-auto">
-            <path d="M0 40L60 35C120 30 240 20 360 18.7C480 17 600 23 720 28C840 33 960 37 1080 35C1200 33 1320 25 1380 21.7L1440 18.7V80H1380C1320 80 1200 80 1080 80C960 80 840 80 720 80C600 80 480 80 360 80C240 80 120 80 60 80H0V40Z" fill="#f8fafc" fillOpacity="0.95" />
-          </svg>
+        <div className="relative z-[1] pb-4 sm:pb-6">
+          <HeroShortcuts />
         </div>
       </section>
 
