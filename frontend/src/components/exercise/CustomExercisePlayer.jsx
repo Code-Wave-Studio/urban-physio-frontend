@@ -11,10 +11,17 @@ function formatTime(seconds) {
 
 const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
-const ASPECT_FRAME = {
-  landscape: 'aspect-video',
-  portrait: 'aspect-[3/4] max-h-[min(72vh,640px)] mx-auto',
-};
+// Tallest the media frame may grow; wider/taller media keep their own shape inside this.
+const MAX_FRAME_HEIGHT = 'min(62vh, 560px)';
+
+/** Frame sized to the media's own aspect ratio: full width for wide media, narrower for tall media. */
+function frameStyle(ratio) {
+  return {
+    aspectRatio: String(ratio),
+    width: `min(100%, calc(${MAX_FRAME_HEIGHT} * ${ratio}))`,
+    marginInline: 'auto',
+  };
+}
 
 export default function CustomExercisePlayer({
   exercise,
@@ -31,7 +38,16 @@ export default function CustomExercisePlayer({
   const media = useMemo(() => parseMediaSource(exercise || mediaUrl), [exercise, mediaUrl]);
   const label = title || (exercise && (exercise.name || exercise.exercise_name)) || 'Exercise Video';
   const isPortrait = layout === 'portrait';
-  const frameClass = ASPECT_FRAME[isPortrait ? 'portrait' : 'landscape'];
+  // Width ÷ height of the media. YouTube Shorts are 9:16, other YouTube 16:9;
+  // images and uploaded videos report their real size once loaded.
+  const initialRatio = media.type === 'youtube' && media.isShort ? 9 / 16 : 16 / 9;
+  const [ratio, setRatio] = useState(initialRatio);
+  useEffect(() => {
+    setRatio(initialRatio);
+  }, [initialRatio, media.url]);
+  const measure = (w, h) => {
+    if (w > 0 && h > 0) setRatio(Math.min(Math.max(w / h, 0.5), 2.4));
+  };
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -109,7 +125,10 @@ export default function CustomExercisePlayer({
     const v = videoRef.current;
 
     const onTimeUpdate = () => setCurrentTime(v.currentTime);
-    const onLoadedMetadata = () => setDuration(v.duration);
+    const onLoadedMetadata = () => {
+      setDuration(v.duration);
+      measure(v.videoWidth, v.videoHeight);
+    };
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
     const onEnded = () => {
@@ -218,8 +237,13 @@ export default function CustomExercisePlayer({
 
   if (media.type === 'image') {
     return (
-      <div className={`w-full ${frameClass} rounded-2xl overflow-hidden bg-slate-950 border border-slate-200/80 shadow-md relative ${className}`}>
-        <img src={media.url} alt={label} className="w-full h-full object-contain bg-slate-900" />
+      <div style={frameStyle(ratio)} className={`rounded-2xl overflow-hidden bg-slate-950 border border-slate-200/80 shadow-md relative ${className}`}>
+        <img
+          src={media.url}
+          alt={label}
+          className="w-full h-full object-contain bg-slate-900"
+          onLoad={(e) => measure(e.currentTarget.naturalWidth, e.currentTarget.naturalHeight)}
+        />
         <div className="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-full text-[11px] font-semibold text-teal-300 flex items-center gap-1.5 border border-slate-700/50">
           <FaIcon icon="fa-image" />
           <span>Exercise Guide Image</span>
@@ -231,7 +255,7 @@ export default function CustomExercisePlayer({
   // YouTube — portrait letterboxes 16:9 in a vertical frame (no aggressive crop)
   if (media.type === 'youtube') {
     return (
-      <div className={`w-full ${frameClass} rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-xl relative flex items-center justify-center ${className}`}>
+      <div style={frameStyle(ratio)} className={`rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-xl relative flex items-center justify-center ${className}`}>
         {isPortrait && !autoPlay && !ytStarted && !iframeError && (
           <button
             type="button"
@@ -243,7 +267,7 @@ export default function CustomExercisePlayer({
               <img
                 src={media.thumbnailUrl}
                 alt=""
-                className="absolute inset-0 w-full h-full object-contain opacity-80"
+                className="absolute inset-0 w-full h-full object-cover opacity-90"
                 loading="lazy"
               />
             ) : null}
@@ -256,7 +280,7 @@ export default function CustomExercisePlayer({
           </button>
         )}
         {youtubeEmbedUrl && !iframeError && (
-          <div className={isPortrait ? 'w-full aspect-video max-h-full' : 'w-full h-full'}>
+          <div className="w-full h-full">
             <iframe
               src={youtubeEmbedUrl}
               title={label}
@@ -268,7 +292,7 @@ export default function CustomExercisePlayer({
           </div>
         )}
         {iframeError && media.thumbnailUrl && (
-          <img src={media.thumbnailUrl} alt={label} className="w-full h-full object-contain" />
+          <img src={media.thumbnailUrl} alt={label} className="w-full h-full object-cover" />
         )}
       </div>
     );
@@ -278,10 +302,11 @@ export default function CustomExercisePlayer({
   return (
     <div
       ref={containerRef}
-      className={`w-full flex flex-col rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 shadow-2xl relative ${className}`}
+      style={{ width: frameStyle(ratio).width, marginInline: 'auto' }}
+      className={`flex flex-col rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 shadow-2xl relative ${className}`}
     >
       {/* Portrait uses object-contain so movement stays visible */}
-      <div className={`relative w-full ${frameClass} bg-black flex items-center justify-center overflow-hidden group`}>
+      <div style={{ aspectRatio: String(ratio) }} className="relative w-full bg-black flex items-center justify-center overflow-hidden group">
         
         <div className="absolute top-3 left-3 z-20 bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-full text-[11px] font-semibold text-teal-300 flex items-center gap-1.5 border border-slate-700/60 shadow-md pointer-events-none">
           <FaIcon icon="fa-file-video" className="text-teal-400" />
