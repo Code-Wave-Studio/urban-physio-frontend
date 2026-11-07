@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import FaIcon from '../FaIcon';
 import { physioFeed } from '../../services/api';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 
 const TYPE_META = {
   blog: { label: 'Blog', icon: 'fa-blog', color: 'text-sky-600 bg-sky-50' },
@@ -41,20 +42,43 @@ export default function PhysioFeedSection() {
         {loading ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="glass-card h-32 animate-pulse" />
+              <div key={i} className="glass-card h-64 animate-pulse" />
             ))}
           </div>
         ) : (
           <div className="mobile-scroll-x md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-5">
             {list.map((post) => {
               const meta = TYPE_META[post.type] || TYPE_META.blog;
+              const img = post.featured_image ? resolveMediaUrl(post.featured_image) || post.featured_image : '';
               return (
-                <Link key={post.id} to={post?.canonical_path || (post?.type === 'podcast' ? `/podcast/${post.slug}` : `/blog/${post.slug}`)} className="mobile-scroll-item glass-card p-4 block hover:shadow-lg transition group">
-                  <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${meta.color}`}>
-                    <FaIcon icon={meta.icon} /> {meta.label}
-                  </span>
-                  <h3 className="font-bold text-slate-800 mt-2 group-hover:text-indigo-700 transition">{post.title}</h3>
-                  <p className="text-xs text-slate-600 mt-2 line-clamp-2">{post.excerpt}</p>
+                <Link
+                  key={post.id}
+                  to={post?.canonical_path || (post?.type === 'podcast' ? `/podcast/${post.slug}` : `/blog/${post.slug}`)}
+                  className="mobile-scroll-item glass-card !p-0 overflow-hidden flex flex-col hover:shadow-lg hover:-translate-y-0.5 transition duration-300 group"
+                >
+                  {/* Thumbnail: 16:9, falls back to a soft tinted block with the type icon */}
+                  <div className="relative aspect-[16/9] w-full overflow-hidden bg-gradient-to-br from-indigo-50 to-sky-50">
+                    {img ? (
+                      <img
+                        src={img}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                      />
+                    ) : (
+                      <span className="absolute inset-0 flex items-center justify-center text-3xl text-indigo-300">
+                        <FaIcon icon={meta.icon} />
+                      </span>
+                    )}
+                    <span className={`absolute left-3 top-3 inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full shadow-sm ${meta.color}`}>
+                      <FaIcon icon={meta.icon} /> {meta.label}
+                    </span>
+                  </div>
+                  <div className="p-4 flex-1 flex flex-col">
+                    <h3 className="font-bold text-slate-800 leading-snug line-clamp-2 group-hover:text-indigo-700 transition">{post.title}</h3>
+                    <p className="text-xs text-slate-600 mt-2 line-clamp-2">{post.excerpt}</p>
+                  </div>
                 </Link>
               );
             })}
