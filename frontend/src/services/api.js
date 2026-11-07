@@ -307,18 +307,10 @@ export const uploadClinicLogo = (file, clinicId) => {
   }).then((res) => res.data);
 };
 
-export const uploadClinicCover = (file, clinicId) => {
-  const form = new FormData();
-  form.append('cover', file);
-  if (clinicId) form.append('clinic_id', String(clinicId));
-  const token = localStorage.getItem('token');
-  return axios.post(`${API_BASE}/upload/clinic-cover`, form, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  }).then((res) => res.data);
-};
+// The server has no /upload/clinic-cover route (it answers 404), so covers go through the
+// working CMS image upload; the returned URL is saved as cover_image when the clinic form is saved.
+// eslint-disable-next-line no-unused-vars
+export const uploadClinicCover = (file, clinicId) => cmsUpload('image', file);
 
 export const uploadClinicGallery = (file, clinicId) => {
   const form = new FormData();
