@@ -642,7 +642,7 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
 
 
-        {(profileServices.length > 0 || legacyServices.length > 0 || equipment.length > 0) && (
+        {(profileServices.length > 0 || legacyServices.length > 0) && (
 
           <Section title="Services & treatments" icon="fa-hand-holding-medical" id="profile-services">
 
@@ -666,29 +666,29 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
             )}
 
-            {equipment.length > 0 && (
+          </Section>
 
-              <div className="mt-4">
+        )}
 
-                <h3 className="text-xs font-bold uppercase text-slate-500 mb-2">Equipment & modalities</h3>
 
-                <div className="flex flex-wrap gap-2">
 
-                  {equipment.map((item) => (
+        {equipment.length > 0 && (
 
-                    <span key={item} className="px-3 py-1 rounded-full bg-teal-50 text-teal-800 text-xs font-medium border border-teal-100">
+          <Section title="Equipment & modalities" icon="fa-dumbbell" id="profile-equipment">
 
-                      {item}
+            <div className="flex flex-wrap gap-2">
 
-                    </span>
+              {equipment.map((item) => (
 
-                  ))}
+                <span key={item} className="px-3 py-1.5 rounded-full bg-teal-50 text-teal-800 text-sm font-medium border border-teal-100">
 
-                </div>
+                  {item}
 
-              </div>
+                </span>
 
-            )}
+              ))}
+
+            </div>
 
           </Section>
 
