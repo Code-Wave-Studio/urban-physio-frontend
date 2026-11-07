@@ -17,6 +17,10 @@ const FALLBACK = [
   { id: 6, name: 'Heel Raises', slug: 'heel-raises', body_area: 'general', difficulty: 'beginner', default_sets: 3, default_reps: '15', instructions: 'Rise onto toes, hold, lower slowly.', video_url: 'https://www.youtube.com/watch?v=3R-zOQ2q2eM' },
 ];
 
+// One row of 4 on desktop; a swipeable row on phones (same pattern as the PhysioFeed blogs).
+const HOME_COUNT = 4;
+const ROW = 'mobile-scroll-x md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-5';
+
 export default function ExercisesSection() {
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,12 +31,12 @@ export default function ExercisesSection() {
   useEffect(() => {
     exercises
       .list()
-      .then((res) => setList((res.data || []).slice(0, 6)))
+      .then((res) => setList((res.data || []).slice(0, HOME_COUNT)))
       .catch(() => setList(FALLBACK))
       .finally(() => setLoading(false));
   }, []);
 
-  const display = list.length ? list : FALLBACK;
+  const display = (list.length ? list : FALLBACK).slice(0, HOME_COUNT);
 
   return (
     <section className="max-w-7xl mx-auto px-4 section-pad" aria-labelledby="home-exercises-heading">
@@ -62,16 +66,16 @@ export default function ExercisesSection() {
         </div>
 
         {loading ? (
-          <div className="exercise-gallery-grid">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="glass-card !p-0 overflow-hidden animate-pulse">
+          <div className={ROW}>
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="mobile-scroll-item glass-card !p-0 overflow-hidden animate-pulse">
                 <div className="exercise-gallery-media bg-slate-200/80" />
                 <div className="p-4 h-24" />
               </div>
             ))}
           </div>
         ) : (
-          <div className="exercise-gallery-grid stagger-children">
+          <div className={ROW}>
             {display.map((ex, idx) => (
               <ExerciseGalleryCard
                 key={ex.id || ex.slug}
@@ -81,6 +85,7 @@ export default function ExercisesSection() {
                 showSave={false}
                 aiIntegrationActive={aiIntegrationActive === true}
                 privacyBadges={libraryPrivacyBadges}
+                className="mobile-scroll-item"
               />
             ))}
           </div>
