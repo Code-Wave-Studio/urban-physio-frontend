@@ -31,6 +31,7 @@ export default function ExerciseGalleryCard({
   showSave = true,
   aiIntegrationActive = false,
   privacyBadges = [],
+  className = '',
 }) {
   const hasMedia = hasExerciseMedia(exercise);
   const aiReady = aiIntegrationActive === true && Boolean(exercise?.kinestex?.ai_supported && exercise?.kinestex?.mapped);
@@ -60,7 +61,7 @@ export default function ExerciseGalleryCard({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(index * 0.03, 0.3) }}
-      className="exercise-gallery-card group flex flex-col overflow-hidden bg-white border border-slate-200/90 rounded-xl shadow-sm hover:shadow-md hover:border-teal-200/80 transition-[box-shadow,border-color,transform] duration-200 hover:-translate-y-0.5"
+      className={`exercise-gallery-card ${className} group flex flex-col overflow-hidden bg-white border border-slate-200/90 rounded-xl shadow-sm hover:shadow-md hover:border-teal-200/80 transition-[box-shadow,border-color,transform] duration-200 hover:-translate-y-0.5`}
     >
       <div
         role="button"
@@ -78,7 +79,7 @@ export default function ExerciseGalleryCard({
               title={name}
               variant="thumbnail"
               layout="portrait"
-              className="absolute inset-0 w-full h-full object-contain"
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/50 via-transparent to-transparent pointer-events-none" />
             <span
