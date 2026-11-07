@@ -44,6 +44,7 @@ export default function GlobalSearch({
   onNavigate,
   autoFocus = false,
   popularTags,
+  showPopular = true,
 }) {
   const navigate = useNavigate();
   const quickTags = popularTags?.length ? popularTags : QUICK_TAGS;
@@ -369,7 +370,7 @@ export default function GlobalSearch({
   };
 
   const showDropdown = open && query.trim().length >= 1;
-  const showQuickTags = isHero;
+  const showQuickTags = isHero && showPopular;
   const trimmedQuery = query.trim();
 
   const cityShort =
@@ -606,7 +607,7 @@ export default function GlobalSearch({
               <button
                 type="button"
                 onClick={openSearchPage}
-                className="absolute right-1 top-1/2 -translate-y-1/2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-semibold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-full shadow-md shadow-orange-600/25 transition"
+                className="absolute right-1 top-1/2 -translate-y-1/2 bg-[#FF6F61] hover:bg-[#F45A4C] active:scale-95 text-white font-semibold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-full shadow-md shadow-[#FF6F61]/30 transition"
               >
                 Search
               </button>
