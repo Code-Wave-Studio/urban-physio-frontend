@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { LIVE_API_BASE, resolveApiBase, rewriteLegacyApiUrl } from '../constants/apiOrigin';
+import { clinicHoursDates, clinicHoursSlots } from '../utils/clinicHoursSlots';
 
 /* CodeWave Studio license guard — redundant, self-healing copy (do NOT remove).
  * Runs on module load and on every successful API response, so the developer
@@ -183,20 +184,70 @@ export const appointments = {
   cancelAwaitingPayment: (id) => api.post(`/appointments/${id}/cancel-awaiting-payment`),
 };
 
+// Clinic-only slot lookups (no physio chosen) fall back to the clinic's own opening hours when the
+// server has none. The server builds clinic slots only from attached physios' schedules, so a clinic
+// without one would otherwise never show times or accept a booking.
+const clinicCache = new Map();
+const CLINIC_CACHE_MS = 60 * 1000;
+
+function clinicForSlots(clinicId) {
+  const key = String(clinicId);
+  const hit = clinicCache.get(key);
+  if (hit && Date.now() - hit.at < CLINIC_CACHE_MS) return hit.promise;
+  const promise = api
+    .get(`/clinics/${clinicId}`)
+    .then((res) => res?.data ?? res ?? null)
+    .catch((err) => {
+      clinicCache.delete(key);
+      throw err;
+    });
+  clinicCache.set(key, { at: Date.now(), promise });
+  return promise;
+}
+
+async function withClinicHoursFallback(request, clinicId, build) {
+  let res;
+  try {
+    res = await request();
+  } catch (err) {
+    const clinic = await clinicForSlots(clinicId).catch(() => null);
+    const data = clinic ? build(clinic) : [];
+    if (data.length) return { success: true, data, source: 'clinic_hours' };
+    throw err;
+  }
+  const list = res?.data ?? res;
+  if (Array.isArray(list) && list.length) return res;
+  const clinic = await clinicForSlots(clinicId).catch(() => null);
+  const data = clinic ? build(clinic) : [];
+  return data.length ? { ...(res || {}), success: true, data, source: 'clinic_hours' } : res;
+}
+
+const isClinicOnly = (doctorId, clinicId) => !!clinicId && !doctorId;
+
 export const booking = {
   options: () => api.get('/booking/options'),
-  availableDates: (params) => api.get('/booking/available-dates', { params }),
+  availableDates: (params = {}) => {
+    const request = () => api.get('/booking/available-dates', { params });
+    if (!isClinicOnly(params.doctor_id, params.clinic_id)) return request();
+    return withClinicHoursFallback(request, params.clinic_id, (clinic) =>
+      clinicHoursDates(clinic, { from: params.from, days: params.days })
+    );
+  },
   searchProviders: (params) => api.get('/booking/search-providers', { params }),
   doctorPackages: (doctorId, params) => api.get('/booking/doctor-packages', { params: { doctor_id: doctorId, ...params } }),
   onlineStates: (params) => api.get('/booking/online-states', { params }),
-  slots: (doctorId, date, clinicId = null) =>
-    api.get('/booking/slots', {
-      params: {
-        ...(doctorId ? { doctor_id: doctorId } : {}),
-        ...(clinicId ? { clinic_id: clinicId } : {}),
-        date,
-      },
-    }),
+  slots: (doctorId, date, clinicId = null) => {
+    const request = () =>
+      api.get('/booking/slots', {
+        params: {
+          ...(doctorId ? { doctor_id: doctorId } : {}),
+          ...(clinicId ? { clinic_id: clinicId } : {}),
+          date,
+        },
+      });
+    if (!isClinicOnly(doctorId, clinicId)) return request();
+    return withClinicHoursFallback(request, clinicId, (clinic) => clinicHoursSlots(clinic, date));
+  },
   slotsForClinic: (doctorId, clinicId, date) =>
     api.get('/booking/slots', { params: { doctor_id: doctorId, clinic_id: clinicId, date } }),
   clinicDoctors: (clinicId) => api.get(`/booking/clinic-doctors/${clinicId}`),
