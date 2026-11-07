@@ -101,13 +101,13 @@ export default function Home() {
         const d = res?.data ?? res;
         if (!d) return;
         setHero({
-          badge_text: d.badge_text || HERO_DEFAULTS.badge_text,
+          // Empty admin fields hide that line; only missing (null) fields fall back to defaults.
+          badge_text: d.badge_text ?? HERO_DEFAULTS.badge_text,
           title_prefix: d.title_prefix || HERO_DEFAULTS.title_prefix,
-          title_highlight: d.title_highlight || HERO_DEFAULTS.title_highlight,
-          subtitle: d.subtitle || HERO_DEFAULTS.subtitle,
+          title_highlight: d.title_highlight ?? HERO_DEFAULTS.title_highlight,
+          subtitle: d.subtitle ?? HERO_DEFAULTS.subtitle,
           popular_tags: Array.isArray(d.popular_tags) && d.popular_tags.length ? d.popular_tags : HERO_DEFAULTS.popular_tags,
-          feature_pills:
-            Array.isArray(d.feature_pills) && d.feature_pills.length ? d.feature_pills : HERO_DEFAULTS.feature_pills,
+          feature_pills: Array.isArray(d.feature_pills) ? d.feature_pills : HERO_DEFAULTS.feature_pills,
         });
         if (d.section_images && typeof d.section_images === 'object') {
           const merged = { ...emptySectionImages(), ...d.section_images };
@@ -223,10 +223,14 @@ export default function Home() {
 
               <h1 className="tup-rise mt-3 lg:mt-5 text-[34px] sm:text-[46px] lg:text-[56px] font-bold leading-[1.08] tracking-[-0.03em] text-[#0F1E36]" style={{ '--d': '80ms' }}>
                 {hero.title_prefix}
-                <br />
-                <span className="inline-block bg-gradient-to-r from-[#376299] via-[#6A63B8] to-[#FF6F61] bg-clip-text text-transparent pb-1">
-                  {hero.title_highlight}
-                </span>
+                {hero.title_highlight && (
+                  <>
+                    <br />
+                    <span className="inline-block bg-gradient-to-r from-[#376299] via-[#6A63B8] to-[#FF6F61] bg-clip-text text-transparent pb-1">
+                      {hero.title_highlight}
+                    </span>
+                  </>
+                )}
               </h1>
 
               {hero.subtitle && (
