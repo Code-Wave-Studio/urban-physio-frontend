@@ -17,6 +17,7 @@ import { showPartnerClinicBadge } from '../../utils/clinicBadges';
 import { clinicProfileUrl, doctorProfileUrl } from '../../utils/profileUrls';
 import { resolveMediaUrl } from '../../utils/mediaUrl';
 import { setFloatingActionsHidden } from '../../utils/floatingActionsBus';
+import { clinicMapsUrl } from '../../utils/locationHelpers';
 import {
   formatOpeningHoursRows,
   resolveClinicHours,
@@ -87,9 +88,7 @@ export default function ClinicBottomSheet({ clinic: initialClinic, open, onClose
     y.set(0);
   };
 
-  const mapUrl =
-    c.map_url ||
-    (c.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${c.name}, ${c.address}`)}` : null);
+  const mapUrl = clinicMapsUrl(c);
 
   const sheet = (
     <AnimatePresence>
