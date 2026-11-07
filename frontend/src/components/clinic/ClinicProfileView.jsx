@@ -28,6 +28,8 @@ import { showPartnerClinicBadge } from '../../utils/clinicBadges';
 
 import { resolveMediaUrl } from '../../utils/mediaUrl';
 
+import { clinicMapEmbedUrl } from '../../utils/locationHelpers';
+
 import { formatOpeningHoursRows, resolveClinicHours, getBannerImages } from '../../utils/clinicProfileUtils';
 
 import ProfilePhotoScroll from '../profile/ProfilePhotoScroll';
@@ -568,7 +570,7 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
 
 
-            {clinic.latitude && clinic.longitude && (
+            {((clinic.latitude && clinic.longitude) || clinic.address) && (
 
               <div>
 
@@ -584,7 +586,7 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
                     className="w-full h-full border-0"
 
-                    src={`https://maps.google.com/maps?q=${clinic.latitude},${clinic.longitude}&z=15&output=embed`}
+                    src={clinicMapEmbedUrl(clinic)}
 
                   />
 
@@ -644,13 +646,11 @@ export default function ClinicProfileView({ clinic, mapUrl, websiteUrl }) {
 
           <Section title="Services & treatments" icon="fa-hand-holding-medical" id="profile-services">
 
-            {profileServices.length > 0 ? (
+            {profileServices.length > 0 && <ProfileServicesGrid services={profileServices} variant="clinic" />}
 
-              <ProfileServicesGrid services={profileServices} variant="clinic" />
+            {legacyServices.length > 0 && (
 
-            ) : (
-
-              <div className="flex flex-wrap gap-2">
+              <div className={`flex flex-wrap gap-2 ${profileServices.length > 0 ? 'mt-4' : ''}`}>
 
                 {legacyServices.map((s) => (
 
