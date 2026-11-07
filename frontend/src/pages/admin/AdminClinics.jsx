@@ -75,14 +75,6 @@ function ClinicRow({ clinic, onApprove, onReject, onEdit, onDelete, onManageDoct
                 Inactive
               </span>
             )}
-            {!Number(clinic.doctor_count) && (
-              <span
-                className="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200"
-                title="Booking slots come from the schedules of physios attached to this clinic. Use Manage doctors to attach one."
-              >
-                No physio · no booking slots
-              </span>
-            )}
             {!(clinic.latitude && clinic.longitude) && (
               <span
                 className="text-xs px-2 py-0.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200"
